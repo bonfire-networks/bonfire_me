@@ -4,14 +4,9 @@ use Mix.Config
 
 # You will almost certainly want to change at least some of these
 
-alias VoxPublica.Mailer
-
-config :vox_publica, Mailer,
-  from_address: "noreply@voxpub.local"
-
 alias CommonsPub.Me.Accounts
 
-config :vox_publica, Accounts.Emails,
+config :cpub_me, Accounts.Emails,
   confirm_email: [subject: "Confirm your email - VoxPublica"],
   reset_password: [subject: "Reset your password - VoxPublica"]
 
@@ -23,23 +18,13 @@ config :vox_publica, Accounts.Emails,
 
 config :pointers,
   search_path: [
-    :cpub_activities,
     :cpub_accounts,
-    :cpub_blocks,
-    :cpub_bookmarks,
     :cpub_characters,
-    :cpub_comments,
-    :cpub_communities,
-    :cpub_circles,
     :cpub_emails,
-    :cpub_features,
-    :cpub_follows,
-    :cpub_likes,
     :cpub_local_auth,
     :cpub_profiles,
-    :cpub_threads,
     :cpub_users,
-    :vox_publica,
+    :cpub_me,
   ]
 
 #### Flexto Stitching
@@ -55,8 +40,6 @@ config :pointers,
 
 alias CommonsPub.Accounts.{Account, Accounted}
 alias CommonsPub.{
-  Actors.Actor,
-  Blocks.Block,
   Characters.Character,
   Comments.Comment,
   Communities.Communities,
@@ -94,9 +77,6 @@ config :cpub_local_auth, LoginCredential,
 config :cpub_profiles, Profile,
   belongs_to: [user: {User, foreign_key: :id, define_field: false}]
 
-config :cpub_actors, Actor,
-  belongs_to: [user: {User, foreign_key: :id, define_field: false}]
-
 config :cpub_users, User,
   has_one: [accounted: {Accounted, foreign_key: :id}],
   has_one: [character: {Character, foreign_key: :id}],
@@ -117,30 +97,30 @@ alias CommonsPub.Me.Accounts.{
 
 # these are not used yet, but they will be
 
-config :vox_publica, ChangePasswordFields,
+config :cpub_me, ChangePasswordFields,
   cast: [:old_password, :password, :password_confirmation],
   required: [:old_password, :password, :password_confirmation],
   confirm: :password,
   new_password: [length: [min: 10, max: 64]]
 
-config :vox_publica, ConfirmEmailFields,
+config :cpub_me, ConfirmEmailFields,
   cast: [:email],
   required: [:email],
   email: [format: ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$)]
 
-config :vox_publica, LoginFields,
+config :cpub_me, LoginFields,
   cast: [:email, :password],
   required: [:email, :password],
   email: [format: ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$)],
   password: [length: [min: 10, max: 64]]
 
-config :vox_publica, ResetPasswordFields,
+config :cpub_me, ResetPasswordFields,
   cast: [:password, :password_confirmation],
   required: [:password, :password_confirmation],
   confirm: :password,
   password: [length: [min: 10, max: 64]]
 
-config :vox_publica, SignupFields,
+config :cpub_me, SignupFields,
   cast: [:email, :password],
   required: [:email, :password],
   email: [format: ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$)],
@@ -148,7 +128,7 @@ config :vox_publica, SignupFields,
 
 alias CommonsPub.Me.Users.ValidFields
 
-config :vox_publica, ValidFields,
+config :cpub_me, ValidFields,
   username: [format: ~r(^[a-z][a-z0-9_]{2,30}$)i],
   name: [length: [min: 3, max: 50]],
   summary: [length: [min: 20, max: 500]]
@@ -158,29 +138,11 @@ config :vox_publica, ValidFields,
 # You probably won't want to touch these. You might override some in
 # other config files.
 
-config :vox_publica,
-  ecto_repos: [VoxPublica.Repo]
-
-config :vox_publica, VoxPublica.Web.Endpoint,
-  url: [host: "localhost"],
-  secret_key_base: "g7K250qlSxhNDt5qnV6f4HFnyoD7fGUuZ8tbBF69aJCOvUIF8P0U7wnnzTqklK10",
-  render_errors: [view: VoxPublica.Web.ErrorView, accepts: ~w(html json), layout: false],
-  pubsub_server: VoxPublica.PubSub,
-  live_view: [signing_salt: "9vdUm+Kh"]
-
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
 config :phoenix, :json_library, Jason
-
-config :activity_pub, :adapter, VoxPublica.ActivityPub.Adapter
-config :activity_pub, :repo, VoxPublica.Repo
-
-config :vox_publica, Oban,
-  repo: VoxPublica.Repo,
-  plugins: [Oban.Plugins.Pruner],
-  queues: [federator_incoming: 50, federator_outgoing: 50]
 
 config :mime, :types, %{
   "application/activity+json" => ["activity+json"]
@@ -191,4 +153,4 @@ config :cpub_me, :repo_module, VoxPublica.Repo
 config :cpub_me, :mailer_module, VoxPublica.Mailer
 config :cpub_me, :helper_module, VoxPublica.CommonHelper
 
-import_config "#{Mix.env()}.exs"
+# import_config "#{Mix.env()}.exs"
