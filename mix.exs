@@ -1,11 +1,11 @@
 Code.eval_file("mess.exs")
-defmodule VoxPublica.MixProject do
+defmodule CommonsPub.Me.MixProject do
 
   use Mix.Project
 
   def project do
     [
-      app: :vox_publica,
+      app: :cpub_me,
       version: "0.1.0",
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -22,8 +22,7 @@ defmodule VoxPublica.MixProject do
 
   def application do
     [
-      mod: {VoxPublica.Application, []},
-      extra_applications: [:logger, :runtime_tools, :ssl, :bamboo, :bamboo_smtp]
+      extra_applications: [:logger]
     ]
   end
 
