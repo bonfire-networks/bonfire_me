@@ -1,20 +1,18 @@
-# VoxPublica
+# CommonsPub:Me
 
-Blogging/Microblogging software.
+- Account creation
+- Email verification
+- Authentication
+- User/Profile creation
+- User/Profile switching
+- User Profile
 
 ## Handy commands
 
-* `mix cpub.deps.update` - updates commonspub dep versions
-* `mix cpub.deps.clean` - cleans the compiled deps so config is reread
-* `mix cpub.deps` - both of the above
-
-If using Docker, just replace `mix ` with `make mix-` in the above commands, so for example `mix cpub.deps` becomes `make mix-cpub.deps`.
-
 ## Copyright and License
 
-VoxPublica content publishing platform
-
 Copyright (c) 2020 VoxPublica Contributors
+Copyright (c) 2020 CommonsPub Contributors
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
