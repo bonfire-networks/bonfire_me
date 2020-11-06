@@ -1,14 +1,17 @@
 use Mix.Config
 
-#### Email configuration
+# You will almost certainly want to copy this into your app's config,
+# and then change at least some of the values
 
-# You will almost certainly want to change at least some of these
+config :cpub_me, :repo_module, MyApp.Repo
+config :cpub_me, :mailer_module, MyApp.Mailer
+config :cpub_me, :web_module, CommonsPub.Core.Web
+config :cpub_me, :helper_module, CommonsPub.Core.WebHelpers
+config :cpub_me, :templates_path, "lib/"
 
-alias CommonsPub.Me.Accounts
-
-config :cpub_me, Accounts.Emails,
-  confirm_email: [subject: "Confirm your email - VoxPublica"],
-  reset_password: [subject: "Reset your password - VoxPublica"]
+config :cpub_me, CommonsPub.Me.Accounts.Emails,
+  confirm_email: [subject: "Confirm your email on CommonsPub"],
+  reset_password: [subject: "Reset your password on CommonsPub"]
 
 #### Pointers configuration
 
@@ -38,8 +41,9 @@ config :pointers,
 ## Note: This does not apply to configuration for
 ## `Pointers.Changesets`, which is read at runtime, not compile time
 
-alias CommonsPub.Accounts.{Account, Accounted}
 alias CommonsPub.{
+  Accounts.Account,
+  Accounts.Accounted,
   Characters.Character,
   Comments.Comment,
   Communities.Communities,
@@ -94,6 +98,7 @@ alias CommonsPub.Me.Accounts.{
   ResetPasswordFields,
   SignupFields,
 }
+alias CommonsPub.Me.Users.UserFields
 
 # these are not used yet, but they will be
 
@@ -126,17 +131,15 @@ config :cpub_me, SignupFields,
   email: [format: ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$)],
   password: [length: [min: 10, max: 64]]
 
-alias CommonsPub.Me.Users.ValidFields
-
-config :cpub_me, ValidFields,
+config :cpub_me, UserFields,
   username: [format: ~r(^[a-z][a-z0-9_]{2,30}$)i],
   name: [length: [min: 3, max: 50]],
   summary: [length: [min: 20, max: 500]]
 
 #### Basic configuration
 
-# You probably won't want to touch these. You might override some in
-# other config files.
+# You probably won't want to copy these to your app or change them.
+# You might override some in other config files.
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
@@ -147,10 +150,5 @@ config :phoenix, :json_library, Jason
 config :mime, :types, %{
   "application/activity+json" => ["activity+json"]
 }
-
-config :cpub_me, :web_module, VoxPublica.Web
-config :cpub_me, :repo_module, VoxPublica.Repo
-config :cpub_me, :mailer_module, VoxPublica.Mailer
-config :cpub_me, :helper_module, VoxPublica.CommonHelper
 
 # import_config "#{Mix.env()}.exs"

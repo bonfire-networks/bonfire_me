@@ -1,8 +1,8 @@
 defmodule CommonsPub.Me.UsersTest do
 
-  use VoxPublica.DataCase, async: true
+  use CommonsPub.Me.DataCase, async: true
   alias CommonsPub.Me.{Accounts, Users}
-  alias VoxPublica.Fake
+  alias CommonsPub.Me.Fake
 
   test "creation works" do
     assert {:ok, account} = Accounts.signup(Fake.account())

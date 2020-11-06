@@ -1,3 +1,8 @@
+// Profile Flow mixins and styles
+@import "profile/hero";
+@import "profile/profile";
+@import "settings/settings";
+
 @mixin auth-grid() {
     display: grid;
     grid-template-columns: 1fr 1fr;

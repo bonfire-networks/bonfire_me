@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.ForgotPasswordController do
-  use CommonsPub.Me.UseModule, [:web_module, :controller]
+  use CommonsPub.Core.Web, [:controller]
 
   plug CommonsPub.Me.Web.Plugs.MustBeGuest
 

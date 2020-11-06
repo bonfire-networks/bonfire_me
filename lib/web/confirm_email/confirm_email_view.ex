@@ -1,3 +1,3 @@
 defmodule CommonsPub.Me.Web.ConfirmEmailView do
-  use CommonsPub.Me.UseModule, [:web_module, [:view, "lib/me/"]]
+  use CommonsPub.Core.Web, [:view, Application.get_env(:cpub_me, :templates_path)]
 end

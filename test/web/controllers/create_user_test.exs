@@ -1,6 +1,6 @@
-defmodule VoxPublica.Web.CreateUserController.Test do
+defmodule CommonsPub.Me.Web.CreateUserController.Test do
 
-  use VoxPublica.ConnCase
+  use CommonsPub.Me.ConnCase
 
   test "form renders" do
     alice = fake_account!()

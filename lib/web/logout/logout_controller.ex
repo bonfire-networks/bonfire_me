@@ -1,6 +1,6 @@
 defmodule CommonsPub.Me.Web.LogoutController do
 
-  use CommonsPub.Me.UseModule, [:web_module, :controller]
+  use CommonsPub.Core.Web, [:controller]
 
   def index(conn, _) do
     conn |>

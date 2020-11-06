@@ -1,7 +1,7 @@
-defmodule VoxPublica.Web.ResetPasswordController.Test do
+defmodule CommonsPub.Me.Web.ResetPasswordController.Test do
 
-  use VoxPublica.ConnCase
-  # alias VoxPublica.Fake
+  use CommonsPub.Me.ConnCase
+  # alias CommonsPub.Me.Fake
 
   # describe "request" do
 

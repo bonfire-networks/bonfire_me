@@ -1,6 +1,6 @@
-defmodule VoxPublica.Web.SignupController.Test do
+defmodule CommonsPub.Me.Web.SignupController.Test do
 
-  use VoxPublica.ConnCase
+  use CommonsPub.Me.ConnCase
 
   test "form renders" do
     conn = conn()

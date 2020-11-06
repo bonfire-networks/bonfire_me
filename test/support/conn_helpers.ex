@@ -1,4 +1,4 @@
-defmodule VoxPublica.Test.ConnHelpers do
+defmodule CommonsPub.Me.Test.ConnHelpers do
 
   import ExUnit.Assertions
   import Plug.Conn
@@ -8,7 +8,7 @@ defmodule VoxPublica.Test.ConnHelpers do
   alias CommonsPub.Accounts.Account
   alias CommonsPub.Users.User
 
-  @endpoint VoxPublica.Web.Endpoint
+  @endpoint CommonsPub.Me.Web.Endpoint
 
   ### conn
 

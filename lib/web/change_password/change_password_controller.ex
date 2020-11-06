@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.ChangePasswordController do
-  use CommonsPub.Me.UseModule, [:web_module, :controller]
+  use CommonsPub.Core.Web, [:controller]
 
   plug CommonsPub.Me.Web.Plugs.MustLogIn, load_account: true
 

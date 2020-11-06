@@ -1,6 +1,6 @@
-defmodule VoxPublica.DataHelpers do
+defmodule CommonsPub.Me.DataHelpers do
 
   # import ExUnit.Assertions
-  # alias VoxPublica.Fake
+  # alias CommonsPub.Me.Fake
 
 end

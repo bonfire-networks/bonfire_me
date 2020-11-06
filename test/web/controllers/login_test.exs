@@ -1,6 +1,6 @@
-defmodule VoxPublica.Web.LoginController.Test do
+defmodule CommonsPub.Me.Web.LoginController.Test do
 
-  use VoxPublica.ConnCase
+  use CommonsPub.Me.ConnCase
   alias CommonsPub.Me.Accounts
 
   test "form renders" do

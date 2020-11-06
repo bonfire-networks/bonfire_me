@@ -1,7 +1,7 @@
-defmodule VoxPublica.Web.SwitchUserController.Test do
+defmodule CommonsPub.Me.Web.SwitchUserController.Test do
 
-  use VoxPublica.ConnCase
-  alias VoxPublica.Fake
+  use CommonsPub.Me.ConnCase
+  alias CommonsPub.Me.Fake
 
   describe "index" do
 

@@ -1,4 +1,4 @@
-defmodule VoxPublica.ConnCase do
+defmodule CommonsPub.Me.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -23,22 +23,25 @@ defmodule VoxPublica.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import Phoenix.LiveViewTest
-      import VoxPublica.ConnCase
-      import VoxPublica.Test.ConnHelpers
-      import VoxPublica.Test.FakeHelpers
-      alias VoxPublica.Fake
-      alias VoxPublica.Web.Router.Helpers, as: Routes
+      import CommonsPub.Me.ConnCase
+      import CommonsPub.Me.Test.ConnHelpers
+      import CommonsPub.Me.Test.FakeHelpers
+      alias CommonsPub.Me.Fake
+      alias CommonsPub.Me.Web.Router.Helpers, as: Routes
 
       # The default endpoint for testing
-      @endpoint VoxPublica.Web.Endpoint
+      @endpoint CommonsPub.Me.Web.Endpoint
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(VoxPublica.Repo)
+
+    @repo Application.get_env(:cpub_me, :repo_module)
+
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(VoxPublica.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(@repo, {:shared, self()})
     end
 
     {:ok, []}

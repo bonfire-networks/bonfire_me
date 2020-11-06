@@ -1,8 +1,8 @@
 defmodule CommonsPub.Me.AccountsTest do
 
-  use VoxPublica.DataCase, async: true
+  use CommonsPub.Me.DataCase, async: true
   alias CommonsPub.Me.Accounts
-  alias VoxPublica.Fake
+  alias CommonsPub.Me.Fake
 
   describe "[registration]" do
 

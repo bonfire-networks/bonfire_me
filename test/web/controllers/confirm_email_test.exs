@@ -1,7 +1,7 @@
-defmodule VoxPublica.Web.ConfirmEmailController.Test do
+defmodule CommonsPub.Me.Web.ConfirmEmailController.Test do
 
-  use VoxPublica.ConnCase
-  alias VoxPublica.Fake
+  use CommonsPub.Me.ConnCase
+  alias CommonsPub.Me.Fake
 
   describe "request" do
 

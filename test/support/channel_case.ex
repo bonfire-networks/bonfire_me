@@ -1,4 +1,4 @@
-defmodule VoxPublica.ChannelCase do
+defmodule CommonsPub.Me.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -21,18 +21,21 @@ defmodule VoxPublica.ChannelCase do
     quote do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
-      import VoxPublica.ChannelCase
+      import CommonsPub.Me.ChannelCase
 
       # The default endpoint for testing
-      @endpoint VoxPublica.Web.Endpoint
+      @endpoint CommonsPub.Me.Web.Endpoint
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(VoxPublica.Repo)
+
+    @repo Application.get_env(:cpub_me, :repo_module)
+
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(VoxPublica.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(@repo, {:shared, self()})
     end
 
     :ok

@@ -1,6 +1,6 @@
-defmodule VoxPublica.Web.ForgotPasswordController.Test do
+defmodule CommonsPub.Me.Web.ForgotPasswordController.Test do
 
-  use VoxPublica.ConnCase
+  use CommonsPub.Me.ConnCase
   # alias CommonsPub.Me.Accounts
 
   # test "form renders" do

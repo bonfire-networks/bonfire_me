@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.ProfileLive do
-  use CommonsPub.Me.UseModule, [:web_module, :live_view]
+  use CommonsPub.Core.Web, [:live_view]
   alias CommonsPub.Me.Web.HeroProfileLive
   alias CommonsPub.Me.Web.ProfileNavigationLive
   alias CommonsPub.Me.Web.ProfileAboutLive

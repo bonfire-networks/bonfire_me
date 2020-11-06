@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.SignupController do
-  use CommonsPub.Me.UseModule, [:web_module, :controller]
+  use CommonsPub.Core.Web, [:controller]
   alias CommonsPub.Me.Accounts
 
   plug CommonsPub.Me.Web.Plugs.MustBeGuest

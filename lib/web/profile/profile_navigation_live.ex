@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.ProfileNavigationLive do
-  use CommonsPub.Me.UseModule, [:web_module, :live_component]
+  use CommonsPub.Core.Web, [:live_component]
 
   def render(assigns) do
     ~L"""
