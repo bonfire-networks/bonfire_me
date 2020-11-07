@@ -14,6 +14,7 @@ An extension for [Bonfire](https://bonfire.cafe/) that handles:
 
 ## Copyright and License
 
+Copyright (c) 2020 Bonfire Contributors
 Copyright (c) 2020 VoxPublica Contributors
 Copyright (c) 2020 CommonsPub Contributors
 
