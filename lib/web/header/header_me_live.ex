@@ -1,4 +1,4 @@
 defmodule CommonsPub.Me.Web.HeaderMeLive do
-  use CommonsPub.Core.Web, [:live_component]
+  use CommonsPub.WebPhoenix, [:live_component]
 
 end

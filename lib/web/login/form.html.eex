@@ -1,6 +1,6 @@
 <main class="guest__container page__auth-grid">
   <aside class="auth__info">
-    <div 
+    <div
       role="img"
       aria-label="instance representative image"
       title="instance representative image"
@@ -18,8 +18,8 @@
     <section class="grid__form">
       <h1>Log in</h1>
       <%= if @error do %>
-        <div 
-          role="status" 
+        <div
+          role="status"
           class="box__warning">
           <%= case @error do %>
           <% :not_found -> %>
@@ -30,11 +30,11 @@
         </div>
       <% end %>
       <div class="form__wrapper">
-        <%= f = form_for @form, Routes.login_path(@conn, :create), [method: :post, id: "login-form"] %>
+        <%= f = form_for @form, routes().login_path(@conn, :create), [method: :post, id: "login-form"] %>
           <div class="form__container">
             <%= label f, :email, "Type your email" %>
-            <%= text_input f, 
-              :email, 
+            <%= text_input f,
+              :email,
               [
                 aria_describedby: "required-message",
                 required: true
@@ -43,8 +43,8 @@
           </div>
           <div class="form__container">
             <%= label f, :password, "Type your password" %>
-            <%= password_input f, 
-              :password, 
+            <%= password_input f,
+              :password,
               [
                 aria_describedby: "required-message",
                 required: true
@@ -52,18 +52,18 @@
             <%= error_tag f, :password %>
           </div>
           <%= submit "Log in" %>
-        </form> 
-        <aside class="auth__helpers">  
+        </form>
+        <aside class="auth__helpers">
           <p>
             <span>&#x01f44b;</span>
             Don&#39;t have an account yet?
-            <%= link "Create a new one.", to: Routes.signup_path(@conn, :index) %>
+            <%= link "Create a new one.", to: routes().signup_path(@conn, :index) %>
           </p>
           <p>
             <span>&#x01f9d0;</span>
             Trouble logging in?
-            <%= link "Reset your password.", to: Routes.forgot_password_path(@conn, :index) %>.
-          </p>      
+            <%= link "Reset your password.", to: routes().forgot_password_path(@conn, :index) %>.
+          </p>
         </aside>
       </div>
     </section>

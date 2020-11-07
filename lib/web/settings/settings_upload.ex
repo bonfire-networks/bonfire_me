@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.My.SettingsUpload do
-  use CommonsPub.Core.Web, [:controller]
+  use CommonsPub.WebPhoenix, [:controller]
 
   # params we receive:
   # %{

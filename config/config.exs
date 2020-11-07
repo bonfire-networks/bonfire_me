@@ -5,9 +5,9 @@ use Mix.Config
 
 config :cpub_me, :repo_module, MyApp.Repo
 config :cpub_me, :mailer_module, MyApp.Mailer
-config :cpub_me, :web_module, CommonsPub.Core.Web
-config :cpub_me, :helper_module, CommonsPub.Core.WebHelpers
-config :cpub_me, :templates_path, "lib/web"
+config :cpub_me, :web_module, CommonsPub.WebPhoenix
+config :cpub_me, :helper_module, CommonsPub.WebPhoenixHelpers
+config :cpub_me, :templates_path, "lib"
 
 config :cpub_me, CommonsPub.Me.Accounts.Emails,
   confirm_email: [subject: "Confirm your email on CommonsPub"],

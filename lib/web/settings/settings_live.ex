@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.SettingsLive do
-  use CommonsPub.Core.Web, [:live_view]
+  use CommonsPub.WebPhoenix, [:live_view]
 
 
   # alias CommonsPub.Me.Profiles.Web.ProfilesHelper

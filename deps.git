@@ -1,4 +1,4 @@
-cpub_core = "https://github.com/commonspub/cpub_core#main"
+cpub_web_phoenix = "https://github.com/commonspub/cpub_web_phoenix#main"
 pointers = "https://github.com/commonspub/pointers#main"
 cpub_local_auth = "https://github.com/commonspub/cpub_local_auth#main"
 cpub_accounts = "https://github.com/commonspub/cpub_accounts#main"

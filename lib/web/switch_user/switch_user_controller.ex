@@ -1,6 +1,6 @@
 defmodule CommonsPub.Me.Web.SwitchUserController do
 
-  use CommonsPub.Core.Web, [:controller]
+  use CommonsPub.WebPhoenix, [:controller]
   alias CommonsPub.Me.Users
 
   plug CommonsPub.Me.Web.Plugs.MustLogIn, load_account: true

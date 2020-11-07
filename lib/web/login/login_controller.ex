@@ -1,6 +1,6 @@
 defmodule CommonsPub.Me.Web.LoginController do
 
-  use CommonsPub.Core.Web, [:controller]
+  use CommonsPub.WebPhoenix, [:controller]
   alias CommonsPub.Me.Accounts
 
   plug CommonsPub.Me.Web.Plugs.MustBeGuest

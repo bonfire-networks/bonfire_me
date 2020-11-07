@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.CreateUserController do
-  use CommonsPub.Core.Web, [:controller]
+  use CommonsPub.WebPhoenix, [:controller]
   alias CommonsPub.Users.User
   alias CommonsPub.Me.Users
 

@@ -1,4 +1,4 @@
 defmodule CommonsPub.Me.Web.SettingsLive.SettingsGeneralLive do
-  use CommonsPub.Core.Web, [:live_component]
+  use CommonsPub.WebPhoenix, [:live_component]
 
 end

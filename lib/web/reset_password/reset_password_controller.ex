@@ -1,5 +1,5 @@
 defmodule CommonsPub.Me.Web.ResetPasswordController do
-  use CommonsPub.Core.Web, [:controller]
+  use CommonsPub.WebPhoenix, [:controller]
 
   plug CommonsPub.Me.Web.Plugs.MustBeGuest
 

@@ -3,8 +3,11 @@ defmodule CommonsPub.Me.Web.Router do
 
     quote do
 
+      # alias CommonsPub.Me.Web.Router.Helpers, as: MeRoutes
+
       scope "/", CommonsPub.Me.Web do
-        pipe_through :browser
+        # pipe_through :browser
+
         # guest visible pages
         resources "/signup", SignupController, only: [:index, :create]
         resources "/confirm-email", ConfirmEmailController, only: [:index, :show, :create]
@@ -12,6 +15,7 @@ defmodule CommonsPub.Me.Web.Router do
         resources "/password/forgot", ForgotPasswordController, only: [:index, :create]
         resources "/password/reset/:token", ResetPasswordController, only: [:index, :create]
         resources "/password/change", ChangePasswordController, only: [:index, :create]
+
         # authenticated pages
         resources "/create-user", CreateUserController, only: [:index, :create]
         get "/switch-user", SwitchUserController, :index
