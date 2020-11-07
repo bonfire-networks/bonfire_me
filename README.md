@@ -14,9 +14,7 @@ An extension for [Bonfire](https://bonfire.cafe/) that handles:
 
 ## Copyright and License
 
-Copyright (c) 2020 Bonfire Contributors
-Copyright (c) 2020 VoxPublica Contributors
-Copyright (c) 2020 CommonsPub Contributors
+Copyright (c) 2020 Bonfire, VoxPublica, and CommonsPub Contributors
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
