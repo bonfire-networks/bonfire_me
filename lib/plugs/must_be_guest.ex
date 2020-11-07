@@ -14,7 +14,7 @@ defmodule Bonfire.Me.Web.Plugs.MustBeGuest do
   defp not_permitted(conn) do
     conn
     |> put_flash(:error, "That page is only accessible to guests.")
-    |> redirect(to: "/home")
+    |> redirect(to: "/logout")
     |> halt()
   end
 

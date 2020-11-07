@@ -3,8 +3,8 @@ use Mix.Config
 # You will almost certainly want to copy this into your app's config,
 # and then change at least some of the values
 
-config :bonfire_me, :repo_module, MyApp.Repo
-config :bonfire_me, :mailer_module, MyApp.Mailer
+config :bonfire_me, :repo_module, MyApp.Repo # change me
+config :bonfire_me, :mailer_module, MyApp.Mailer # change me
 config :bonfire_me, :web_module, Bonfire.WebPhoenix
 config :bonfire_me, :helper_module, Bonfire.WebPhoenixHelpers
 config :bonfire_me, :templates_path, "lib"
