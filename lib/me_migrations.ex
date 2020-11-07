@@ -1,4 +1,4 @@
-defmodule CommonsPub.Me.Migrations do
+defmodule Bonfire.Me.Migrations do
   use Ecto.Migration
 
   import CommonsPub.Accounts.Account.Migration

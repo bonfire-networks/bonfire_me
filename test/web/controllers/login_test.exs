@@ -1,7 +1,7 @@
-defmodule CommonsPub.Me.Web.LoginController.Test do
+defmodule Bonfire.Me.Web.LoginController.Test do
 
-  use CommonsPub.Me.ConnCase
-  alias CommonsPub.Me.Accounts
+  use Bonfire.Me.ConnCase
+  alias Bonfire.Me.Accounts
 
   test "form renders" do
     conn = conn()

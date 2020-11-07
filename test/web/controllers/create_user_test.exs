@@ -1,6 +1,6 @@
-defmodule CommonsPub.Me.Web.CreateUserController.Test do
+defmodule Bonfire.Me.Web.CreateUserController.Test do
 
-  use CommonsPub.Me.ConnCase
+  use Bonfire.Me.ConnCase
 
   test "form renders" do
     alice = fake_account!()

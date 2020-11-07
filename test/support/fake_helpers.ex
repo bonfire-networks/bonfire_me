@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Test.FakeHelpers do
+defmodule Bonfire.Me.Test.FakeHelpers do
 
   alias CommonsPub.Accounts.Account
-  alias CommonsPub.Me.{Fake, Repo}
-  alias CommonsPub.Me.{Accounts, Users}
+  alias Bonfire.Me.{Fake, Repo}
+  alias Bonfire.Me.{Accounts, Users}
   import ExUnit.Assertions
 
   def fake_account!(attrs \\ %{}) do

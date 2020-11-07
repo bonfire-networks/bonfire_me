@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Accounts.ConfirmEmailFields do
+defmodule Bonfire.Me.Accounts.ConfirmEmailFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias CommonsPub.Me.Accounts.ConfirmEmailFields
+  alias Bonfire.Me.Accounts.ConfirmEmailFields
 
   embedded_schema do
     field :email, :string

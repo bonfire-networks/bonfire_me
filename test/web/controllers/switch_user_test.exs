@@ -1,7 +1,7 @@
-defmodule CommonsPub.Me.Web.SwitchUserController.Test do
+defmodule Bonfire.Me.Web.SwitchUserController.Test do
 
-  use CommonsPub.Me.ConnCase
-  alias CommonsPub.Me.Fake
+  use Bonfire.Me.ConnCase
+  alias Bonfire.Me.Fake
 
   describe "index" do
 

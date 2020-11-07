@@ -1,4 +1,4 @@
-defmodule CommonsPub.Me.DataCase do
+defmodule Bonfire.Me.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -10,7 +10,7 @@ defmodule CommonsPub.Me.DataCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use CommonsPub.Me.DataCase, async: true`, although
+  by setting `use Bonfire.Me.DataCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -22,13 +22,13 @@ defmodule CommonsPub.Me.DataCase do
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import CommonsPub.Me.DataCase
+      import Bonfire.Me.DataCase
     end
   end
 
   setup tags do
 
-    @repo Application.get_env(:cpub_me, :repo_module)
+    @repo Application.get_env(:bonfire_me, :repo_module)
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
 

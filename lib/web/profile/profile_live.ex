@@ -1,9 +1,9 @@
-defmodule CommonsPub.Me.Web.ProfileLive do
-  use CommonsPub.WebPhoenix, [:live_view]
-  alias CommonsPub.Me.Web.HeroProfileLive
-  alias CommonsPub.Me.Web.ProfileNavigationLive
-  alias CommonsPub.Me.Web.ProfileAboutLive
-  alias CommonsPub.Me.Fake
+defmodule Bonfire.Me.Web.ProfileLive do
+  use Bonfire.WebPhoenix, [:live_view]
+  alias Bonfire.Me.Web.HeroProfileLive
+  alias Bonfire.Me.Web.ProfileNavigationLive
+  alias Bonfire.Me.Web.ProfileAboutLive
+  alias Bonfire.Me.Fake
 
 
   @impl true

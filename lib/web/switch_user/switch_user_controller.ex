@@ -1,9 +1,9 @@
-defmodule CommonsPub.Me.Web.SwitchUserController do
+defmodule Bonfire.Me.Web.SwitchUserController do
 
-  use CommonsPub.WebPhoenix, [:controller]
-  alias CommonsPub.Me.Users
+  use Bonfire.WebPhoenix, [:controller]
+  alias Bonfire.Me.Users
 
-  plug CommonsPub.Me.Web.Plugs.MustLogIn, load_account: true
+  plug Bonfire.Me.Web.Plugs.MustLogIn, load_account: true
 
   def index(conn, _) do
     case Users.by_account(conn.assigns[:account]) do

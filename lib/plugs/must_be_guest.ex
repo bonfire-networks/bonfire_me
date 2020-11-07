@@ -1,4 +1,4 @@
-defmodule CommonsPub.Me.Web.Plugs.MustBeGuest do
+defmodule Bonfire.Me.Web.Plugs.MustBeGuest do
 
   import Plug.Conn
   import Phoenix.Controller, only: [redirect: 2, put_flash: 3]

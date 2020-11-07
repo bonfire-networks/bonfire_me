@@ -1,9 +1,9 @@
-defmodule CommonsPub.Me.Web.LoginController do
+defmodule Bonfire.Me.Web.LoginController do
 
-  use CommonsPub.WebPhoenix, [:controller]
-  alias CommonsPub.Me.Accounts
+  use Bonfire.WebPhoenix, [:controller]
+  alias Bonfire.Me.Accounts
 
-  plug CommonsPub.Me.Web.Plugs.MustBeGuest
+  plug Bonfire.Me.Web.Plugs.MustBeGuest
 
   def index(conn, _), do: render(conn, "form.html", error: nil, form: form())
 

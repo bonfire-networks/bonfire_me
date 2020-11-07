@@ -1,7 +1,7 @@
-defmodule CommonsPub.Me.Web.ResetPasswordController.Test do
+defmodule Bonfire.Me.Web.ResetPasswordController.Test do
 
-  use CommonsPub.Me.ConnCase
-  # alias CommonsPub.Me.Fake
+  use Bonfire.Me.ConnCase
+  # alias Bonfire.Me.Fake
 
   # describe "request" do
 

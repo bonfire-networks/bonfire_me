@@ -1,4 +1,4 @@
-defmodule CommonsPub.Me.ConnCase do
+defmodule Bonfire.Me.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -23,20 +23,20 @@ defmodule CommonsPub.Me.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import Phoenix.LiveViewTest
-      import CommonsPub.Me.ConnCase
-      import CommonsPub.Me.Test.ConnHelpers
-      import CommonsPub.Me.Test.FakeHelpers
-      alias CommonsPub.Me.Fake
-      alias CommonsPub.Me.Web.Router.Helpers, as: Routes
+      import Bonfire.Me.ConnCase
+      import Bonfire.Me.Test.ConnHelpers
+      import Bonfire.Me.Test.FakeHelpers
+      alias Bonfire.Me.Fake
+      alias Bonfire.Me.Web.Router.Helpers, as: Routes
 
       # The default endpoint for testing
-      @endpoint CommonsPub.Me.Web.Endpoint
+      @endpoint Bonfire.Me.Web.Endpoint
     end
   end
 
   setup tags do
 
-    @repo Application.get_env(:cpub_me, :repo_module)
+    @repo Application.get_env(:bonfire_me, :repo_module)
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
 

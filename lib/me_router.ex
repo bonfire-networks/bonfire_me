@@ -1,11 +1,11 @@
-defmodule CommonsPub.Me.Web.Router do
+defmodule Bonfire.Me.Web.Router do
   defmacro __using__(_) do
 
     quote do
 
-      # alias CommonsPub.Me.Web.Router.Helpers, as: MeRoutes
+      # alias Bonfire.Me.Web.Router.Helpers, as: MeRoutes
 
-      scope "/", CommonsPub.Me.Web do
+      scope "/", Bonfire.Me.Web do
         # pipe_through :browser
 
         # guest visible pages

@@ -1,5 +1,5 @@
-defmodule CommonsPub.Me.Web.My.SettingsUpload do
-  use CommonsPub.WebPhoenix, [:controller]
+defmodule Bonfire.Me.Web.My.SettingsUpload do
+  use Bonfire.WebPhoenix, [:controller]
 
   # params we receive:
   # %{

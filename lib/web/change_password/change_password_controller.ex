@@ -1,7 +1,7 @@
-defmodule CommonsPub.Me.Web.ChangePasswordController do
-  use CommonsPub.WebPhoenix, [:controller]
+defmodule Bonfire.Me.Web.ChangePasswordController do
+  use Bonfire.WebPhoenix, [:controller]
 
-  plug CommonsPub.Me.Web.Plugs.MustLogIn, load_account: true
+  plug Bonfire.Me.Web.Plugs.MustLogIn, load_account: true
 
   def index(conn, _) do
   end

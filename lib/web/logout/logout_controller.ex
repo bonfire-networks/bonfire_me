@@ -1,6 +1,6 @@
-defmodule CommonsPub.Me.Web.LogoutController do
+defmodule Bonfire.Me.Web.LogoutController do
 
-  use CommonsPub.WebPhoenix, [:controller]
+  use Bonfire.WebPhoenix, [:controller]
 
   def index(conn, _) do
     conn |>

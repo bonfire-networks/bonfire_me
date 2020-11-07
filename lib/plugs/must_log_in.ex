@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Web.Plugs.MustLogIn do
+defmodule Bonfire.Me.Web.Plugs.MustLogIn do
 
   import Plug.Conn
   import Phoenix.Controller
-  alias CommonsPub.Me.Accounts
+  alias Bonfire.Me.Accounts
 
   def init(opts), do: opts
 

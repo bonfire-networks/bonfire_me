@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Repo.Migrations.ImportMe do
+defmodule Bonfire.Me.Repo.Migrations.ImportMe do
   use Ecto.Migration
 
   def change do
-   CommonsPub.Me.Migrations.change()
+   Bonfire.Me.Migrations.change()
   end
 
 end

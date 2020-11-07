@@ -3,13 +3,13 @@ use Mix.Config
 # You will almost certainly want to copy this into your app's config,
 # and then change at least some of the values
 
-config :cpub_me, :repo_module, MyApp.Repo
-config :cpub_me, :mailer_module, MyApp.Mailer
-config :cpub_me, :web_module, CommonsPub.WebPhoenix
-config :cpub_me, :helper_module, CommonsPub.WebPhoenixHelpers
-config :cpub_me, :templates_path, "lib"
+config :bonfire_me, :repo_module, MyApp.Repo
+config :bonfire_me, :mailer_module, MyApp.Mailer
+config :bonfire_me, :web_module, Bonfire.WebPhoenix
+config :bonfire_me, :helper_module, Bonfire.WebPhoenixHelpers
+config :bonfire_me, :templates_path, "lib"
 
-config :cpub_me, CommonsPub.Me.Accounts.Emails,
+config :bonfire_me, Bonfire.Me.Accounts.Emails,
   confirm_email: [subject: "Confirm your email on CommonsPub"],
   reset_password: [subject: "Reset your password on CommonsPub"]
 
@@ -27,7 +27,7 @@ config :pointers,
     :cpub_local_auth,
     :cpub_profiles,
     :cpub_users,
-    :cpub_me,
+    :bonfire_me,
   ]
 
 #### Flexto Stitching
@@ -91,47 +91,47 @@ config :cpub_users, User,
 
 # You probably will want to leave these
 
-alias CommonsPub.Me.Accounts.{
+alias Bonfire.Me.Accounts.{
   ChangePasswordFields,
   ConfirmEmailFields,
   LoginFields,
   ResetPasswordFields,
   SignupFields,
 }
-alias CommonsPub.Me.Users.UserFields
+alias Bonfire.Me.Users.UserFields
 
 # these are not used yet, but they will be
 
-config :cpub_me, ChangePasswordFields,
+config :bonfire_me, ChangePasswordFields,
   cast: [:old_password, :password, :password_confirmation],
   required: [:old_password, :password, :password_confirmation],
   confirm: :password,
   new_password: [length: [min: 10, max: 64]]
 
-config :cpub_me, ConfirmEmailFields,
+config :bonfire_me, ConfirmEmailFields,
   cast: [:email],
   required: [:email],
   email: [format: ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$)]
 
-config :cpub_me, LoginFields,
+config :bonfire_me, LoginFields,
   cast: [:email, :password],
   required: [:email, :password],
   email: [format: ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$)],
   password: [length: [min: 10, max: 64]]
 
-config :cpub_me, ResetPasswordFields,
+config :bonfire_me, ResetPasswordFields,
   cast: [:password, :password_confirmation],
   required: [:password, :password_confirmation],
   confirm: :password,
   password: [length: [min: 10, max: 64]]
 
-config :cpub_me, SignupFields,
+config :bonfire_me, SignupFields,
   cast: [:email, :password],
   required: [:email, :password],
   email: [format: ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$)],
   password: [length: [min: 10, max: 64]]
 
-config :cpub_me, UserFields,
+config :bonfire_me, UserFields,
   username: [format: ~r(^[a-z][a-z0-9_]{2,30}$)i],
   name: [length: [min: 3, max: 50]],
   summary: [length: [min: 20, max: 500]]

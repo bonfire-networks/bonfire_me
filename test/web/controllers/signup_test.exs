@@ -1,6 +1,6 @@
-defmodule CommonsPub.Me.Web.SignupController.Test do
+defmodule Bonfire.Me.Web.SignupController.Test do
 
-  use CommonsPub.Me.ConnCase
+  use Bonfire.Me.ConnCase
 
   test "form renders" do
     conn = conn()

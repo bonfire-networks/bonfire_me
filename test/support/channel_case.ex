@@ -1,4 +1,4 @@
-defmodule CommonsPub.Me.ChannelCase do
+defmodule Bonfire.Me.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -21,16 +21,16 @@ defmodule CommonsPub.Me.ChannelCase do
     quote do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
-      import CommonsPub.Me.ChannelCase
+      import Bonfire.Me.ChannelCase
 
       # The default endpoint for testing
-      @endpoint CommonsPub.Me.Web.Endpoint
+      @endpoint Bonfire.Me.Web.Endpoint
     end
   end
 
   setup tags do
 
-    @repo Application.get_env(:cpub_me, :repo_module)
+    @repo Application.get_env(:bonfire_me, :repo_module)
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
 

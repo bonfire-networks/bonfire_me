@@ -1,4 +1,4 @@
-defmodule CommonsPub.Me.Test.ConnHelpers do
+defmodule Bonfire.Me.Test.ConnHelpers do
 
   import ExUnit.Assertions
   import Plug.Conn
@@ -8,7 +8,7 @@ defmodule CommonsPub.Me.Test.ConnHelpers do
   alias CommonsPub.Accounts.Account
   alias CommonsPub.Users.User
 
-  @endpoint CommonsPub.Me.Web.Endpoint
+  @endpoint Bonfire.Me.Web.Endpoint
 
   ### conn
 

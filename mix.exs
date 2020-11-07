@@ -1,11 +1,11 @@
 Code.eval_file("mess.exs")
-defmodule CommonsPub.Me.MixProject do
+defmodule Bonfire.Me.MixProject do
 
   use Mix.Project
 
   def project do
     [
-      app: :cpub_me,
+      app: :bonfire_me,
       version: "0.1.0",
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),

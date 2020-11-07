@@ -1,5 +1,5 @@
-defmodule CommonsPub.Me.Web.HeroProfileLive do
-  use CommonsPub.WebPhoenix, [:live_component]
+defmodule Bonfire.Me.Web.HeroProfileLive do
+  use Bonfire.WebPhoenix, [:live_component]
 
 
   def render(assigns) do

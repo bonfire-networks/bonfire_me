@@ -1,6 +1,6 @@
-defmodule CommonsPub.Me.DataHelpers do
+defmodule Bonfire.Me.DataHelpers do
 
   # import ExUnit.Assertions
-  # alias CommonsPub.Me.Fake
+  # alias Bonfire.Me.Fake
 
 end

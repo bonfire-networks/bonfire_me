@@ -1,11 +1,11 @@
-defmodule CommonsPub.Me.Accounts do
+defmodule Bonfire.Me.Accounts do
 
   use OK.Pipe
   alias CommonsPub.Accounts.Account
   alias CommonsPub.Emails.Email
   alias Ecto.Changeset
   alias Pointers.Changesets
-  alias CommonsPub.Me.Accounts.{
+  alias Bonfire.Me.Accounts.{
     Emails,
     # ChangeEmailFields,
     ConfirmEmailFields,
@@ -16,9 +16,9 @@ defmodule CommonsPub.Me.Accounts do
   }
   import Ecto.Query
 
-  @repo Application.get_env(:cpub_me, :repo_module)
-  @mailer_module Application.get_env(:cpub_me, :mailer_module)
-  @helper Application.get_env(:cpub_me, :helper_module)
+  @repo Application.get_env(:bonfire_me, :repo_module)
+  @mailer_module Application.get_env(:bonfire_me, :mailer_module)
+  @helper Application.get_env(:bonfire_me, :helper_module)
 
   def get_for_session(id) when is_binary(id), do: @repo.get(Account, id)
 

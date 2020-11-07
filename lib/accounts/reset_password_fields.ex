@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Accounts.ResetPasswordFields do
+defmodule Bonfire.Me.Accounts.ResetPasswordFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias CommonsPub.Me.Accounts.ResetPasswordFields
+  alias Bonfire.Me.Accounts.ResetPasswordFields
 
   embedded_schema do
     field :password, :string

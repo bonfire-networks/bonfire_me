@@ -1,16 +1,16 @@
-defmodule CommonsPub.Me.Users do
+defmodule Bonfire.Me.Users do
   @doc """
   A User is a logical identity within the system belonging to an Account.
   """
   use OK.Pipe
   alias CommonsPub.Accounts.Account
   alias CommonsPub.Users.User
-  alias CommonsPub.Me.Users.UserFields
+  alias Bonfire.Me.Users.UserFields
   alias Pointers.Changesets
   alias Ecto.Changeset
   import Ecto.Query
 
-  @repo Application.get_env(:cpub_me, :repo_module)
+  @repo Application.get_env(:bonfire_me, :repo_module)
 
   @type changeset_name :: :create
 

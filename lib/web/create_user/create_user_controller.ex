@@ -1,9 +1,9 @@
-defmodule CommonsPub.Me.Web.CreateUserController do
-  use CommonsPub.WebPhoenix, [:controller]
+defmodule Bonfire.Me.Web.CreateUserController do
+  use Bonfire.WebPhoenix, [:controller]
   alias CommonsPub.Users.User
-  alias CommonsPub.Me.Users
+  alias Bonfire.Me.Users
 
-  plug CommonsPub.Me.Web.Plugs.MustLogIn, load_account: true
+  plug Bonfire.Me.Web.Plugs.MustLogIn, load_account: true
 
   def index(conn, _),
     do: render(conn, "form.html", form: form(conn.assigns[:account]))

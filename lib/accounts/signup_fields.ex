@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Accounts.SignupFields do
+defmodule Bonfire.Me.Accounts.SignupFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias CommonsPub.Me.Accounts.SignupFields
+  alias Bonfire.Me.Accounts.SignupFields
 
   embedded_schema do
     field :email, :string

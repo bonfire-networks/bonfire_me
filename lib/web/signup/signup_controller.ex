@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Web.SignupController do
-  use CommonsPub.WebPhoenix, [:controller]
-  alias CommonsPub.Me.Accounts
+defmodule Bonfire.Me.Web.SignupController do
+  use Bonfire.WebPhoenix, [:controller]
+  alias Bonfire.Me.Accounts
 
-  plug CommonsPub.Me.Web.Plugs.MustBeGuest
+  plug Bonfire.Me.Web.Plugs.MustBeGuest
 
   def index(conn, _) do
     if get_session(conn, :account_id),

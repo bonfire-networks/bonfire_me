@@ -1,3 +1,3 @@
-defmodule CommonsPub.Me.Web.ProfileAboutLive do
+defmodule Bonfire.Me.Web.ProfileAboutLive do
   use Phoenix.LiveComponent
 end

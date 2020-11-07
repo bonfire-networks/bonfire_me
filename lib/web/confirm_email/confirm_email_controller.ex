@@ -1,9 +1,9 @@
-defmodule CommonsPub.Me.Web.ConfirmEmailController do
+defmodule Bonfire.Me.Web.ConfirmEmailController do
 
-  use CommonsPub.WebPhoenix, [:controller]
-  alias CommonsPub.Me.Accounts
+  use Bonfire.WebPhoenix, [:controller]
+  alias Bonfire.Me.Accounts
 
-  plug CommonsPub.Me.Web.Plugs.MustBeGuest
+  plug Bonfire.Me.Web.Plugs.MustBeGuest
 
   def index(conn, _),
     do: render(conn, "form.html", requested: false, error: nil, form: form())

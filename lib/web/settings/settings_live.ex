@@ -1,12 +1,12 @@
-defmodule CommonsPub.Me.Web.SettingsLive do
-  use CommonsPub.WebPhoenix, [:live_view]
+defmodule Bonfire.Me.Web.SettingsLive do
+  use Bonfire.WebPhoenix, [:live_view]
 
 
-  # alias CommonsPub.Me.Profiles.Web.ProfilesHelper
-  # alias CommonsPub.Me.Web.GraphQL.UsersResolver
-  alias CommonsPub.Me.Fake
+  # alias Bonfire.Me.Profiles.Web.ProfilesHelper
+  # alias Bonfire.Me.Web.GraphQL.UsersResolver
+  alias Bonfire.Me.Fake
 
-  alias CommonsPub.Me.Web.SettingsLive.{
+  alias Bonfire.Me.Web.SettingsLive.{
     SettingsNavigationLive,
     SettingsGeneralLive
   }

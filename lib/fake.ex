@@ -1,4 +1,4 @@
-defmodule CommonsPub.Me.Fake do
+defmodule Bonfire.Me.Fake do
 
   def email, do: Faker.Internet.email()
   def confirm_token, do: Base.encode32(Faker.random_bytes(10), pad: false)

@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.UsersTest do
+defmodule Bonfire.Me.UsersTest do
 
-  use CommonsPub.Me.DataCase, async: true
-  alias CommonsPub.Me.{Accounts, Users}
-  alias CommonsPub.Me.Fake
+  use Bonfire.Me.DataCase, async: true
+  alias Bonfire.Me.{Accounts, Users}
+  alias Bonfire.Me.Fake
 
   test "creation works" do
     assert {:ok, account} = Accounts.signup(Fake.account())

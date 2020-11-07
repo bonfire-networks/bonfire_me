@@ -1,8 +1,8 @@
-defmodule CommonsPub.Me.Accounts.LoginFields do
+defmodule Bonfire.Me.Accounts.LoginFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias CommonsPub.Me.Accounts.LoginFields
+  alias Bonfire.Me.Accounts.LoginFields
 
   embedded_schema do
     field :form, :string, virtual: true

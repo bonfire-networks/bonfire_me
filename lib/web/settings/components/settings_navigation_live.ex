@@ -1,5 +1,5 @@
-defmodule CommonsPub.Me.Web.SettingsLive.SettingsNavigationLive do
-  use CommonsPub.WebPhoenix, [:live_component]
+defmodule Bonfire.Me.Web.SettingsLive.SettingsNavigationLive do
+  use Bonfire.WebPhoenix, [:live_component]
 
   def render(assigns) do
     ~L"""
