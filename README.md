@@ -1,4 +1,6 @@
-# CommonsPub:Me
+# Bonfire:Me
+
+An extension for [Bonfire](https://bonfire.cafe/) that handles:
 
 - Account creation
 - Email verification
@@ -6,6 +8,7 @@
 - User/Profile creation
 - User/Profile switching
 - User Profile
+- Settings
 
 ## Handy commands
 
