@@ -1,4 +1,4 @@
 defmodule Bonfire.Me.Web.SettingsLive.SettingsGeneralLive do
-  use Bonfire.WebPhoenix, [:live_component]
-
+  use Phoenix.Controller, :live_component
+  import Bonfire.Utils
 end

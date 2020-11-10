@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.My.SettingsUpload do
-  use Bonfire.WebPhoenix, [:controller]
+  use Phoenix.Controller, :controller
 
   # params we receive:
   # %{
@@ -18,18 +18,17 @@ defmodule Bonfire.Me.Web.My.SettingsUpload do
   # }
 
   def upload(%{assigns: %{current_user: current_user}} = conn, params) do
-    attrs = input_to_atoms(params)
+    attrs = CommonsPub.Utils.Utils.input_to_atoms(params)
 
     # maybe_upload(params["profile"]["icon"], "icon")
     # maybe_upload(params["profile"]["image"], "image")
 
-    # TODO
-    # {:ok, _edit_profile} =
-    #   CommonsPub.Web.GraphQL.UsersResolver.update_profile(attrs, %{
-    #     context: %{current_user: current_user}
-    #   })
+    {:ok, _edit_profile} =
+      CommonsPub.Web.GraphQL.UsersResolver.update_profile(attrs, %{
+        context: %{current_user: current_user}
+      })
 
     conn
-    |> redirect(external: "/profile")
+    |> redirect(external: "/~/profile")
   end
 end

@@ -1,32 +1,32 @@
 defmodule Bonfire.Me.Web.HeroProfileLive do
-  use Bonfire.WebPhoenix, [:live_component]
+  use Phoenix.Controller, :live_component
 
 
   def render(assigns) do
     ~L"""
       <div class="mainContent__hero">
         <div class="hero__image">
-          <img alt="background image" src="<%= e(@user, :profile, :image_url, "") %>" />
+          <img alt="background image" src="<%= @current_user.image_url %>" />
         </div>
         <div class="hero__info">
           <div class="info__icon">
-            <img alt="profile pic" src="<%= e(@user, :profile, :icon_url, "") %>" />
+            <img alt="profile pic" src="<%= @current_user.icon_url %>" />
           </div>
           <div class="info__meta">
-            <h1><%= e(@user, :profile, :name, "Me")  %></h1>
-            <h4 class="info__username"><%= e(@user, :character, :username, "me") %></h4>
+            <h1><%= @current_user.name %></h1>
+            <h4 class="info__username"><%= @current_user.username %></h4>
             <div class="info__details">
-            <%= if e(@user, :profile, :website, nil) do %>
+            <%= if @current_user.website do %>
               <div class="details__meta">
                 <a href="#" target="_blank">
                   <i class="feather-external-link"></i>
-                  <%= e(@user, :profile, :website, "") %>
+                  <%= @current_user.website %>
                 </a>
               </div>
               <% end %>
-              <%= if e(@user, :profile, :location, nil) do %>
+              <%= if @current_user.location do %>
                 <div class="details__meta">
-                  <i class="feather-map-pin"></i><%= e(@user, :profile, :location, "") %>
+                  <i class="feather-map-pin"></i><%= @current_user.location %>
                 </div>
               <% end %>
             </div>

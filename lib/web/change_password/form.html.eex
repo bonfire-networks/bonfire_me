@@ -1,6 +1,6 @@
 <div class="page__auth-simple ">
   <h1>Generate a new password</h1>
-  <%= form_for @form, "/password/change", [method: :post] %>
+  <%= f = form_for @form, "/password/change", [method: :post] %>
     <div class="form__container">
       <label for="password">New password</label>
       <input name="new-password" id="password" type="password" placeholder="Type your password..." />

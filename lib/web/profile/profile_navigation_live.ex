@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.ProfileNavigationLive do
-  use Bonfire.WebPhoenix, [:live_component]
+  use Phoenix.Controller, :live_component
 
   def render(assigns) do
     ~L"""

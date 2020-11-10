@@ -1,12 +1,10 @@
 defmodule Bonfire.Me.Web.ConfirmEmailController do
 
-  use Bonfire.WebPhoenix, [:controller]
+  use Phoenix.Controller, :controller
   alias Bonfire.Me.Accounts
 
-  plug Bonfire.Me.Web.Plugs.MustBeGuest
-
   def index(conn, _),
-    do: render(conn, "form.html", requested: false, error: nil, form: form())
+    do: render(conn, "form.html", current_account: nil, requested: false, error: nil, form: form())
 
   def show(conn, %{"id" => token}) do
     case Accounts.confirm_email(token) do
@@ -15,23 +13,23 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
       {:error, :confirmed, _} ->
         already_confirmed(conn)
       {:error, :expired, _} ->
-        render(conn, "form.html", requested: false, error: :expired_link, form: form())
+        render(conn, "form.html", current_account: nil, requested: false, error: :expired_link, form: form())
       _ ->
-        render(conn, "form.html", requested: false, error: :not_found, form: form())
+        render(conn, "form.html", current_account: nil, requested: false, error: :not_found, form: form())
     end
   end
 
   def create(conn, params) do
-    form = Map.get(params, "confirm_email_fields", %{})
+    form = Map.get(params, "confirm_email_form", %{})
     case Accounts.request_confirm_email(form(form)) do
       {:ok, _, _} ->
-        render(conn, "form.html", requested: true, error: nil, form: form())
+        render(conn, "form.html", current_account: nil, requested: true, error: nil, form: form())
       {:error, :confirmed} ->
         already_confirmed(conn)
       {:error, :not_found} ->
-        render(conn, "form.html", requested: false, error: :not_found, form: form())
+        render(conn, "form.html", current_account: nil, requested: false, error: :not_found, form: form())
       {:error, changeset} ->
-        render(conn, "form.html", requested: false, error: nil, form: changeset)
+        render(conn, "form.html", current_account: nil, requested: false, error: nil, form: changeset)
     end
 
   end
@@ -42,7 +40,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
     conn
     |> put_session(:account_id, account.id)
     |> put_flash(:info, "Welcome back! Thanks for confirming your email address.")
-    |> redirect(to: "/home")
+    |> redirect(to: "/_")
   end
 
   defp already_confirmed(conn) do

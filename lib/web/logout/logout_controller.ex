@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.LogoutController do
 
-  use Bonfire.WebPhoenix, [:controller]
+  use Phoenix.Controller, [:controller]
 
   def index(conn, _) do
     conn |>

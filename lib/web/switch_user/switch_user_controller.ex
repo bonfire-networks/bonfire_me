@@ -1,20 +1,13 @@
 defmodule Bonfire.Me.Web.SwitchUserController do
 
-  use Bonfire.WebPhoenix, [:controller]
+  use Phoenix.Controller, :controller
   alias Bonfire.Me.Users
 
-  plug Bonfire.Me.Web.Plugs.MustLogIn, load_account: true
-
   def index(conn, _) do
-    if Kernel.function_exported?(Users, :by_account, 1) do
-      case Users.by_account(conn.assigns[:account]) do
-        [] -> no_users(conn)
-        users -> list(conn, users)
-      end
-    else
-      no_users(conn)
+    case Users.by_account(conn.assigns[:account]) do
+      [] -> no_users(conn)
+      users -> list(conn, users)
     end
-
   end
 
   def list(conn, users), do: render(conn, "list.html", users: users)
@@ -32,12 +25,11 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp lookup({:error, :not_found}, conn), do: not_found(conn)
   defp lookup({:error, :not_permitted}, conn), do: not_permitted(conn)
 
-  defp switch(conn, %{character: %{username: username}}) do
+  defp switch(conn, user) do
     conn
-    # |> put_session(:user_id, user.id)
-    |> put_session(:username, username)
-    |> put_flash(:info, "Welcome back, @#{username}!")
-    |> redirect(to: "/home/@#{username}")
+    |> put_session(:user_id, user.id)
+    |> put_flash(:info, "Welcome back, @#{user.character.username}!")
+    |> redirect(to: "/_/@#{user.character.username}")
    end
 
   defp no_users(conn) do

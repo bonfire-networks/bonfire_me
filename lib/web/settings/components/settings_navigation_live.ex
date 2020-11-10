@@ -1,10 +1,10 @@
 defmodule Bonfire.Me.Web.SettingsLive.SettingsNavigationLive do
-  use Bonfire.WebPhoenix, [:live_component]
+  use Phoenix.Controller, :live_component
 
   def render(assigns) do
     ~L"""
     <%= live_patch link_body("My profile", "feather-user"),
-      to: "/settings/general",
+      to: "/~/settings/general",
       class: if @selected == "general", do: "navigation__item active", else: "navigation__item"
     %>
 

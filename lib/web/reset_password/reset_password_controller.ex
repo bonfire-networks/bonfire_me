@@ -1,7 +1,5 @@
 defmodule Bonfire.Me.Web.ResetPasswordController do
-  use Bonfire.WebPhoenix, [:controller]
-
-  plug Bonfire.Me.Web.Plugs.MustBeGuest
+  use Phoenix.Controller, :controller
 
   def index(conn, %{"token" => token}) do
   end

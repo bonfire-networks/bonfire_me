@@ -5,8 +5,9 @@ defmodule Bonfire.Me.Users do
   use OK.Pipe
   alias CommonsPub.Accounts.Account
   alias CommonsPub.Users.User
-  alias Bonfire.Me.Users.UserFields
+  alias Bonfire.Me.Users.CreateUserFields
   alias Pointers.Changesets
+  alias Bonfire.Utils
   alias Ecto.Changeset
   import Ecto.Query
 
@@ -15,15 +16,15 @@ defmodule Bonfire.Me.Users do
   @type changeset_name :: :create
 
   @spec changeset(changeset_name, attrs :: map, %Account{}) :: Changeset.t
-  def changeset(:create, attrs, %Account{}=account), do: UserFields.changeset(attrs, account)
+  def changeset(:create, attrs, %Account{}=account), do: CreateUserFields.changeset(attrs, account)
 
   def create(attrs, %Account{}=account) when not is_struct(attrs),
     do: create(changeset(:create, attrs, account))
 
-  defp create(%Changeset{data: %UserFields{}}=cs),
+  defp create(%Changeset{data: %CreateUserFields{}}=cs),
     do: Changeset.apply_action(cs, :insert) ~>> create()
 
-  defp create(%UserFields{}=form) do
+  defp create(%CreateUserFields{}=form) do
     Map.from_struct(form)
     |> create_changeset()
     |> @repo.put()
@@ -43,16 +44,12 @@ defmodule Bonfire.Me.Users do
   def by_account(account_id) when is_binary(account_id),
     do: @repo.all(by_account_query(account_id))
 
-  def by_account_one(account_id) when is_binary(account_id),
-    do: @repo.all(by_account_query(account_id, 1))
-
-  def by_account_query(account_id, limit \\ 100) do
+  def by_account_query(account_id) do
     from u in User,
       join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
       where: a.account_id == ^account_id,
-      preload: [accounted: a, character: c],
-      limit: ^limit
+      preload: [character: c]
   end
 
   def by_username(username), do: @repo.single(by_username_query(username))
@@ -85,6 +82,19 @@ defmodule Bonfire.Me.Users do
       where: c.username == ^username,
       preload: [character: c, accounted: a],
       order_by: [asc: u.id]
+  end
+
+  def get_for_session(username, account_id),
+    do: @repo.single(get_for_session_query(username, account_id))
+
+  defp get_for_session_query(username, account_id) do
+    from u in User,
+      join: c in assoc(u, :character),
+      join: ac in assoc(u, :accounted),
+      join: a in assoc(ac, :account),
+      where: a.id == ^account_id,
+      where: c.username == ^username,
+      preload: [character: c, accounted: {ac, account: a}]
   end
 
 end

@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Users.UserFields do
+defmodule Bonfire.Me.Users.CreateUserFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
   alias CommonsPub.Accounts.Account
-  alias Bonfire.Me.Users.UserFields
+  alias Bonfire.Me.Users.CreateUserFields
 
   embedded_schema do
     field :username, :string
@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Users.UserFields do
   #   required: [:username, :name, :summary],
   # ]
 
-  def changeset(form \\ %UserFields{}, attrs, %Account{id: id}) do
+  def changeset(form \\ %CreateUserFields{}, attrs, %Account{id: id}) do
     form
     |> Changeset.cast(attrs, @cast)
     |> Changeset.change(account_id: id)
