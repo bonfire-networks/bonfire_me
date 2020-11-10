@@ -12,7 +12,7 @@ defmodule Bonfire.Me.Web.SignupController do
     if get_session(conn, :account_id) do
       redirect(conn, to: "/home")
     else
-      case Accounts.signup(Map.get(params, "signup_form", %{})) do
+      case Accounts.signup(Map.get(params, "signup_fields", %{})) do
         {:ok, _account} ->
           render(conn, "form.html", current_account: nil, registered: true)
         {:error, :taken} ->

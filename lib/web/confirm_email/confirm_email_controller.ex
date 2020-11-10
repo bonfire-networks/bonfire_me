@@ -20,7 +20,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
   end
 
   def create(conn, params) do
-    form = Map.get(params, "confirm_email_form", %{})
+    form = Map.get(params, "confirm_email_fields", %{})
     case Accounts.request_confirm_email(form(form)) do
       {:ok, _, _} ->
         render(conn, "form.html", current_account: nil, requested: true, error: nil, form: form())

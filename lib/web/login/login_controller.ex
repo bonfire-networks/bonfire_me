@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Web.LoginController do
   def index(conn, _), do: render(conn, "form.html", current_account: nil, error: nil, form: form())
 
   def create(conn, params) do
-    form = Map.get(params, "login_form", %{})
+    form = Map.get(params, "login_fields", %{})
     case Accounts.login(Accounts.changeset(:login, form)) do
       {:ok, account} ->
         logged_in(account, conn)

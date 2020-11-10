@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
     do: render(conn, "form.html", form: form(conn.assigns[:account]))
 
   def create(conn, params) do
-    Map.get(params, "create_form", %{})
+    Map.get(params, "create_user_fields", %{})
     |> Users.create(conn.assigns[:account])
     |> case do
       {:ok, user} -> switched(conn, user)
