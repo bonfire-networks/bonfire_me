@@ -9,13 +9,19 @@ defmodule Bonfire.Me.Web.ProfileLive do
   @impl true
   def mount(params, session, socket) do
     socket = init_assigns(params, session, socket)
+
+    user = if e(socket.assigns, :current_user, :id, nil) do
+      socket.assigns.current_user
+    else
+      Fake.user_live()
+    end
+
     {:ok,
      socket
      |> assign(
        page_title: "User",
        selected_tab: "about",
-       user: socket.assigns.current_user
-      #  current_user: Fake.user_live()
+       user: user
      )}
   end
 

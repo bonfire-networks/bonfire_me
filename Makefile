@@ -1,6 +1,6 @@
 .PHONY: setup updates db-reset build dev shell
 
-LIBS_PATH=./libs/
+LIBS_PATH=./forks/
 
 mix-%: ## Run a specific mix command, eg: `make mix-deps.get` or make mix-deps.update args="pointers"
 	docker-compose run web mix $* $(args)
@@ -33,11 +33,14 @@ dep-clone-local: ## Clone a git dep and use the local version, eg: make dep-clon
 dep-go-local: ## Switch to using a standard local path, eg: make dep-go-local dep=pointers
 	make dep-go-local-path dep=$(dep) path=$(LIBS_PATH)$(dep)
 
+dep-go-local-%: ## Switch to using a standard local path, eg: make dep-go-local dep=pointers
+	make dep-go-local dep="$*"
+
 dep-go-local-path: ## Switch to using a local path, eg: make dep-go-local dep=pointers path=./libs/pointers
 	make dep-local-add dep=$(dep) path=$(path)
 	make dep-local-enable dep=$(dep) path=""
-	make dep-git-disable dep=$(dep) repo="" 
-	make dep-hex-disable dep=$(dep) version=""
+	# make dep-git-disable dep=$(dep) repo="" 
+	# make dep-hex-disable dep=$(dep) version=""
 
 dep-go-git: ## Switch to using a git repo, eg: make dep-go-git dep="pointers" repo=https://github.com/commonspub/pointers (repo is optional if previously specified)
 	make dep-git-add dep=$(dep) $(repo) 2> /dev/null || true
@@ -53,3 +56,6 @@ dep-go-hex: ## Switch to using a library from hex.pm, eg: make dep-go-hex dep="p
 
 dev: ## Run the app with Docker
 	docker-compose run --service-ports web
+
+%: ## Run a specific mix command, eg: `make messclt` or `make "messctl help"` or make `messctl args="help"`
+	docker-compose run web $* $(args)

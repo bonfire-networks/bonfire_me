@@ -6,10 +6,15 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   plug Bonfire.Me.Web.Plugs.MustLogIn, load_account: true
 
   def index(conn, _) do
-    case Users.by_account(conn.assigns[:account]) do
-      [] -> no_users(conn)
-      users -> list(conn, users)
+    if Kernel.function_exported?(Users, :by_account, 1) do
+      case Users.by_account(conn.assigns[:account]) do
+        [] -> no_users(conn)
+        users -> list(conn, users)
+      end
+    else
+      no_users(conn)
     end
+
   end
 
   def list(conn, users), do: render(conn, "list.html", users: users)

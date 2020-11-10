@@ -14,13 +14,17 @@ defmodule Bonfire.Me.Web.SignupController do
     if get_session(conn, :account_id) do
       redirect(conn, to: "/home")
     else
-      case Accounts.signup(Map.get(params, "signup_fields", %{})) do
-        {:ok, _account} ->
-          render(conn, "form.html", registered: true)
-        {:error, :taken} ->
-          render(conn, "form.html", registered: false, error: :taken, form: form())
-        {:error, changeset} ->
-          render(conn, "form.html", registered: false, error: nil, form: changeset)
+       if Kernel.function_exported?(Accounts, :signup, 1) do
+        case Accounts.signup(Map.get(params, "signup_fields", %{})) do
+          {:ok, _account} ->
+            render(conn, "form.html", registered: true)
+          {:error, :taken} ->
+            render(conn, "form.html", registered: false, error: :taken, form: form())
+          {:error, changeset} ->
+            render(conn, "form.html", registered: false, error: nil, form: changeset)
+        end
+      else
+        render(conn, "form.html", registered: true)
       end
     end
   end

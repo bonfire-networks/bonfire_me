@@ -9,18 +9,22 @@ defmodule Bonfire.Me.Web.CreateUserController do
     do: render(conn, "form.html", form: form(conn.assigns[:account]))
 
   def create(conn, params) do
-    Map.get(params, "user_fields", %{})
-    |> Users.create(conn.assigns[:account])
-    |> case do
-      {:ok, user} -> switched(conn, user)
-      {:error, form} ->
-         render(conn, "form.html", form: form)
+    if Kernel.function_exported?(Users, :create, 1) do
+      Map.get(params, "user_fields", %{})
+      |> Users.create(conn.assigns[:account])
+      |> case do
+        {:ok, user} -> switched(conn, user)
+        {:error, form} ->
+          render(conn, "form.html", form: form)
+      end
+    else
+      switched(conn, %{character: %{username: "fake"}} )
     end
   end
 
   defp form(attrs \\ %{}, account), do: Users.changeset(:create, attrs, account)
 
-  defp switched(conn, %User{id: _id, character: %{username: username}}) do
+  defp switched(conn, %{id: _id, character: %{username: username}}) do
     conn
     |> put_flash(:info, "Welcome, #{username}, you're all ready to go!")
     |> put_session(:username, username)

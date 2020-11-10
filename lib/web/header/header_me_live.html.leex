@@ -1,3 +1,4 @@
+    <% IO.inspect(u: @current_user) %>
     <%= if @current_user do %>
     <div class="box__info">
       <%= live_redirect to: "/@"<> e(@current_user, :character, :username, "")  do %>
