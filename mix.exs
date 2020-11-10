@@ -22,7 +22,8 @@ defmodule Bonfire.Me.MixProject do
 
   def application do
     [
-      extra_applications: [:logger]
+      # mod: {Bonfire.Me.FallbackApplication, []},
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 

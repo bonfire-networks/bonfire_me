@@ -1,6 +1,6 @@
 .PHONY: setup updates db-reset build dev shell
 
-LIBS_PATH=./forks/
+LIBS_PATH=/forks/
 
 mix-%: ## Run a specific mix command, eg: `make mix-deps.get` or make mix-deps.update args="pointers"
 	docker-compose run web mix $* $(args)
