@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Users do
   alias CommonsPub.Users.User
   alias Bonfire.Me.Users.CreateUserFields
   alias Pointers.Changesets
-  alias Bonfire.Utils
+  alias Bonfire.Common.Utils
   alias Ecto.Changeset
   import Ecto.Query
 
@@ -52,7 +52,7 @@ defmodule Bonfire.Me.Users do
       preload: [character: c]
   end
 
-  def by_username(username), do: @repo.single(by_username_query(username))
+  def by_username(username), do: get_flat(by_username_query(username))
 
   def by_username_query(username) do
     from u in User,
@@ -65,8 +65,9 @@ defmodule Bonfire.Me.Users do
   end
 
   def for_switch_user(username, account_id) do
-    @repo.single(for_switch_user_query(username))
+    get_flat(for_switch_user_query(username))
     ~>> check_account_id(account_id)
+    |> IO.inspect
   end
 
   def check_account_id(%User{}=user, account_id) do
@@ -85,7 +86,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def get_for_session(username, account_id),
-    do: @repo.single(get_for_session_query(username, account_id))
+    do: get_flat(get_for_session_query(username, account_id))
 
   defp get_for_session_query(username, account_id) do
     from u in User,
@@ -95,6 +96,16 @@ defmodule Bonfire.Me.Users do
       where: a.id == ^account_id,
       where: c.username == ^username,
       preload: [character: c, accounted: {ac, account: a}]
+  end
+
+  def flatten(user) do
+    user
+    |> Map.merge(user, user.profile)
+    |> Map.merge(user, user.character)
+  end
+
+  def get_flat(query) do
+    @repo.single(query)
   end
 
 end

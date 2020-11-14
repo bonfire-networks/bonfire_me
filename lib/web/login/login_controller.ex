@@ -1,12 +1,12 @@
 defmodule Bonfire.Me.Web.LoginController do
 
-  use Phoenix.Controller, :controller
+  use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
 
   def index(conn, _), do: render(conn, "form.html", current_account: nil, error: nil, form: form())
 
   def create(conn, params) do
-    form = Map.get(params, "login_form", %{})
+    form = Map.get(params, "login_fields", %{})
     case Accounts.login(Accounts.changeset(:login, form)) do
       {:ok, account} ->
         logged_in(account, conn)
@@ -22,7 +22,7 @@ defmodule Bonfire.Me.Web.LoginController do
   defp logged_in(account, conn) do
     conn
     |> put_session(:account_id, account.id)
-    |> redirect(to: "/_")
+    |> redirect(to: "/~")
   end
 
 end

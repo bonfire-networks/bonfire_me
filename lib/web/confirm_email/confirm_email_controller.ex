@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.ConfirmEmailController do
 
-  use Phoenix.Controller, :controller
+  use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
 
   def index(conn, _),
@@ -20,7 +20,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
   end
 
   def create(conn, params) do
-    form = Map.get(params, "confirm_email_form", %{})
+    form = Map.get(params, "confirm_email_fields", %{})
     case Accounts.request_confirm_email(form(form)) do
       {:ok, _, _} ->
         render(conn, "form.html", current_account: nil, requested: true, error: nil, form: form())
@@ -40,7 +40,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
     conn
     |> put_session(:account_id, account.id)
     |> put_flash(:info, "Welcome back! Thanks for confirming your email address.")
-    |> redirect(to: "/_")
+    |> redirect(to: "/~")
   end
 
   defp already_confirmed(conn) do

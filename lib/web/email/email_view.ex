@@ -1,3 +1,3 @@
 defmodule Bonfire.Me.Web.EmailView do
-  use Phoenix.Controller, :view
+  use Bonfire.Web, :view
 end

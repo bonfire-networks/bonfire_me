@@ -10,8 +10,8 @@ defmodule Bonfire.Me.Web.Router do
       scope "/", Bonfire.Me.Web do
         pipe_through :browser
         live "/", IndexLive, :index
-        live "/users/@:username", ProfileLive, :profile
-        live "/users/@:username/:tab", ProfileLive, :profile_tab
+        live "/@:username", ProfileLive, :profile
+        live "/@:username/:tab", ProfileLive, :profile_tab
       end
 
       # visible only to guests
@@ -27,17 +27,24 @@ defmodule Bonfire.Me.Web.Router do
       end
 
       # visible only to users and account holders
-      scope "/~", Bonfire.Me.Web do
+      scope "/~", Bonfire do
         pipe_through :browser
         pipe_through :auth_required
-        live "/", SwitchUserLive
-        live "/change-password", ChangePasswordLive
-        live "/create-user", CreateUserLive, only: [:index, :create]
+
+        live "/", Me.Web.SwitchUserLive
+        resources "/switch-user", Me.Web.SwitchUserController, only: [:show, :create]
+
+        live "/change-password", Me.Web.ChangePasswordLive
+
+        resources "/create-user", Me.Web.CreateUserController, only: [:index, :show, :create]
+        #TODO
+        live "/create-user", Me.Web.CreateUserLive, only: [:index, :create]
 
         scope "/@:username" do
-          live "/home", HomeLive, :home
-          live "/settings", SettingsLive, :settings
-          live "/settings/:tab", SettingsLive, :settings_tab
+          live "/", Web.HomeLive, :home
+          live "/home", Web.HomeLive, :home
+          live "/settings", Me.Web.SettingsLive, :settings
+          live "/settings/:tab", Me.Web.SettingsLive, :settings_tab
         end
       end
 

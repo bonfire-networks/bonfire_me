@@ -26,7 +26,7 @@ defmodule Bonfire.Me.Users.CreateUserFields do
     |> Changeset.validate_required(@required)
     |> Changeset.validate_format(:username, ~r(^[a-z][a-z0-9_]{2,30}$)i)
     |> Changeset.validate_length(:name, min: 3, max: 50)
-    |> Changeset.validate_length(:summary, min: 20, max: 500)
+    |> Changeset.validate_length(:summary, min: 5, max: 500)
   end
 
 end

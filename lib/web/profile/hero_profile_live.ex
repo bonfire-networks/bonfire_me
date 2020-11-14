@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.HeroProfileLive do
-  use Phoenix.Controller, :live_component
+  use Bonfire.Web, :live_component
 
 
   def render(assigns) do

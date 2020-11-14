@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.ResetPasswordController do
-  use Phoenix.Controller, :controller
+  use Bonfire.Web, :controller
 
   def index(conn, %{"token" => token}) do
   end

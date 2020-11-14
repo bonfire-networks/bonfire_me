@@ -14,13 +14,20 @@ defmodule Bonfire.Me.Accounts do
     SignupFields,
   }
 
-  alias Bonfire.Utils
+  alias Bonfire.Common.Utils
   import Ecto.Query
 
   @repo Application.get_env(:bonfire_me, :repo_module)
   @mailer_module Application.get_env(:bonfire_me, :mailer_module)
 
   def get_for_session(id) when is_binary(id), do: @repo.get(Account, id)
+  def get_for_session(conn) do
+    get_for_session(get_session(conn))
+  end
+
+  def get_session(conn) do
+    (Plug.Conn.get_session(conn, :account_id) || conn.assigns[:account])
+  end
 
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
 

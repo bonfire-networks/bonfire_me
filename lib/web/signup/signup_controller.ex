@@ -1,10 +1,10 @@
 defmodule Bonfire.Me.Web.SignupController do
-  use Phoenix.Controller, :controller
+  use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
 
   def index(conn, _) do
     if get_session(conn, :account_id),
-      do: redirect(conn, to: "/_"),
+      do: redirect(conn, to: "/~"),
       else: render(conn, "form.html", current_account: nil, registered: false, error: nil, form: form())
   end
 
@@ -12,7 +12,7 @@ defmodule Bonfire.Me.Web.SignupController do
     if get_session(conn, :account_id) do
       redirect(conn, to: "/home")
     else
-      case Accounts.signup(Map.get(params, "signup_form", %{})) do
+      case Accounts.signup(Map.get(params, "signup_fields", %{})) do
         {:ok, _account} ->
           render(conn, "form.html", current_account: nil, registered: true)
         {:error, :taken} ->

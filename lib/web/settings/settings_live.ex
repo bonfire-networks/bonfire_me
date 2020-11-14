@@ -1,14 +1,13 @@
 defmodule Bonfire.Me.Web.SettingsLive do
-  use Phoenix.Controller, :live_view
+  use Bonfire.Web, :live_view
 
-  import Bonfire.Utils
   alias Bonfire.Me.Fake
 
   alias Bonfire.Me.Web.SettingsLive.{
     SettingsNavigationLive,
     SettingsGeneralLive
   }
-  alias Bonfire.Me.Web.LivePlugs
+  alias Bonfire.Common.Web.LivePlugs
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [

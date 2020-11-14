@@ -1,32 +1,24 @@
-defmodule Bonfire.Me.Web.ProfileLive do
+defmodule Bonfire.Me.Web.SwitchUserLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Me.Web.HeroProfileLive
-  alias Bonfire.Me.Web.ProfileNavigationLive
-  alias Bonfire.Me.Web.ProfileAboutLive
-  alias Bonfire.Me.Fake
+  alias Bonfire.Fake
   alias Bonfire.Common.Web.LivePlugs
+  alias Bonfire.Me.Users
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadSessionAuth,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
+      LivePlugs.AuthRequired,
       &mounted/3,
     ]
   end
 
   defp mounted(params, session, socket) do
+    IO.inspect("switcher")
+    {:ok, socket
+    |> assign(page_title: "Switch User", selected_tab: "about", users: Users.by_account(socket.assigns.current_account))}
 
-    user = e(socket.assigns, :current_user, Fake.user_live())
-
-       {:ok,
-       socket
-       |> assign(
-         page_title: "User",
-         selected_tab: "about",
-         user: user,
-         current_user: user
-       )}
   end
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do

@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.My.SettingsUpload do
-  use Phoenix.Controller, :controller
+  use Bonfire.Web, :controller
 
   # params we receive:
   # %{

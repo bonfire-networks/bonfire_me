@@ -1,4 +1,4 @@
 defmodule Bonfire.Me.Web.HeaderMeLive do
-  use Phoenix.Controller, [:live_component]
+  use Bonfire.Web, [:live_component]
 
 end

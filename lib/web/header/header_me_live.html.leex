@@ -1,4 +1,3 @@
-    <% IO.inspect(u: @current_user) %>
     <%= if @current_user do %>
     <div class="box__info">
       <%= live_redirect to: "/@"<> e(@current_user, :character, :username, "")  do %>
@@ -30,7 +29,7 @@
       </details>
     </div>
     <% end %>
-    <%= if @current_user == nil do %>
+    <%= if !@current_user do %>
         <div class="panel__item">
           <%= live_redirect to: "/login", class: "button" do %>
             <i class="feather-log-in"></i> Log in

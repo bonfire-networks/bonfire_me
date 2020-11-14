@@ -4,14 +4,14 @@
   <div class="user__list">
   <%= for user <- @users do %>
     <article class="list__item">
-      <%= live_redirect to: "/switch-user/@" <> user.character.username  do %>
+      <%= live_redirect to: "/~/switch-user/@" <> user.character.username  do %>
         <img alt="profile pic" src="https://unsplash.it/200" />
         <h3>@<%= user.character.username %></h3>
       <% end %>
     </article>
   <% end %>
   <article class="list__item">
-      <%= live_redirect to: "/create-user/"  do %>
+      <%= live_redirect to: "/~/create-user/"  do %>
         <img alt="profile pic" src="https://unsplash.it/200" />
         <h3>Create a new user profile</h3>
       <% end %>

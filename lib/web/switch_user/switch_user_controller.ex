@@ -1,19 +1,22 @@
 defmodule Bonfire.Me.Web.SwitchUserController do
 
-  use Phoenix.Controller, :controller
+  use Bonfire.Web, :controller
+  alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
 
-  def index(conn, _) do
-    case Users.by_account(conn.assigns[:account]) do
-      [] -> no_users(conn)
-      users -> list(conn, users)
-    end
-  end
+  # def index(conn, _) do
+  #   case Users.by_account(Accounts.get_session(conn)) do
+  #     [] -> no_users(conn)
+  #     users -> list(conn, users)
+  #   end
+  # end
 
-  def list(conn, users), do: render(conn, "list.html", users: users)
+  # def list(conn, users), do: render(conn, "switch_user_live.html.leex", users: users)
+
+  def show(conn, %{"id" => username}), do: show(conn, %{"username" => username})
 
   def show(conn, %{"username" => username}),
-    do: show(get_session(conn, :account_id), username, conn)
+    do: show(Accounts.get_session(conn), username, conn)
 
   defp show(nil, _username, conn), do: not_logged_in(conn)
   defp show(account_id, username, conn), do: lookup(account_id, username, conn)
@@ -26,16 +29,18 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp lookup({:error, :not_permitted}, conn), do: not_permitted(conn)
 
   defp switch(conn, user) do
+    username = user.character.username
     conn
     |> put_session(:user_id, user.id)
-    |> put_flash(:info, "Welcome back, @#{user.character.username}!")
-    |> redirect(to: "/_/@#{user.character.username}")
+    |> put_session(:username, username)
+    |> put_flash(:info, "Welcome back, @#{username}!")
+    |> redirect(to: "/~/@#{username}")
    end
 
   defp no_users(conn) do
     conn
     |> put_flash(:info, "Hey there! Let's fill out your profile!")
-    |> redirect(to: "/create-user")
+    |> redirect(to: "/~/create-user")
   end
 
   defp not_logged_in(conn) do
@@ -47,13 +52,13 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp not_found(conn) do
     conn
     |> put_flash(:error, "This username does not exist.")
-    |> redirect(to: "/switch-user")
+    |> redirect(to: "/~")
   end
 
   defp not_permitted(conn) do
     conn
     |> put_flash(:error, "You are not permitted to switch to this user.")
-    |> redirect(to: "/switch-user")
+    |> redirect(to: "/~")
   end
 
 end
