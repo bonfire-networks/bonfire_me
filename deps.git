@@ -1,4 +1,5 @@
 # bonfire_web_phoenix = "https://github.com/commonspub/bonfire_web_phoenix#main"
+bonfire_common = "https://github.com/bonfire-ecosystem/bonfire_common#main"
 pointers = "https://github.com/commonspub/pointers#main"
 cpub_local_auth = "https://github.com/commonspub/cpub_local_auth#main"
 cpub_accounts = "https://github.com/commonspub/cpub_accounts#main"
