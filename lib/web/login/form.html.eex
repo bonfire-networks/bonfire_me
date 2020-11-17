@@ -1,70 +1,130 @@
-<main class="guest__container page__auth-grid">
-  <aside class="auth__info">
-    <div 
-      role="img"
-      aria-label="instance representative image"
-      title="instance representative image"
-      class="grid__background"></div>
-      <h2>About this instance</h2>
-      <p>It has been created for clear, uncluttered and elegant designs following a minimal and flat style pattern. For syntax highlighting it aims to ensure an undisturbed focus on important parts of the code, a good readability and a quick visual distinction between the different syntax elements.
-      </p>
-      <h3>Useful links</h3>
-      <ol>
-        <li><%= link "Code of Conduct", to: "/#" %></li>
-        <li><%= link "Accessibility guidelines", to: "/#" %></li>
-        <li><%= link "Terms and Conditions", to: "/#" %></li>
-      </ol>
-    </aside>
-    <section class="grid__form">
-      <h1>Log in</h1>
-      <%= if @error do %>
-        <div 
-          role="status" 
-          class="box__warning">
-          <%= case @error do %>
-          <% :not_found -> %>
-            <span>Your username and/or password are incorrect.</span>
-          <% :email_not_confirmed -> %>
-            <span>You must confirm your email address before logging in. Check your email.</span>
-          <% end %>
+<div class="h-screen container mx-auto max-w-screen-lg">
+
+  <div class="flex flex-col overflow-hidden">
+    <div class="relative z-10 rounded-md flex-shrink-0 flex h-16 bg-white shadow justify-between">
+      <div class="flex items-center flex-shrink-0 px-4">
+        <div class="border-r pr-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
         </div>
-      <% end %>
-      <div class="form__wrapper">
-        <%= f = form_for @form, Routes.login_path(@conn, :create), [method: :post, id: "login-form"] %>
-          <div class="form__container">
-            <%= label f, :email, "Type your email" %>
-            <%= text_input f, 
-              :email, 
-              [
-                aria_describedby: "required-message",
-                required: true
-              ] %>
-            <%= error_tag f, :email %>
+        <div class="hidden lg:block lg:ml-6">
+          <div class="flex">
+            <a href="#" class="px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">About</a>
+            <a href="#" class="ml-4 px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">Discover</a>
+            <a href="#" class="ml-4 px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">Contact us</a>
           </div>
-          <div class="form__container">
-            <%= label f, :password, "Type your password" %>
-            <%= password_input f, 
-              :password, 
-              [
-                aria_describedby: "required-message",
-                required: true
-              ] %>
-            <%= error_tag f, :password %>
-          </div>
-          <%= submit "Log in" %>
-        </form> 
-        <aside class="auth__helpers">  
-          <p>
-            <span>&#x01f44b;</span>
-            Don&#39;t have an account yet?
-            <%= link "Create a new one.", to: Routes.signup_path(@conn, :index) %>
-          </p>
-          <p>
-            <span>&#x01f9d0;</span>
-            Trouble logging in?
-            <%= link "Reset your password.", to: Routes.forgot_password_path(@conn, :index) %>.
-          </p>      
-        </aside>
+        </div>
       </div>
-    </section>
-</main>
+      <div class="flex-1 px-4 items-center flex">
+        <div class="flex-1 flex">
+          <form class="w-full flex md:ml-0" action="#" method="GET">
+            <label for="search_field" class="sr-only">Search</label>
+            <div style="max-width: 290px" class="relative w-full text-gray-400 focus-within:text-gray-600">
+              <div style="left: 8px" class="text-gray-500 absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 fill-current" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" />
+                </svg>
+              </div>
+              <input type="search" id="search_field" class="pl-8 w-full bg-gray-300 placeholder-gray-500 h-full" placeholder="Search">
+            </div>
+          </form>
+        </div>
+        </div>
+      <div class="px-4 flex ">
+        <div class="ml-4 flex items-center md:ml-6">
+
+          <span class="inline-flex rounded-md shadow-sm">
+            <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
+              Login
+            </button>
+          </span>
+          <span class="inline-flex ml-3 rounded-md shadow-sm">
+            <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
+              Signup
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+
+  <div class="flex mt-6 -mx-2">
+    <div class="w-3/5 px-2">
+      <div class="bg-white shadow rounded-lg">
+          <div class="bg-white px-4 py-5 rounded-t-md sm:px-6">
+            <div class="-ml-4 -mt-2 flex items-center justify-between flex-wrap sm:flex-no-wrap">
+              <div class="ml-4 mt-2 prose">
+                <h2 class="text-gray-900">
+                  Welcome to {Instance name}
+                </h2>
+                <p>For most of us, the idea of astronomy is something we directly connect to “stargazing”, telescopes and seeing magnificent displays in the heavens. And to be sure, that is the exciting area of astronomy that accounts for it’s huge popularity.</p>
+              </div>
+            </div>
+          </div>
+          <div class="py-5 mx-auto sm:px-6 lg:px-8">
+
+          </div>
+      </div>
+
+    </div>
+    <div class="w-2/5 px-2">
+
+    <div class="bg-white shadow rounded-lg">
+    <div class="bg-white px-4 py-5 border-b rounded-t-md border-gray-200 sm:px-6">
+      <div class="-ml-4 -mt-2 flex items-center justify-between flex-wrap sm:flex-no-wrap">
+        <div class="ml-4 mt-2">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Login
+          </h3>
+        </div>
+      </div>
+    </div>
+    <div class="py-5 mx-auto sm:px-6 lg:px-8">
+      <form action="#" method="POST">
+        <div>
+          <label for="email" class="block text-sm font-medium leading-5 text-gray-700">
+            Email address
+          </label>
+          <div class="mt-1 rounded-md shadow-sm">
+            <input id="email" type="email" required class="w-full">
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <label for="password" class="block text-sm font-medium leading-5 text-gray-700">
+            Password
+          </label>
+          <div class="mt-1 rounded-md shadow-sm">
+            <input id="password" type="password" required class="w-full">
+          </div>
+        </div>
+
+        <div class="mt-6 flex items-center justify-between">
+          <div class="flex items-center">
+            <input id="remember_me" type="checkbox" class="form-checkbox h-4 w-4 text-gray-900 transition duration-150 ease-in-out">
+            <label for="remember_me" class="ml-2 block text-sm leading-5 text-gray-900">
+              Remember me
+            </label>
+          </div>
+
+          <div class="text-sm leading-5">
+            <a href="#" class="font-medium text-gray-900 hover:text-gray-700 focus:outline-none focus:underline transition ease-in-out duration-150">
+              Forgot your password?
+            </a>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <span class="block w-full rounded-md shadow-sm">
+            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
+              Log in
+            </button>
+          </span>
+        </div>
+      </form>
+    </div>
+</div>
+
+
+    </div>
+  </div>
+</div>
