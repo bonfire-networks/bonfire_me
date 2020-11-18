@@ -2,8 +2,10 @@ defmodule Bonfire.Me.Web.LoginController do
 
   use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Web.LoginPageLive
+  import Phoenix.LiveView.Controller
 
-  def index(conn, _), do: render(conn, "form.html", current_account: nil, error: nil, form: form())
+  def index(conn, _), do: live_render(conn, LoginPageLive, current_account: nil, error: nil, form: form())
 
   def create(conn, params) do
     form = Map.get(params, "login_fields", %{})

@@ -1,0 +1,29 @@
+<div class="h-screen container mx-auto max-w-screen-lg">
+  <%= live_render(conn, HeaderGuestLive, session: %{}) %>
+  <div class="flex mt-6 -mx-2">
+    <div class="w-3/5 px-2">
+      <div class="bg-white shadow rounded-lg">
+          <div class="bg-white px-4 py-5 rounded-t-md sm:px-6">
+            <div class="-ml-4 -mt-2 flex items-center justify-between flex-wrap sm:flex-no-wrap">
+              <div class="ml-4 mt-2 prose">
+                <h2 class="text-gray-900">
+                  Welcome to {Instance name}
+                </h2>
+                <p>For most of us, the idea of astronomy is something we directly connect to “stargazing”, telescopes and seeing magnificent displays in the heavens. And to be sure, that is the exciting area of astronomy that accounts for it’s huge popularity.</p>
+              </div>
+            </div>
+          </div>
+          <div class="py-5 mx-auto sm:px-6 lg:px-8">
+
+          </div>
+      </div>
+
+    </div>
+    <div class="w-2/5 px-2">
+      <%# = live_component(
+        @socket,
+        LoginLive
+      ) %>
+    </div>
+  </div>
+</div>
