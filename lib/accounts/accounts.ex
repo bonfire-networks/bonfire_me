@@ -25,8 +25,8 @@ defmodule Bonfire.Me.Accounts do
     get_for_session(get_session(conn))
   end
 
-  def get_session(conn) do
-    (Plug.Conn.get_session(conn, :account_id) || conn.assigns[:account])
+  def get_session(conn_or_socket) do
+    (Plug.Conn.get_session(conn_or_socket, :account_id) || conn_or_socket.assigns[:account])
   end
 
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
