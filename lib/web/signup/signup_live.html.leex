@@ -34,7 +34,7 @@
           </div>
         <% end %>
         <div class="form__wrapper">
-          <%= f = form_for @form, "/signup", [id: "signup-form", phx_submit: :submit] %>
+          <%= f = form_for @form, "/signup", [id: "signup-form"] %>
             <div class="form__container">
               <%= label f, :email, "Type your email" %>
               <%= text_input f, 
