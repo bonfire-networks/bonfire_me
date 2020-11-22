@@ -17,10 +17,10 @@ defmodule Bonfire.Me.Accounts do
   alias Bonfire.Common.Utils
   import Ecto.Query
 
-  @repo Application.get_env(:bonfire_me, :repo_module)
-  @mailer_module Application.get_env(:bonfire_me, :mailer_module)
+  defp repo, do: Application.get_env(:bonfire_me, :repo_module)
+  defp mailer, do: Application.get_env(:bonfire_me, :mailer_module)
 
-  def get_for_session(id) when is_binary(id), do: @repo.get(Account, id)
+  def get_for_session(id) when is_binary(id), do: repo().get(Account, id)
   def get_for_session(conn) do
     get_for_session(get_session(conn))
   end
@@ -70,8 +70,8 @@ defmodule Bonfire.Me.Accounts do
     do: signup(signup_changeset(form))
 
   def signup(%Changeset{data: %Account{}}=cs) do
-    @repo.transact_with fn -> # revert if email send fails
-      @repo.put(cs)
+    repo().transact_with fn -> # revert if email send fails
+      repo().put(cs)
       |> Utils.replace_error(:taken)
       ~>> send_confirm_email()
     end
@@ -84,9 +84,7 @@ defmodule Bonfire.Me.Accounts do
 
   def login(%Changeset{data: %LoginFields{}}=cs) do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
-      form
-      |> find_by_email_query()
-      |> @repo.single()
+      repo().single(find_by_email_query(form))
       ~>> check_password(form)
       ~>> check_confirmed()
     end
@@ -118,7 +116,7 @@ defmodule Bonfire.Me.Accounts do
     do: Changeset.apply_action(cs, :insert) ~>> request_confirm_email()
 
   def request_confirm_email(%ConfirmEmailFields{}=form) do
-    case @repo.one(find_by_email_query(form.email)) do
+    case repo().one(find_by_email_query(form.email)) do
       nil -> {:error, :not_found}
       %Account{email: email}=account -> request_confirm_email(account)
     end
@@ -131,7 +129,7 @@ defmodule Bonfire.Me.Accounts do
       # why not refresh here? it provides a window of DOS opportunity
       # against a user completing their activation.
       DateTime.utc_now() < email.confirm_until ->
-        with {:ok, _} <- Mailer.send_now(Emails.confirm_email(account), email.email),
+        with {:ok, _} <- mailer().send_now(Emails.confirm_email(account), email.email),
           do: {:ok, :resent, account}
 
       true ->
@@ -142,20 +140,20 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp refresh_confirm_email_token(%Account{email: %Email{}=email}=account) do
-    with {:ok, email} <- @repo.update(Email.put_token(email)),
+    with {:ok, email} <- repo().update(Email.put_token(email)),
       do: {:ok, %{ account | email: email }}
   end
 
   ### confirm_email
 
   def confirm_email(%Account{}=account) do
-    with {:ok, email} <- @repo.update(Email.confirm(account.email)),
+    with {:ok, email} <- repo().update(Email.confirm(account.email)),
       do: {:ok, %{ account | email: email } }
   end
 
   def confirm_email(token) when is_binary(token) do
-    @repo.transact_with fn ->
-      case @repo.one(find_for_confirm_email_query(token)) do
+    repo().transact_with fn ->
+      case repo().one(find_for_confirm_email_query(token)) do
         nil -> {:error, :not_found}
         %Account{email: %Email{}=email} = account ->
           cond do
@@ -169,7 +167,7 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp send_confirm_email(%Account{}=account) do
-    case Mailer.send_now(Emails.confirm_email(account), account.email.email) do
+    case mailer().send_now(Emails.confirm_email(account), account.email.email) do
       {:ok, _mail} -> {:ok, account}
       _ -> {:error, :email}
     end
