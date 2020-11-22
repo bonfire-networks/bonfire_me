@@ -32,9 +32,8 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     username = user.character.username
     conn
     |> put_session(:user_id, user.id)
-    |> put_session(:username, username)
     |> put_flash(:info, "Welcome back, @#{username}!")
-    |> redirect(to: "/~/@#{username}")
+    |> redirect(to: "/~@#{username}")
    end
 
   defp no_users(conn) do

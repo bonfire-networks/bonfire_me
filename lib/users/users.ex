@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Users do
   alias Ecto.Changeset
   import Ecto.Query
 
-  @repo Application.get_env(:bonfire_me, :repo_module)
+  defp repo, do: Application.get_env(:bonfire_me, :repo_module)
 
   @type changeset_name :: :create
 
@@ -25,12 +25,10 @@ defmodule Bonfire.Me.Users do
     do: Changeset.apply_action(cs, :insert) ~>> create()
 
   defp create(%CreateUserFields{}=form) do
-    Map.from_struct(form)
-    |> create_changeset()
-    |> @repo.put()
+    repo().put(create_changeset(Map.from_struct(form)))
   end
 
-  def update(%User{} = user, attrs), do: @repo.update(create_changeset(user, attrs))
+  def update(%User{} = user, attrs), do: repo().update(create_changeset(user, attrs))
 
   def create_changeset(user \\ %User{}, attrs) do
     User.changeset(user, attrs)
@@ -42,7 +40,7 @@ defmodule Bonfire.Me.Users do
 
   def by_account(%Account{id: id}), do: by_account(id)
   def by_account(account_id) when is_binary(account_id),
-    do: @repo.all(by_account_query(account_id))
+    do: repo().all(by_account_query(account_id))
 
   def by_account_query(account_id) do
     from u in User,
@@ -105,7 +103,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def get_flat(query) do
-    @repo.single(query)
+    repo().single(query)
   end
 
 end
