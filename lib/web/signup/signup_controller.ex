@@ -2,34 +2,32 @@ defmodule Bonfire.Me.Web.SignupController do
   use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Web.SignupLive
-  import Bonfire.Web.Hax
-
-  @defaults [current_account: nil, registered: false, error: nil]
 
   def index(conn, _) do
     if get_session(conn, :account_id),
       do: redirect(conn, to: "/~"),
-      else: render_live_view(conn, SignupLive, [form: form()] ++ @defaults)
+      else: live_render(conn, SignupLive)
   end
   
   def create(conn, params) do
     if get_session(conn, :account_id) do
-      redirect(conn, to: "/home")
+      redirect(conn, to: "/~")
     else
       case Accounts.signup(Map.get(params, "signup_fields", %{})) do
         {:ok, _account} ->
-          render_live_view conn, SignupLive,
-            current_account: nil, registered: true
+          conn
+          |> assign(:registered, true)
+          |> live_render(SignupLive)
         {:error, :taken} ->
-          render_live_view conn, SignupLive,
-            current_account: nil, registered: false, error: :taken, form: form()
+          conn
+          |> assign(:error, :taken)
+          |> live_render(SignupLive)
         {:error, changeset} ->
-          render_live_view conn, SignupLive,
-            current_account: nil, registered: false, error: nil, form: changeset)
+          conn
+          |> assign(:form, changeset)
+          |> live_render(SignupLive)
       end
     end
   end
-
-  defp form(params \\ %{}), do: Accounts.changeset(:signup, params)
 
 end

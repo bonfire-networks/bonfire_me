@@ -1,29 +1,25 @@
 defmodule Bonfire.Me.Web.SignupLive do
   use Bonfire.Web, :live_view
+  alias Bonfire.Me.Accounts
   alias Bonfire.Me.Web.HeroProfileLive
   alias Bonfire.Me.Web.ProfileNavigationLive
   alias Bonfire.Me.Web.ProfileAboutLive
   alias Bonfire.Me.Fake
   alias Bonfire.Common.Web.LivePlugs
+  alias Ecto.Changeset
 
-  def mount(params, session, socket) do
-    LivePlugs.live_plug params, session, socket, [
-      LivePlugs.LoadSessionAuth,
-      LivePlugs.StaticChanged,
-      LivePlugs.Csrf,
-      &mounted/3,
-    ]
-  end
-
-  defp mounted(params, session, socket) do
-    user = e(socket.assigns, :current_user, Fake.user_live())
+  # because this isn't a live link and it will always be accessed by a
+  # guest, it will always be offline
+  def mount(_params, _session, socket) do
     {:ok,
-       socket
-       |> assign(
-         page_title: "User",
-         selected_tab: "about",
-         user: user,
-         current_user: user
-       )}
+     socket
+      |> assign_new(:current_account, fn -> nil end)
+      |> assign_new(:current_user, fn -> nil end)
+      |> assign_new(:registered, fn -> false end)
+      |> assign_new(:error, fn -> nil end)
+      |> assign_new(:form, &form/0)}
   end
+
+  defp form(), do: Accounts.changeset(:signup, %{})
+
 end

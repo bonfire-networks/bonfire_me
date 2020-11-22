@@ -30,11 +30,11 @@
         <h1>Create a new account</h1>
         <%= if @error == :taken do %>
           <div role="status" class="box__warning">
-            <span>This email is taken. Did you mean to <%= link "log in", to: "/login" %>?
+            <span>This email is taken. Did you mean to <%= link "log in", to: "/login" %>?</span>
           </div>
         <% end %>
         <div class="form__wrapper">
-          <%= f = form_for @form, "/signup", [id: "signup-form"] %>
+          <%= f = form_for @form, Routes.signup_path(@socket, :create), [id: "signup-form"] %>
             <div class="form__container">
               <%= label f, :email, "Type your email" %>
               <%= text_input f, 
@@ -62,7 +62,7 @@
             <p>
               <span>&#x01f44b; </span>
               Do you already have an account?
-              <%= link "Log in", to: "/login" %>.
+              <%= link "Log in", to: Routes.login_path(@socket, :index) %>.
             </p>
           </aside>
         </div>
