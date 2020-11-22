@@ -21,13 +21,6 @@ defmodule Bonfire.Me.Accounts do
   defp mailer, do: Application.get_env(:bonfire_me, :mailer_module)
 
   def get_for_session(id) when is_binary(id), do: repo().get(Account, id)
-  def get_for_session(conn) do
-    get_for_session(get_session(conn))
-  end
-
-  def get_session(conn_or_socket) do
-    (Plug.Conn.get_session(conn_or_socket, :account_id) || conn_or_socket.assigns[:account])
-  end
 
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
 
@@ -174,13 +167,6 @@ defmodule Bonfire.Me.Accounts do
   end
 
   ### queries
-
-  # defp get_for_session_query(token) when is_binary(token) do
-  #   from a in Account,
-  #     join: e in assoc(a, :email),
-  #     where: e.confirm_token == ^token,
-  #     preload: [email: e]
-  # end
 
   defp find_for_confirm_email_query(token) when is_binary(token) do
     from a in Account,
