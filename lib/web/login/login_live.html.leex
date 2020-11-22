@@ -1,53 +1,4 @@
-<div class="h-screen container mx-auto max-w-screen-lg">
 
-  <div class="flex flex-col overflow-hidden">
-    <div class="relative z-10 rounded-md flex-shrink-0 flex h-16 bg-white shadow justify-between">
-      <div class="flex items-center flex-shrink-0 px-4">
-        <div class="border-r pr-4">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-        </div>
-        <div class="hidden lg:block lg:ml-6">
-          <div class="flex">
-            <a href="#" class="px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">About</a>
-            <a href="#" class="ml-4 px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">Discover</a>
-            <a href="#" class="ml-4 px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">Contact us</a>
-          </div>
-        </div>
-      </div>
-      <%= if @current_user do %>
-        <div class="flex-1 px-4 items-center flex">
-          <div class="flex-1 flex">
-            <form class="w-full flex md:ml-0" action="#" method="GET">
-              <label for="search_field" class="sr-only">Search</label>
-              <div style="max-width: 290px" class="relative w-full text-gray-400 focus-within:text-gray-600">
-                <div style="left: 8px" class="text-gray-500 absolute inset-y-0 left-0 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 fill-current" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" />
-                  </svg>
-                </div>
-                <input type="search" id="search_field" class="pl-8 w-full bg-gray-300 placeholder-gray-500 h-full" placeholder="Search">
-              </div>
-            </form>
-          </div>
-        </div>
-      <% else %>
-        <div class="px-4 flex ">
-          <div class="ml-4 flex items-center md:ml-6">
-  
-            <span class="inline-flex rounded-md shadow-sm">
-              <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
-                <%= link "Login", to: Routes.login_path(@socket, :index) %>
-              </button>
-            </span>
-            <span class="inline-flex ml-3 rounded-md shadow-sm">
-              <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
-                <%= link "Signup", to: Routes.signup_path(@socket, :index) %>
-              </button>
-            </span>
-          </div>
-        </div>
-      <% end %>
-    </div>
 
 
   <div class="flex mt-6 -mx-2">
@@ -64,9 +15,6 @@
             </div>
           </div>
           <div class="py-5 mx-auto sm:px-6 lg:px-8">
-
-
-
           </div>
       </div>
     </div>
@@ -74,4 +22,3 @@
       <%= live_component(@socket, Bonfire.Web.Components.LoginLive, assigns) %>
     </div>
   </div>
-</div>
