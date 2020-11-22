@@ -14,36 +14,39 @@
           </div>
         </div>
       </div>
-      <div class="flex-1 px-4 items-center flex">
-        <div class="flex-1 flex">
-          <form class="w-full flex md:ml-0" action="#" method="GET">
-            <label for="search_field" class="sr-only">Search</label>
-            <div style="max-width: 290px" class="relative w-full text-gray-400 focus-within:text-gray-600">
-              <div style="left: 8px" class="text-gray-500 absolute inset-y-0 left-0 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 fill-current" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" />
-                </svg>
+      <%= if @current_user do %>
+        <div class="flex-1 px-4 items-center flex">
+          <div class="flex-1 flex">
+            <form class="w-full flex md:ml-0" action="#" method="GET">
+              <label for="search_field" class="sr-only">Search</label>
+              <div style="max-width: 290px" class="relative w-full text-gray-400 focus-within:text-gray-600">
+                <div style="left: 8px" class="text-gray-500 absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 fill-current" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" />
+                  </svg>
+                </div>
+                <input type="search" id="search_field" class="pl-8 w-full bg-gray-300 placeholder-gray-500 h-full" placeholder="Search">
               </div>
-              <input type="search" id="search_field" class="pl-8 w-full bg-gray-300 placeholder-gray-500 h-full" placeholder="Search">
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
+      <% else %>
+        <div class="px-4 flex ">
+          <div class="ml-4 flex items-center md:ml-6">
+  
+            <span class="inline-flex rounded-md shadow-sm">
+              <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
+                <%= link "Login", to: Routes.login_path(@socket, :index) %>
+              </button>
+            </span>
+            <span class="inline-flex ml-3 rounded-md shadow-sm">
+              <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
+                <%= link "Signup", to: Routes.signup_path(@socket, :index) %>
+              </button>
+            </span>
+          </div>
         </div>
-      <div class="px-4 flex ">
-        <div class="ml-4 flex items-center md:ml-6">
-
-          <span class="inline-flex rounded-md shadow-sm">
-            <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
-              Login
-            </button>
-          </span>
-          <span class="inline-flex ml-3 rounded-md shadow-sm">
-            <button type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
-              Signup
-            </button>
-          </span>
-        </div>
-      </div>
+      <% end %>
     </div>
 
 
@@ -66,13 +69,9 @@
 
           </div>
       </div>
-
     </div>
     <div class="w-2/5 px-2">
-
-
-      <%= live_render_component(@conn, Bonfire.Web.Components.LoginLive) %>
-
+      <%= live_component(@socket, Bonfire.Web.Components.LoginLive, assigns) %>
     </div>
   </div>
 </div>

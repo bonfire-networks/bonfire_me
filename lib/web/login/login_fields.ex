@@ -8,6 +8,7 @@ defmodule Bonfire.Me.Accounts.LoginFields do
     field :form, :string, virtual: true
     field :email, :string
     field :password, :string
+    field :remember_me, :boolean, virtual: true
   end
 
   @cast [:email, :password]
