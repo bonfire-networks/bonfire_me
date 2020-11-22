@@ -17,7 +17,10 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
   defp mounted(params, session, socket) do
     IO.inspect("switcher")
     {:ok, socket
-    |> assign(page_title: "Switch User", selected_tab: "about", users: Users.by_account(socket.assigns.current_account))}
+    |> assign(page_title: "Switch User",
+    selected_tab: "about",
+    current_account: socket.assigns.current_account,
+    users: Users.by_account(socket.assigns.current_account))}
 
   end
 

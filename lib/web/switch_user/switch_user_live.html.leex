@@ -1,7 +1,6 @@
-<div class="guest__container page__switch-user">
-<section class="page__fullContent">
-  <h1 class="switch-user__title">User Switcher</h1>
-  <div class="user__list">
+<section class="">
+  <h1 class="text-2xl font-bold mt-6 text-gray-700 text-center">User Switcher</h1>
+  <div class="mt-4 grid grid-cols-4 gap-4">
   <%= for user <- @users do %>
     <article class="list__item">
       <%= live_redirect to: "/~/switch-user/@" <> user.character.username  do %>
@@ -10,14 +9,10 @@
       <% end %>
     </article>
   <% end %>
-  <article class="list__item">
+    <article style="height: 200px" class="rounded-md border-dashed border-4 border-blue-500 flex place-content-center">
       <%= live_redirect to: "/~/create-user/"  do %>
-        <img alt="profile pic" src="https://unsplash.it/200" />
         <h3>Create a new user profile</h3>
       <% end %>
     </article>
 </ul>
 </section>
-
-
-</div>
