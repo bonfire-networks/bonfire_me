@@ -1,6 +1,6 @@
 <div class="page__auth-simple ">
   <h1>Create a new user</h1>
-  <%= f = form_for @form, Routes.create_user_path(@conn, :create), [id: "create-user-fields", method: :post] %>
+  <%= f = form_for @form, Routes.live_path(@socket, CreateUserLive), [id: "create-user-fields", method: :post] %>
     <!-- <div class="section__preview"> -->
     <!--   <div class="preview__card"> -->
     <!--     <label class="card__upload" for="upload_bg"> -->

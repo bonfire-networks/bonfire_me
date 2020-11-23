@@ -4,6 +4,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
   alias Bonfire.Me.Users
   alias Bonfire.Me.Accounts
   alias Bonfire.Common.Web.LivePlugs
+  alias Bonfire.Me.Web.CreateUserLive
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
@@ -14,10 +15,10 @@ defmodule Bonfire.Me.Web.CreateUserLive do
     ]
   end
 
-  defp mounted(params, _sessions, socket) do
+  defp mounted(params, session, socket) do
     {:ok,
      socket
-     |> assign(form: form(%{account_id: socket.assigns["account_id"]}))}
+     |> assign(form: form(socket.assigns[:current_account]))}
   end
 
   def handle_event("submit", params, socket) do
