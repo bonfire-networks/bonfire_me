@@ -6,16 +6,14 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
-      LivePlugs.LoadSessionAuth,
+      LivePlugs.LoadCurrentAccountFromSession,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
-      LivePlugs.AuthRequired,
       &mounted/3,
     ]
   end
 
   defp mounted(params, session, socket) do
-    IO.inspect("switcher")
     {:ok, socket
     |> assign(page_title: "Switch User",
     selected_tab: "about",

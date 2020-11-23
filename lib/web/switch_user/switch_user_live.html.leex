@@ -9,7 +9,7 @@
   <div class="mt-4 grid grid-cols-4 gap-4">
   <%= for user <- @users do %>
     <article class="list__item">
-      <%= live_redirect to: "/~/switch-user/@" <> user.character.username  do %>
+      <%= live_redirect to: "/~@" <> user.character.username  do %>
         <img alt="profile pic" src="https://unsplash.it/200" />
         <h3>@<%= user.character.username %></h3>
       <% end %>
