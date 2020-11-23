@@ -8,42 +8,36 @@ defmodule Bonfire.Me.Web.CreateUserLive do
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
-      LivePlugs.LoadSessionAuth,
+      LivePlugs.LoadCurrentAccountFromSession,
+      # LivePlugs.LoadCurrentUserFromPath,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
     ]
   end
 
-  defp mounted(params, session, socket) do
+  defp mounted(_params, session, socket) do
     {:ok,
      socket
      |> assign(form: form(socket.assigns[:current_account]))}
   end
 
-  def handle_event("submit", params, socket) do
-    {:noreply, socket}
+  def handle_event("submit", %{"create_user_fields" => params}, socket) do
+    case Users.create(params, socket.assigns()[:current_account]) do
+      {:ok, user} -> {:noreply, switched(socket, user)}
+      {:error, form} ->
+        IO.inspect(bad: form)
+        {:noreply, assign(socket, form)}
+    end
   end
-
-  # def create(conn, params) do
-  #   account = Accounts.get_for_session(conn)
-  #   Map.get(params, "create_user_fields",  Map.get(params, "user", %{}))
-  #   |> Users.create(account)
-  #   |> case do
-  #     {:ok, user} -> switched(conn, user)
-  #     {:error, form} ->
-  #        render(conn, "form.html", form: form, current_account: account)
-  #   end
-  # end
 
   defp form(attrs \\ %{}, account), do: Users.changeset(:create, attrs, account)
 
-  # defp switched(conn, %User{id: id, character: %{username: username}}) do
-  #   conn
-  #   |> put_flash(:info, "Welcome, #{username}, you're all ready to go!")
-  #   |> put_session(:user_id, id)
-  #   |> redirect(to: "/~/@#{username}")
-  # end
+  defp switched(socket, %User{character: %{username: username}}) do
+    socket
+    |> put_flash(:info, "Welcome, @#{username}, you're all ready to go!")
+    |> push_redirect(to: "/~@#{username}")
+  end
 
 
 end

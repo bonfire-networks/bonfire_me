@@ -1,5 +1,5 @@
 <div class="w-2/4 mx-auto h-full mb-24">
-  <%= f = form_for @form, Routes.live_path(@socket, CreateUserLive), [id: "create-user-fields", method: :post] %>
+  <%= f = form_for @form, "#", id: "create-user-fields", phx_submit: "submit" %>
     <!-- <div class="section__preview"> -->
     <!--   <div class="preview__card"> -->
     <!--     <label class="card__upload" for="upload_bg"> -->
@@ -32,19 +32,19 @@
             <%= error_tag f, :name %>
           </div>
         </div>
-      <div class="sm:col-span-4">
-        <%= label f, :username, "What username will you use?", class: "block text-sm font-medium text-gray-700" %>
-        <%= text_input f, :username, required: true %>
-        <%= error_tag f, :username %>
-      </div>
-      <div class="sm:col-span-6">
-        <%= label f, :summary, "Tell us a bit about yourself.", class: "block text-sm font-medium text-gray-700" %>
-        <%= textarea f, :summary, required: true, class: "w-full" %>
-        <%= error_tag f, :summary %>
-      </div>
-      <div class="sm:col-span-6">
-        <button type="submit" class="w-full items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">Create</button>
-      </div>
+        <div class="sm:col-span-4">
+          <%= label f, :username, "What username will you use?", class: "block text-sm font-medium text-gray-700" %>
+          <%= text_input f, :username, required: true %>
+          <%= error_tag f, :username %>
+        </div>
+        <div class="sm:col-span-6">
+          <%= label f, :summary, "Tell us a bit about yourself.", class: "block text-sm font-medium text-gray-700" %>
+          <%= textarea f, :summary, required: true, class: "w-full" %>
+          <%= error_tag f, :summary %>
+        </div>
+        <div class="sm:col-span-6">
+          <button type="submit" class="w-full items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">Create</button>
+        </div>
       </div>
     </section>
   </form>
