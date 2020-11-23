@@ -1,5 +1,4 @@
-<div class="page__auth-simple ">
-  <h1>Create a new user</h1>
+<div class="w-2/4 mx-auto h-full mb-24">
   <%= f = form_for @form, Routes.live_path(@socket, CreateUserLive), [id: "create-user-fields", method: :post] %>
     <!-- <div class="section__preview"> -->
     <!--   <div class="preview__card"> -->
@@ -15,22 +14,38 @@
     <!--     </div> -->
     <!--   </div> -->
     <!-- </div> -->
-    <div class="form__container">
-      <%= label f, :name, "What is your preferred name?" %>
-      <%= text_input f, :name, required: true %>
-      <%= error_tag f, :name %>
-    </div>
-    <div class="form__container">
-      <%= label f, :username, "What username will you use?" %>
-      <%= text_input f, :username, required: true %>
-      <%= error_tag f, :username %>
-    </div>
-    <div class="form__container">
-      <label for="bio">Tell us a bit about yourself</label>
-      <%= label f, :summary, "Tell us a bit about yourself." %>
-      <%= textarea f, :summary, required: true %>
-      <%= error_tag f, :summary %>
-    </div>
-    <button type="submit">Create</button>
+    <section class="bg-white shadow-md rounded-lg">
+      <div class="bg-white px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          Create a new user
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          This information will be displayed publicly so be careful what you share.
+        </p>
+      </div>
+      <div class="space-y-8 divide-y divide-gray-200">
+      <div class="mt-0 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 p-4">
+        <div class="sm:col-span-4">
+          <%= label f, :name, "What is your preferred name?", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= text_input f, :name, required: true %>
+            <%= error_tag f, :name %>
+          </div>
+        </div>
+      <div class="sm:col-span-4">
+        <%= label f, :username, "What username will you use?", class: "block text-sm font-medium text-gray-700" %>
+        <%= text_input f, :username, required: true %>
+        <%= error_tag f, :username %>
+      </div>
+      <div class="sm:col-span-6">
+        <%= label f, :summary, "Tell us a bit about yourself.", class: "block text-sm font-medium text-gray-700" %>
+        <%= textarea f, :summary, required: true, class: "w-full" %>
+        <%= error_tag f, :summary %>
+      </div>
+      <div class="sm:col-span-6">
+        <button type="submit" class="w-full items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">Create</button>
+      </div>
+      </div>
+    </section>
   </form>
 </div>
