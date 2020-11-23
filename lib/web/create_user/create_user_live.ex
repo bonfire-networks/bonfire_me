@@ -22,12 +22,16 @@ defmodule Bonfire.Me.Web.CreateUserLive do
      |> assign(form: form(socket.assigns[:current_account]))}
   end
 
+  def handle_event("validate", %{"create_user_fields" => params}, socket) do
+    form =
+      Users.changeset(:create, params, socket.assigns[:current_account])
+      |> Map.put(:action, :insert)
+    {:noreply, assign(socket, form: form)}
+  end
   def handle_event("submit", %{"create_user_fields" => params}, socket) do
     case Users.create(params, socket.assigns()[:current_account]) do
       {:ok, user} -> {:noreply, switched(socket, user)}
-      {:error, form} ->
-        IO.inspect(bad: form)
-        {:noreply, assign(socket, form)}
+      {:error, form} -> {:noreply, assign(socket, form: form)}
     end
   end
 
