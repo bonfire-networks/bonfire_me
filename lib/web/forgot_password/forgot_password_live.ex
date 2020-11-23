@@ -1,9 +1,5 @@
-defmodule Bonfire.Me.Web.ChangePasswordLive do
+defmodule Bonfire.Me.Web.ForgotPasswordLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Me.Web.HeroProfileLive
-  alias Bonfire.Me.Web.ProfileNavigationLive
-  alias Bonfire.Me.Web.ProfileAboutLive
-  alias Bonfire.Me.Fake
   alias Bonfire.Common.Web.LivePlugs
 
   def mount(params, session, socket) do
@@ -18,4 +14,5 @@ defmodule Bonfire.Me.Web.ChangePasswordLive do
   defp mounted(params, session, socket) do
     {:ok, socket}
   end
+
 end
