@@ -3,6 +3,7 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
   alias Bonfire.Fake
   alias Bonfire.Common.Web.LivePlugs
   alias Bonfire.Me.Users
+  alias Bonfire.Me.Web.{CreateUserLive, MeHomeLive}
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
