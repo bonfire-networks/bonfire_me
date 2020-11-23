@@ -83,10 +83,10 @@ defmodule Bonfire.Me.Users do
       order_by: [asc: u.id]
   end
 
-  def get_for_session(username, account_id),
-    do: get_flat(get_for_session_query(username, account_id))
+  def get_current(username, %Account{id: account_id}),
+    do: repo().single(get_current_query(username, account_id))
 
-  defp get_for_session_query(username, account_id) do
+  defp get_current_query(username, account_id) do
     from u in User,
       join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
