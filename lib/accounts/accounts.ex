@@ -20,7 +20,12 @@ defmodule Bonfire.Me.Accounts do
   defp repo, do: Application.get_env(:bonfire_me, :repo_module)
   defp mailer, do: Application.get_env(:bonfire_me, :mailer_module)
 
-  def get_for_session(id) when is_binary(id), do: repo().get(Account, id)
+  def get_current(id) when is_binary(id), do: repo().single(current_query(id))
+
+  defp current_query(id) do
+    from a in Account,
+      where: a.id == ^id
+  end
 
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
 
