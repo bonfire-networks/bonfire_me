@@ -1,20 +1,18 @@
 <section class="">
-<div class="pb-5 border-b border-gray-200 mt-8">
-  <h3 class="text-xl leading-6 font-medium text-gray-900">
-    Switch user
-  </h3>
-  <p class="mt-2 max-w-4xl text-md font-light leading-6 text-gray-600">Workcation is a property rental website. Etiam ullamcorper massa viverra consequat, consectetur id nulla tempus. Fringilla egestas justo massa purus sagittis malesuada.</p>
-</div>
+  <div class="pb-5 border-b border-gray-200 mt-8">
+    <h3 class="text-xl leading-6 font-medium text-gray-900">Switch user</h3>
+    <p class="mt-2 max-w-4xl text-md font-light leading-6 text-gray-600">Workcation is a property rental website. Etiam ullamcorper massa viverra consequat, consectetur id nulla tempus. Fringilla egestas justo massa purus sagittis malesuada.</p>
+  </div>
 
   <div class="mt-4 grid grid-cols-4 gap-4">
-  <%= for user <- @users do %>
-    <article class="list__item">
-      <%= live_redirect to: Routes.live_path(@socket, MeHomeLive, user.character.username) do %>
-        <img alt="profile pic" src="https://unsplash.it/200" />
-        <h3>@<%= user.character.username %></h3>
-      <% end %>
-    </article>
-  <% end %>
+    <%= for user <- @current_account_users do %>
+      <article class="list__item">
+        <%= live_redirect to: Routes.live_path(@socket, MeHomeLive, user.character.username) do %>
+          <img alt="profile pic" src="https://unsplash.it/200" />
+          <h3>@<%= user.character.username %></h3>
+        <% end %>
+      </article>
+    <% end %>
     <article>
       <%= live_redirect to: Routes.live_path(@socket, CreateUserLive) do %>
         <div style="height: 200px" class="rounded-md border-dashed border-4 border-gray-500 bg-gray-300 flex place-content-center cursor-pointer hover:bg-gray-400 hover:border-gray-600" >
@@ -25,5 +23,5 @@
         <h3 class="text-center font-semibold text-gray-700 mt-2">Create a new user profile</h3>
       <% end %>
     </article>
-</ul>
+  </div>
 </section>
