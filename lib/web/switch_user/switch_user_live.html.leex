@@ -6,21 +6,37 @@
 
   <div class="mt-4 grid grid-cols-4 gap-4">
     <%= for user <- @current_account_users do %>
-      <article class="list__item">
+      <article style="
+        height: 10vw;
+        width: 10vw;
+        max-height: 200px;
+        max-width: 200px;
+        min-height: 84px;
+        min-width: 84px;" 
+        class="rounded-md cursor-pointer">
         <%= live_redirect to: Routes.live_path(@socket, MeHomeLive, user.character.username) do %>
-          <img alt="profile pic" src="https://unsplash.it/200" />
-          <h3>@<%= user.character.username %></h3>
+          <img  class="rounded-md" alt="profile pic" src="https://unsplash.it/400" />
+          <h3 class="text-center font-semibold text-gray-700 mt-2">@<%= user.character.username %></h3>
         <% end %>
       </article>
     <% end %>
     <article>
       <%= live_redirect to: Routes.live_path(@socket, CreateUserLive) do %>
-        <div style="height: 200px" class="rounded-md border-dashed border-4 border-gray-500 bg-gray-300 flex place-content-center cursor-pointer hover:bg-gray-400 hover:border-gray-600" >
-          <svg class="text-gray-500" style="width: 120px" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        <div style="
+          height: 10vw;
+          width: 10vw;
+          max-height: 200px;
+          max-width: 200px;
+          min-height: 84px;
+          min-width: 84px;">
+          <div  style="
+          height: 10vw;" class="rounded-md border-dashed border-4 border-gray-500 bg-gray-300 flex place-content-center cursor-pointer hover:bg-gray-400 hover:border-gray-600" >
+            <svg class="text-gray-500" style="width: 120px" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
         </div>
-        <h3 class="text-center font-semibold text-gray-700 mt-2">Create a new user profile</h3>
+        <h3 class="text-center text-base font-semibold text-gray-700 mt-2">Add a new user</h3>
+        </div>
       <% end %>
     </article>
   </div>
