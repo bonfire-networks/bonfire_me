@@ -91,7 +91,7 @@ defmodule Bonfire.Me.Users do
       join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
       join: a in assoc(ac, :account),
-      join: p in assoc(u, :profile)
+      join: p in assoc(u, :profile),
       where: a.id == ^account_id,
       where: c.username == ^username,
       preload: [character: c, accounted: {ac, account: a}, profile: p]
