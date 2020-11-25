@@ -1,85 +1,10 @@
-<div class="page__fullContent">
-  <section class="page__member">
-    <div class="member__hero">
-      <div class="suphero">
-        <div class="suphero__left">
-          <%= live_patch to: "/@" <> @current_user.username <> "/about" do %>
-            <div class="named-avatar">
-              <img alt="profile pic" src="<%= @current_user.icon_url %>" />
-              <h3><%= @current_user.name %></h3>
-            </div>
-          <% end %>
-        </div>
-        <div class="suphero__actions">
-          <%= if is_map(@current_user) and @current_user.id==@current_user.id do %>
-            <%= live_redirect to: "/~/settings" do %>Settings<% end %>
-          <% else %>
-            <%= if @current_user.is_followed do %>
-              <button class="button follow" phx-click="unfollow">Unfollow</button>
-            <% else %>
-              <button class="button follow" phx-click="follow">Follow</button>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-    </div>
-    <div class="member__layout">
-      <%= cond do %>
-        <% @selected_tab == "likes" ->  %>
-        <div class="mainContent__selected">
-          <h3 class="area__title">likes</h3>
-          <div class="selected__area">
-            
-          </div>
-        </div>
-        <% @selected_tab == "following" ->  %>
-        <div class="mainContent__selected">
-          <h3 class="area__title"><%= @current_user.name %> is following</h3>
-          <div class="selected__area">
-           
-          </div>
-        </div>
-        <% @selected_tab == "posts" ->  %>
-        <div class="mainContent__selected">
-          <h3 class="area__title">Posts</h3>
-          <div class="selected__area">
-            
-          </div>
-        </div>
-        <% true -> %>
-        <div>
-          <div class="mainContent__selected">
-            <div class="selected__area">
-              <%= live_component(
-                  @socket,
-                  HeroProfileLive,
-                  user: @current_user,
-                  current_user: @current_user
-                ) %>
-              <%= live_component(
-                  @socket,
-                  ProfileAboutLive,
-                  description: @current_user.summary
-                ) %>
-            </div>
-          </div>
-          <div class="mainContent__selected">
-            <h3 class="area__title">Updates</h3>
-            <div class="selected__area">
-             
-            </div>
-          </div>
-        </div>
-      <% end %>
-      <div class="member__navigation">
-        <%= live_component(
-            @socket,
-            ProfileNavigationLive,
-            selected: @selected_tab,
-            username: @current_user.username,
-            current_user: @current_user
-          )
-        %>
-      </div>
-    </section>
+
+<div class="lg:flex mt-6 -mx-2">
+  <div class="w-full lg:w-3/5 lg:px-2">
+    <%= live_component(@socket, Bonfire.Web.Components.CreateActivityLive, assigns) %>
+    <%= live_component(@socket, Bonfire.Web.Components.ProfileHeroLive, assigns) %>
+    <%= live_component(@socket, Bonfire.Web.Components.FeedLive, assigns) %>
   </div>
+  <div class="w-full lg:w-2/5 px-2">
+  </div>
+</div>

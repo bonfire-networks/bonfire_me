@@ -17,9 +17,10 @@ defmodule Bonfire.Me.Web.MeHomeLive do
 
   defp mounted(params, session, socket) do
     {:ok, socket
-    |> assign(page_title: "Switch User",
-    selected_tab: "about",
+    |> assign(page_title: "Home",
     current_account: socket.assigns.current_account,
+    current_user: socket.assigns.current_user,
+    feed_title: "Instance feed",
     users: Users.by_account(socket.assigns.current_account))}
 
   end

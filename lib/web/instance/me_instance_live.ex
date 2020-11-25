@@ -1,10 +1,9 @@
-defmodule Bonfire.Me.Web.ProfileLive do
+defmodule Bonfire.Me.Web.MeInstanceLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Me.Web.HeroProfileLive
-  alias Bonfire.Me.Web.ProfileNavigationLive
-  alias Bonfire.Me.Web.ProfileAboutLive
-  alias Bonfire.Me.Fake
+  alias Bonfire.Fake
   alias Bonfire.Common.Web.LivePlugs
+  alias Bonfire.Me.Users
+  alias Bonfire.Me.Web.{CreateUserLive, MeHomeLive}
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
@@ -17,18 +16,13 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   defp mounted(params, session, socket) do
+    {:ok, socket
+    |> assign(page_title: "Instance",
+    current_account: socket.assigns.current_account,
+    current_user: socket.assigns.current_user,
+    feed_title: "Instance feed",
+    users: Users.by_account(socket.assigns.current_account))}
 
-    user = e(socket.assigns, :current_user, Fake.user_live())
-
-       {:ok,
-       socket
-       |> assign(
-         page_title: "Profile",
-         selected_tab: "about",
-         feed_title: "User feed",
-         current_account: socket.assigns.current_account,
-         current_user: socket.assigns.current_user,
-       )}
   end
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do
