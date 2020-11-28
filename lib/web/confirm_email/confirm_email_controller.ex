@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Web.ConfirmEmailController do
 
   use Bonfire.Web, :controller
-  alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Web.ConfirmEmailLive
   
   def index(conn, _), do: live_render(conn, ConfirmEmailLive)

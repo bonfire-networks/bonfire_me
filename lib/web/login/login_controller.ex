@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Web.LoginController do
 
   use Bonfire.Web, :controller
-  alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Web.LoginLive
 
   def index(conn, _), do: live_render(conn, LoginLive)

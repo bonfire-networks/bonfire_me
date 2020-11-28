@@ -1,12 +1,12 @@
-defmodule Bonfire.Me.Accounts.Emails do
+defmodule Bonfire.Me.Identity.Emails do
 
   import Bamboo.Email
   import Bamboo.Phoenix
-  alias CommonsPub.Accounts.Account
+  alias Bonfire.Data.Identity.Account
   alias Pointers.Changesets
   alias Bonfire.Me.Web.EmailView
 
-  def confirm_email(%Account{email: %{email: email}}=account) when is_binary(email) do
+  def confirm_email(%Account{email: %{email_address: email}}=account) when is_binary(email) do
     conf =
       Application.get_env(:bonfire_me, __MODULE__, [])
       |> Keyword.get(:confirm_email, [])
@@ -17,7 +17,7 @@ defmodule Bonfire.Me.Accounts.Emails do
     |> put_text_layout({EmailView, "confirm_email.text"})
   end
 
-  def reset_password(%Account{email: %{email: email}}=account) when is_binary(email) do
+  def reset_password(%Account{email: %{email_address: email}}=account) when is_binary(email) do
     conf =
       Application.get_env(:bonfire_me, __MODULE__, [])
       |> Keyword.get(:reset_password_email, [])

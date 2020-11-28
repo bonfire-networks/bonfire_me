@@ -1,8 +1,8 @@
-defmodule Bonfire.Me.Accounts.LoginFields do
+defmodule Bonfire.Me.Identity.Accounts.LoginFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias Bonfire.Me.Accounts.LoginFields
+  alias Bonfire.Me.Identity.Accounts.LoginFields
 
   embedded_schema do
     field :form, :string, virtual: true

@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailLive do
   alias Bonfire.Me.Web.ProfileAboutLive
   alias Bonfire.Me.Fake
   alias Bonfire.Common.Web.LivePlugs
-  alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Identity.Accounts
 
   def mount(params, session, socket) do
     {:ok,

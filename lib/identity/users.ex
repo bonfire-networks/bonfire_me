@@ -1,15 +1,16 @@
-defmodule Bonfire.Me.Users do
+defmodule Bonfire.Me.Identity.Users do
   @doc """
   A User is a logical identity within the system belonging to an Account.
   """
   use OK.Pipe
-  alias CommonsPub.Accounts.Account
-  alias CommonsPub.Users.User
-  alias Bonfire.Me.Users.CreateUserFields
+  alias Bonfire.Data.Identity.{Account, User}
+  alias Bonfire.Me.Identity.Users.CreateUserFields
   alias Pointers.Changesets
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   import Ecto.Query
+
+  defp commons_id, do: "STVFFSAVA11AB1EF0REVERY0NE"
 
   defp repo, do: Application.get_env(:bonfire_me, :repo_module)
 
@@ -27,6 +28,7 @@ defmodule Bonfire.Me.Users do
   defp create(%CreateUserFields{}=form) do
     repo().put(create_changeset(Map.from_struct(form)))
   end
+
 
   def update(%User{} = user, attrs), do: repo().update(create_changeset(user, attrs))
 
@@ -91,7 +93,7 @@ defmodule Bonfire.Me.Users do
       join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
       join: a in assoc(ac, :account),
-      join: p in assoc(u, :profile)
+      join: p in assoc(u, :profile),
       where: a.id == ^account_id,
       where: c.username == ^username,
       preload: [character: c, accounted: {ac, account: a}, profile: p]

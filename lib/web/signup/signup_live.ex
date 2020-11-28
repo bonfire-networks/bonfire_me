@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.SignupLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Web.HeroProfileLive
   alias Bonfire.Me.Web.ProfileNavigationLive
   alias Bonfire.Me.Web.ProfileAboutLive

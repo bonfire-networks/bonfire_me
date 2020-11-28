@@ -1,9 +1,8 @@
-defmodule Bonfire.Me.Users.Queries do
+defmodule Bonfire.Me.Identity.Users.Queries do
 
   @repo Application.get_env(:bonfire_me, :repo_module)
 
-  alias Bonfire.Me.Users
-  # alias CommonsPub.Peers.Peer
+  alias Bonfire.Me.Identity.Users
   import Ecto.Query
 
   def query(), do: from(u in User, as: :user)

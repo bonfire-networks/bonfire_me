@@ -1,8 +1,7 @@
 defmodule Bonfire.Me.Web.CreateUserLive do
   use Bonfire.Web, :live_view
-  alias CommonsPub.Users.User
-  alias Bonfire.Me.Users
-  alias Bonfire.Me.Accounts
+  alias Bonfire.Data.Identity.User
+  alias Bonfire.Me.Identity.{Accounts, Users}
   alias Bonfire.Common.Web.LivePlugs
   alias Bonfire.Me.Web.CreateUserLive
 
@@ -19,6 +18,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
   defp mounted(_params, session, socket) do
     {:ok,
      socket
+     |> assign_new(:current_user, fn -> nil end)
      |> assign(form: form(socket.assigns[:current_account]))}
   end
 
@@ -37,7 +37,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
 
   defp form(attrs \\ %{}, account), do: Users.changeset(:create, attrs, account)
 
-  defp switched(socket, %User{character: %{username: username}}) do
+  defp switched(socket, %{character: %{username: username}}) do
     socket
     |> put_flash(:info, "Welcome, @#{username}, you're all ready to go!")
     |> push_redirect(to: "/~@#{username}")

@@ -1,8 +1,7 @@
 defmodule Bonfire.Me.Web.SwitchUserController do
 
   use Bonfire.Web, :controller
-  alias Bonfire.Me.Accounts
-  alias Bonfire.Me.Users
+  alias Bonfire.Me.Identity.{Accounts, Users}
 
   # def index(conn, _) do
   #   case Users.by_account(Accounts.get_session(conn)) do

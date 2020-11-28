@@ -1,12 +1,11 @@
-defmodule Bonfire.Me.Accounts do
+defmodule Bonfire.Me.Identity.Accounts do
 
   use OK.Pipe
-  alias CommonsPub.Accounts.Account
-  alias CommonsPub.Emails.Email
+  alias Bonfire.Data.Identity.{Account, Email}
   alias Ecto.Changeset
   alias Pointers.Changesets
-  alias Bonfire.Me.Accounts.{
-    Emails,
+  alias Bonfire.Me.Identity.Emails
+  alias Bonfire.Me.Identity.Accounts.{
     ChangePasswordFields,
     ConfirmEmailFields,
     LoginFields,
@@ -50,10 +49,10 @@ defmodule Bonfire.Me.Accounts do
     do: signup_changeset(Map.from_struct(form))
 
   def signup_changeset(attrs) when not is_struct(attrs) do
-    %Account{email: nil, login_credential: nil}
+    %Account{email: nil, credential: nil}
     |> Account.changeset(attrs)
     |> Changesets.cast_assoc(:email, attrs)
-    |> Changesets.cast_assoc(:login_credential, attrs)
+    |> Changesets.cast_assoc(:credential, attrs)
   end
 
   ### signup
@@ -94,7 +93,7 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp check_password(account, form) do
-    if Argon2.verify_pass(form.password, account.login_credential.password_hash),
+    if Argon2.verify_pass(form.password, account.credential.password_hash),
       do: {:ok, account},
       else: {:error, :no_match}
   end
@@ -127,7 +126,7 @@ defmodule Bonfire.Me.Accounts do
       # why not refresh here? it provides a window of DOS opportunity
       # against a user completing their activation.
       DateTime.utc_now() < email.confirm_until ->
-        with {:ok, _} <- mailer().send_now(Emails.confirm_email(account), email.email),
+        with {:ok, _} <- mailer().send_now(Emails.confirm_email(account), email.email_address),
           do: {:ok, :resent, account}
 
       true ->
@@ -165,7 +164,7 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp send_confirm_email(%Account{}=account) do
-    case mailer().send_now(Emails.confirm_email(account), account.email.email) do
+    case mailer().send_now(Emails.confirm_email(account), account.email.email_address) do
       {:ok, _mail} -> {:ok, account}
       _ -> {:error, :email}
     end
@@ -184,9 +183,9 @@ defmodule Bonfire.Me.Accounts do
   defp find_by_email_query(email) when is_binary(email) do
     from a in Account,
       join: e in assoc(a, :email),
-      join: lc in assoc(a, :login_credential),
-      where: lc.identity == ^email,
-      preload: [email: e, login_credential: lc]
+      join: c in assoc(a, :credential),
+      where: c.identity == ^email,
+      preload: [email: e, credential: c]
   end
 
 end

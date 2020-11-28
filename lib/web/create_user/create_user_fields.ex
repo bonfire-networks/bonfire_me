@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Users.CreateUserFields do
+defmodule Bonfire.Me.Identity.Users.CreateUserFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias CommonsPub.Accounts.Account
-  alias Bonfire.Me.Users.CreateUserFields
+  alias Bonfire.Data.Identity.Account
+  alias Bonfire.Me.Identity.Users.CreateUserFields
 
   embedded_schema do
     field :username, :string

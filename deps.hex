@@ -1,26 +1,19 @@
-# web
+bamboo = "~> 1.5" # email
+bamboo_smtp = "~> 3.0.0"
+ecto_sql = "~> 3.4"
+faker = "~> 0.14" # fake data generation
+flexto = "~> 0.2.1"
 gettext = "~> 0.11"
 jason = "~> 1.0"
-# db
-ecto_sql = "~> 3.4"
-flexto = "~> 0.2.1"
-postgrex = ">= 0.0.0"
 oban = "~> 2.0.0" # job queueing
+ok = "~> 2.3.0"
 pointers_ulid = "~> 0.2"
 pointers = "~> 0.5.1"
-# email
-bamboo = "~> 1.5"
-bamboo_smtp = "~> 3.0.0"
-# misc
+postgrex = ">= 0.0.0"
 recase = "~> 0.5" # string recasing
-faker = "~> 0.14" # fake data generation
 telemetry_metrics = "~> 0.4"
 telemetry_poller = "~> 0.4"
 # plugins
-# cpub_accounts = "~> 0.1"
-# cpub_local_auth = "~> 0.1"
-# cpub_emails = "~> 0.1"
-# cpub_users = "~> 0.1"
-# cpub_profiles = "~> 0.1"
-# cpub_characters = "~> 0.1"
-ok = "~> 2.3.0"
+# bonfire_data_access_control = "~> 0.1"
+# bonfire_data_identity = "~> 0.1"
+# bonfire_data_social = "~> 0.1"

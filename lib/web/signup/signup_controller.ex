@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.SignupController do
   use Bonfire.Web, :controller
-  alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Web.SignupLive
 
   def index(conn, _), do: live_render(conn, SignupLive)
@@ -16,6 +16,7 @@ defmodule Bonfire.Me.Web.SignupController do
         |> assign(:error, :taken)
         |> live_render(SignupLive)
       {:error, changeset} ->
+        IO.inspect(changeset)
         conn
         |> assign(:form, changeset)
         |> live_render(SignupLive)
