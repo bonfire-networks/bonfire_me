@@ -9,9 +9,6 @@ use Mix.Config
 # config :bonfire, Mailer,
 #   from_address: "noreply@bonfire.local"
 
-# include DB schemas
-import_config "cpub_schemas.exs"
-
 # include Phoenix web server boilerplate
 import_config "bonfire_web_phoenix.exs"
 

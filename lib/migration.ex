@@ -5,9 +5,6 @@ defmodule Bonfire.Me.Migration do
   import Bonfire.Me.Identity.Migration
   import Bonfire.Me.Social.Migration
   import CommonsPub.Actors.Actor.Migration
-  import CommonsPub.Characters.Character.Migration
-  import CommonsPub.Profiles.Profile.Migration
-  import CommonsPub.Users.User.Migration
 
   def up do
     migrate_me_identity()
