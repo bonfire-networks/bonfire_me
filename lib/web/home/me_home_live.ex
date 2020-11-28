@@ -15,6 +15,27 @@ defmodule Bonfire.Me.Web.MeHomeLive do
     ]
   end
 
-  defp mounted(params, session, socket), do: {:ok, assign(socket, page_title: "Home")}
+  defp mounted(params, session, socket) do
+    {:ok, socket
+    |> assign(page_title: "Home",
+    current_account: socket.assigns.current_account,
+    current_user: socket.assigns.current_user,
+    feed_title: "Instance feed",
+    users: Users.by_account(socket.assigns.current_account))}
+  end
+
+  # def handle_params(%{"tab" => tab} = _params, _url, socket) do
+  #   {:noreply,
+  #    assign(socket,
+  #      selected_tab: tab
+  #    )}
+  # end
+
+  # def handle_params(%{} = _params, _url, socket) do
+  #   {:noreply,
+  #    assign(socket,
+  #      current_user: Fake.user_live()
+  #    )}
+  # end
 
 end

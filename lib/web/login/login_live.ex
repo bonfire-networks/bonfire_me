@@ -12,6 +12,7 @@ defmodule Bonfire.Me.Web.LoginLive do
      socket
       |> assign_new(:current_account, fn -> nil end)
       |> assign_new(:current_user, fn -> nil end)
+      |> assign_new(:feed_title, fn -> "Public feed" end)
       |> assign_new(:error, fn -> nil end)
       |> assign_new(:form, &form/0)}
   end
