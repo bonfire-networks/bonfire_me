@@ -4,6 +4,8 @@ defmodule Bonfire.Me.Social.Migration do
 
   defp mms(:up) do
     quote do
+      require Bonfire.Data.Social.Block.Migration
+      require Bonfire.Data.Social.Bookmark.Migration
       require Bonfire.Data.Social.Character.Migration
       require Bonfire.Data.Social.Circle.Migration
       require Bonfire.Data.Social.Encircle.Migration
@@ -12,6 +14,8 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Like.Migration
       require Bonfire.Data.Social.LikeCount.Migration
       require Bonfire.Data.Social.Profile.Migration
+      Bonfire.Data.Social.Block.Migration.migrate_block()
+      Bonfire.Data.Social.Bookmark.Migration.migrate_bookmark()
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Social.Character.Migration.migrate_character()
       Bonfire.Data.Social.Circle.Migration.migrate_circle()
@@ -25,6 +29,8 @@ defmodule Bonfire.Me.Social.Migration do
 
   defp mms(:down) do
     quote do
+      require Bonfire.Data.Social.Block.Migration
+      require Bonfire.Data.Social.Bookmark.Migration
       require Bonfire.Data.Social.Character.Migration
       require Bonfire.Data.Social.Circle.Migration
       require Bonfire.Data.Social.Encircle.Migration
@@ -41,6 +47,8 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Encircle.Migration.migrate_encircle()
       Bonfire.Data.Social.Circle.Migration.migrate_circle()
       Bonfire.Data.Social.Character.Migration.migrate_character()
+      Bonfire.Data.Social.Bookmark.Migration.migrate_bookmark()
+      Bonfire.Data.Social.Block.Migration.migrate_block()
     end
   end
 

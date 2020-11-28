@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Circles do
+defmodule Bonfire.Me.Social.Circles do
 
   alias CommonsPub.Circles.{Circle, Encircle}
 

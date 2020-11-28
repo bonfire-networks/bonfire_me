@@ -1,10 +1,10 @@
 defmodule Bonfire.Me.Migration do
   use Ecto.Migration
   import Pointers.Migration
+  import Bonfire.Data.ActivityPub.Actor.Migration
   import Bonfire.Me.AccessControl.Migration
   import Bonfire.Me.Identity.Migration
   import Bonfire.Me.Social.Migration
-  import CommonsPub.Actors.Actor.Migration
 
   def up do
     migrate_me_identity()
