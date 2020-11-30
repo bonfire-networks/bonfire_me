@@ -9,6 +9,7 @@ defmodule Bonfire.Me.Web.MeHomeLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccountFromSession,
       LivePlugs.LoadCurrentUserFromPath,
+      LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
@@ -16,12 +17,9 @@ defmodule Bonfire.Me.Web.MeHomeLive do
   end
 
   defp mounted(params, session, socket) do
+    title = "@#{socket.assigns.current_user.character.username}'s feed"
     {:ok, socket
-    |> assign(page_title: "Home",
-    current_account: socket.assigns.current_account,
-    current_user: socket.assigns.current_user,
-    feed_title: "Instance feed",
-    users: Users.by_account(socket.assigns.current_account))}
+    |> assign(page_title: "Home", feed_title: title)}
   end
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do

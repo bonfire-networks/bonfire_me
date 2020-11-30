@@ -125,7 +125,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
       # why not refresh here? it provides a window of DOS opportunity
       # against a user completing their activation.
-      DateTime.utc_now() < email.confirm_until ->
+      DateTime.compare(DateTime.utc_now(), email.confirm_until) == :lt ->
         with {:ok, _} <- mailer().send_now(Emails.confirm_email(account), email.email_address),
           do: {:ok, :resent, account}
 
