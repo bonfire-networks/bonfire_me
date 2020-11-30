@@ -6,19 +6,13 @@ defmodule Bonfire.Me.Migration do
   import Bonfire.Me.Identity.Migration
   import Bonfire.Me.Social.Migration
 
-  def up do
-    migrate_me_identity()
-    migrate_me_access_control()
-    migrate_me_social()
-    migrate_actor()
+  defmacro migrate_me() do
+    quote do
+      migrate_me_identity()
+      migrate_me_access_control()
+      migrate_me_social()
+      migrate_actor()
+    end
   end
-
-  def down do
-    migrate_actor()
-    migrate_me_identity()
-    migrate_me_access_control()
-    migrate_me_social()
-  end
-
 
 end

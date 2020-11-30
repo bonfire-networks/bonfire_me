@@ -156,7 +156,7 @@ defmodule Bonfire.Me.Identity.Accounts do
           cond do
             not is_nil(email.confirmed_at) -> {:error, :confirmed, account}
             is_nil(email.confirm_until) -> {:error, :no_expiry, account}
-            DateTime.utc_now() < email.confirm_until -> confirm_email(account)
+            DateTime.compare(DateTime.utc_now(),email.confirm_until) == :lt -> confirm_email(account)
             true -> {:error, :expired, account}
           end
       end

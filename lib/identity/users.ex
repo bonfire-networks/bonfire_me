@@ -32,12 +32,21 @@ defmodule Bonfire.Me.Identity.Users do
 
   def update(%User{} = user, attrs), do: repo().update(create_changeset(user, attrs))
 
+  @counts %{
+    follower_count: 0,
+    follow_count: 0,
+    liker_count: 0,
+    like_count: 0
+  }
+
   def create_changeset(user \\ %User{}, attrs) do
     User.changeset(user, attrs)
     |> Changesets.cast_assoc(:accounted, attrs)
-    |> Changesets.cast_assoc(:character, attrs)
-    |> Changesets.cast_assoc(:profile, attrs)
     |> Changesets.cast_assoc(:actor, attrs)
+    |> Changesets.cast_assoc(:character, attrs)
+    |> Changesets.cast_assoc(:follow_count, @counts)
+    |> Changesets.cast_assoc(:like_count, @counts)
+    |> Changesets.cast_assoc(:profile, attrs)
   end
 
   def by_account(%Account{id: id}), do: by_account(id)
