@@ -4,6 +4,7 @@ defmodule Bonfire.Me.Social.Migration do
 
   defp mms(:up) do
     quote do
+      require Bonfire.Data.Social.Article.Migration
       require Bonfire.Data.Social.Block.Migration
       require Bonfire.Data.Social.Bookmark.Migration
       require Bonfire.Data.Social.Circle.Migration
@@ -13,7 +14,10 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Like.Migration
       require Bonfire.Data.Social.LikeCount.Migration
       require Bonfire.Data.Social.Mention.Migration
+      require Bonfire.Data.Social.Post.Migration
+      require Bonfire.Data.Social.PostContent.Migration
       require Bonfire.Data.Social.Profile.Migration
+      Bonfire.Data.Social.Article.Migration.migrate_article()
       Bonfire.Data.Social.Block.Migration.migrate_block()
       Bonfire.Data.Social.Bookmark.Migration.migrate_bookmark()
       Bonfire.Data.Social.Circle.Migration.migrate_circle()
@@ -23,12 +27,15 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Like.Migration.migrate_like()
       Bonfire.Data.Social.LikeCount.Migration.migrate_like_count()
       Bonfire.Data.Social.Mention.Migration.migrate_mention()
+      Bonfire.Data.Social.Post.Migration.migrate_post()
+      Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
     end
   end
 
   defp mms(:down) do
     quote do
+      require Bonfire.Data.Social.Article.Migration
       require Bonfire.Data.Social.Block.Migration
       require Bonfire.Data.Social.Bookmark.Migration
       require Bonfire.Data.Social.Circle.Migration
@@ -38,8 +45,12 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Like.Migration
       require Bonfire.Data.Social.LikeCount.Migration
       require Bonfire.Data.Social.Mention.Migration
+      require Bonfire.Data.Social.Post.Migration
+      require Bonfire.Data.Social.PostContent.Migration
       require Bonfire.Data.Social.Profile.Migration
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
+      Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
+      Bonfire.Data.Social.Post.Migration.migrate_post()
       Bonfire.Data.Social.Mention.Migration.migrate_mention()
       Bonfire.Data.Social.LikeCount.Migration.migrate_like_count()
       Bonfire.Data.Social.Like.Migration.migrate_like()
@@ -49,6 +60,7 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Circle.Migration.migrate_circle()
       Bonfire.Data.Social.Bookmark.Migration.migrate_bookmark()
       Bonfire.Data.Social.Block.Migration.migrate_block()
+      Bonfire.Data.Social.Article.Migration.migrate_article()
     end
   end
 
