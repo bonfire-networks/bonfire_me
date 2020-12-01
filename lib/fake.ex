@@ -14,7 +14,8 @@ defmodule Bonfire.Me.Fake do
 
   def account(base \\ %{}) do
     base
-    |> Map.put_new_lazy(:email, &email/0)
+    # |> Map.put_new_lazy(:email, &email/0)
+    |> Map.put_new_lazy(:email_address, &email/0)
     |> Map.put_new_lazy(:password, &password/0)
   end
 

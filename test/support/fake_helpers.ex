@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Test.FakeHelpers do
 
-  alias CommonsPub.Accounts.Account
+  alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Fake
   alias Bonfire.Me.{Accounts, Users}
   import ExUnit.Assertions
