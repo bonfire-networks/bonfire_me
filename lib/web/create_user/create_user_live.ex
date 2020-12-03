@@ -3,7 +3,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Identity.{Accounts, Users}
   alias Bonfire.Common.Web.LivePlugs
-  alias Bonfire.Me.Web.CreateUserLive
+  alias Bonfire.Me.Web.{CreateUserLive, MeHomeLive}
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
@@ -40,7 +40,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
   defp switched(socket, %{character: %{username: username}}) do
     socket
     |> put_flash(:info, "Welcome, @#{username}, you're all ready to go!")
-    |> push_redirect(to: "/~@#{username}")
+    |> push_redirect(to: Routes.live_path(socket, MeHomeLive, username))
   end
 
 
