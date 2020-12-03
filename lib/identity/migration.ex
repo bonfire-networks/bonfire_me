@@ -10,9 +10,9 @@ defmodule Bonfire.Me.Identity.Migration do
       require Bonfire.Data.Identity.Credential.Migration
       require Bonfire.Data.Identity.Email.Migration
       require Bonfire.Data.Identity.User.Migration
-      Bonfire.Data.Identity.Character.Migration.migrate_character()
       Bonfire.Data.Identity.Account.Migration.migrate_account()
       Bonfire.Data.Identity.Accounted.Migration.migrate_accounted()
+      Bonfire.Data.Identity.Character.Migration.migrate_character()
       Bonfire.Data.Identity.Credential.Migration.migrate_credential()
       Bonfire.Data.Identity.Email.Migration.migrate_email()
       Bonfire.Data.Identity.User.Migration.migrate_user()

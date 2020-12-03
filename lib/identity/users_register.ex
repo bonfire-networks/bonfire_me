@@ -33,7 +33,6 @@ defmodule Bonfire.Me.Identity.Users.Register do
   #     * AccessGrant
   #     * AclGrant
   #   
-
   def acls() do
     
   end

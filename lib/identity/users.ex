@@ -10,7 +10,8 @@ defmodule Bonfire.Me.Identity.Users do
   alias Ecto.Changeset
   import Ecto.Query
 
-  defp commons_id, do: "STVFFSAVA11AB1EF0REVERY0NE"
+  def guest_user_id, do: "N0TAVSER1FY0VTH1NKSAB0VT1T"
+  def local_user_id, do: "1AMASTAND1NF0RANY10CA1VSER"
 
   defp repo, do: Application.get_env(:bonfire_me, :repo_module)
 
