@@ -22,6 +22,7 @@ defmodule Bonfire.Me.Web.MeHomeLive do
     |> assign(page_title: "Home", feed_title: title)}
   end
 
+
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do
   #   {:noreply,
   #    assign(socket,
