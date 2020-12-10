@@ -10,7 +10,7 @@ use Mix.Config
 #   from_address: "noreply@bonfire.local"
 
 # include Phoenix web server boilerplate
-import_config "bonfire_web_phoenix.exs"
+# import_config "bonfire_web_phoenix.exs"
 
 # include all used Bonfire extensions
 import_config "bonfire_me.exs"
