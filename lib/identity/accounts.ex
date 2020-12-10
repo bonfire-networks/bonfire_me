@@ -12,12 +12,10 @@ defmodule Bonfire.Me.Identity.Accounts do
     ResetPasswordFields,
     SignupFields,
   }
+  import Bonfire.Me.Integration
 
   alias Bonfire.Common.Utils
   import Ecto.Query
-
-  defp repo, do: Application.get_env(:bonfire_me, :repo_module)
-  defp mailer, do: Application.get_env(:bonfire_me, :mailer_module)
 
   def get_current(id) when is_binary(id), do: repo().single(current_query(id))
 

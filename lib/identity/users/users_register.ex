@@ -23,34 +23,19 @@ defmodule Bonfire.Me.Identity.Users.Register do
   #     * Public
   #     * Instance Local 
   #     * Followers
-  #   These ACLs require accesses creating:
-  #     * Read only
-  #     * Interact
-  #   The accesses need their own ACL:
-  #     * My own stuff
-  #   Which needs its own:
-  #     * Access
-  #     * AccessGrant
-  #     * AclGrant
-  #   
+  #   They all need to reference the predefined verbs
   def acls() do
-    
+    %{name: "Public"}
+    %{name: "Local"}
+    %{name: "Followers"}
+    %{name: "Read only"}
   end
 
   def public_acl(%User{}=user) do
-    %{name: "Public", can_see: true, can_read: true}
+    %{name: "Public"}
   end
 
   def local_acl(%User{}=user) do
-    %{name: "Local", can_see: true, can_read: true}
-  end
-
-  def followers_acl(%User{}=user) do
-    %{name: "Followers", can_see: true, can_read: true}
-  end
-
-  def read_only_access(%User{}=user) do
-    %{name: "Read only", can_see: true, can_read: true}
   end
 
   def interact_access(%User{}=user) do

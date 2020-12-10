@@ -8,12 +8,17 @@ defmodule Bonfire.Me.Identity.Users do
   alias Pointers.Changesets
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
+  import Bonfire.Me.Integration
   import Ecto.Query
+
+  def users() do
+    [ guest: "N0TAVSER1FY0VTH1NKSAB0VT1T",
+      local: "1AMASTAND1NF0RANY10CA1VSER",
+    ]
+  end
 
   def guest_user_id, do: "N0TAVSER1FY0VTH1NKSAB0VT1T"
   def local_user_id, do: "1AMASTAND1NF0RANY10CA1VSER"
-
-  defp repo, do: Application.get_env(:bonfire_me, :repo_module)
 
   @type changeset_name :: :create
 
@@ -30,14 +35,13 @@ defmodule Bonfire.Me.Identity.Users do
     repo().put(create_changeset(Map.from_struct(form)))
   end
 
-
   def update(%User{} = user, attrs), do: repo().update(create_changeset(user, attrs))
 
   @counts %{
+    follow_count:   0,
     follower_count: 0,
-    follow_count: 0,
-    liker_count: 0,
-    like_count: 0
+    like_count:     0,
+    liker_count:    0,
   }
 
   def create_changeset(user \\ %User{}, attrs) do
@@ -58,8 +62,9 @@ defmodule Bonfire.Me.Identity.Users do
     from u in User,
       join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
+      join: p in assoc(u, :profile),
       where: a.account_id == ^account_id,
-      preload: [character: c]
+      preload: [character: c, profile: p]
   end
 
   def by_username(username), do: get_flat(by_username_query(username))
@@ -117,6 +122,40 @@ defmodule Bonfire.Me.Identity.Users do
 
   def get_flat(query) do
     repo().single(query)
+  end
+
+  def delete(%User{}=user) do
+    preloads =
+      [:actor, :character, :follow_count, :like_count, :profile, :self] ++
+      [accounted: [:account]]
+    user = Repo.preload(user, preloads)
+    with :ok         <- delete_caretaken(user),
+         {:ok, user} <- delete_mixins(user) do
+      {:ok, user}
+    end
+  end
+
+  # TODO: what must we chase down?
+  # * acls
+  # * accesses
+  # * grants
+  # * posts
+  # * feeds
+  defp delete_caretaken(user) do
+    :ok
+  end
+
+
+  defp delete_mixins(user) do
+    with {:ok, user} <- repo().delete(user.actor),
+         {:ok, user} <- repo().delete(user.accounted),
+         {:ok, user} <- repo().delete(user.character),
+         {:ok, user} <- repo().delete(user.profile),
+         {:ok, user} <- repo().delete(user.accounted),
+         {:ok, user} <- repo().delete(user.accounted),
+         {:ok, user} <- repo().delete(user.accounted) do
+      {:ok, user}
+    end
   end
 
 end

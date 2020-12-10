@@ -14,6 +14,7 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Like.Migration
       require Bonfire.Data.Social.LikeCount.Migration
       require Bonfire.Data.Social.Mention.Migration
+      require Bonfire.Data.Social.Named.Migration
       require Bonfire.Data.Social.Post.Migration
       require Bonfire.Data.Social.PostContent.Migration
       require Bonfire.Data.Social.Profile.Migration
@@ -27,6 +28,7 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Like.Migration.migrate_like()
       Bonfire.Data.Social.LikeCount.Migration.migrate_like_count()
       Bonfire.Data.Social.Mention.Migration.migrate_mention()
+      Bonfire.Data.Social.Named.Migration.migrate_named()
       Bonfire.Data.Social.Post.Migration.migrate_post()
       Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
@@ -45,12 +47,14 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Like.Migration
       require Bonfire.Data.Social.LikeCount.Migration
       require Bonfire.Data.Social.Mention.Migration
+      require Bonfire.Data.Social.Named.Migration
       require Bonfire.Data.Social.Post.Migration
       require Bonfire.Data.Social.PostContent.Migration
       require Bonfire.Data.Social.Profile.Migration
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
       Bonfire.Data.Social.Post.Migration.migrate_post()
+      Bonfire.Data.Social.Named.Migration.migrate_named()
       Bonfire.Data.Social.Mention.Migration.migrate_mention()
       Bonfire.Data.Social.LikeCount.Migration.migrate_like_count()
       Bonfire.Data.Social.Like.Migration.migrate_like()

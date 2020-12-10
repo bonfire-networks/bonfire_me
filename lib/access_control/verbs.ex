@@ -1,12 +1,14 @@
 defmodule Bonfire.Me.AccessControl.Verbs do
 
   alias Bonfire.Data.AccessControl.Verb
+  import Bonfire.Me.Integration
 
-  # from our fixtures
-  def read_id, do: "READ1NGSVTTER1YFVNDAMENTA1"
-  def see_id, do: "0BSERV1NG11ST1NGSEX1STENCE"
-
-  defp repo, do: Application.get_env(:bonfire_me, :repo_module)
+  def verbs, do: [
+    read: "READ1NGSVTTER1YFVNDAMENTA1",
+    see: "0BSERV1NG11ST1NGSEX1STENCE",
+    edit: "CHANG1NGVA1VES0FPR0PERT1ES",
+    delete: "MAKESTVFFG0AWAYPERMANENT1Y"
+  ]
 
   def create(%{}=attrs) when not is_struct(attrs) do
     repo().insert(changeset(attrs))
