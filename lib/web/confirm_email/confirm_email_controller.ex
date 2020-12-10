@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
   alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Web.ConfirmEmailLive
 
-  def index(conn, _), do: live_render_with_conn(conn, ConfirmEmailLive)
+  def index(conn, _), do: live_render(conn, ConfirmEmailLive)
 
   def show(conn, %{"id" => token}) do
     case Accounts.confirm_email(token) do
@@ -15,11 +15,11 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
       {:error, :expired, _} ->
         conn
         |> assign(:error, :expired_link)
-        |> live_render_with_conn(ConfirmEmailLive)
+        |> live_render(ConfirmEmailLive)
       _ ->
         conn
         |> assign(:error, :not_found)
-        |> live_render_with_conn(ConfirmEmailLive)
+        |> live_render(ConfirmEmailLive)
     end
   end
 
@@ -29,17 +29,17 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
       {:ok, _, _} ->
         conn
         |> assign(:requested, true)
-        |> live_render_with_conn(ConfirmEmailLive)
+        |> live_render(ConfirmEmailLive)
       {:error, :confirmed} ->
         already_confirmed(conn)
       {:error, :not_found} ->
         conn
         |> assign(:error, :not_found)
-        |> live_render_with_conn(ConfirmEmailLive)
+        |> live_render(ConfirmEmailLive)
       {:error, changeset} ->
         conn
         |> assign(:form, changeset)
-        |> live_render_with_conn(ConfirmEmailLive)
+        |> live_render(ConfirmEmailLive)
     end
   end
 

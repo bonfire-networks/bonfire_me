@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Web.LoginController do
   alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Web.LoginLive
 
-  def index(conn, _), do: live_render_with_conn(conn, LoginLive)
+  def index(conn, _), do: live_render(conn, LoginLive)
 
   def create(conn, params) do
     form = Map.get(params, "login_fields", %{})
@@ -14,11 +14,11 @@ defmodule Bonfire.Me.Web.LoginController do
       {:error, error} when is_atom(error) ->
         conn
         |> assign(:error, error)
-        |> live_render_with_conn(LoginLive)
+        |> live_render(LoginLive)
       {:error, changeset} ->
         conn
         |> assign(:form, changeset)
-        |> live_render_with_conn(LoginLive)
+        |> live_render(LoginLive)
     end
   end
 
