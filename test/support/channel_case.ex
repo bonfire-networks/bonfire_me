@@ -17,6 +17,8 @@ defmodule Bonfire.Me.ChannelCase do
 
   use ExUnit.CaseTemplate
 
+  @repo Application.get_env(:bonfire_me, :repo_module)
+
   using do
     quote do
       # Import conveniences for testing with channels
@@ -29,8 +31,6 @@ defmodule Bonfire.Me.ChannelCase do
   end
 
   setup tags do
-
-    @repo Application.get_env(:bonfire_me, :repo_module)
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
 
