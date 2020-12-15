@@ -1,5 +1,28 @@
 defmodule Bonfire.Me.Fake do
 
+  alias Bonfire.Data.Identity.Account
+  alias Bonfire.Me.Identity.{Accounts, Users}
+
+  @repo Application.get_env(:bonfire_me, :repo_module)
+
+  def fake_account!(attrs \\ %{}) do
+    cs = Accounts.signup_changeset(account(attrs))
+    {:ok, account} = @repo.insert(cs)
+    account
+  end
+
+  def fake_user!(account \\ %{}, attrs \\ %{})
+
+  def fake_user!(%Account{}=account, attrs) do
+    {:ok, user} = Users.create(user(attrs), account)
+    user
+  end
+
+  def fake_user!(account_attrs, user_attrs) do
+    fake_user!(fake_account!(account_attrs), user_attrs)
+  end
+
+
   def email, do: Faker.Internet.email()
   def confirm_token, do: Base.encode32(Faker.random_bytes(10), pad: false)
   # def location, do: Faker.Pokemon.location()
