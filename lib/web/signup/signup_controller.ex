@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Web.SignupController do
   def index(conn, _), do: live_render(conn, SignupLive)
 
   def create(conn, params) do
-    case Accounts.signup(Map.get(params, "signup_fields", %{})) do
+    case Accounts.signup(Map.get(params, "account", %{})) do
       {:ok, _account} ->
         conn
         |> assign(:registered, true)

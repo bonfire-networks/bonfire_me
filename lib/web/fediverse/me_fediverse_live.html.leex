@@ -1,7 +1,7 @@
   <div class="lg:flex mt-6 lg:-mx-2">
     <div class="w-full lg:w-3/5 lg:px-2">
-      <%= live_component(@socket, Bonfire.Web.Components.CreateActivityLive, assigns) %>
-      <%= live_component(@socket, Bonfire.Web.Components.FeedLive, assigns) %>
+      <%= live_component(@socket, Bonfire.Web.Components.CreateActivityLive, [id: "create_activity"] ++ assigns) %>
+      <%= live_component(@socket, Bonfire.Web.Components.FeedLive, [id: "feed"] ++ assigns) %>
     </div>
     <div class="w-full lg:w-2/5 px-2"> 
       <div class="">
