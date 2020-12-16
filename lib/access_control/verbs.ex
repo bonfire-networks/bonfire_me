@@ -4,10 +4,14 @@ defmodule Bonfire.Me.AccessControl.Verbs do
   import Bonfire.Me.Integration
 
   def verbs, do: [
-    read: "READ1NGSVTTER1YFVNDAMENTA1",
-    see: "0BSERV1NG11ST1NGSEX1STENCE",
-    edit: "CHANG1NGVA1VES0FPR0PERT1ES",
-    delete: "MAKESTVFFG0AWAYPERMANENT1Y"
+    read:    "READ1NGSVTTER1YFVNDAMENTA1",
+    see:     "0BSERV1NG11ST1NGSEX1STENCE",
+    edit:    "CHANG1NGVA1VES0FPR0PERT1ES",
+    delete:  "MAKESTVFFG0AWAYPERMANENT1Y",
+    follow:  "T0SVBSCR1BET0THE0VTPVT0F1T",
+    like:    "11KES1ND1CATEAM11DAPPR0VA1",
+    mention: "REFERENC1NGTH1NGSE1SEWHERE",
+    tag:     "CATEG0R1S1NGNGR0VP1NGSTVFF",
   ]
 
   def create(%{}=attrs) when not is_struct(attrs) do

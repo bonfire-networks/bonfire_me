@@ -4,14 +4,15 @@ defmodule Bonfire.Me.Identity.Users.Acls do
   alias Bonfire.Data.Identity.User
   import Bonfire.Me.Integration
   import Bonfire.Me.Queries
+  import Ecto.Query
 
   ## invariants:
 
   ## * All a user's ACLs will have the user as an administrator but it
   ##   will be hidden from the user
 
-  def create(%User{}=user) do
-  end
+  # def create(%User{}=user) do
+  # end
 
   @doc """
   Lists the circles we are the registered caretakers of that we are
@@ -21,8 +22,6 @@ defmodule Bonfire.Me.Identity.Users.Acls do
   def list_my(%User{}=user) do
     repo().all(list_my_q(user))
   end
-
-  import Ecto.Query
 
   @doc "query for `list_my`"
   def list_my_q(%User{id: user_id}=user) do

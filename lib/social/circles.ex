@@ -1,17 +1,18 @@
 defmodule Bonfire.Me.Social.Circles do
 
-  alias CommonsPub.Circles.{Circle, Encircle}
+  alias CommonsPub.Circles.Circle
+  import Bonfire.Me.Integration
 
-  def guests_id, do: "RAND0MSTRANGERS0FF1NTERNET"
-  def local_users_id, do: "VSERSFR0MY0VR10CA11NSTANCE"
+  def circles, do: [
+    guest:        "RAND0MSTRANGERS0FF1NTERNET",
+    local:        "VSERSFR0MY0VR10CA11NSTANCE",
+    activity_pub: "FEDERATEDW1THANACT1V1TYPVB",
+  ]
 
-  defp repo, do: Application.get_env(:bonfire_me, :repo_module)
-
-  def create(type, attrs) when is_map(attrs) and not is_map_key(attrs, :__struct__) do
-    repo().single(changeset(:create, type, attrs))
+  def create(%{}=attrs) do
+    repo().insert(changeset(:create, attrs))
   end
 
-  def changeset(:create, Circle, attrs), do: Circle.changeset(attrs)
-  def changeset(:create, Encircle, attrs), do: Encircle.changeset(attrs)
+  def changeset(:create, attrs), do: Circle.changeset(attrs)
 
 end
