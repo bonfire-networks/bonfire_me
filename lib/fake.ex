@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Fake do
   @repo Application.get_env(:bonfire_me, :repo_module)
 
   def fake_account!(attrs \\ %{}) do
-    cs = Accounts.signup_changeset(account(attrs))
+    cs = Accounts.signup_changeset(signup_form(attrs))
     {:ok, account} = @repo.insert(cs)
     account
   end
@@ -14,7 +14,7 @@ defmodule Bonfire.Me.Fake do
   def fake_user!(account \\ %{}, attrs \\ %{})
 
   def fake_user!(%Account{}=account, attrs) do
-    {:ok, user} = Users.create(user(attrs), account)
+    {:ok, user} = Users.create(create_user_form(attrs), account)
     user
   end
 
