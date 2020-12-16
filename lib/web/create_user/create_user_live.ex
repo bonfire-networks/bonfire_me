@@ -8,7 +8,6 @@ defmodule Bonfire.Me.Web.CreateUserLive do
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccountFromSession,
-      # LivePlugs.LoadCurrentUserFromPath,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
@@ -22,13 +21,13 @@ defmodule Bonfire.Me.Web.CreateUserLive do
      |> assign(form: form(socket.assigns[:current_account]))}
   end
 
-  def handle_event("validate", %{"create_user_fields" => params}, socket) do
+  def handle_event("validate", %{"user" => params}, socket) do
     form =
       Users.changeset(:create, params, socket.assigns[:current_account])
       |> Map.put(:action, :insert)
     {:noreply, assign(socket, form: form)}
   end
-  def handle_event("submit", %{"create_user_fields" => params}, socket) do
+  def handle_event("submit", %{"user" => params}, socket) do
     case Users.create(params, socket.assigns()[:current_account]) do
       {:ok, user} -> {:noreply, switched(socket, user)}
       {:error, form} -> {:noreply, assign(socket, form: form)}
