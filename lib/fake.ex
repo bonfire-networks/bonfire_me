@@ -12,40 +12,60 @@ defmodule Bonfire.Me.Fake do
   def icon_url, do: Faker.Avatar.image_url(140,140)
   def image_url, do: Faker.Avatar.image_url()
 
-  def account(base \\ %{}) do
-    base
-    # |> Map.put_new_lazy(:email, &email/0)
-    |> Map.put_new_lazy(:email_address, &email/0)
-    |> Map.put_new_lazy(:password, &password/0)
+  defp put_form_lazy(base, key, fun) do
+    Map.put_new_lazy base, key, fn ->
+      fun.(Map.get(base, key, %{}))
+    end
   end
 
-  def user(base \\ %{}) do
-    base
-    |> character()
-    |> profile()
-  end
-
-  def character(base \\ %{}) do
+  def character_subform(base \\ %{}) do
     base
     |> Map.put_new_lazy(:username, &username/0)
   end
 
-  def profile(base \\ %{}) do
+  def credential_subform(base \\ %{}) do
     base
-    |> Map.put_new_lazy(:name, &name/0)
+    |> Map.put_new_lazy(:password, &password/0)
+  end
+
+  def email_subform(base \\ %{}) do
+    base
+    |> Map.put_new_lazy(:email_address, &email/0)
+  end
+
+  def profile_subform(base \\ %{}) do
+    base
+    |> Map.put_new_lazy(:name,    &name/0)
     |> Map.put_new_lazy(:summary, &summary/0)
+  end
+
+  def signup_form(base \\ %{}) do
+    base
+    |> put_form_lazy(:email,      &email_subform/1)
+    |> put_form_lazy(:credential, &credential_subform/1)
+  end
+
+  def login_form(base \\ %{}) do
+    base
+    |> put_form_lazy(:email, &email_subform/1)
+    |> put_form_lazy(:credential, &credential_subform/1)
+  end
+
+  def create_user_form(base \\ %{}) do
+    base
+    |> put_form_lazy(:character, &character_subform/1)
+    |> put_form_lazy(:profile,   &profile_subform/1)
   end
 
   def user_live(base \\ %{}) do
     base
-    |> user()
-    |> Map.put_new_lazy(:location, &location/0)
-    |> Map.put_new_lazy(:id, &username/0)
-    |> Map.put_new_lazy(:website, &website/0)
-    |> Map.put_new_lazy(:icon_url, &icon_url/0)
-    |> Map.put_new_lazy(:image_url, &image_url/0)
-    |> Map.put_new_lazy(:email, &email/0)
-    |> Map.put_new(:is_followed, false)
-    |> Map.put_new(:is_instance_admin, true)
+    # |> user()
+    # |> Map.put_new_lazy(:location,  &location/0)
+    # |> Map.put_new_lazy(:id,        &username/0)
+    # |> Map.put_new_lazy(:website,   &website/0)
+    # |> Map.put_new_lazy(:icon_url,  &icon_url/0)
+    # |> Map.put_new_lazy(:image_url, &image_url/0)
+    # |> Map.put_new(:is_followed,       false)
+    # |> Map.put_new(:is_instance_admin, true)
   end
 end
