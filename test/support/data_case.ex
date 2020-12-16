@@ -15,6 +15,7 @@ defmodule Bonfire.Me.DataCase do
   """
 
   use ExUnit.CaseTemplate
+  @repo Application.get_env(:bonfire_me, :repo_module)
 
   using do
     quote do
@@ -27,8 +28,6 @@ defmodule Bonfire.Me.DataCase do
   end
 
   setup tags do
-
-    @repo Application.get_env(:bonfire_me, :repo_module)
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
 

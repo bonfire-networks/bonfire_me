@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Test.FakeHelpers do
 
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Fake
-  alias Bonfire.Me.{Accounts, Users}
+  alias Bonfire.Me.Identity.{Accounts, Users}
   import ExUnit.Assertions
 
   @repo Application.get_env(:bonfire_me, :repo_module)
