@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Social.Posts do
 
   alias Bonfire.Data.Social.{Post, PostContent}
   alias Pointers.Changesets
+  import Ecto.Query
 
   defp repo, do: Application.get_env(:bonfire_me, :repo_module)
 
@@ -16,4 +17,15 @@ defmodule Bonfire.Me.Social.Posts do
     |> Changesets.cast_assoc(:created, attrs)
   end
 
+  def by_user(user_id) do
+    repo().all(by_user_query(user_id))
+  end
+
+  def by_user_query(user_id) do
+    from p in Post,
+     join: pc in assoc(p, :post_content),
+     join: cr in assoc(p, :created),
+     where: cr.creator_id == ^user_id,
+     preload: [post_content: pc, created: cr]
+  end
 end
