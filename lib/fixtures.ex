@@ -2,58 +2,68 @@ defmodule Bonfire.Me.Fixtures do
 
   alias Bonfire.Data.AccessControl.{Access, Acl, Controlled, Grant, Interact, Verb}
   alias Bonfire.Data.Identity.User
+  alias Bonfire.Data.Social.{Circle, Named}
   alias Bonfire.Me.AccessControl.{Accesses, Verbs}
   alias Bonfire.Me.Identity.Users
+  alias Bonfire.Me.Social.Circles
   alias Ecto.UUID
   alias Pointers.ULID
   import Bonfire.Me.Integration
 
   def insert() do
     # to start with, we need our special users
-    guest = Users.guest_user_id()
-    local = Users.local_user_id()
-    {2, _} = repo().insert_all(User, [%{id: guest}, %{id: local}])
+    circles = Circles.circles()
+    repo().insert_all Circle, [
+      %{id: circles.guest},
+      %{id: circles.local},
+      %{id: circles.activity_pub},
+    ]
+    repo().insert_all Named, [
+      %{id: circles.guest,        name: "Guests"},
+      %{id: circles.local,        name: "Local Users"},
+      %{id: circles.activity_pub, name: "Remote Users (ActivityPub)"},
+    ]
     # now we need to insert verbs for our standard actions
     verbs  = Verbs.verbs()
-    read   = Keyword.fetch!(verbs, :read)
-    see    = Keyword.fetch!(verbs, :see)
-    edit   = Keyword.fetch!(verbs, :edit)
-    delete = Keyword.fetch!(verbs, :delete)
-    {4, _} = repo().insert_all Verb,
-      [ %{id: read,   verb: "read"},
-        %{id: see,    verb: "see"},
-        %{id: edit,   verb: "edit"},
-        %{id: delete, verb: "delete"},
+    repo().insert_all Verb,
+      [ %{id: verbs.read,   verb: "read"},
+        %{id: verbs.see,    verb: "see"},
+        %{id: verbs.edit,   verb: "edit"},
+        %{id: verbs.delete, verb: "delete"},
       ]
     # then our standard accesses
-    accesses   = Accesses.accesses()
-    read_only  = Keyword.fetch!(accesses, :read_only)
-    administer = Keyword.fetch!(accesses, :administer)
-    {2, _} = repo().insert_all(Access, [%{id: read_only}, %{id: administer}])
-    # now we have to hook up the verbs to the accesses
-    {6, _} = repo().insert_all Interact, [
-      %{id: ULID.generate(), access_id: read_only,  verb_id: read},
-      %{id: ULID.generate(), access_id: read_only,  verb_id: see},
-      %{id: ULID.generate(), access_id: administer, verb_id: read},
-      %{id: ULID.generate(), access_id: administer, verb_id: see},
-      %{id: ULID.generate(), access_id: administer, verb_id: edit},
-      %{id: ULID.generate(), access_id: administer, verb_id: delete},
+    accesses = Accesses.accesses()
+    repo().insert_all Access, [
+      %{id: accesses.read_only},
+      %{id: accesses.administer},
     ]
+    # now we have to hook up the verbs to the accesses
+    repo().insert_all Interact, [
+      %{id: ULID.generate(), access_id: accesses.read_only,  verb_id: verbs.read},
+      %{id: ULID.generate(), access_id: accesses.read_only,  verb_id: verbs.see},
+      %{id: ULID.generate(), access_id: accesses.administer, verb_id: verbs.read},
+      %{id: ULID.generate(), access_id: accesses.administer, verb_id: verbs.see},
+      %{id: ULID.generate(), access_id: accesses.administer, verb_id: verbs.edit},
+      %{id: ULID.generate(), access_id: accesses.administer, verb_id: verbs.delete},
+    ]
+    # some of these things are public
     # read_only and read are visible to local users, so they need an
     # acl and a controlled mixin that associates them
-    read_only_acl = Pointers.ULID.generate()
-    {1, _} = repo().insert_all(Acl,[%{id: read_only_acl}])
+    acls = %{read_only: Pointers.ULID.generate()}
+    {1, _} = repo().insert_all(Acl,[ %{id: acls.read_only} ])
     {2, _} = repo().insert_all Controlled, [
-      %{id: read,      acl_id: read_only_acl},
-      %{id: read_only, acl_id: read_only_acl},
+      %{id: verbs.read,     acl_id: acls.read_only},
+      %{id: acls.read_only, acl_id: acls.read_only},
     ]
     # finally, we do a horrible thing and grant read_only to
     # read_only_acl and it actually kinda works out because of the
     # indirection through pointer.
-    read_only_grant = Pointers.ULID.generate()
+    grants = %{read_only: Pointers.ULID.generate()}
     {1, _} = repo().insert_all Grant, [
-      %{ id: read_only_grant,  acl_id: read_only_acl,
-         access_id: read_only, subject_id: local },
+      %{ id:         grants.read_only,
+         acl_id:     acls.read_only,
+         access_id:  accesses.read_only,
+         subject_id: circles.local },
     ]
   end
 

@@ -34,7 +34,7 @@
           <% end %>
           <%= for g <- inputs_for(f, :profile) do %>
             <div class="sm:col-span-4">
-              <%= label g, :name, "What \"real name\" should we know you by?", class: "block text-sm font-medium text-gray-700" %>
+              <%= label g, :name, "What display name should we know you by?", class: "block text-sm font-medium text-gray-700" %>
               <div class="mt-1">
                 <%= text_input g, :name, required: true %>
                 <%= error_tag g, :name %>
