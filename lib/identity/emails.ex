@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Identity.Emails do
 
   def confirm_email(%Account{email: %{email_address: email}}=account) when is_binary(email) do
     conf =
-      Application.get_env(:bonfire_me, __MODULE__, [])
+      Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])
       |> Keyword.get(:confirm_email, [])
     new_email()
     |> assign(:current_account, account)
@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Identity.Emails do
 
   def reset_password(%Account{email: %{email_address: email}}=account) when is_binary(email) do
     conf =
-      Application.get_env(:bonfire_me, __MODULE__, [])
+      Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])
       |> Keyword.get(:reset_password_email, [])
     new_email()
     |> assign(:current_account, account)

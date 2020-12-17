@@ -3,11 +3,11 @@ defmodule Bonfire.Me.Fake do
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Identity.{Accounts, Users}
 
-  @repo Application.get_env(:bonfire_me, :repo_module)
+  import Bonfire.Common.Config, only: [repo: 0]
 
   def fake_account!(attrs \\ %{}) do
     cs = Accounts.changeset(:signup, signup_form(attrs))
-    {:ok, account} = @repo.insert(cs)
+    {:ok, account} = repo().insert(cs)
     account
   end
 

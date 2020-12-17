@@ -17,7 +17,7 @@ defmodule Bonfire.Me.ChannelCase do
 
   use ExUnit.CaseTemplate
 
-  @repo Application.get_env(:bonfire_me, :repo_module)
+  import Bonfire.Common.Config, only: [repo: 0]
 
   using do
     quote do
@@ -32,7 +32,7 @@ defmodule Bonfire.Me.ChannelCase do
 
   setup tags do
 
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(@repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(repo())
 
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(@repo, {:shared, self()})

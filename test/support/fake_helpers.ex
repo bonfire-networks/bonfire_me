@@ -5,11 +5,11 @@ defmodule Bonfire.Me.Test.FakeHelpers do
   alias Bonfire.Me.Identity.{Accounts, Users}
   import ExUnit.Assertions
 
-  @repo Application.get_env(:bonfire_me, :repo_module)
+  import Bonfire.Common.Config, only: [repo: 0]
 
   def fake_account!(attrs \\ %{}) do
     cs = Accounts.signup_changeset(Fake.account(attrs))
-    assert {:ok, account} = @repo.insert(cs)
+    assert {:ok, account} = repo().insert(cs)
     account
   end
 

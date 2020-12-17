@@ -6,10 +6,10 @@ defmodule Bonfire.Me.Users.ActivityPub do
   # import Ecto.Query
   # import Pointers.Queries
 
-  # @repo Application.get_env(:bonfire_me, :repo_module)
+  # import Bonfire.Common.Config, only: [repo: 0]
 
   # def by_username(username) when is_binary(username),
-  #   do: @repo.single(by_username_query(username))
+  #   do: repo().single(by_username_query(username))
 
   # def by_username_query(username) do
   #   # from(u in User, as: :user)
@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   # def create(params, %Peer{id: id}) do
   #   changeset(params)
   #   |> Changesets.change(peer_id: id)
-  #   |> @repo.insert()
+  #   |> repo().insert()
   # end
 
   # def changeset(user \\ %User{}, params) do
@@ -46,7 +46,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
 
   # @doc "Updates a remote user"
   # def update(user, params) do
-  #   @repo.update(changeset(user, params))
+  #   repo().update(changeset(user, params))
   # end
 
 end
