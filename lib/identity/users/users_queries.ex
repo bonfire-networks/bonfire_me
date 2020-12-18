@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Identity.Users.Queries do
 
-  @repo Application.get_env(:bonfire_me, :repo_module)
+  import Bonfire.Common.Config, only: [repo: 0]
 
   alias Bonfire.Me.Identity.Users
   import Ecto.Query
