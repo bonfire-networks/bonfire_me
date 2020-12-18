@@ -30,6 +30,7 @@ defmodule Bonfire.Me.Fake do
   def password, do: Base.encode32(Faker.random_bytes(10), pad: false)
   def summary, do: Faker.Lorem.sentence(6..15)
   def username, do: String.replace(Faker.Internet.user_name(), ~r/\./, "_")
+  def atusername, do: "@" <> username()
   def website, do: Faker.Internet.domain_name()
   def location, do: Faker.Pokemon.location()
   def icon_url, do: Faker.Avatar.image_url(140,140)
@@ -65,12 +66,6 @@ defmodule Bonfire.Me.Fake do
   def signup_form(base \\ %{}) do
     base
     |> put_form_lazy(:email,      &email_subform/1)
-    |> put_form_lazy(:credential, &credential_subform/1)
-  end
-
-  def login_form(base \\ %{}) do
-    base
-    |> put_form_lazy(:email, &email_subform/1)
     |> put_form_lazy(:credential, &credential_subform/1)
   end
 

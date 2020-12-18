@@ -57,25 +57,32 @@ defmodule Bonfire.Me.Identity.Accounts do
   def signup(attrs, opts) when not is_struct(attrs),
     do: signup(changeset(:signup, attrs, opts), opts)
 
-  def signup(%Changeset{data: %Account{}}=cs, _opts) do
+  def signup(%Changeset{valid?: true, data: %Account{}}=cs, opts) do
+    opts = opts ++ Email.config()
     repo().transact_with fn -> # revert if email send fails
       repo().insert(cs)
-      ~>> send_confirm_email()
+      ~>> send_confirm_email(opts)
     end
   end
+  def signup(%Changeset{data: %Account{}}=cs, _), do: cs # avoid checking out txn
 
   ### login
 
-  def login(attrs) when not is_struct(attrs),
-    do: login(changeset(:login, attrs))
+  def login(attrs_or_changeset, opts \\ [])
 
-  def login(%Changeset{data: %LoginFields{}}=cs) do
+  def login(attrs, opts) when not is_struct(attrs),
+    do: login(changeset(:login, attrs), opts)
+
+  def login(%Changeset{data: %LoginFields{}}=cs, opts) do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
-      repo().single(find_by_email_query(form))
+      repo().single(login_query(form))
       ~>> check_password(form)
-      ~>> check_confirmed()
+      ~>> check_confirmed(opts)
     end
   end
+
+  defp login_query(%LoginFields{email: e}) when is_binary(e), do: find_by_email_query(e)
+  defp login_query(%LoginFields{username: u}) when is_binary(u), do: find_by_username_query(u)
 
   defp check_password(nil, _form) do
     Argon2.no_user_verify()
@@ -88,30 +95,39 @@ defmodule Bonfire.Me.Identity.Accounts do
       else: {:error, :no_match}
   end
 
-  defp check_confirmed(%Account{email: %{confirmed_at: nil}}),
-    do: {:error, :email_not_confirmed}
-
-  defp check_confirmed(%Account{email: %{confirmed_at: _}}=account),
-    do: {:ok, account}
+  defp check_confirmed(%Account{email: %{confirmed_at: ca}}=account, opts) do
+    if is_nil(ca) and Email.config(opts, :must_confirm, true),
+      do: {:error, :email_not_confirmed},
+      else: {:ok, account}
+  end
 
   ### request_confirm_email
 
-  def request_confirm_email(params) when not is_struct(params),
-    do: request_confirm_email(changeset(:confirm_email, params))
+  def request_confirm_email(params_or_changeset_or_form_or_account, opts \\ [])
 
-  def request_confirm_email(%Changeset{data: %ConfirmEmailFields{}}=cs),
-    do: Changeset.apply_action(cs, :insert) ~>> request_confirm_email()
+  def request_confirm_email(params, opts) when not is_struct(params),
+    do: request_confirm_email(changeset(:confirm_email, params), opts)
 
-  def request_confirm_email(%ConfirmEmailFields{}=form) do
-    case repo().one(find_by_email_query(form.email)) do
-      nil -> {:error, :not_found}
-      %Account{email: email}=account -> request_confirm_email(account)
+  def request_confirm_email(%Changeset{data: %ConfirmEmailFields{}}=cs, opts),
+    do: Changeset.apply_action(cs, :insert) ~>> request_confirm_email(opts)
+
+  def request_confirm_email(%ConfirmEmailFields{}=form, opts) do
+    if Email.config(opts, :must_confirm, true) do
+      case repo().one(find_by_email_query(form.email)) do
+        nil -> {:error, :not_found}
+        %Account{email: email}=account -> request_confirm_email(account, opts)
+      end
+    else
+      {:error, :confirmation_disabled}
     end
   end
 
-  def request_confirm_email(%Account{email: %{}=email}=account) do
+  def request_confirm_email(%Account{email: %{}=email}=account, opts) do
     cond do
       not is_nil(email.confirmed_at) -> {:error, :confirmed}
+
+      not Email.config(opts, :must_confirm, true) ->
+        {:error, :confirmation_disabled}
 
       # why not refresh here? it provides a window of DOS opportunity
       # against a user completing their activation.
@@ -121,7 +137,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
       true ->
         account = refresh_confirm_email_token(account)
-        with {:ok, _} <- send_confirm_email(Emails.confirm_email(account)),
+        with {:ok, _} <- send_confirm_email(Emails.confirm_email(account), opts),
           do: {:ok, :refreshed, account}
     end
   end
@@ -153,11 +169,15 @@ defmodule Bonfire.Me.Identity.Accounts do
     end
   end
 
-  defp send_confirm_email(%Account{}=account) do
-    account = repo().preload(account, :email)
-    case mailer().send_now(Emails.confirm_email(account), account.email.email_address) do
-      {:ok, _mail} -> {:ok, account}
-      _ -> {:error, :email}
+  defp send_confirm_email(%Account{}=account, opts) do
+    if Keyword.get(opts, :must_confirm, true) do
+      account = repo().preload(account, :email)
+      case mailer().send_now(Emails.confirm_email(account), account.email.email_address) do
+        {:ok, _mail} -> {:ok, account}
+        _ -> {:error, :email}
+      end
+    else
+      {:ok, account}
     end
   end
 
@@ -179,14 +199,19 @@ defmodule Bonfire.Me.Identity.Accounts do
       preload: [email: e, credential: c]
   end
 
-  # defp find_by_username_query(username) when is_binary(username) do
-  #   from a in Account,
-  #     join: c in assoc(a, :credential),
-  #     join: ac in assoc(a, :accounted),
-  #     join: u in User, on: ac.id == u.id,
-  #     join: c in assoc(u, :character),
-  #     where: e.email_address == ^email,
-  #     preload: [email: e, credential: c]
-  # end
+  defp find_by_username_query(username) when is_binary(username) do
+    from a in Account,
+      join: c in assoc(a, :credential),
+      join: e in assoc(a, :email),
+      join: ac in assoc(a, :accounted),
+      join: u in assoc(ac, :user),
+      join: ch in assoc(u, :character),
+      join: p in assoc(u, :profile),
+      where: c.username == ^username,
+      preload: [
+        email: e, credential: c,
+        accounted: {ac, user: {u, character: ch, profile: p}},
+      ]
+  end
 
 end

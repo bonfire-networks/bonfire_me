@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Identity.Users do
   use OK.Pipe
   alias Bonfire.Data.Identity.{Account, User}
   alias Bonfire.Me.Identity.Characters
-  alias Bonfire.Me.Social.Profiles
+  alias Bonfire.Me.Social.{Circles, Profiles}
   alias Pointers.Changesets
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
@@ -13,29 +13,71 @@ defmodule Bonfire.Me.Identity.Users do
   import Ecto.Query
 
   @type changeset_name :: :create
+  @type changeset_extra :: Account.t | :remote
 
-  def create(params, %Account{}=account) when not is_struct(params),
-    do: repo().insert(changeset(:create, %User{}, params, account))
+  @spec create(params :: map, extra :: changeset_extra) :: Changeset.t
+
+  def create(params, extra) do
+    repo().insert(changeset(:create, %User{}, params, extra))
+  end
 
   # def update(%User{} = user, params), do: repo().update(changeset(:update, user, params))
 
-  def changeset(:create, user \\ %User{}, params, %Account{}=account) do
+  @spec changeset(
+    name :: changeset_name,
+    params :: map,
+    extra :: Account.t | :remote
+  ) :: Changeset.t
+
+  @spec changeset(
+    name :: changeset_name,
+    user :: User.t,
+    params :: map,
+    extra :: Account.t | :remote
+  ) :: Changeset.t
+
+  def changeset(name , user \\ %User{}, params, extra)
+
+  def changeset(:create, user, params, %Account{}=account) do
     User.changeset(user, params)
-    |> create_override(account)
-    |> Changeset.cast_assoc(:accounted)
+    |> override(:create, account)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
+    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    |> Changeset.cast_assoc(:accounted)
     |> Changeset.cast_assoc(:follow_count)
     |> Changeset.cast_assoc(:like_count)
-    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    |> Changeset.cast_assoc(:encircles)
   end
 
-  defp create_override(changeset, %Account{}=account) do
+  def changeset(:create, user, params, :remote) do
+    User.changeset(user, params)
+    |> override(:create, :remote)
+    |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
+    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    |> Changeset.cast_assoc(:follow_count)
+    |> Changeset.cast_assoc(:like_count)
+    |> Changeset.cast_assoc(:encircles)
+  end
+
+  # this is where we are very careful to explicitly set all the things
+  # a user should have but shouldn't have control over the input for.
+  defp override(changeset, changeset_type, extra \\ nil)
+
+  defp override(changeset, :create, %Account{}=account) do
     Changeset.cast changeset, %{
       accounted:    %{account_id: account.id},
       follow_count: %{follower_count: 0, followed_count: 0},
       like_count:   %{liker_count: 0,    liked_count: 0},
+      encircles:    [%{circle_id: Circles.circles().local}]
     }, []
   end
+
+  defp override(changeset, :create, :remote) do
+    Changeset.cast changeset, %{
+      encircles: [%{circle_id: Circles.circles().activity_pub}]
+    }, []
+  end
+
 
   def by_account(%Account{id: id}), do: by_account(id)
   def by_account(account_id) when is_binary(account_id),
