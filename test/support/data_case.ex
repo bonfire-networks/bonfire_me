@@ -15,7 +15,7 @@ defmodule Bonfire.Me.DataCase do
   """
 
   use ExUnit.CaseTemplate
-  import Bonfire.Common.Config, only: [repo: 0]
+  import Bonfire.Me.Integration
 
   using do
     quote do

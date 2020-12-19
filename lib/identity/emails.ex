@@ -2,11 +2,12 @@ defmodule Bonfire.Me.Identity.Emails do
 
   import Bamboo.Email
   import Bamboo.Phoenix
+
   alias Bonfire.Data.Identity.Account
   alias Pointers.Changesets
   alias Bonfire.Me.Web.EmailView
 
-  def confirm_email(%Account{email: %{email_address: email}}=account) when is_binary(email) do
+  def confirm_email(%Account{}=account) do
     conf =
       Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])
       |> Keyword.get(:confirm_email, [])

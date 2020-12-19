@@ -18,6 +18,7 @@ defmodule Bonfire.Me.Web.LoginController do
       {:error, changeset} ->
         conn
         |> assign(:form, changeset)
+        |> assign(:error, :validation)
         |> live_render(LoginLive)
     end
   end

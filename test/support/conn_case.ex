@@ -27,7 +27,7 @@ defmodule Bonfire.Me.ConnCase do
       import Bonfire.Me.Test.ConnHelpers
       import Bonfire.Me.Test.FakeHelpers
       alias Bonfire.Me.Fake
-      alias Bonfire.Me.Web.Router.Helpers, as: Routes
+      # alias Bonfire.Me.Web.Router.Helpers, as: Routes
 
       # The default endpoint for testing
       @endpoint Bonfire.Me.Web.Endpoint
@@ -36,7 +36,7 @@ defmodule Bonfire.Me.ConnCase do
 
   setup tags do
 
-    import Bonfire.Common.Config, only: [repo: 0]
+    import Bonfire.Me.Integration
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(repo())
 

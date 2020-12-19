@@ -50,17 +50,19 @@ defmodule Bonfire.Me.Identity.Accounts do
   ### signup
 
   def signup(thing, opts \\ [])
+
   def signup(attrs, opts) when not is_struct(attrs),
     do: signup(changeset(:signup, attrs, opts), opts)
 
-  def signup(%Changeset{valid?: true, data: %Account{}}=cs, opts) do
+  def signup(%Changeset{valid?: true, data: %Account{} = account}=cs, opts) do
     opts = opts ++ Email.config()
     repo().transact_with fn -> # revert if email send fails
       repo().insert(cs)
-      ~>> send_confirm_email(opts)
+      ~>> maybe_send_confirm_email(opts)
     end
   end
-  def signup(%Changeset{data: %Account{}}=cs, _), do: cs # avoid checking out txn
+
+  def signup(%Changeset{data: %Account{}}=cs, _), do: {:error, cs} # avoid checking out txn
 
   ### login
 
@@ -79,13 +81,13 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   defp check_password(nil, _form) do
     Argon2.no_user_verify()
-    {:error, :no_match}
+    {:error, :not_found}
   end
 
   defp check_password(account, form) do
     if Argon2.verify_pass(form.password, account.credential.password_hash),
       do: {:ok, account},
-      else: {:error, :no_match}
+      else: {:error, :not_found}
   end
 
   defp check_confirmed(%Account{email: %{confirmed_at: ca}}=account, opts) do
@@ -130,7 +132,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
       true ->
         account = refresh_confirm_email_token(account)
-        with {:ok, _} <- send_confirm_email(Emails.confirm_email(account), opts),
+        with {:ok, _} <- maybe_send_confirm_email(account, opts),
           do: {:ok, :refreshed, account}
     end
   end
@@ -164,16 +166,15 @@ defmodule Bonfire.Me.Identity.Accounts do
     end
   end
 
-  defp send_confirm_email(%Account{}=account, opts) do
+  defp maybe_send_confirm_email(%Account{}=account, opts) do
     if Keyword.get(opts, :must_confirm, true),
-      do: really_send_confirm_email(account),
+      do: repo().preload(account, :email) |> send_confirm_email(),
       else: {:ok, account}
   end
 
-  defp really_send_confirm_email(account) do
-    account = repo().preload(account, :email)
+  defp send_confirm_email(%Account{email: %{email_address: email_address}}=account) do
     mail = Emails.confirm_email(account)
-    mailer().send_now(mail, account.email.email_address)
+    mailer().send_now(mail, email_address)
     |> mailer_response(account)
   end
 
