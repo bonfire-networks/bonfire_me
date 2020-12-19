@@ -1,11 +1,21 @@
 defmodule Bonfire.Me.Identity.Users.Queries do
 
+  import Ecto.Query
   import Bonfire.Me.Integration
 
-  alias Bonfire.Me.Identity.Users
-  import Ecto.Query
+  # alias Bonfire.Me.Identity.Users
+  alias Bonfire.Data.Identity.User
 
   def query(), do: from(u in User, as: :user)
+
+  def with_mixins() do
+    from(u in User, as: :user,
+      join: a in assoc(u, :accounted),
+      join: c in assoc(u, :character),
+      join: p in assoc(u, :profile),
+      preload: [character: c, profile: p]
+    )
+  end
 
   # def query
 
@@ -14,6 +24,46 @@ defmodule Bonfire.Me.Identity.Users.Queries do
     # Enum.reduce(filters, query, &macro_filter(&2, &1, env))
     nil
   end
+
+  def by_account_query(account_id) do
+    from u in User,
+      join: a in assoc(u, :accounted),
+      join: c in assoc(u, :character),
+      join: p in assoc(u, :profile),
+      where: a.account_id == ^account_id,
+      preload: [character: c, profile: p]
+  end
+
+  def by_username_query(username) do
+    from u in User,
+      join: p in assoc(u, :profile),
+      join: c in assoc(u, :character),
+      left_join: a in assoc(u, :actor),
+      join: ac in assoc(u, :accounted),
+      where: c.username == ^username,
+      preload: [profile: p, character: c, actor: a, accounted: ac]
+  end
+
+  def for_switch_user_query(username) do
+    from u in User,
+      join: c in assoc(u, :character),
+      join: a in assoc(u, :accounted),
+      where: c.username == ^username,
+      preload: [character: c, accounted: a],
+      order_by: [asc: u.id]
+  end
+
+  defp get_current_query(username, account_id) do
+    from u in User,
+      join: c in assoc(u, :character),
+      join: ac in assoc(u, :accounted),
+      join: a in assoc(ac, :account),
+      join: p in assoc(u, :profile),
+      where: a.id == ^account_id,
+      where: c.username == ^username,
+      preload: [character: c, accounted: {ac, account: a}, profile: p]
+  end
+
 
   # defp macro_filter(query, {join_: [{source, [{rel, as}]}]}, _env),
   #   do: join_as(query, source, :inner, rel, as)
