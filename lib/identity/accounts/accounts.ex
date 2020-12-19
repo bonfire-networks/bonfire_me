@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Identity.Accounts do
     ConfirmEmailFields,
     LoginFields,
     ResetPasswordFields,
-    SignupFields,
+    Queries,
   }
   alias Ecto.Changeset
   alias Pointers.Changesets
@@ -16,15 +16,11 @@ defmodule Bonfire.Me.Identity.Accounts do
   import Ecto.Query
   use OK.Pipe
 
-  def get_current(id) when is_binary(id), do: repo().one(current_query(id))
-  def fetch_current(id) when is_binary(id), do: repo().single(current_query(id))
+  def get_current(id) when is_binary(id),
+    do: repo().one(Queries.current(id))
 
-  defp current_query(id) do
-    from a in Account,
-      where: a.id == ^id,
-      left_join: ia in assoc(a, :instance_admin),
-      preload: [instance_admin: ia]
-  end
+  def fetch_current(id) when is_binary(id),
+    do: repo().single(Queries.current(id))
 
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
 
@@ -75,14 +71,11 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   def login(%Changeset{data: %LoginFields{}}=cs, opts) do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
-      repo().single(login_query(form))
+      repo().single(Queries.login(form))
       ~>> check_password(form)
       ~>> check_confirmed(opts)
     end
   end
-
-  defp login_query(%LoginFields{email: e}) when is_binary(e), do: find_by_email_query(e)
-  defp login_query(%LoginFields{username: u}) when is_binary(u), do: find_by_username_query(u)
 
   defp check_password(nil, _form) do
     Argon2.no_user_verify()
@@ -113,7 +106,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   def request_confirm_email(%ConfirmEmailFields{}=form, opts) do
     if Email.config(opts, :must_confirm, true) do
-      case repo().one(find_by_email_query(form.email)) do
+      case repo().one(Queries.request_confirm_email(form.email)) do
         nil -> {:error, :not_found}
         %Account{email: email}=account -> request_confirm_email(account, opts)
       end
@@ -131,7 +124,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
       # why not refresh here? it provides a window of DOS opportunity
       # against a user completing their activation.
-      DateTime.compare(DateTime.utc_now(), email.confirm_until) == :lt ->
+      future?(email.confirm_until) ->
         with {:ok, _} <- mailer().send_now(Emails.confirm_email(account), email.email_address),
           do: {:ok, :resent, account}
 
@@ -156,62 +149,39 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   def confirm_email(token) when is_binary(token) do
     repo().transact_with fn ->
-      case repo().one(find_for_confirm_email_query(token)) do
-        nil -> {:error, :not_found}
-        %Account{email: %Email{}=email} = account ->
-          cond do
-            not is_nil(email.confirmed_at) -> {:error, :confirmed, account}
-            is_nil(email.confirm_until) -> {:error, :no_expiry, account}
-            DateTime.compare(DateTime.utc_now(),email.confirm_until) == :lt -> confirm_email(account)
-            true -> {:error, :expired, account}
-          end
-      end
+      repo().one(Queries.confirm_email(token))
+      |> do_confirm_email()
+    end
+  end
+
+  defp do_confirm_email(nil), do: {:error, :not_found}
+  defp do_confirm_email(%Account{email: %Email{}=email}=account) do
+    cond do
+      not is_nil(email.confirmed_at) -> {:error, :confirmed, account}
+      is_nil(email.confirm_until) -> {:error, :no_expiry, account}
+      future?(email.confirm_until) -> confirm_email(account)
+      true -> {:error, :expired, account}
     end
   end
 
   defp send_confirm_email(%Account{}=account, opts) do
-    if Keyword.get(opts, :must_confirm, true) do
-      account = repo().preload(account, :email)
-      case mailer().send_now(Emails.confirm_email(account), account.email.email_address) do
-        {:ok, _mail} -> {:ok, account}
-        _ -> {:error, :email}
-      end
-    else
-      {:ok, account}
-    end
+    if Keyword.get(opts, :must_confirm, true),
+      do: really_send_confirm_email(account),
+      else: {:ok, account}
   end
 
-  ### queries
-
-  defp find_for_confirm_email_query(token) when is_binary(token) do
-    from a in Account,
-      join: e in assoc(a, :email),
-      where: e.confirm_token == ^token,
-      preload: [email: e]
+  defp really_send_confirm_email(account) do
+    account = repo().preload(account, :email)
+    mail = Emails.confirm_email(account)
+    mailer().send_now(mail, account.email.email_address)
+    |> mailer_response(account)
   end
 
-  defp find_by_email_query(%{email: email}), do: find_by_email_query(email)
-  defp find_by_email_query(email) when is_binary(email) do
-    from a in Account,
-      join: e in assoc(a, :email),
-      join: c in assoc(a, :credential),
-      where: e.email_address == ^email,
-      preload: [email: e, credential: c]
-  end
+  defp mailer_response({:ok, _}, account), do: {:ok, account}
+  defp mailer_response(_, _), do: {:error, :email}
 
-  defp find_by_username_query(username) when is_binary(username) do
-    from a in Account,
-      join: c in assoc(a, :credential),
-      join: e in assoc(a, :email),
-      join: ac in assoc(a, :accounted),
-      join: u in assoc(ac, :user),
-      join: ch in assoc(u, :character),
-      join: p in assoc(u, :profile),
-      where: c.username == ^username,
-      preload: [
-        email: e, credential: c,
-        accounted: {ac, user: {u, character: ch, profile: p}},
-      ]
+  defp future?(%DateTime{}=dt) do
+    DateTime.compare(DateTime.utc_now(), dt) == :lt
   end
 
 end

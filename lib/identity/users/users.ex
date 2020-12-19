@@ -107,7 +107,6 @@ defmodule Bonfire.Me.Identity.Users do
   def for_switch_user(username, account_id) do
     get_flat(for_switch_user_query(username))
     ~>> check_account_id(account_id)
-    |> IO.inspect
   end
 
   def check_account_id(%User{}=user, account_id) do
