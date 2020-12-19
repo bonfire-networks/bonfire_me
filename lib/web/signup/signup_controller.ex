@@ -7,8 +7,8 @@ defmodule Bonfire.Me.Web.SignupController do
 
   def create(conn, params) do
     submitted = Map.get(params, "account", %{})
-    attrs = %{credential: submitted, email: submitted}
-    case Accounts.signup(attrs) do
+    # attrs = %{credential: submitted, email: submitted}
+    case Accounts.signup(submitted) do
       {:ok, _account} ->
         conn
         |> assign(:registered, true)
