@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Test.FakeHelpers do
   alias Bonfire.Me.Identity.{Accounts, Users}
   import ExUnit.Assertions
 
-  import Bonfire.Common.Config, only: [repo: 0]
+  import Bonfire.Me.Integration
 
   def fake_account!(attrs \\ %{}) do
     cs = Accounts.signup_changeset(Fake.account(attrs))

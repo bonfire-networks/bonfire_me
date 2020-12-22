@@ -49,17 +49,21 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   ### signup
 
-  def signup(thing, opts \\ [])
+  def signup(params_or_changeset, opts \\ [])
+
   def signup(params, opts) when not is_struct(params),
     do: signup(changeset(:signup, params, opts), opts)
 
   def signup(%Changeset{valid?: true, data: %Account{}}=cs, opts) do
-    repo().transact_with fn -> # revert if email send fails
-      repo().insert(cs)
-      ~>> send_confirm_email(opts)
+    if cs.valid? do
+      repo().transact_with fn -> # revert if email send fails
+        repo().insert(cs)
+        ~>> send_confirm_email(opts)
+      end
+    else
+      {:error, cs} # avoid checking out txn
     end
   end
-  def signup(%Changeset{data: %Account{}}=cs, _), do: cs # avoid checking out txn
 
   ### login
 
@@ -145,26 +149,23 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   ### confirm_email
 
-  def confirm_email(%Account{}=account) do
+  def confirm_email(account_or_token, opts \\ [])
+
+  def confirm_email(%Account{}=account, _opts) do
     with {:ok, email} <- repo().update(Email.confirm(account.email)),
       do: {:ok, %{ account | email: email } }
   end
 
-  def confirm_email(token) when is_binary(token) do
+  def confirm_email(token, opts) when is_binary(token) do
     repo().transact_with fn ->
-      repo().one(Queries.confirm_email(token))
-      |> do_confirm_email()
+      repo().find(Queries.confirm_email(token))
+      ~>> ce(opts)
     end
   end
 
-  defp do_confirm_email(nil), do: {:error, :not_found}
-  defp do_confirm_email(%Account{email: %Email{}=email}=account) do
-    cond do
-      not is_nil(email.confirmed_at) -> {:error, :confirmed, account}
-      is_nil(email.confirm_until) -> {:error, :no_expiry, account}
-      DateTimes.future?(email.confirm_until) -> confirm_email(account)
-      true -> {:error, :expired, account}
-    end
+  defp ce(account, opts) do
+    with :ok <- Email.may_confirm?(account.email, opts),
+      do: confirm_email(account)
   end
 
   defp send_confirm_email(%Account{}=account, opts) do

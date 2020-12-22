@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Identity.Users.Queries do
 
-  import Bonfire.Common.Config, only: [repo: 0]
+  import Bonfire.Me.Integration
 
   alias Bonfire.Me.Identity.Users
   import Ecto.Query

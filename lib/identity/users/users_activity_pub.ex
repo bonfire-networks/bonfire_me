@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   # import Ecto.Query
   # import Pointers.Queries
 
-  # import Bonfire.Common.Config, only: [repo: 0]
+  # Bonfire.Me.Integration
 
   # def by_username(username) when is_binary(username),
   #   do: repo().single(by_username_query(username))
