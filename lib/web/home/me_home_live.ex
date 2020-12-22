@@ -7,8 +7,6 @@ defmodule Bonfire.Me.Web.MeHomeLive do
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
-      LivePlugs.LoadCurrentAccount,
-      LivePlugs.LoadCurrentUser,
       LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
