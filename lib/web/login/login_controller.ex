@@ -3,9 +3,10 @@ defmodule Bonfire.Me.Web.LoginController do
   use Bonfire.Web, :controller
   alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Web.LoginLive
+  alias Bonfire.Common.Web.Misc
 
   def index(conn, _) do # GET only supports 'go'
-    paint(conn, form(Map.take(conn.query_params, [:go])))
+    paint(conn, form(Map.take(conn.query_params, [:go, "go"])))
   end
 
   def create(conn, params) do
@@ -23,7 +24,7 @@ defmodule Bonfire.Me.Web.LoginController do
     conn
     |> put_session(:account_id, account.id)
     |> put_flash(:info, "Welcome back!")
-    |> redirect(to: go_path(conn, form))
+    |> redirect(to: Misc.go_where?(conn, form, Routes.home_path(conn, :index)))
   end
 
   defp paint(conn, changeset) do
@@ -31,11 +32,5 @@ defmodule Bonfire.Me.Web.LoginController do
     |> assign(:form, changeset)
     |> live_render(LoginLive)
   end
-
-  # TODO: we should validate this a bit harder. Phoenix will prevent
-  # us from sending the user to an external URL, but it'll do so by
-  # means of a 500 error.
-  defp go_path(_conn, %{go: go}) when not is_nil(go) and go !="", do: go
-  defp go_path(conn, _), do: Routes.live_path(conn, Bonfire.Web.HomeLive)
 
 end

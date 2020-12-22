@@ -19,19 +19,18 @@ defmodule Bonfire.Me.Identity.Users do
   def get_current(username, %Account{id: account_id}),
     do: get_current(username, account_id)
   def get_current(username, account_id) when is_binary(account_id),
-    do: repo().single(Queries.get_current_query(username, account_id))
+    do: repo().single(Queries.get_current(username, account_id))
 
   def by_id(id), do: get_flat(Queries.by_id(id))
 
-  def by_username(username), do: get_flat(Queries.by_username_query(username))
+  def by_username(username), do: get_flat(Queries.by_username(username))
 
   def by_account(%Account{id: id}), do: by_account(id)
   def by_account(account_id) when is_binary(account_id),
-    do: repo().all(Queries.by_account_query(account_id))
+    do: repo().all(Queries.by_account(account_id))
 
   def for_switch_user(username, account_id) do
-    get_flat(Queries.for_switch_user_query(username))
-    ~>> check_account_id(account_id)
+    get_flat(Queries.for_switch_user(username, account_id))
   end
 
   def list, do: repo().all(Queries.with_mixins())
@@ -109,14 +108,6 @@ defmodule Bonfire.Me.Identity.Users do
   def get_flat(query) do
     repo().single(query)
   end
-
-  def check_account_id(%User{}=user, account_id) when is_binary(account_id) do
-    if user.accounted.account_id == account_id,
-      do: {:ok, user},
-      else: {:error, :not_permitted}
-  end
-
-  def check_account_id(%User{}=user, %{id: account_id}), do: check_account_id(user, account_id)
 
   # def delete(%User{}=user) do
   #   preloads =
