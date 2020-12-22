@@ -28,8 +28,7 @@ defmodule Bonfire.Me.Identity.Users do
     do: repo().all(Queries.by_account_query(account_id))
 
   def for_switch_user(username, account_id) do
-    get_flat(Queries.for_switch_user_query(username))
-    ~>> check_account_id(account_id)
+    get_flat(Queries.for_switch_user_query(username, account_id))
   end
 
   def list, do: repo().all(Queries.with_mixins())
@@ -106,12 +105,6 @@ defmodule Bonfire.Me.Identity.Users do
 
   def get_flat(query) do
     repo().single(query)
-  end
-
-  def check_account_id(%User{}=user, account_id) do
-    if user.accounted.account_id == account_id,
-      do: {:ok, user},
-      else: {:error, :not_permitted}
   end
 
   # def delete(%User{}=user) do

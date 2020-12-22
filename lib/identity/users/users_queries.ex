@@ -53,23 +53,23 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       preload: [profile: p, character: c, actor: a, accounted: ac]
   end
 
-  def for_switch_user_query(username) do
+  def for_switch_user_query(username, account_id) do
     from u in User,
       join: c in assoc(u, :character),
       join: a in assoc(u, :accounted),
       where: c.username == ^username,
+      where: a.account_id == ^account_id,
       preload: [character: c, accounted: a],
       order_by: [asc: u.id]
   end
 
-  defp get_current_query(username, account_id) do
+  defp get_current_query(user_id) do
     from u in User,
       join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
       join: a in assoc(ac, :account),
       join: p in assoc(u, :profile),
-      where: a.id == ^account_id,
-      where: c.username == ^username,
+      where: u.id == ^user_id,
       preload: [character: c, accounted: {ac, account: a}, profile: p]
   end
 
