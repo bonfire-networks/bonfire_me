@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Identity.Emails do
+defmodule Bonfire.Me.Identity.Mails do
 
   import Bamboo.Email
   import Bamboo.Phoenix
