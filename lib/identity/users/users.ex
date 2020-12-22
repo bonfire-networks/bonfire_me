@@ -19,6 +19,8 @@ defmodule Bonfire.Me.Identity.Users do
   def get_current(username, %Account{id: account_id}),
     do: repo().single(Queries.get_current_query(username, account_id))
 
+  def by_id(id), do: get_flat(Queries.by_id(id))
+
   def by_username(username), do: get_flat(Queries.by_username_query(username))
 
   def by_account(%Account{id: id}), do: by_account(id)

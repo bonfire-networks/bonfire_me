@@ -10,12 +10,21 @@ defmodule Bonfire.Me.Identity.Users.Queries do
 
   def with_mixins() do
     from(u in User, as: :user,
-      join: a in assoc(u, :accounted),
+      # join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
       join: p in assoc(u, :profile),
       preload: [character: c, profile: p]
     )
   end
+
+  def by_id(id) do
+    from u in User,
+      join: p in assoc(u, :profile),
+      join: c in assoc(u, :character),
+      where: u.id == ^id,
+      preload: [profile: p, character: c]
+  end
+
 
   # def query
 
