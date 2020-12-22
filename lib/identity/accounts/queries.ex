@@ -46,7 +46,7 @@ defmodule Bonfire.Me.Identity.Accounts.Queries do
       join: u in assoc(ac, :user),
       join: ch in assoc(u, :character),
       join: p in assoc(u, :profile),
-      where: c.username == ^username,
+      where: ch.username == ^username,
       preload: [
         email: e, credential: c,
         accounted: {ac, user: {u, character: ch, profile: p}},
