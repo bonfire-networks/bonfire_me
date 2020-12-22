@@ -35,7 +35,7 @@ defmodule Bonfire.Me.Web.LoginController do
   # TODO: we should validate this a bit harder. Phoenix will prevent
   # us from sending the user to an external URL, but it'll do so by
   # means of a 500 error.
-  defp go_path(conn, %{go: nil}), do: Routes.live_path(conn, HomeLive)
-  defp go_path(_conn, %{go: go}), do: go
+  defp go_path(_conn, %{go: go}) when not is_nil(go) and go !="", do: go
+  defp go_path(conn, _), do: Routes.live_path(conn, Bonfire.Web.HomeLive)
 
 end

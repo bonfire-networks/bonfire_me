@@ -3,18 +3,18 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   use Bonfire.Web, :controller
   alias Bonfire.Me.Identity.{Accounts, Users}
 
-  def index(conn, _) do
-    case Users.by_account(Accounts.get_session(conn)) do
+  def index(%{assigns: %{current_account: current_account}} = conn, _) do
+    case Users.by_account(current_account) do
       [] -> no_users(conn)
       users ->
         conn
         |> assign(:current_account_users, users)
-        |> live_render(UsersLive)
+        |> live_render(Bonfire.Me.Web.SwitchUserLive)
     end
   end
 
-  def show(conn, %{"id" => username}) do
-    show(Accounts.get_session(conn), username, conn)
+  def show(%{assigns: %{current_account: current_account}} = conn, %{"id" => username}) do
+    show(current_account, username, conn)
   end
 
   defp show(nil, _username, conn), do: not_logged_in(conn)
@@ -28,7 +28,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp lookup({:error, :not_permitted}, conn), do: not_permitted(conn)
 
   defp go_back(conn) do
-    
+
   end
 
   defp switch(conn, user) do
@@ -36,13 +36,13 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     conn
     |> put_session(:user_id, user.id)
     |> put_flash(:info, "Welcome back, @#{username}!")
-    |> redirect(to: "/~@#{username}")
+    |> redirect(to: "/")
    end
 
   defp no_users(conn) do
     conn
     |> put_flash(:info, "Hey there! Let's fill out your profile!")
-    |> redirect(to: "/~/create-user")
+    |> redirect(to: "/create-user")
   end
 
   defp not_logged_in(conn) do
@@ -54,13 +54,13 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp not_found(conn) do
     conn
     |> put_flash(:error, "This username does not exist.")
-    |> redirect(to: "/~")
+    |> redirect(to: "/")
   end
 
   defp not_permitted(conn) do
     conn
     |> put_flash(:error, "You are not permitted to switch to this user.")
-    |> redirect(to: "/~")
+    |> redirect(to: "/")
   end
 
 end

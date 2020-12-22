@@ -12,9 +12,9 @@
         max-height: 200px;
         max-width: 200px;
         min-height: 84px;
-        min-width: 84px;" 
+        min-width: 84px;"
         class="rounded-md cursor-pointer">
-        <%= live_redirect to: Routes.live_path(@socket, MeHomeLive, user.character.username) do %>
+        <%= live_redirect to: Routes.switch_user_path(@socket, :show, user.character.username) do %>
           <img  class="rounded-md" alt="profile pic" src="https://unsplash.it/400" />
           <h3 class="text-center font-semibold text-gray-700 mt-2">@<%= user.character.username %></h3>
         <% end %>

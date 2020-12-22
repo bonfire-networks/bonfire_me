@@ -17,6 +17,8 @@ defmodule Bonfire.Me.Identity.Users do
   @type changeset_extra :: Account.t | :remote
 
   def get_current(username, %Account{id: account_id}),
+    do: get_current(username, account_id)
+  def get_current(username, account_id) when is_binary(account_id),
     do: repo().single(Queries.get_current_query(username, account_id))
 
   def by_id(id), do: get_flat(Queries.by_id(id))
@@ -108,11 +110,13 @@ defmodule Bonfire.Me.Identity.Users do
     repo().single(query)
   end
 
-  def check_account_id(%User{}=user, account_id) do
+  def check_account_id(%User{}=user, account_id) when is_binary(account_id) do
     if user.accounted.account_id == account_id,
       do: {:ok, user},
       else: {:error, :not_permitted}
   end
+
+  def check_account_id(%User{}=user, %{id: account_id}), do: check_account_id(user, account_id)
 
   # def delete(%User{}=user) do
   #   preloads =

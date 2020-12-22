@@ -62,14 +62,16 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       order_by: [asc: u.id]
   end
 
-  defp get_current_query(username, account_id) do
+  def get_current_query(username, account_id) do
+    # IO.inspect(username)
+    # IO.inspect(account_id)
     from u in User,
       join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
       join: a in assoc(ac, :account),
       join: p in assoc(u, :profile),
       where: a.id == ^account_id,
-      where: c.username == ^username,
+      where: u.id == ^username or c.username == ^username,
       preload: [character: c, accounted: {ac, account: a}, profile: p]
   end
 
