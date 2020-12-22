@@ -7,8 +7,8 @@ defmodule Bonfire.Me.Web.MeInstanceLive do
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
-      LivePlugs.LoadCurrentAccountFromSession,
-      LivePlugs.LoadCurrentUserFromPath,
+      LivePlugs.LoadCurrentAccount,
+      LivePlugs.LoadCurrentUser,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
@@ -16,13 +16,13 @@ defmodule Bonfire.Me.Web.MeInstanceLive do
   end
 
   defp mounted(params, session, socket) do
-    {:ok, socket
-    |> assign(page_title: "Instance",
-    current_account: socket.assigns.current_account,
-    current_user: socket.assigns.current_user,
-    feed_title: "Instance feed",
-    users: Users.by_account(socket.assigns.current_account))}
-
+    {:ok,
+     socket
+     |> assign(
+       page_title: "Instance",
+       feed_title: "Instance feed",
+       users: Users.by_account(socket.assigns.current_account)
+     )}
   end
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do

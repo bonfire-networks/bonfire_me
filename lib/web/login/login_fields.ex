@@ -5,16 +5,19 @@ defmodule Bonfire.Me.Identity.Accounts.LoginFields do
   alias Bonfire.Me.Identity.Accounts.LoginFields
 
   embedded_schema do
-    field :form
+    # inputs
     field :email_or_username, :string
     field :password, :string
     field :remember_me, :boolean
+    field :go, :string # where the user was before
+    # outputs
     field :email, :string
     field :username, :string
   end
 
-  @cast [:email_or_username, :password]
-  @required @cast
+  @required [:email_or_username, :password]
+  @optional [:remember_me, :go]
+  @cast @required ++ @optional
 
   def changeset(form \\ %LoginFields{}, attrs) do
     form
@@ -29,7 +32,7 @@ defmodule Bonfire.Me.Identity.Accounts.LoginFields do
         cond do
           Regex.match?(~r(^@?[a-z][a-z0-9]+$)i, eou) ->
             Changeset.put_change(changeset, :username, eou)
-          Regex.match?(~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$), eou) ->
+          Regex.match?(~r(^[^@]{1,128}@[^@]{2,128}$), eou) ->
             Changeset.put_change(changeset, :email, eou)
           true ->
             Changeset.put_error(changeset, :email_or_username, "You must provide a valid email address or @username.")

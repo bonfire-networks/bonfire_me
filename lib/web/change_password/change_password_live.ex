@@ -8,14 +8,10 @@ defmodule Bonfire.Me.Web.ChangePasswordLive do
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
-      LivePlugs.LoadCurrentAccountFromSession,
+      LivePlugs.LoadCurrentAccount,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
-      &mounted/3,
     ]
   end
 
-  defp mounted(params, session, socket) do
-    {:ok, socket}
-  end
 end

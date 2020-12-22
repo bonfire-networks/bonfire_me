@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
-      LivePlugs.LoadCurrentAccountFromSession,
+      LivePlugs.LoadCurrentAccount,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,

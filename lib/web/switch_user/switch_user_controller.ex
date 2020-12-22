@@ -3,19 +3,19 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   use Bonfire.Web, :controller
   alias Bonfire.Me.Identity.{Accounts, Users}
 
-  # def index(conn, _) do
-  #   case Users.by_account(Accounts.get_session(conn)) do
-  #     [] -> no_users(conn)
-  #     users -> list(conn, users)
-  #   end
-  # end
+  def index(conn, _) do
+    case Users.by_account(Accounts.get_session(conn)) do
+      [] -> no_users(conn)
+      users ->
+        conn
+        |> assign(:current_account_users, users)
+        |> live_render(UsersLive)
+    end
+  end
 
-  # def list(conn, users), do: render(conn, "switch_user_live.html.leex", users: users)
-
-  def show(conn, %{"id" => username}), do: show(conn, %{"username" => username})
-
-  def show(conn, %{"username" => username}),
-    do: show(Accounts.get_session(conn), username, conn)
+  def show(conn, %{"id" => username}) do
+    show(Accounts.get_session(conn), username, conn)
+  end
 
   defp show(nil, _username, conn), do: not_logged_in(conn)
   defp show(account_id, username, conn), do: lookup(account_id, username, conn)
@@ -26,6 +26,10 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp lookup({:ok, user}, conn), do: switch(conn, user)
   defp lookup({:error, :not_found}, conn), do: not_found(conn)
   defp lookup({:error, :not_permitted}, conn), do: not_permitted(conn)
+
+  defp go_back(conn) do
+    
+  end
 
   defp switch(conn, user) do
     username = user.character.username
