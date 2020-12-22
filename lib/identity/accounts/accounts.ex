@@ -16,6 +16,7 @@ defmodule Bonfire.Me.Identity.Accounts do
   import Ecto.Query
   use OK.Pipe
 
+  def get_current(nil), do: nil
   def get_current(id) when is_binary(id),
     do: repo().one(Queries.current(id))
 

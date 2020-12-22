@@ -1,4 +1,4 @@
-defmodule Bonfire.Web.HomeLive do
+defmodule Bonfire.Me.Web.HomeLive do
     use Bonfire.Web, :live_view
     alias Bonfire.Me.Fake
     alias Bonfire.Common.Web.LivePlugs
@@ -7,6 +7,8 @@ defmodule Bonfire.Web.HomeLive do
 
     def mount(params, session, socket) do
       LivePlugs.live_plug params, session, socket, [
+        LivePlugs.LoadCurrentAccount,
+        LivePlugs.LoadCurrentUser,
         LivePlugs.StaticChanged,
         LivePlugs.Csrf,
         &mounted/3,
@@ -17,10 +19,7 @@ defmodule Bonfire.Web.HomeLive do
       {:ok, socket
       |> assign(page_title: "Switch User",
       selected_tab: "about",
-      current_account: socket.assigns.current_account,
-      current_user: socket.assigns.current_user
       )}
-
     end
 
     # def handle_params(%{"tab" => tab} = _params, _url, socket) do

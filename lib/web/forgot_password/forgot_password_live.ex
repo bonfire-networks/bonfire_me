@@ -5,6 +5,8 @@ defmodule Bonfire.Me.Web.ForgotPasswordLive do
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
+      LivePlugs.LoadCurrentAccount,
+      LivePlugs.LoadCurrentUser,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,

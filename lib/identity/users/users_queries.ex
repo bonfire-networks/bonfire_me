@@ -63,7 +63,7 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       order_by: [asc: u.id]
   end
 
-  def get_current(user_id) do
+  def current(user_id) do
     from u in User,
       join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
