@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   alias Bonfire.Data.Identity.{Account, Credential, Email, User}
   alias Bonfire.Common.Utils
-  alias Bonfire.Me.Identity.Emails
+  alias Bonfire.Me.Identity.Mails
   alias Bonfire.Me.Identity.Accounts.{
     ChangePasswordFields,
     ConfirmEmailFields,
@@ -24,25 +24,25 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
 
-  @spec changeset(changeset_name, attrs :: map) :: Changeset.t
-  @spec changeset(changeset_name, attrs :: map, opts :: Keyword.t) :: Changeset.t
-  def changeset(changeset_name, attrs, opts \\ [])
+  @spec changeset(changeset_name, params :: map) :: Changeset.t
+  @spec changeset(changeset_name, params :: map, opts :: Keyword.t) :: Changeset.t
+  def changeset(changeset_name, params, opts \\ [])
 
-  def changeset(:change_password, attrs, _opts) when not is_struct(attrs),
-    do: ChangePasswordFields.changeset(attrs)
+  def changeset(:change_password, params, _opts) when not is_struct(params),
+    do: ChangePasswordFields.changeset(params)
 
-  def changeset(:confirm_email, attrs, _opts) when not is_struct(attrs),
-    do: ConfirmEmailFields.changeset(attrs)
+  def changeset(:confirm_email, params, _opts) when not is_struct(params),
+    do: ConfirmEmailFields.changeset(params)
 
-  def changeset(:login, attrs, _opts) when not is_struct(attrs),
-    do: LoginFields.changeset(attrs)
+  def changeset(:login, params, _opts) when not is_struct(params),
+    do: LoginFields.changeset(params)
 
-  def changeset(:reset_password, attrs, _opts) when not is_struct(attrs),
-    do: ResetPasswordFields.changeset(attrs)
+  def changeset(:reset_password, params, _opts) when not is_struct(params),
+    do: ResetPasswordFields.changeset(params)
 
-  def changeset(:signup, attrs, opts) do
+  def changeset(:signup, params, opts) do
     %Account{}
-    |> Account.changeset(attrs)
+    |> Account.changeset(params)
     |> Changeset.cast_assoc(:email, with: &Email.changeset(&1, &2, opts))
     |> Changeset.cast_assoc(:credential)
   end
@@ -50,11 +50,10 @@ defmodule Bonfire.Me.Identity.Accounts do
   ### signup
 
   def signup(thing, opts \\ [])
-  def signup(attrs, opts) when not is_struct(attrs),
-    do: signup(changeset(:signup, attrs, opts), opts)
+  def signup(params, opts) when not is_struct(params),
+    do: signup(changeset(:signup, params, opts), opts)
 
   def signup(%Changeset{valid?: true, data: %Account{}}=cs, opts) do
-    opts = opts ++ Email.config()
     repo().transact_with fn -> # revert if email send fails
       repo().insert(cs)
       ~>> send_confirm_email(opts)
@@ -64,33 +63,33 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   ### login
 
-  def login(attrs_or_changeset, opts \\ [])
+  def login(params_or_changeset, opts \\ [])
 
-  def login(attrs, opts) when not is_struct(attrs),
-    do: login(changeset(:login, attrs), opts)
+  def login(params, opts) when not is_struct(params),
+    do: login(changeset(:login, params, opts), opts)
 
   def login(%Changeset{data: %LoginFields{}}=cs, opts) do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
-      repo().single(Queries.login(form))
-      ~>> check_password(form)
-      ~>> check_confirmed(opts)
+      repo().find(Queries.login(form), cs)
+      ~>> login_check_password(form, cs)
+      ~>> login_check_confirmed(opts, cs)
     end
   end
 
-  defp check_password(nil, _form) do
-    Argon2.no_user_verify()
-    {:error, :no_match}
+  defp login_check_password(nil, _form, changeset) do
+    Credential.dummy_check()
+    {:error, Changeset.add_error(changeset, :form, "no_match")}
   end
 
-  defp check_password(account, form) do
-    if Argon2.verify_pass(form.password, account.credential.password_hash),
+  defp login_check_password(%Account{}=account, form, changeset) do
+    if Credential.check_password(form.password, account.credential.password_hash),
       do: {:ok, account},
-      else: {:error, :no_match}
+      else: {:error, Changeset.add_error(changeset, :form, "no_match")}
   end
 
-  defp check_confirmed(%Account{email: %{confirmed_at: ca}}=account, opts) do
-    if is_nil(ca) and Email.config(opts, :must_confirm, true),
-      do: {:error, :email_not_confirmed},
+  defp login_check_confirmed(%Account{}=account, opts, cs) do
+    if is_nil(account.email.confirmed_at) and Email.must_confirm?(opts),
+      do: {:error, Changeset.add_error(cs, :form, "email_not_confirmed")},
       else: {:ok, account}
   end
 
@@ -99,45 +98,49 @@ defmodule Bonfire.Me.Identity.Accounts do
   def request_confirm_email(params_or_changeset_or_form_or_account, opts \\ [])
 
   def request_confirm_email(params, opts) when not is_struct(params),
-    do: request_confirm_email(changeset(:confirm_email, params), opts)
+    do: request_confirm_email(changeset(:confirm_email, params, opts), opts)
 
   def request_confirm_email(%Changeset{data: %ConfirmEmailFields{}}=cs, opts),
-    do: Changeset.apply_action(cs, :insert) ~>> request_confirm_email(opts)
+    do: Changeset.apply_action(cs, :insert) ~>> rce_check_valid(cs, opts)
 
-  def request_confirm_email(%ConfirmEmailFields{}=form, opts) do
-    if Email.config(opts, :must_confirm, true) do
-      case repo().one(Queries.request_confirm_email(form.email)) do
-        nil -> {:error, :not_found}
-        %Account{email: email}=account -> request_confirm_email(account, opts)
-      end
-    else
-      {:error, :confirmation_disabled}
+  defp rce_check_valid(form, %Changeset{}=changeset, opts),
+    do: rce_check_confirm(Email.must_confirm?(opts), form, changeset, opts)
+
+
+  defp rce_check_confirm(false, _form, changeset, _opts),
+    do: {:error, Changeset.add_error(changeset, :form, "confirmation_disabled")}
+
+  defp rce_check_confirm(true, form, changeset, opts) do
+    repo().one(Queries.request_confirm_email(form.email))
+    |> rce_check_account(form, changeset, opts) 
+  end
+
+
+  defp rce_check_account(nil, form, changeset, opts),
+    do: {:error, Changeset.add_error(changeset, :form, "not_found")}
+
+  defp rce_check_account(%Account{}=account, form, changeset, opts),
+    do: rce_check_permitted(account.email, changeset, opts)  
+
+
+  defp rce_check_permitted(account, changeset, opts) do
+    case Email.may_request_confirm_email?(account.email, opts) do
+      {:ok, :resend}  -> resend_confirm_email(account)
+      {:ok, :refresh} -> refresh_confirm_email(account, opts)
+      {:error, error} -> {:error, Changeset.add_error(changeset, :form, error)}
     end
   end
 
-  def request_confirm_email(%Account{email: %{}=email}=account, opts) do
-    cond do
-      not is_nil(email.confirmed_at) -> {:error, :confirmed}
-
-      not Email.config(opts, :must_confirm, true) ->
-        {:error, :confirmation_disabled}
-
-      # why not refresh here? it provides a window of DOS opportunity
-      # against a user completing their activation.
-      future?(email.confirm_until) ->
-        with {:ok, _} <- mailer().send_now(Emails.confirm_email(account), email.email_address),
-          do: {:ok, :resent, account}
-
-      true ->
-        account = refresh_confirm_email_token(account)
-        with {:ok, _} <- send_confirm_email(Emails.confirm_email(account), opts),
-          do: {:ok, :refreshed, account}
-    end
+  defp resend_confirm_email(%Account{email: %{}=email}=account) do
+    with {:ok, _} <- mailer().send_now(Mails.confirm_email(account), email.email_address),
+      do: {:ok, :resent, account}
   end
 
-  defp refresh_confirm_email_token(%Account{email: %Email{}=email}=account) do
+  defp refresh_confirm_email(%Account{email: %Email{}=email}=account, opts) do
     with {:ok, email} <- repo().update(Email.put_token(email)),
-      do: {:ok, %{ account | email: email }}
+         account = %{ account | email: email },
+         {:ok, _} <- send_confirm_email(Mails.confirm_email(account), opts),
+      do: {:ok, :refreshed, account}
   end
 
   ### confirm_email
@@ -159,29 +162,26 @@ defmodule Bonfire.Me.Identity.Accounts do
     cond do
       not is_nil(email.confirmed_at) -> {:error, :confirmed, account}
       is_nil(email.confirm_until) -> {:error, :no_expiry, account}
-      future?(email.confirm_until) -> confirm_email(account)
+      DateTimes.future?(email.confirm_until) -> confirm_email(account)
       true -> {:error, :expired, account}
     end
   end
 
   defp send_confirm_email(%Account{}=account, opts) do
-    if Keyword.get(opts, :must_confirm, true),
-      do: really_send_confirm_email(account),
-      else: {:ok, account}
+    send_confirm_email(Email.must_confirm?(opts), account, opts)
   end
 
-  defp really_send_confirm_email(account) do
+  defp send_confirm_email(false, account, _opts),
+   do: {:ok, account}
+
+  defp send_confirm_email(true, account, _opts) do
     account = repo().preload(account, :email)
-    mail = Emails.confirm_email(account)
+    mail = Mails.confirm_email(account)
     mailer().send_now(mail, account.email.email_address)
     |> mailer_response(account)
   end
 
   defp mailer_response({:ok, _}, account), do: {:ok, account}
   defp mailer_response(_, _), do: {:error, :email}
-
-  defp future?(%DateTime{}=dt) do
-    DateTime.compare(DateTime.utc_now(), dt) == :lt
-  end
 
 end

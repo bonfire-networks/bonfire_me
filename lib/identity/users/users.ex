@@ -124,18 +124,16 @@ defmodule Bonfire.Me.Identity.Users do
       order_by: [asc: u.id]
   end
 
-  def get_current(username, %Account{id: account_id}),
-    do: repo().single(get_current_query(username, account_id))
+  def get_current(id), do: repo().one(get_current_query(id))
 
-  defp get_current_query(username, account_id) do
+  def fetch_current(id), do: repo().single(get_current_query(id))
+
+  defp get_current_query(id) do
     from u in User,
       join: c in assoc(u, :character),
-      join: ac in assoc(u, :accounted),
-      join: a in assoc(ac, :account),
       join: p in assoc(u, :profile),
-      where: a.id == ^account_id,
-      where: c.username == ^username,
-      preload: [character: c, accounted: {ac, account: a}, profile: p]
+      where: u.id == ^id,
+      preload: [character: c, profile: p]
   end
 
   def flatten(user) do
