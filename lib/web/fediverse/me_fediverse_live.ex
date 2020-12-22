@@ -9,6 +9,7 @@ defmodule Bonfire.Me.Web.MeFediverseLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
+      LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
@@ -16,13 +17,9 @@ defmodule Bonfire.Me.Web.MeFediverseLive do
   end
 
   defp mounted(params, session, socket) do
-    {:ok, socket
-    |> assign(page_title: "Home",
-    current_account: socket.assigns.current_account,
-    current_user: socket.assigns.current_user,
-    feed_title: "Fediverse feed",
-    users: Users.by_account(socket.assigns.current_account))}
-
+    {:ok,
+     socket
+     |> assign(page_title: "Home", feed_title: "Fediverse feed")}
   end
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do

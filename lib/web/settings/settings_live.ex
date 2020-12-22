@@ -26,7 +26,6 @@ defmodule Bonfire.Me.Web.SettingsLive do
          page_title: "Settings",
          selected_tab: "general",
          trigger_submit: false,
-         current_user: Fake.user_live()
          )}
 
   def handle_params(%{"tab" => tab}, _url, socket) do

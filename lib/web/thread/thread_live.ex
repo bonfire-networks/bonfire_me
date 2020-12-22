@@ -9,6 +9,7 @@ defmodule Bonfire.Me.Web.ThreadLive do
     LivePlugs.live_plug(params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
+      LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3
@@ -20,9 +21,6 @@ defmodule Bonfire.Me.Web.ThreadLive do
      socket
      |> assign(
        page_title: "Thread",
-       current_account: socket.assigns.current_account,
-       current_user: socket.assigns.current_user,
-       users: Users.by_account(socket.assigns.current_account)
      )}
   end
 

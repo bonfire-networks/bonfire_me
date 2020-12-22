@@ -9,6 +9,7 @@ defmodule Bonfire.Me.Web.MeInstanceLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
+      LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
@@ -21,7 +22,6 @@ defmodule Bonfire.Me.Web.MeInstanceLive do
      |> assign(
        page_title: "Instance",
        feed_title: "Instance feed",
-       users: Users.by_account(socket.assigns.current_account)
      )}
   end
 
