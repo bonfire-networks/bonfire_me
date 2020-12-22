@@ -73,7 +73,6 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       preload: [character: c, accounted: {ac, account: a}, profile: p]
   end
 
-
   # defp macro_filter(query, {join_: [{source, [{rel, as}]}]}, _env),
   #   do: join_as(query, source, :inner, rel, as)
 
