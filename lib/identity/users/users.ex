@@ -17,6 +17,8 @@ defmodule Bonfire.Me.Identity.Users do
   @type changeset_extra :: Account.t | :remote
 
   def get_current(username, %Account{id: account_id}),
+    do: get_current(username, account_id)
+  def get_current(username, account_id) when is_binary(account_id),
     do: repo().single(Queries.get_current_query(username, account_id))
 
   def by_id(id), do: get_flat(Queries.by_id(id))

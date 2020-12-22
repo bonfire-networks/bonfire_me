@@ -34,7 +34,7 @@ defmodule Bonfire.Me.Identity.Users.Queries do
     nil
   end
 
-  def by_account_query(account_id) do
+  def by_account(account_id) do
     from u in User,
       join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       preload: [character: c, profile: p]
   end
 
-  def by_username_query(username) do
+  def by_username(username) do
     from u in User,
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
@@ -53,7 +53,7 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       preload: [profile: p, character: c, actor: a, accounted: ac]
   end
 
-  def for_switch_user_query(username, account_id) do
+  def for_switch_user(username, account_id) do
     from u in User,
       join: c in assoc(u, :character),
       join: a in assoc(u, :accounted),
@@ -63,7 +63,7 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       order_by: [asc: u.id]
   end
 
-  defp get_current_query(user_id) do
+  def get_current(user_id) do
     from u in User,
       join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
