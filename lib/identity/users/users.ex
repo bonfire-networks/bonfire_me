@@ -5,6 +5,7 @@ defmodule Bonfire.Me.Identity.Users do
   use OK.Pipe
   alias Bonfire.Data.Identity.{Account, User}
   alias Bonfire.Me.Identity.Characters
+  alias Bonfire.Me.Identity.Users.Queries
   alias Bonfire.Me.Social.{Circles, Profiles}
   alias Pointers.Changesets
   alias Bonfire.Common.Utils
@@ -15,8 +16,25 @@ defmodule Bonfire.Me.Identity.Users do
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
 
-  @spec create(params :: map, extra :: changeset_extra) :: Changeset.t
+  def get_current(username, %Account{id: account_id}),
+    do: repo().single(Queries.get_current_query(username, account_id))
 
+  def by_username(username), do: get_flat(Queries.by_username_query(username))
+
+  def by_account(%Account{id: id}), do: by_account(id)
+  def by_account(account_id) when is_binary(account_id),
+    do: repo().all(Queries.by_account_query(account_id))
+
+  def for_switch_user(username, account_id) do
+    get_flat(Queries.for_switch_user_query(username))
+    ~>> check_account_id(account_id)
+  end
+
+  def list, do: repo().all(Queries.with_mixins())
+
+  ## Mutations
+
+  @spec create(params :: map, extra :: changeset_extra) :: Changeset.t
   def create(params, extra) do
     repo().insert(changeset(:create, %User{}, params, extra))
   end
@@ -78,64 +96,6 @@ defmodule Bonfire.Me.Identity.Users do
     }, []
   end
 
-
-  def by_account(%Account{id: id}), do: by_account(id)
-  def by_account(account_id) when is_binary(account_id),
-    do: repo().all(by_account_query(account_id))
-
-  def by_account_query(account_id) do
-    from u in User,
-      join: a in assoc(u, :accounted),
-      join: c in assoc(u, :character),
-      join: p in assoc(u, :profile),
-      where: a.account_id == ^account_id,
-      preload: [character: c, profile: p]
-  end
-
-  def by_username(username), do: get_flat(by_username_query(username))
-
-  def by_username_query(username) do
-    from u in User,
-      join: p in assoc(u, :profile),
-      join: c in assoc(u, :character),
-      left_join: a in assoc(u, :actor),
-      join: ac in assoc(u, :accounted),
-      where: c.username == ^username,
-      preload: [profile: p, character: c, actor: a, accounted: ac]
-  end
-
-  def for_switch_user(username, account_id) do
-    get_flat(for_switch_user_query(username))
-    ~>> check_account_id(account_id)
-  end
-
-  def check_account_id(%User{}=user, account_id) do
-    if user.accounted.account_id == account_id,
-      do: {:ok, user},
-      else: {:error, :not_permitted}
-  end
-
-  def for_switch_user_query(username) do
-    from u in User,
-      join: c in assoc(u, :character),
-      join: a in assoc(u, :accounted),
-      where: c.username == ^username,
-      preload: [character: c, accounted: a],
-      order_by: [asc: u.id]
-  end
-
-  def get_current(id), do: repo().one(get_current_query(id))
-
-  def fetch_current(id), do: repo().single(get_current_query(id))
-
-  defp get_current_query(id) do
-    from u in User,
-      join: c in assoc(u, :character),
-      join: p in assoc(u, :profile),
-      where: u.id == ^id,
-      preload: [character: c, profile: p]
-  end
-
   def flatten(user) do
     user
     |> Map.merge(user, user.profile)
@@ -144,6 +104,12 @@ defmodule Bonfire.Me.Identity.Users do
 
   def get_flat(query) do
     repo().single(query)
+  end
+
+  def check_account_id(%User{}=user, account_id) do
+    if user.accounted.account_id == account_id,
+      do: {:ok, user},
+      else: {:error, :not_permitted}
   end
 
   # def delete(%User{}=user) do
