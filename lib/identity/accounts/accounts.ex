@@ -158,7 +158,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   def confirm_email(token, opts) when is_binary(token) do
     repo().transact_with fn ->
-      repo().find(Queries.confirm_email(token))
+      repo().single(Queries.confirm_email(token))
       ~>> ce(opts)
     end
   end
