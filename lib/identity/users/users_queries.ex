@@ -55,11 +55,12 @@ defmodule Bonfire.Me.Identity.Users.Queries do
 
   def for_switch_user(username, account_id) do
     from u in User,
+      join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
       join: a in assoc(u, :accounted),
       where: c.username == ^username,
       where: a.account_id == ^account_id,
-      preload: [character: c, accounted: a],
+      preload: [profile: p, character: c, accounted: a],
       order_by: [asc: u.id]
   end
 
