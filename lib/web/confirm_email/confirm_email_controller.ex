@@ -49,7 +49,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
     conn
     |> put_session(:account_id, account.id)
     |> put_flash(:info, "Welcome back! Thanks for confirming your email address.")
-    |> redirect(to: Routes.home_path(conn))
+    |> redirect(to: Routes.live_path(conn, Bonfire.Me.Web.HomeLive))
   end
 
   defp already_confirmed(conn) do
