@@ -1,5 +1,5 @@
 
-  <%= live_component(@socket, Bonfire.Web.Components.HeroLive, assigns) %>
+  <%= live_component(@socket, Bonfire.UI.Social.HeroLive, assigns) %>
   <div class="flex mt-6 -mx-2">
     <div class="w-3/5 px-2">
       <div class="bg-white shadow rounded-lg mb-4">
@@ -18,14 +18,14 @@
           <div class="py-5 mx-auto sm:px-6 lg:px-8">
           </div>
       </div>
-       <%= live_component(@socket, Bonfire.Web.Components.FeedLive, assigns) %>
+       <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
     </div>
     <div class="w-2/5 px-2">
-      <%= live_component(@socket, Bonfire.Web.Components.LoginLive, assigns) %>
+      <%= live_component(@socket, Bonfire.UI.Social.LoginLive, assigns) %>
       <div class="mt-4">
         <%= live_component(
           @socket,
-          Bonfire.Web.Components.InstanceAdminsLive,
+          Bonfire.UI.Social.InstanceAdminsLive,
           assigns
         ) %>
       </div>

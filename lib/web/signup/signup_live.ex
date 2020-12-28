@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Web.SignupLive do
   alias Bonfire.Me.Web.HeroProfileLive
   alias Bonfire.Me.Web.ProfileNavigationLive
   alias Bonfire.Me.Web.ProfileAboutLive
-  alias Bonfire.Web.Components.SignupLive
+  alias Bonfire.UI.Social.SignupLive
   alias Bonfire.Me.Fake
   alias Bonfire.Common.Web.LivePlugs
   alias Ecto.Changeset
