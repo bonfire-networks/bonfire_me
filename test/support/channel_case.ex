@@ -26,7 +26,7 @@ defmodule Bonfire.Me.ChannelCase do
       import Bonfire.Me.ChannelCase
 
       # The default endpoint for testing
-      @endpoint Bonfire.Me.Web.Endpoint
+      @endpoint Bonfire.Common.Config.get!(:endpoint_module)
     end
   end
 
