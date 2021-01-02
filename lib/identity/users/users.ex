@@ -27,8 +27,16 @@ defmodule Bonfire.Me.Identity.Users do
 
   def by_username(username), do: get_flat(Queries.by_username(username))
 
-  def by_account(%Account{id: id}), do: by_account(id)
-  def by_account(account_id) when is_binary(account_id),
+  def by_account(account) do
+    if Utils.module_exists?(Bonfire.Data.SharedUser) do
+      Bonfire.Me.Identity.SharedUsers.by_account(account)
+    else
+      do_by_account(account)
+    end
+  end
+
+  defp do_by_account(%Account{id: id}), do: by_account(id)
+  defp do_by_account(account_id) when is_binary(account_id),
     do: repo().all(Queries.by_account(account_id))
 
   def for_switch_user(username, account_id) do

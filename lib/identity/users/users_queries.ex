@@ -5,6 +5,7 @@ defmodule Bonfire.Me.Identity.Users.Queries do
 
   # alias Bonfire.Me.Identity.Users
   alias Bonfire.Data.Identity.User
+  alias Bonfire.Common.Utils
 
   def query(), do: from(u in User, as: :user)
 
@@ -54,14 +55,19 @@ defmodule Bonfire.Me.Identity.Users.Queries do
   end
 
   def for_switch_user(username, account_id) do
-    from u in User,
-      join: p in assoc(u, :profile),
-      join: c in assoc(u, :character),
-      join: a in assoc(u, :accounted),
-      where: c.username == ^username,
-      where: a.account_id == ^account_id,
-      preload: [profile: p, character: c, accounted: a],
-      order_by: [asc: u.id]
+    if Utils.module_exists?(Bonfire.Data.SharedUser) do
+      Bonfire.Data.SharedUser.query_for_switch_user(username, account_id)
+
+    else
+      from u in User,
+        join: p in assoc(u, :profile),
+        join: c in assoc(u, :character),
+        join: a in assoc(u, :accounted),
+        where: c.username == ^username,
+        where: a.account_id == ^account_id,
+        preload: [profile: p, character: c, accounted: a],
+        order_by: [asc: u.id]
+    end
   end
 
   def current(user_id) do

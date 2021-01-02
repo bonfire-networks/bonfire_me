@@ -32,8 +32,14 @@ defmodule Bonfire.Me.Fake do
   def atusername, do: "@" <> username()
   def website, do: Faker.Internet.domain_name()
   def location, do: Faker.Pokemon.location()
-  def icon_url, do: Faker.Avatar.image_url(140,140)
-  def image_url, do: Faker.Avatar.image_url()
+  def icon_url(slug \\ nil), do: Faker.Avatar.image_url(slug, 140,140)
+  def image_url(slug \\ nil), do: Faker.Avatar.image_url(slug)
+  def avatar_url, do: "https://thispersondoesnotexist.com/image"
+
+  def image(%{shared_user: %{label: _}}), do: Faker.Internet.image_url()
+  def image(%{id: id, profile: _}), do: avatar_url()
+  def image(%{id: id}), do: image_url(id)
+  def image(_), do: image_url()
 
   defp put_form_lazy(base, key, fun) do
     Map.put_new_lazy base, key, fn ->
