@@ -1,7 +1,13 @@
 
 <div class="lg:flex mt-6 -mx-2">
   <div class="w-full lg:w-3/5 lg:px-2">
-    <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
+    <%= if @current_user do %>
+      <%= if maybe_get(@current_user, :id) != maybe_get(@user, :id) do %>
+        Share something with them:
+      <% end %>
+      <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
+    <% end %>
+
     <%= live_component(@socket, Bonfire.UI.Social.ProfileHeroLive, assigns) %>
     <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
   </div>

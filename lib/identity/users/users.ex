@@ -16,6 +16,8 @@ defmodule Bonfire.Me.Identity.Users do
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
 
+  ### Queries
+
   def get_current(nil), do: nil
   def get_current(id) when is_binary(id), do: repo().one(Queries.current(id))
 
@@ -35,14 +37,25 @@ defmodule Bonfire.Me.Identity.Users do
 
   def list, do: repo().all(Queries.with_mixins())
 
-  ## Mutations
+  def flatten(user) do
+    user
+    |> Map.merge(user, user.profile)
+    |> Map.merge(user, user.character)
+  end
+
+  def get_flat(query) do
+    repo().single(query)
+  end
+
+
+  ### Mutations
+
+  ## Create
 
   @spec create(params :: map, extra :: changeset_extra) :: Changeset.t
   def create(params, extra) do
     repo().insert(changeset(:create, %User{}, params, extra))
   end
-
-  # def update(%User{} = user, params), do: repo().update(changeset(:update, user, params))
 
   @spec changeset(
     name :: changeset_name,
@@ -99,15 +112,21 @@ defmodule Bonfire.Me.Identity.Users do
     }, []
   end
 
-  def flatten(user) do
+
+  ## Update
+
+  def update(%User{} = user, params), do: repo().update(changeset(:update, user, params))
+
+  def changeset(:update, user, params, %Account{}=account) do
     user
-    |> Map.merge(user, user.profile)
-    |> Map.merge(user, user.character)
+    |> repo().preload([:character, :profile])
+    |> User.changeset(params)
+    |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
+    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
   end
 
-  def get_flat(query) do
-    repo().single(query)
-  end
+
+  ## Delete
 
   # def delete(%User{}=user) do
   #   preloads =

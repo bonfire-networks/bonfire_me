@@ -23,6 +23,9 @@ defmodule Bonfire.Me.Identity.Accounts do
   def fetch_current(id) when is_binary(id),
     do: repo().single(Queries.current(id))
 
+  def get_by_email(email) when is_binary(email),
+    do: repo().one(Queries.by_email(email))
+
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
 
   @spec changeset(changeset_name, params :: map) :: Changeset.t
@@ -55,7 +58,7 @@ defmodule Bonfire.Me.Identity.Accounts do
   def signup(params, opts) when not is_struct(params),
     do: signup(changeset(:signup, params, opts), opts)
 
-  def signup(%Changeset{valid?: true, data: %Account{}}=cs, opts) do
+  def signup(%Changeset{data: %Account{}}=cs, opts) do
     if cs.valid? do
       repo().transact_with fn -> # revert if email send fails
         repo().insert(cs)
@@ -117,7 +120,7 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   defp rce_check_confirm(true, form, changeset, opts) do
     repo().one(Queries.request_confirm_email(form.email))
-    |> rce_check_account(form, changeset, opts) 
+    |> rce_check_account(form, changeset, opts)
   end
 
 
@@ -125,7 +128,7 @@ defmodule Bonfire.Me.Identity.Accounts do
     do: {:error, Changeset.add_error(changeset, :form, "not_found")}
 
   defp rce_check_account(%Account{}=account, form, changeset, opts),
-    do: rce_check_permitted(account.email, changeset, opts)  
+    do: rce_check_permitted(account.email, changeset, opts)
 
 
   defp rce_check_permitted(account, changeset, opts) do

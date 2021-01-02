@@ -10,6 +10,13 @@ defmodule Bonfire.Me.Identity.Accounts.Queries do
       preload: [instance_admin: ia]
   end
 
+  def by_email(email) when is_binary(email) do
+    from a in Account,
+      join: e in assoc(a, :email),
+      where: e.email_address == ^email,
+      preload: [email: e]
+  end
+
   def request_confirm_email(email) when is_binary(email) do
     from a in Account,
       join: e in assoc(a, :email),

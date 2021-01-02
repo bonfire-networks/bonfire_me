@@ -17,18 +17,25 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   defp mounted(params, session, socket) do
+    user = case Map.get(params, "username") do
+      nil -> Map.get(socket.assigns, :current_user, Fake.user_live())
+      username ->
+        with {:ok, user} <- Bonfire.Me.Identity.Users.by_username(username) do
+          user
+        end
+    end
+    IO.inspect(user)
 
-    user = e(socket.assigns, :current_user, Fake.user_live())
-
-       {:ok,
-       socket
-       |> assign(
-         page_title: "Profile",
-         selected_tab: "about",
-         feed_title: "User feed",
-         current_account: socket.assigns.current_account,
-         current_user: socket.assigns.current_user,
-       )}
+    {:ok,
+      socket
+      |> assign(
+        page_title: "Profile",
+        selected_tab: "about",
+        feed_title: "User feed",
+        current_account: Map.get(socket.assigns, :current_account),
+        current_user: Map.get(socket.assigns, :current_user),
+        user: user # the user to display
+      )}
   end
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do
