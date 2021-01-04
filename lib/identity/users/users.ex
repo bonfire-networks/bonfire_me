@@ -60,8 +60,12 @@ defmodule Bonfire.Me.Identity.Users do
 
   ## Create
 
-  @spec create(params :: map, extra :: changeset_extra) :: Changeset.t
-  def create(params, extra) do
+  # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
+  def create(params_or_changeset, extra)
+  def create(%Changeset{data: %User{}}=changeset, extra) do
+    repo().insert(changeset)
+  end
+  def create(params, extra) when not is_struct(params) do
     repo().insert(changeset(:create, %User{}, params, extra))
   end
 

@@ -30,7 +30,7 @@
       </article>
     <% end %>
     <article>
-      <%= live_redirect to: Routes.live_path(@socket, CreateUserLive) <> @go do %>
+      <%= live_redirect to: Routes.create_user_path(@socket, :index) do %>
         <div style="
           height: 10vw;
           width: 10vw;

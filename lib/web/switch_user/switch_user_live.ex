@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
-      # LivePlugs.LoadCurrentUser,
+      LivePlugs.LoadCurrentUser,
       LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,

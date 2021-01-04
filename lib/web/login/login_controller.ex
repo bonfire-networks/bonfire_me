@@ -6,6 +6,7 @@ defmodule Bonfire.Me.Web.LoginController do
   alias Bonfire.Common.Web.Misc
 
   def index(conn, _) do # GET only supports 'go'
+    conn = fetch_query_params(conn)
     paint(conn, form(Map.take(conn.query_params, [:go, "go"])))
   end
 

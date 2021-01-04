@@ -1,5 +1,5 @@
 <div class="w-2/4 mx-auto h-full mb-24 mt-6">
-  <%= f = form_for @form, "#", id: "create-user-fields", phx_submit: "submit", phx_change: "validate" %>
+  <%= f = form_for @form, Routes.create_user_path(@socket, :create), id: "create-form" %>
     <!-- <div class="section__preview"> -->
     <!--   <div class="preview__card"> -->
     <!--     <label class="card__upload" for="upload_bg"> -->

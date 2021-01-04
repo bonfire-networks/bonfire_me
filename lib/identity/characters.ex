@@ -9,9 +9,8 @@ defmodule Bonfire.Me.Identity.Characters do
 
   def changeset(char \\ %Character{}, params) do
     char
-    |> Character.changeset(params)
+    |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)
-    |> Changesets.replicate_map_valid_change(:username, :username_hash, &Character.hash/1)
   end
 
   def display_username(%{username: username}) when not is_nil(username) do
