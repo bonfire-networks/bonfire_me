@@ -17,7 +17,7 @@ defmodule Bonfire.Me.Web.HomeLive do
 
     defp mounted(params, session, socket) do
       {:ok, socket
-      |> assign(page_title: "Switch User",
+      |> assign(page_title: "Bonfire home page",
       selected_tab: "about",
       )}
     end
