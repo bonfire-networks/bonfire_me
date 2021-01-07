@@ -19,6 +19,6 @@ defmodule Bonfire.Me.Users.ActivityPub do
 
   @doc "Updates a remote user"
   def update(user, params) do
-    repo().update(Users.changeset(:update, user, params))
+    Users.update(user, params, :remote)
   end
 end

@@ -127,9 +127,17 @@ defmodule Bonfire.Me.Identity.Users do
 
   ## Update
 
-  def update(%User{} = user, params), do: repo().update(changeset(:update, user, params))
+  def update(%User{} = user, params, extra), do: repo().update(changeset(:update, user, params, extra))
 
   def changeset(:update, user, params, %Account{}=account) do
+    user
+    |> repo().preload([:character, :profile])
+    |> User.changeset(params)
+    |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
+    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+  end
+
+  def changeset(:update, user, params, :remote) do
     user
     |> repo().preload([:character, :profile])
     |> User.changeset(params)
