@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Users.ActivityPub do
+defmodule Bonfire.Me.Identity.Users.ActivityPub do
   alias Bonfire.Me.Identity.Users
   alias Bonfire.Data.ActivityPub.Peer
   alias Bonfire.Data.Identity.User
