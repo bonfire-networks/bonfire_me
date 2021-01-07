@@ -16,7 +16,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
     changeset = Users.changeset(:create, form, conn.assigns.current_account)
     case Users.create(changeset, conn.assigns.current_account) do
       {:ok, user} ->
-        IO.inspect(user: user)
+        # IO.inspect(user: user)
         conn
         |> put_session(:user_id, user.id)
         |> put_flash(:info, "Hey, #{user.character.username}, nice to meet you!")

@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
   use Bonfire.Web, :live_view
 
   alias Bonfire.Me.Fake
+  alias Bonfire.Me.Identity.Users
 
   alias Bonfire.Me.Web.SettingsLive.{
     SettingsNavigationLive,
@@ -45,27 +46,28 @@ defmodule Bonfire.Me.Web.SettingsLive do
   end
 
   def handle_event("profile_save", params, socket) do
-    params = input_to_atoms(params)
+    # params = input_to_atoms(params)
 
-    {:ok, _edit_profile} =
-      UsersResolver.update_profile(params, %{
-        context: %{current_user: socket.assigns.current_user}
-      })
+    with {:ok, edit_profile} <-
+      Users.update(socket.assigns.current_user, params, socket.assigns.current_account) do
 
-    cond do
-      strlen(params.icon) > 0 or strlen(params.image) > 0 ->
-        {
-          :noreply,
-          assign(socket, trigger_submit: true)
-          |> put_flash(:info, "Details saved!")
-          #  |> push_redirect(to: "/~/profile")
-        }
+      IO.inspect((Map.get(params, "icon")))
+      cond do
+      # handle controller-based upload
+        strlen(Map.get(params, "icon")) > 0 or strlen(Map.get(params, "image")) > 0 ->
+          {
+            :noreply,
+            assign(socket, trigger_submit: true)
+            |> put_flash(:info, "Details saved!")
+            #  |> push_redirect(to: "/~/profile")
+          }
 
-      true ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Profile saved!")
-         |> push_redirect(to: "/~/profile")}
-    end
+        true ->
+          {:noreply,
+          socket
+          |> put_flash(:info, "Profile saved!")
+          |> push_redirect(to: "/~/profile")}
+      end
+      end
   end
 end

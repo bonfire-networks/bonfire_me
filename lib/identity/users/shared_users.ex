@@ -30,7 +30,7 @@ defmodule Bonfire.Me.Identity.SharedUsers do
 
       if account do
 
-        IO.inspect(account: account)
+        # IO.inspect(account: account)
 
         repo().update(changeset(:add_account, shared_user, account))
       else
@@ -82,7 +82,7 @@ defmodule Bonfire.Me.Identity.SharedUsers do
   def by_account(%Account{} = account) do
     account = repo().preload(account, [users: [:shared_user, :character, :profile], shared_users: [:shared_user, :character, :profile]])
     (Map.get(account, :users, []) ++ Map.get(account, :shared_users, []))
-    |> IO.inspect
+    # |> IO.inspect
   end
 
   def by_account(account_id) when is_binary(account_id),

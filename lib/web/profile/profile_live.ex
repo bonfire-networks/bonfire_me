@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
           user
         end
     end
-    IO.inspect(user)
+    # IO.inspect(user)
 
     {:ok,
       socket

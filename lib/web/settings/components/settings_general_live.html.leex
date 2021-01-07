@@ -1,14 +1,14 @@
 <section class="settings__section">
   <div class="section__main">
     <h1>Edit profile</h1>
-          <form action="/~/settings" phx-submit="profile_save" method="post" enctype="multipart/form-data" <%= if @trigger_submit, do: "phx-trigger-action" %>>
+          <form action="/settings" phx-submit="profile_save" method="post" enctype="multipart/form-data" <%= if @trigger_submit, do: "phx-trigger-action" %>>
             <div class="section__item">
               <h4>Edit your name</h4>
               <input name="profile[name]" type="text" value="<%= e(@current_user, :profile, :name, "") %>" placeholder="Type a new name...">
             </div>
             <div class="section__item">
               <h4>Edit your email</h4>
-              <input name="profile[email]" value="<%= e(@current_user, :account, :email, "") %>" type="text" placeholder="Type a new email...">
+              <input name="email[email_address]" value="<%= e(@current_user, :email, :email_address, "") %>" type="text" placeholder="Type a new email...">
             </div>
             <div class="section__item">
               <h4>Edit your summary</h4>
@@ -30,14 +30,14 @@
               <div class="section__item">
                 <h4>Edit your background image</h4>
                 <label class="file">
-                  <input name="image[upload]" type="file" id="image" aria-label="Image file selector" phx-update="ignore">
+                  <input name="image" type="file" id="image" aria-label="Image file selector" phx-update="ignore">
                   <span class="file-custom"></span>
                 </label>
               </div>
               <div class="section__item">
                 <h4>Edit your avatar</h4>
                 <label class="file">
-                  <input name="icon[upload]" type="file" id="icon" aria-label="Icon file selector" phx-update="ignore">
+                  <input name="icon" type="file" id="icon" aria-label="Icon file selector" phx-update="ignore">
                   <span class="file-custom"></span>
                 </label>
               </div>

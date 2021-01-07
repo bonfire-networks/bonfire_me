@@ -127,19 +127,18 @@ defmodule Bonfire.Me.Identity.Users do
 
   ## Update
 
-  def update(%User{} = user, params, extra), do: repo().update(changeset(:update, user, params, extra))
-
-  def changeset(:update, user, params, %Account{}=account) do
-    user
-    |> repo().preload([:character, :profile])
-    |> User.changeset(params)
-    |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
-    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+  def update(%User{} = user, params, extra) do
+  # TODO: check who is doing the update (except if extra==:remote)
+    repo().update(changeset(:update, user, params, extra))
   end
 
-  def changeset(:update, user, params, :remote) do
+  def changeset(:update, user, params, _extra) do
+    user = repo().preload(user, [:character, :profile])
+
+    # add the ID for update
+    params = Map.merge(params, %{"profile"=> %{"id"=> user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
+
     user
-    |> repo().preload([:character, :profile])
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)

@@ -7,15 +7,14 @@
   <div class="mt-4 grid grid-cols-4 gap-4">
     <%= for user <- @current_account_users do %>
       <article style="
-        height: 10vw;
         width: 10vw;
-        max-height: 200px;
+        max-height: 300px;
         max-width: 200px;
         min-height: 84px;
         min-width: 84px;"
         class="rounded-md cursor-pointer">
         <%= live_redirect to: Routes.switch_user_path(@socket, :show, user.character.username) <> @go do %>
-          <h3 class="text-center font-semibold text-gray-700 mb-2"><%= user.profile.name %></h3>
+          <h3 class="text-center font-semibold text-gray-700 mb-2 mh-2"><%= user.profile.name %></h3>
           <img  class="rounded-md" alt="profile pic" src="<%= Bonfire.Me.Fake.image(user) %>" />
 
           <%= if e(user, :shared_user, :label, nil) do %>
@@ -38,7 +37,7 @@
           max-width: 200px;
           min-height: 84px;
           min-width: 84px;">
-        <h3 class="text-center text-base font-semibold text-gray-700 mb-2">Add a new user</h3>
+        <h3 class="text-center text-base font-semibold text-gray-700 mb-2 mh-2">Add a new user</h3>
           <div  style="
           height: 10vw;" class="rounded-md border-dashed border-4 border-gray-500 bg-gray-300 flex place-content-center cursor-pointer hover:bg-gray-400 hover:border-gray-600" >
             <svg class="text-gray-500" style="width: 120px" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
