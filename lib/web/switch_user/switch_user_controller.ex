@@ -15,7 +15,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp index([], _, conn, params) do
     conn
     |> put_flash(:info, "Hey there! Let's fill out your profile!")
-    |> redirect(to: Routes.live_path(conn, CreateUserLive) <> Misc.copy_go(params))
+    |> redirect(to: Routes.create_user_path(conn, :index) <> Misc.copy_go(params))
   end
 
   defp index([_|_]=users, _, conn, params) do
