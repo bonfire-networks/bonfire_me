@@ -136,12 +136,13 @@ defmodule Bonfire.Me.Identity.Users do
     user = repo().preload(user, [:character, :profile])
 
     # add the ID for update
-    params = Map.merge(params, %{"profile"=> %{"id"=> user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
+    params = Map.merge(params, %{profile: %{id: user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
 
     user
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    |> Changeset.cast_assoc(:actor)
   end
 
 
