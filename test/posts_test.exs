@@ -5,7 +5,7 @@ defmodule Bonfire.Me.PostsTest do
   alias Bonfire.Me.Fake
 
   test "creation works" do
-    attrs = %{summary: "summary", name: "name", html_body: "<p>epic html message</p>"}
+    attrs = %{post_content: %{summary: "summary", name: "name", html_body: "<p>epic html message</p>"}}
     account = Fake.fake_account!()
     user = Fake.fake_user!(account)
     assert {:ok, post} = Posts.create(user, attrs)
@@ -16,9 +16,9 @@ defmodule Bonfire.Me.PostsTest do
   end
 
   test "fetching by creator" do
-    attrs_1 = %{summary: "summary", name: "name", html_body: "<p>epic html message 1</p>"}
-    attrs_2 = %{summary: "summary", name: "name", html_body: "<p>epic html message 2</p>"}
-    attrs_3 = %{summary: "summary", name: "name", html_body: "<p>epic html message 3</p>"}
+    attrs_1 = %{post_content: %{summary: "summary", name: "name", html_body: "<p>epic html message 1</p>"}}
+    attrs_2 = %{post_content: %{summary: "summary", name: "name", html_body: "<p>epic html message 2</p>"}}
+    attrs_3 = %{post_content: %{summary: "summary", name: "name", html_body: "<p>epic html message 3</p>"}}
     account = Fake.fake_account!()
     user = Fake.fake_user!(account)
     assert {:ok, _} = Posts.create(user, attrs_1)

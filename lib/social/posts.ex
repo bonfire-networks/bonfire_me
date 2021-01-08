@@ -1,20 +1,20 @@
 defmodule Bonfire.Me.Social.Posts do
 
   alias Bonfire.Data.Social.{Post, PostContent}
-  alias Pointers.Changesets
+  alias Ecto.Changeset
   import Ecto.Query
 
   defp repo, do: Bonfire.Common.Config.get!(:repo_module)
 
   def create(creator, attrs) do
-    attrs = Map.put(attrs, :creator_id, creator.id)
+    attrs = Map.put(attrs, :created, %{creator_id: creator.id})
     repo().put(changeset(:create, attrs))
   end
 
   def changeset(:create, attrs) do
     Post.changeset(%Post{}, attrs)
-    |> Changesets.cast_assoc(:post_content, attrs)
-    |> Changesets.cast_assoc(:created, attrs)
+    |> Changeset.cast_assoc(:post_content)
+    |> Changeset.cast_assoc(:created)
   end
 
   def by_user(user_id) do
