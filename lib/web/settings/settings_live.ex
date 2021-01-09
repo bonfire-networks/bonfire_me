@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.SettingsLive do
-  use Bonfire.Web, :live_view
+  use Bonfire.Web, {:live_view, [layout: {Bonfire.Web.LayoutView, "without_sidebar.html"}]}
 
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Identity.Users
