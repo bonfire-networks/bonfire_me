@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Web.LoginController do
     conn
     |> put_session(:account_id, account.id)
     |> put_flash(:info, "Welcome back!")
-    |> redirect(to: Misc.go_where?(conn, form, Routes.live_path(conn, Bonfire.Me.Web.HomeLive)))
+    |> redirect(to: Misc.go_where?(conn, form, Routes.live_path(conn, Bonfire.Me.Web.LoggedDashboardLive)))
   end
 
   defp paint(conn, changeset) do

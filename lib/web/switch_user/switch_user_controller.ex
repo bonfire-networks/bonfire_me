@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Identity.{Accounts, Users}
   alias Bonfire.Common.Web.Misc
-  alias Bonfire.Me.Web.{CreateUserLive, HomeLive, SwitchUserLive}
+  alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive, SwitchUserLive}
 
   @doc "A listing of users in the account."
   def index(%{assigns: the}=conn, params) do
@@ -42,7 +42,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     conn
     |> put_session(:user_id, user.id)
     |> put_flash(:info, "Welcome back, @#{user.character.username}!")
-    |> redirect(to: Misc.go_where?(conn, params, Routes.live_path(conn, HomeLive)))
+    |> redirect(to: Misc.go_where?(conn, params, Routes.live_path(conn, LoggedDashboardLive)))
   end
 
   defp show({:error, _}, conn, params) do

@@ -41,8 +41,8 @@
 #         live "/create-user", Me.Web.CreateUserLive, only: [:index, :create]
 
 #         scope "/@:username" do
-#           live "/", Web.HomeLive, :home
-#           live "/home", Web.HomeLive, :home
+#           live "/", Web.LoggedDashboardLive, :home
+#           live "/home", Web.LoggedDashboardLive, :home
 #           live "/settings", Me.Web.SettingsLive, :settings
 #           live "/settings/:tab", Me.Web.SettingsLive, :settings_tab
 #         end

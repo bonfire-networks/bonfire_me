@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
 
   use Bonfire.Web, :controller
   alias Bonfire.Me.Identity.Users
-  alias Bonfire.Me.Web.{CreateUserLive, HomeLive}
+  alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive}
   alias Bonfire.Common.Web.Misc
 
   def index(conn, _) do # GET only supports 'go'
@@ -20,7 +20,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
         conn
         |> put_session(:user_id, user.id)
         |> put_flash(:info, "Hey, #{user.character.username}, nice to meet you!")
-        |> redirect(to: Misc.go_where?(conn, params, Routes.live_path(conn, HomeLive)))
+        |> redirect(to: Misc.go_where?(conn, params, Routes.live_path(conn, LoggedDashboardLive)))
       {:error, changeset} ->
         # IO.inspect(error: changeset)
         paint(conn |> put_flash(:error, "Please double check your inputs..."), changeset)
