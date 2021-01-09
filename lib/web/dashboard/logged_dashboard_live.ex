@@ -10,6 +10,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       LivePlugs.live_plug params, session, socket, [
         LivePlugs.LoadCurrentAccount,
         LivePlugs.LoadCurrentUser,
+        LivePlugs.LoadCurrentAccountUsers,
         LivePlugs.StaticChanged,
         LivePlugs.Csrf,
         &mounted/3,
@@ -19,7 +20,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
     defp mounted(params, session, socket) do
       {:ok, socket
       |> assign(page_title: "Bonfire home page",
-      feed_title: "Dashboard feed"
+      feed_title: "My feed"
       )}
     end
 
