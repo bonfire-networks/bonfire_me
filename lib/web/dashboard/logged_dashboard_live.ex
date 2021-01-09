@@ -20,7 +20,8 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
     defp mounted(params, session, socket) do
       {:ok, socket
       |> assign(page_title: "Bonfire home page",
-      feed_title: "My feed"
+      feed_title: "My feed",
+      go: ""
       )}
     end
 
