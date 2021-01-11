@@ -4,7 +4,7 @@
     <li class="flex flex-col col-span-1 text-center divide-y divide-gray-200 rounded group">
       <%= live_redirect to: Routes.switch_user_path(@socket, :show, user.character.username) <> @go do %>
       <div class="flex flex-col flex-1 py-4">
-        <img class="flex-shrink-0 w-full h-full mx-auto transition-colors duration-200 ease-in-out border-4 border-blue-400 border-opacity-0 rounded-md group-hover:border-opacity-100" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
+        <img class="flex-shrink-0 w-full h-full mx-auto transition-colors duration-200 ease-in-out border-4 border-blue-400 border-opacity-0 rounded-md max-h-60 group-hover:border-opacity-100" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
         <h3 class="mt-4 text-lg font-medium text-gray-700 transition-colors duration-200 ease-in-out group-hover:text-blue-600"><%= user.profile.name %></h3>
         <dl class="flex flex-col justify-between flex-grow mt-1">
 
