@@ -5,11 +5,14 @@ defmodule Bonfire.Me.Identity.Characters do
   alias Pointers.Changesets
   import Bonfire.Me.Integration
 
+  @username_forbidden ~r/[^a-z0-9_]+/i
   @username_regex ~r(^[a-z][a-z0-9_]{2,30}$)i
 
   def changeset(char \\ %Character{}, params) do
+
     char
     |> Character.changeset(params, :hash)
+    |> Changeset.cast(%{username: Regex.replace(@username_forbidden, Map.get(params, :username), "_")}, [:username])
     |> Changeset.validate_format(:username, @username_regex)
   end
 
