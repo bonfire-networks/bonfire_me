@@ -4,9 +4,10 @@ defmodule Bonfire.Me.Identity.Users.ActivityPub do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Identity.Users.Queries
   alias ActivityPub.Actor
+  alias Ecto.Changeset
 
   import Bonfire.Me.Integration
-  import Pointers.Changesets
+  import Ecto.Query
 
   def by_username(username) when is_binary(username),
     do: repo().single(Queries.by_username(username))
@@ -14,7 +15,7 @@ defmodule Bonfire.Me.Identity.Users.ActivityPub do
   @doc "Creates a remote user"
   def create(params, %Peer{id: id}) do
     Users.changeset(:create, %User{}, params, :remote)
-    |> Changesets.change(peer_id: id)
+    |> Changeset.change(peer_id: id)
     |> repo().insert()
   end
 
@@ -52,6 +53,41 @@ defmodule Bonfire.Me.Identity.Users.ActivityPub do
     }
   end
 
+  def peer_url_query(url) do
+    from p in Peer,
+    where: p.ap_base_uri == ^url
+  end
+
+  defp get_or_create_peer(actor) do
+    uri = URI.parse(actor.data["id"])
+    ap_base_url = uri.scheme <> "://" <> uri.host
+
+    case repo().single(peer_url_query(ap_base_url)) do
+      {:ok, peer} -> {:ok, peer}
+      {:error, _} ->
+        params = %{ap_base_uri: ap_base_url, display_hostname: uri.host}
+        repo().insert(Peer.changeset(%Peer{}, params))
+    end
+  end
+
+  def create_remote_actor(actor) do
+    attrs = %{
+      name: actor.data["name"],
+      username: actor.username,
+      summary: actor.data["summary"]
+    }
+
+    {:ok, peer} = get_or_create_peer(actor)
+    actor_object = ActivityPub.Object.get_by_ap_id(actor.ap_id)
+
+    repo().transact_with(fn ->
+      with {:ok, user} <- create(attrs, peer),
+           {:ok, _object} <- ActivityPub.Object.update(actor_object, %{pointer_id: user.id}) do
+        {:ok, user}
+      end
+    end)
+  end
+
   ## Adapter callbacks
 
   def get_actor_by_username(username) do
@@ -70,6 +106,13 @@ defmodule Bonfire.Me.Identity.Users.ActivityPub do
            Users.ActivityPub.update(user, Map.put(params, :actor, %{signing_key: params.keys})),
          actor <- format_actor(user) do
       {:ok, actor}
+    end
+  end
+
+  def maybe_create_remote_actor(actor) do
+    case Users.by_username(actor.username) do
+      {:ok, _} -> :ok
+      {:error, _} -> create_remote_actor(actor)
     end
   end
 end
