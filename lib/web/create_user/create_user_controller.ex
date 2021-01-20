@@ -22,7 +22,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
         |> put_flash(:info, "Hey, #{user.character.username}, nice to meet you!")
         |> redirect(to: Misc.go_where?(conn, params, Routes.live_path(conn, LoggedDashboardLive)))
       {:error, changeset} ->
-        # IO.inspect(error: changeset)
+        IO.inspect(error: changeset)
         paint(conn |> put_flash(:error, "Please double check your inputs..."), changeset)
     end
   end

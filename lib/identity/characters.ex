@@ -9,10 +9,9 @@ defmodule Bonfire.Me.Identity.Characters do
   @username_regex ~r(^[a-z][a-z0-9_]{2,30}$)i
 
   def changeset(char \\ %Character{}, params) do
-
+    params = Map.put(params, "username", Regex.replace(@username_forbidden, Bonfire.Common.Utils.map_get(params, :username, ""), "_"))
     char
     |> Character.changeset(params, :hash)
-    |> Changeset.cast(%{username: Regex.replace(@username_forbidden, Map.get(params, :username), "_")}, [:username])
     |> Changeset.validate_format(:username, @username_regex)
   end
 

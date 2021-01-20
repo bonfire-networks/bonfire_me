@@ -10,8 +10,8 @@ defmodule Bonfire.Me.Social.Profiles do
   def changeset(profile \\ %Profile{}, params) do
     profile
     |> Profile.changeset(params)
-    |> Changeset.validate_length(:name, min: 5, max: 50)
-    |> Changeset.validate_length(:summary, min: 15, max: 1024)
+    |> Changeset.validate_length(:name, min: 4, max: 50)
+    |> Changeset.validate_length(:summary, min: 10, max: 1024)
   end
 
 end

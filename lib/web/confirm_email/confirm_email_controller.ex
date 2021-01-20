@@ -48,8 +48,8 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
   defp confirmed(conn, account) do
     conn
     |> put_session(:account_id, account.id)
-    |> put_flash(:info, "Welcome back! Thanks for confirming your email address.")
-    |> redirect(to: Routes.live_path(conn, Bonfire.Me.Web.LoggedDashboardLive))
+    |> put_flash(:info, "Welcome back! Thanks for confirming your email address. You can now create a user profile.")
+    |> redirect(to: Routes.create_user_path(conn, :index))
   end
 
   defp already_confirmed(conn) do
