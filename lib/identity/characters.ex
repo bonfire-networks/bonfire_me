@@ -8,8 +8,27 @@ defmodule Bonfire.Me.Identity.Characters do
   @username_forbidden ~r/[^a-z0-9_]+/i
   @username_regex ~r(^[a-z][a-z0-9_]{2,30}$)i
 
-  def changeset(char \\ %Character{}, params) do
-    params = Map.put(params, "username", Regex.replace(@username_forbidden, Bonfire.Common.Utils.map_get(params, :username, ""), "_"))
+  def changeset(char \\ %Character{}, %{"username" => username} = params) when is_binary(username) do
+    do_changeset(
+      char,
+      Map.put(params, "username", clean_username(username))
+    )
+  end
+
+  def changeset(char, %{username: username} = params) when is_binary(username) do
+    do_changeset(
+      char,
+      Map.put(params, :username, clean_username(username))
+    )
+  end
+
+  def changeset(char, params), do: do_changeset(char, params)
+
+  defp clean_username(username) do
+    Regex.replace(@username_forbidden, username, "_")
+  end
+
+  defp do_changeset(char \\ %Character{}, params) do
     char
     |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)

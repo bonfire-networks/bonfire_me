@@ -30,12 +30,12 @@ defmodule Bonfire.Me.Identity.Accounts.LoginFields do
     case Changeset.fetch_change(changeset, :email_or_username) do
       {:ok, eou} ->
         cond do
-          Regex.match?(~r(^@?[a-z][a-z0-9]+$)i, eou) ->
+          Regex.match?(~r(^@?[a-z][a-z0-9_]+$)i, eou) ->
             Changeset.put_change(changeset, :username, eou)
           Regex.match?(~r(^[^@]{1,128}@[^@]{2,128}$), eou) ->
             Changeset.put_change(changeset, :email, eou)
           true ->
-            Changeset.put_error(changeset, :email_or_username, "You must provide a valid email address or @username.")
+            Changeset.add_error(changeset, :email_or_username, "You must provide a valid email address or @username.")
         end
       _ -> changeset
     end

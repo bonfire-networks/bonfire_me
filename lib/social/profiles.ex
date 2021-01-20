@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Social.Profiles do
     profile
     |> Profile.changeset(params)
     |> Changeset.validate_length(:name, min: 4, max: 50)
-    |> Changeset.validate_length(:summary, min: 10, max: 1024)
+    |> Changeset.validate_length(:summary, min: 0, max: 1024)
   end
 
 end
