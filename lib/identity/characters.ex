@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Identity.Characters do
   def changeset(char, params), do: do_changeset(char, params)
 
   defp clean_username(username) do
-    Regex.replace(@username_forbidden, username, "_")
+    Regex.replace(@username_forbidden, username, "_") |> String.slice(0..29)
   end
 
   defp do_changeset(char \\ %Character{}, params) do
@@ -48,9 +48,9 @@ defmodule Bonfire.Me.Identity.Characters do
   end
 
   def character_url(username) when is_binary(username) do
-    endpoint = Bonfire.Common.Config.get!(:endpoint_module)
     ap_base_path = Bonfire.Common.Config.get(:ap_base_path, "/pub")
-    endpoint.url() <> ap_base_path <> "/actors/" <> username
+    domain = Bonfire.Common.URIs.base_url()
+    domain <> ap_base_path <> "/actors/" <> username
   end
 
   def character_url(%{username: username}) when not is_nil(username) do
