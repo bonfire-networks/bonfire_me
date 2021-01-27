@@ -29,6 +29,6 @@ defmodule Bonfire.Me.Web.My.SettingsUpload do
       })
 
     conn
-    |> redirect(external: "/~/profile")
+    |> redirect(external: "/user")
   end
 end

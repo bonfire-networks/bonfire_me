@@ -59,14 +59,15 @@ defmodule Bonfire.Me.Web.SettingsLive do
             :noreply,
             assign(socket, trigger_submit: true)
             |> put_flash(:info, "Details saved!")
-            #  |> push_redirect(to: "/~/profile")
+            #  |> push_redirect(to: "/user")
           }
 
         true ->
           {:noreply,
           socket
           |> put_flash(:info, "Profile saved!")
-          |> push_redirect(to: "/~/profile")}
+          |> push_redirect(to: "/user")
+          }
       end
       end
   end

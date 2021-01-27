@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Web.SettingsLive.SettingsNavigationLive do
   def render(assigns) do
     ~L"""
     <%= live_patch link_body("My profile", "feather-user"),
-      to: "/~/settings/general",
+      to: "/settings",
       class: if @selected == "general", do: "navigation__item active", else: "navigation__item"
     %>
 

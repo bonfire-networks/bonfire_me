@@ -50,7 +50,7 @@
           </nav>
         </aside>
 
-        <form class="divide-y divide-gray-200 lg:col-span-9" action="#" method="POST">
+        <form class="divide-y divide-gray-200 lg:col-span-9" phx-submit="profile_save" method="POST">
           <!-- Profile section -->
           <div class="px-4 py-6 sm:p-6 lg:pb-8">
             <div>
@@ -61,7 +61,7 @@
             </div>
 
 
-            
+
             <div class="flex flex-col mt-6 lg:flex-row">
               <div class="flex-grow mt-6 lg:mt-0 lg:mr-6 lg:flex-grow-0 lg:flex-shrink-0">
                 <p class="text-sm font-medium text-gray-700" aria-hidden="true">
@@ -83,7 +83,7 @@
                     </div>
                   </div>
                 </div>
-  
+
                 <div class="relative hidden overflow-hidden rounded-full lg:block">
                   <img class="relative w-40 h-40 bg-red-100 rounded-full" src='<%= e(@current_user, :profile, :icon_url, "") %>' alt="">
                   <label for="user-photo" class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-white bg-black bg-opacity-75 opacity-0 hover:opacity-100 focus-within:opacity-100">
@@ -95,11 +95,11 @@
               </div>
               <div class="flex-grow space-y-6">
                 <div>
-                  <label for="username" class="block text-sm font-medium text-gray-700">
+                  <label for="name" class="block text-sm font-medium text-gray-700">
                     Full name
                   </label>
                   <div class="flex mt-1 rounded-md shadow-sm">
-                    <input type="text" name="username" id="username" autocomplete="username" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='<%= e(@current_user, :profile, :name, "") %>'>
+                    <input type="text" name="profile[name]" id="name" autocomplete="name" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='<%= e(@current_user, :profile, :name, "") %>'>
                   </div>
                 </div>
 
@@ -108,7 +108,10 @@
                     Username
                   </label>
                   <div class="flex mt-1 rounded-md shadow-sm">
-                    <input type="text" name="username" id="username" autocomplete="username" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='@<%= e(@current_user, :character, :username, "") %>'>
+                    <span class="inline-flex items-center px-3 text-gray-500 border border-r-0 border-gray-300 bg-gray-50 rounded-l-md sm:text-sm">
+                      @
+                    </span>
+                    <input type="text" name="character[username]" id="username" autocomplete="username" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='<%= e(@current_user, :character, :username, "") %>'>
                     <span class="inline-flex items-center px-3 text-gray-500 border border-l-0 border-gray-300 bg-gray-50 rounded-r-md sm:text-sm">
                       @bonfire.cafe
                     </span>
@@ -120,7 +123,7 @@
                     About
                   </label>
                   <div class="mt-1">
-                    <textarea id="about" name="about" rows="3" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-light-blue-500 focus:border-light-blue-500 sm:text-sm">
+                    <textarea id="about" name="profile[summary]" rows="3" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-light-blue-500 focus:border-light-blue-500 sm:text-sm">
                       <%= e(@current_user, :profile, :summary, "") %>
                     </textarea>
                   </div>
@@ -134,7 +137,7 @@
                     Website
                   </label>
                   <div class="flex mt-1 rounded-md shadow-sm">
-                    <input type="text" name="website" id="website" autocomplete="website" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='<%= e(@current_user, :profile, :website, "") %>'>
+                    <input type="text" name="profile[website]" id="website" autocomplete="website" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='<%= e(@current_user, :profile, :website, "") %>'>
                   </div>
                 </div>
 
@@ -143,7 +146,7 @@
                     Location
                   </label>
                   <div class="flex mt-1 rounded-md shadow-sm">
-                    <input type="text" name="location" id="location" autocomplete="location" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='<%= e(@current_user, :profile, :location, "") %>'>
+                    <input type="text" name="profile[location]" id="location" autocomplete="location" class="flex-grow block w-full min-w-0 border-gray-300 rounded-none focus:ring-light-blue-500 focus:border-light-blue-500 rounded-l-md sm:text-sm" value='<%= e(@current_user, :profile, :location, "") %>'>
                   </div>
                 </div>
               </div>
@@ -166,7 +169,7 @@
   </div>
 </main>
 
-<!-- 
+<!--
 <div class="page__fullContent">
   <div class="page__settings">
     <div class="settings__hero">
@@ -176,7 +179,7 @@
           <h3><%= e(@current_user, :profile, :name, "") %></h3>
         </div>
         <div class="suphero__actions">
-            <%= live_redirect to: "/~/profile" do %>View my profile<% end %>
+            <%= live_redirect to: "/user" do %>View my profile<% end %>
             <details class="more__dropdown">
               <summary>
                 <i class="feather-more-horizontal"></i>

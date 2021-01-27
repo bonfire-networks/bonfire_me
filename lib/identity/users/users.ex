@@ -136,7 +136,13 @@ defmodule Bonfire.Me.Identity.Users do
     user = repo().preload(user, [:character, :profile])
 
     # add the ID for update
-    params = Map.merge(params, %{profile: %{id: user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
+    params = params
+      |> Map.merge(%{"profile" => %{"id"=> user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
+      |> Map.merge(%{"character" => %{"id"=> user.character.id}}, fn _, a, b -> Map.merge(a, b) end)
+
+    if params["profile"]["location"] && Utils.module_exists?(Bonfire.Geolocate.Geolocations) do
+      Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
+    end
 
     user
     |> User.changeset(params)
