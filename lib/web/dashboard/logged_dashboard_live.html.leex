@@ -12,6 +12,9 @@
   </div>
 </div>
 <%= else %>
+  <div class="mt-4">
+    <%= live_component(@socket, Bonfire.Me.Web.SmallAccountUsersLive, assigns) %>
+  </div>
   <div class="flex p-8 mt-6 bg-gray-900 rounded-md">
     <div class="flex-1 w-3/5">
       <h2 class="mr-8 text-5xl font-bold text-white">"This is a short tagline to describe the instance in a toot...</h2>
@@ -28,13 +31,5 @@
     </div>
     <img class="w-2/5 rounded-md" src="https://picsum.photos/400/250" alt="instance wallpaper"/>
   </div>
-  <div class="mt-16">
-    <div class="pb-5 text-center">
-      <h3 class="text-3xl font-medium leading-6 text-gray-900">Switch user</h3>
-      <p class="max-w-4xl mt-2 font-light leading-6 text-gray-600 text-md">Workcation is a property rental website. Etiam ullamcorper massa viverra consequat, consectetur id nulla tempus. Fringilla egestas justo massa purus sagittis malesuada.</p>
-    </div>
-    <div class="">
-      <%= live_component(@socket, Bonfire.Me.Web.AccountUsersLive, assigns) %>
-    </div>
-  </div>
+  
 <% end %>

@@ -1,47 +1,39 @@
 <%= if @current_account_users && length(@current_account_users)>0 do %>
 
-  <ul class="grid grid-cols-1 gap-6 mt-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-
-    <%= for user <- @current_account_users do %>
-
-      <li class="flex flex-col col-span-1 text-center divide-y divide-gray-200 rounded group">
+<ul class="flex items-center space-x-3">
+  <%= for user <- @current_account_users do %>
+    <li class="flex flex-col col-span-1 p-2 transition-colors duration-200 ease-in-out bg-white border divide-y divide-gray-200 rounded-md shadow group hover:bg-blueGray-200">
       <%= live_redirect to: Routes.switch_user_path(@socket, :show, user.character.username || "") <> @go do %>
-      <div class="flex flex-col flex-1 py-4">
-        <img class="flex-shrink-0 w-full h-full mx-auto transition-colors duration-200 ease-in-out border-4 border-blue-400 border-opacity-0 rounded-md max-h-60 group-hover:border-opacity-100" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
-        <h3 class="mt-4 text-lg font-medium text-gray-700 transition-colors duration-200 ease-in-out group-hover:text-blue-600"><%= user.profile.name %></h3>
-        <dl class="flex flex-col justify-between flex-grow mt-1">
-
-          <%= if e(user, :shared_user, :label, nil) do %>
-            <span class="inline-flex items-center px-2 py-1 mt-2 text-sm font-medium leading-5 text-center text-pink-800 bg-pink-100 rounded-md">
-              <%= e(user, :shared_user, :label, nil) %>
-            </span>
-
-          <% else %>
-            <dt class="sr-only">preferred username</dt>
-            <dd class="text-sm text-gray-500">@<%= user.character.username %></dd>
-          <% end %>
-            <!-- <dt class="sr-only">Role</dt>
-            <dd class="mt-3">
-              <span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">Admin</span>
-            </dd> -->
-
-          </dl>
+      <div class="flex-1">
+        <img class="flex-shrink-0 w-40 h-40 mx-auto mr-1 rounded-lg" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
+        <div class="mt-3">
+          <h3 class="text-base font-semibold text-left text-gray-700 transition-colors duration-200 ease-in-out"><%= user.profile.name %></h3>
+          <dl class="flex flex-col justify-between flex-grow mt-0">
+            <%= if e(user, :shared_user, :label, nil) do %>
+              <span class="inline-flex items-center px-2 py-1 mt-1 text-sm font-medium leading-5 text-center text-pink-800 bg-pink-100 rounded-md">
+                <%= e(user, :shared_user, :label, nil) %>
+              </span>
+            <% else %>
+              <dt class="sr-only">preferred username</dt>
+              <dd class="text-sm text-gray-500">@<%= user.character.username %></dd>
+            <% end %>
+            </dl>
         </div>
+      </div>
     </li>
     <% end %>
   <% end %>
-
-    <li class="flex flex-col col-span-1 text-center divide-y divide-gray-200 group">
-      <%= live_redirect to: Routes.create_user_path(@socket, :index) do %>
-        <div class="flex flex-col items-center flex-1 py-4">
-          <div class="w-full h-full">
-            <svg class="w-full h-full text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>          </div>
-          <h3 class="mt-4 text-lg font-medium text-gray-700 transition-colors duration-200 ease-in-out group-hover:text-blue-600">Add a new user</h3>
+  <li class="flex flex-col col-span-1 text-center divide-y divide-gray-200 group">
+    <%= live_redirect to: Routes.create_user_path(@socket, :index) do %>
+      <div class="flex flex-col items-center flex-1">
+        <div class="w-40 h-40">
+          <svg class="w-40 h-40 text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>          
         </div>
-      <% end %>
-    </li>
-
-  </ul>
+        <h3 class="mt-2 sr-only ">Add a new user</h3>
+      </div>
+    <% end %>
+  </li>
+</ul>
 
 <% else %>
 
