@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Social.Posts do
   alias Ecto.Changeset
   import Ecto.Query
 
-  defp repo, do: Bonfire.Common.Config.get!(:repo_module)
+  import Bonfire.Me.Integration
 
   def create(creator, attrs) do
     attrs = Map.put(attrs, :created, %{creator_id: creator.id})

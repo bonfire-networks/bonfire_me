@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Identity.Users do
   alias Bonfire.Me.Identity.Characters
   alias Bonfire.Me.Identity.Users.Queries
   alias Bonfire.Me.Social.{Circles, Profiles}
-  alias Pointers.Changesets
+  # alias Pointers.Changesets
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   import Bonfire.Me.Integration
