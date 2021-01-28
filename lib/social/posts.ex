@@ -13,7 +13,7 @@ defmodule Bonfire.Me.Social.Posts do
 
   def changeset(:create, attrs) do
     Post.changeset(%Post{}, attrs)
-    |> Changeset.cast_assoc(:post_content)
+    |> Changeset.cast_assoc(:post_content, [:required, with: &PostContent.changeset/2])
     |> Changeset.cast_assoc(:created)
   end
 
