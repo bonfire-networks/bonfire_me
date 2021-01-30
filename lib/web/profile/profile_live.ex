@@ -31,6 +31,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     following = if current_user && user, do: Bonfire.Me.Social.Follows.following?(current_user, user)
 
+    feed = if user, do: Bonfire.Me.Social.Activities.by_user(user)
+
     {:ok,
       socket
       |> assign(
@@ -40,7 +42,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
         user: user, # the user to display
-        following: following
+        following: following,
+        feed: feed || []
       )}
   end
 

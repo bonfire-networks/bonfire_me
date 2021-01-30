@@ -20,7 +20,11 @@ defmodule Bonfire.UI.Social.FeedPageLive do
   defp mounted(params, session, socket) do
     title = "@#{socket.assigns.current_user.character.username}'s feed"
     {:ok, socket
-    |> assign(page_title: "My Feed", feed_title: title)}
+    |> assign(
+      page_title: "My Feed",
+      feed_title: title,
+      feed: []
+    )}
   end
 
 

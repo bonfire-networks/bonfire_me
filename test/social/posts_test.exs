@@ -8,7 +8,7 @@ defmodule Bonfire.Me.PostsTest do
     attrs = %{post_content: %{summary: "summary", name: "name", html_body: "<p>epic html message</p>"}}
     account = Fake.fake_account!()
     user = Fake.fake_user!(account)
-    assert {:ok, post} = Posts.create(user, attrs)
+    assert {:ok, post} = Posts.publish(user, attrs)
     assert post.post_content.html_body == "<p>epic html message</p>"
     assert post.post_content.name == "name"
     assert post.post_content.summary == "summary"
@@ -21,9 +21,9 @@ defmodule Bonfire.Me.PostsTest do
     attrs_3 = %{post_content: %{summary: "summary", name: "name", html_body: "<p>epic html message 3</p>"}}
     account = Fake.fake_account!()
     user = Fake.fake_user!(account)
-    assert {:ok, _} = Posts.create(user, attrs_1)
-    assert {:ok, _} = Posts.create(user, attrs_2)
-    assert {:ok, _} = Posts.create(user, attrs_3)
+    assert {:ok, _} = Posts.publish(user, attrs_1)
+    assert {:ok, _} = Posts.publish(user, attrs_2)
+    assert {:ok, _} = Posts.publish(user, attrs_3)
     posts = Posts.by_user(user.id)
     assert length(posts) == 3
   end

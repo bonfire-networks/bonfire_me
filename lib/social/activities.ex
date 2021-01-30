@@ -1,6 +1,7 @@
 defmodule Bonfire.Me.Social.Activities do
 
   alias Bonfire.Data.Social.{Activity}
+  alias Bonfire.Data.Identity.{User}
   alias Bonfire.Me.AccessControl.Verbs
   alias Ecto.Changeset
   import Ecto.Query
@@ -18,17 +19,34 @@ defmodule Bonfire.Me.Social.Activities do
     Activity.changeset(activity, attrs)
   end
 
+  def by_user(%{id: user_id}), do: by_user(user_id)
+  def by_user(user_id) do
+    repo().all(by_user_query(user_id))
+  end
+
+  def by_subject(%User{id: user_id}), do: by_user(user_id)
   def by_subject(%{id: subject_id}), do: by_subject(subject_id)
   def by_subject(subject_id) do
     repo().all(by_subject_query(subject_id))
   end
 
-  def by_subject_query(subject_id) do
+  def by_user_query(subject_id) do
     from a in Activity,
-     join: s in assoc(a, :subject),
+     left_join: u in assoc(a, :subject_user),
+     left_join: up in assoc(u, :profile),
+     left_join: uc in assoc(u, :character),
      join: o in assoc(a, :object),
      join: v in assoc(a, :verb),
      where: a.subject_id == ^subject_id,
-     preload: [subject: s, object: o, verb: v]
+     preload: [subject_user: {u, profile: up, character: uc}, object: o, verb: v]
+  end
+
+  def by_subject_query(subject_id) do
+    from a in Activity,
+     join: u in assoc(a, :subject),
+     join: o in assoc(a, :object),
+     join: v in assoc(a, :verb),
+     where: a.subject_id == ^subject_id,
+     preload: [subject: u, object: o, verb: v]
   end
 end
