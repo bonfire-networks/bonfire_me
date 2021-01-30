@@ -17,6 +17,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   defp mounted(params, session, socket) do
+
+    current_user = Map.get(socket.assigns, :current_user)
+
     user = case Map.get(params, "username") do
       nil -> Map.get(socket.assigns, :current_user, Fake.user_live())
       username ->
@@ -26,6 +29,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     end
     # IO.inspect(user)
 
+    following = Bonfire.Me.Social.Follows.following?(current_user, user)
+
     {:ok,
       socket
       |> assign(
@@ -33,8 +38,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
         selected_tab: "about",
         feed_title: "User feed",
         current_account: Map.get(socket.assigns, :current_account),
-        current_user: Map.get(socket.assigns, :current_user),
-        user: user # the user to display
+        current_user: current_user,
+        user: user, # the user to display
+        following: following
       )}
   end
 
@@ -52,4 +58,23 @@ defmodule Bonfire.Me.Web.ProfileLive do
   #    )}
   # end
 
+  def handle_event("follow", _, socket) do
+    with {:ok, _follow} <- Bonfire.Me.Social.Follows.follow(e(socket.assigns, :current_user, nil), e(socket.assigns, :user, nil)) do
+      {:noreply, assign(socket,
+       following: true
+     )}
+    else e ->
+      {:noreply, socket} # TODO: handle errors
+    end
+  end
+
+  def handle_event("unfollow", _, socket) do
+    with _ <- Bonfire.Me.Social.Follows.unfollow(e(socket.assigns, :current_user, nil), e(socket.assigns, :user, nil)) do
+      {:noreply, assign(socket,
+       following: false
+     )}
+    else e ->
+      {:noreply, socket} # TODO: handle errors
+    end
+  end
 end
