@@ -14,7 +14,7 @@ defmodule Bonfire.Me.Social.Follows do
 
   def follow(%User{} = follower, %{} = followed) do
     with {:ok, follow} <- create(follower, followed) do
-      Bonfire.Me.Social.Activities.create(follower, :follow, followed)
+      Bonfire.Me.Social.Feeds.publish(follower, :follow, followed)
       {:ok, follow}
     end
   end

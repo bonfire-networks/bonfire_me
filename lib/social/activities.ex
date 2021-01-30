@@ -8,7 +8,10 @@ defmodule Bonfire.Me.Social.Activities do
 
   import Bonfire.Me.Integration
 
-
+  @doc """
+  Create an Activity
+  NOTE: you will usually want to use `Feeds.publish/3` instead
+  """
   def create(%{id: subject_id}=_subject, verb, %{id: object_id}=_object) when is_atom(verb) do
     verb_id = Verbs.verbs()[verb]
     attrs = %{subject_id: subject_id, verb_id: verb_id, object_id: object_id}

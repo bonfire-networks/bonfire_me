@@ -40,4 +40,6 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
     #    )}
     # end
 
-  end
+  def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
+
+end

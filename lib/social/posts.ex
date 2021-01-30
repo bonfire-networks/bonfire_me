@@ -15,8 +15,17 @@ defmodule Bonfire.Me.Social.Posts do
 
   def publish(creator, attrs) do
     with {:ok, post} <- create(creator, attrs) do
-      Bonfire.Me.Social.Activities.create(creator, :create, post)
-      {:ok, post}
+      activity = Bonfire.Me.Social.Feeds.publish(creator, :create, post)
+      {:ok, %{post: post, activity: activity}}
+    end
+  end
+
+  def live_post(%{"note"=> note}, socket) do
+    with {:ok, published} <- publish(socket.assigns.current_user, %{html_body: note}) do
+      {:ok,
+        Phoenix.LiveView.assign(socket,
+          feed: [published.activity] ++ Map.get(socket.assigns, :feed, [])
+      )}
     end
   end
 

@@ -42,4 +42,6 @@ defmodule Bonfire.UI.Social.FeedPageLive do
   #    )}
   # end
 
+  def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
+
 end

@@ -5,6 +5,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   alias Bonfire.Me.Web.ProfileAboutLive
   alias Bonfire.Me.Fake
   alias Bonfire.Common.Web.LivePlugs
+  import Bonfire.Me.Integration
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
@@ -27,11 +28,12 @@ defmodule Bonfire.Me.Web.ProfileLive do
           user
         end
     end
-    # IO.inspect(user)
+    IO.inspect(user)
 
     following = if current_user && user, do: Bonfire.Me.Social.Follows.following?(current_user, user)
 
-    feed = if user, do: Bonfire.Me.Social.Activities.by_user(user)
+    # feed = if user, do: Bonfire.Me.Social.Activities.by_user(user)
+    feed = if user, do: e(repo().maybe_preload(user, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]), :feed_publishes, [])
 
     {:ok,
       socket
@@ -80,4 +82,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
       {:noreply, socket} # TODO: handle errors
     end
   end
+
+  def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
 end
