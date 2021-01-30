@@ -11,6 +11,7 @@ defmodule Bonfire.Me.Fixtures do
   import Bonfire.Me.Integration
 
   def insert() do
+
     # to start with, we need our special users
     circles = Circles.circles()
     repo().insert_all Circle, [
@@ -23,21 +24,23 @@ defmodule Bonfire.Me.Fixtures do
       %{id: circles.local,        name: "Local Users"},
       %{id: circles.activity_pub, name: "Remote Users (ActivityPub)"},
     ]
+
     # now we need to insert verbs for our standard actions
     verbs  = Verbs.verbs()
-    repo().insert_all Verb,
-      [ %{id: verbs.read,   verb: "read"},
-        %{id: verbs.see,    verb: "see"},
-        %{id: verbs.edit,   verb: "edit"},
-        %{id: verbs.delete, verb: "delete"},
-      ]
+    repo().insert_all(
+      Verb,
+      Verbs.verbs_fixture(),
+      on_conflict: :nothing
+    )
+
     # then our standard accesses
     accesses = Accesses.accesses()
     repo().insert_all Access, [
       %{id: accesses.read_only},
       %{id: accesses.administer},
     ]
-    # now we have to hook up the verbs to the accesses
+
+    # now we have to hook up the permission-related verbs to the accesses
     repo().insert_all Interact, [
       %{id: ULID.generate(), access_id: accesses.read_only,  verb_id: verbs.read},
       %{id: ULID.generate(), access_id: accesses.read_only,  verb_id: verbs.see},
@@ -46,6 +49,7 @@ defmodule Bonfire.Me.Fixtures do
       %{id: ULID.generate(), access_id: accesses.administer, verb_id: verbs.edit},
       %{id: ULID.generate(), access_id: accesses.administer, verb_id: verbs.delete},
     ]
+
     # some of these things are public
     # read_only and read are visible to local users, so they need an
     # acl and a controlled mixin that associates them
@@ -55,6 +59,7 @@ defmodule Bonfire.Me.Fixtures do
       %{id: verbs.read,     acl_id: acls.read_only},
       %{id: acls.read_only, acl_id: acls.read_only},
     ]
+
     # finally, we do a horrible thing and grant read_only to
     # read_only_acl and it actually kinda works out because of the
     # indirection through pointer.
