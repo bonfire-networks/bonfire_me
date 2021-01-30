@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     current_user = Map.get(socket.assigns, :current_user)
 
     user = case Map.get(params, "username") do
-      nil -> Map.get(socket.assigns, :current_user, Fake.user_live())
+      nil -> e(socket.assigns, :current_user, Fake.user_live())
       username ->
         with {:ok, user} <- Bonfire.Me.Identity.Users.by_username(username) do
           user
@@ -29,7 +29,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     end
     # IO.inspect(user)
 
-    following = Bonfire.Me.Social.Follows.following?(current_user, user)
+    following = if current_user && user, do: Bonfire.Me.Social.Follows.following?(current_user, user)
 
     {:ok,
       socket

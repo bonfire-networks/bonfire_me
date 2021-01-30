@@ -13,32 +13,35 @@ defmodule Bonfire.Me.Social.Follows do
   def by_any(%User{}=user), do: repo().all(by_any_q(user))
 
   def follow(%User{} = follower, %{} = followed) do
-    create(follower, followed)
+    with {:ok, follow} <- create(follower, followed) do
+      Bonfire.Me.Social.Activities.create(follower, :follow, followed)
+      {:ok, follow}
+    end
   end
 
   def unfollow(%User{}=follower, %{}=followed) do
     delete_by_both(follower, followed)
   end
 
-  def create(%{} = follower, %{} = followed) do
+  defp create(%{} = follower, %{} = followed) do
     changeset(follower, followed) |> repo().insert()
   end
 
-  def changeset(%{id: follower}, %{id: followed}) do
+  defp changeset(%{id: follower}, %{id: followed}) do
     Follow.changeset(%Follow{}, %{follower_id: follower, followed_id: followed})
   end
 
   @doc "Delete Follows where i am the follower"
-  def delete_by_follower(%User{}=me), do: elem(repo().delete_all(by_follower_q(me)), 1)
+  defp delete_by_follower(%User{}=me), do: elem(repo().delete_all(by_follower_q(me)), 1)
 
   @doc "Delete Follows where i am the followed"
-  def delete_by_followed(%User{}=me), do: elem(repo().delete_all(by_followed_q(me)), 1)
+  defp delete_by_followed(%User{}=me), do: elem(repo().delete_all(by_followed_q(me)), 1)
 
   @doc "Delete Follows where i am the follower or the followed."
-  def delete_by_any(%User{}=me), do: elem(repo().delete_all(by_any_q(me)), 1)
+  defp delete_by_any(%User{}=me), do: elem(repo().delete_all(by_any_q(me)), 1)
 
   @doc "Delete Follows where i am the follower and someone else is the followed."
-  def delete_by_both(%User{}=me, %{}=followed), do: elem(repo().delete_all(by_both_q(me, followed)), 1)
+  defp delete_by_both(%User{}=me, %{}=followed), do: elem(repo().delete_all(by_both_q(me, followed)), 1)
 
   def by_follower_q(%User{id: id}) do
     from f in Follow,

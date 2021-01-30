@@ -19,6 +19,10 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.PostContent.Migration
       require Bonfire.Data.Social.Profile.Migration
       require Bonfire.Data.Social.Created.Migration
+      require Bonfire.Data.Social.Activity.Migration
+      require Bonfire.Data.Social.Feed.Migration
+      require Bonfire.Data.Social.FeedPublish.Migration
+
       Bonfire.Data.Social.Article.Migration.migrate_article()
       Bonfire.Data.Social.Block.Migration.migrate_block()
       Bonfire.Data.Social.Bookmark.Migration.migrate_bookmark()
@@ -34,6 +38,9 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Social.Created.Migration.migrate_created()
+      Bonfire.Data.Social.Activity.Migration.migrate_activity()
+      Bonfire.Data.Social.Feed.Migration.migrate_feed()
+      Bonfire.Data.Social.FeedPublish.Migration.migrate_feed_publish()
     end
   end
 
@@ -54,6 +61,10 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.PostContent.Migration
       require Bonfire.Data.Social.Profile.Migration
       require Bonfire.Data.Social.Created.Migration
+      require Bonfire.Data.Social.Activity.Migration
+      require Bonfire.Data.Social.Feed.Migration
+      require Bonfire.Data.Social.FeedPublish.Migration
+
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
       Bonfire.Data.Social.Post.Migration.migrate_post()
@@ -69,6 +80,9 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Block.Migration.migrate_block()
       Bonfire.Data.Social.Article.Migration.migrate_article()
       Bonfire.Data.Social.Created.Migration.migrate_created()
+      Bonfire.Data.Social.Activity.Migration.migrate_activity()
+      Bonfire.Data.Social.Feed.Migration.migrate_feed()
+      Bonfire.Data.Social.FeedPublish.Migration.migrate_feed_publish()
     end
   end
 
