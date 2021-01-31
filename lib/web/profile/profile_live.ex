@@ -49,19 +49,25 @@ defmodule Bonfire.Me.Web.ProfileLive do
       )}
   end
 
-  # def handle_params(%{"tab" => tab} = _params, _url, socket) do
-  #   {:noreply,
-  #    assign(socket,
-  #      selected_tab: tab
-  #    )}
-  # end
+  def handle_params(%{"tab" => tab} = _params, _url, socket) do
+    {:noreply,
+     assign(socket,
+       selected_tab: tab
+       #  current_user: socket.assigns.current_user
+     )}
+  end
 
-  # def handle_params(%{} = _params, _url, socket) do
-  #   {:noreply,
-  #    assign(socket,
-  #      current_user: Fake.user_live()
-  #    )}
-  # end
+  def handle_params(%{} = _params, _url, socket) do
+    # logged_url = url =~ "my/profile"
+
+    {:noreply,
+     assign(socket,
+       #  me: logged_url
+       #  user: user,
+       current_user: socket.assigns.current_user
+     )}
+  end
+
 
   def handle_event("follow", _, socket) do
     with {:ok, _follow} <- Bonfire.Me.Social.Follows.follow(e(socket.assigns, :current_user, nil), e(socket.assigns, :user, nil)) do
