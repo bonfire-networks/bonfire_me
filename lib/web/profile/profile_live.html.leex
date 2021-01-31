@@ -15,34 +15,35 @@
           <div class="border-r pr-4">
             <img class="inline-block h-10 w-10 rounded-md" src="https://thispersondoesnotexist.com/image" alt="">
           </div>
-          <div class="hidden lg:block lg:ml-6">
-            <div class="flex">
-              <a href="#" class="px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">About</a>
-              <a href="#" class="ml-4 px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">Timeline</a>
-              <a href="#" class="ml-4 px-3 py-2 rounded-md text-sm leading-5 font-normal text-gray-800 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">Media</a>
+
+          <div>
+            <div class="sm:hidden">
+              <label for="tabs" class="sr-only">Select a tab</label>
+              <select id="tabs" name="tabs" class="block w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md">
+                <option>About</option>
+                <option>Timeline</option>
+                <option selected>Media</option>
+              </select>
+            </div>
+            <div class="hidden sm:block">
+              <nav class="flex space-x-4" aria-label="Tabs">
+                <a href="#" class="text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md">
+                  About
+                </a>
+                <a href="#" class="text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md">
+                  Timeline
+                </a>
+                <!-- Current: "bg-gray-100 text-gray-700", Default: "text-gray-500 hover:text-gray-700" -->
+                <a href="#" class="bg-gray-100 text-gray-700 px-3 py-2 font-medium text-sm rounded-md" aria-current="page">
+                  Media
+                </a>
+              </nav>
             </div>
           </div>
+
         </div>
         <div class="px-4 flex ">
           <div class="ml-4 flex items-center md:ml-6">
-
-            <%= if @current_user && maybe_get(@current_user, :id) != maybe_get(@user, :id) do %>
-              <%= if not @following do %>
-                <span class="inline-flex rounded-md shadow-sm">
-                  <button phx-click="follow" type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
-                    Follow
-                  </button>
-                </span>
-              <%= else %>
-                <span class="inline-flex rounded-md shadow-sm">
-                  <button phx-click="unfollow" type="button" class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">
-                    Unfollow
-                  </button>
-                </span>
-              <% end %>
-            <% end %>
-
-
             <span class="inline-flex ml-3">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
             </span>
