@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.ThreadLive do
-  use Bonfire.Web, :live_view
+  use Bonfire.Web, {:live_view, [layout: {Bonfire.Web.LayoutView, "without_sidebar.html"}]}
   alias Bonfire.Fake
   alias Bonfire.Common.Web.LivePlugs
   alias Bonfire.Me.Users
