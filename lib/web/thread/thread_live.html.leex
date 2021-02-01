@@ -46,8 +46,18 @@
           </div>
         </div>
 
-        <div class="my-6">
-          <textarea class="block w-full"></textarea>
+        <div class="my-6 p-2 border rounded-md">
+          <h4 class="p-2 -m-2 mb-2 rounded-t border-b text-xs uppercase font-semibold text-gray-100 bg-indigo-900">Add a reply</h4>
+          <div class="mb-2 flex rounded-md shadow-sm">
+            <label class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+              Title
+            </label>
+            <input type="text" name="company_website" id="company_website" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300" placeholder="www.example.com">
+          </div>
+          <textarea class="block w-full mb-2" placeholder="Write something remarkable.."></textarea>
+          <div class="flex rounded-b items-center p-2 bg-blueGray-200 -m-2 mt-2 justify-end	">
+            <button class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">Publish</button>
+          </div>
         </div>
         <%# <div class="flex justify-between mt-8 pb-6 border-b">
           <span>
@@ -90,7 +100,7 @@
                 <%# <button class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">View activity</button> %>
                 <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                   <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
-                  <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">165 Comments</span>
+                  <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">Reply</span>
                 </div>
                 <div class="ml-4 flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                   <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -113,7 +123,7 @@
                     <div class="flex pt-2 -mx-2 items-center">
                       <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
-                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">165 Comments</span>
+                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">Reply</span>
                       </div>
                       <div class="ml-4 flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -137,7 +147,7 @@
                     <div class="flex pt-2 -mx-2 items-center">
                       <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
-                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">165 Comments</span>
+                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">Reply</span>
                       </div>
                       <div class="ml-4 flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -165,7 +175,7 @@
                 <%# <button class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">View activity</button> %>
                 <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                   <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
-                  <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">165 Comments</span>
+                  <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">Reply</span>
                 </div>
                 <div class="ml-4 flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                   <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -188,7 +198,7 @@
                     <div class="flex pt-2 -mx-2 items-center">
                       <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
-                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">165 Comments</span>
+                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">Reply</span>
                       </div>
                       <div class="ml-4 flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -212,7 +222,7 @@
                     <div class="flex pt-2 -mx-2 items-center">
                       <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
-                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">165 Comments</span>
+                        <span class="group-hover:text-gray-600 text-gray-400 font-semibold text-xs">Reply</span>
                       </div>
                       <div class="ml-4 flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
                         <svg class="group-hover:text-gray-600 w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -227,16 +237,6 @@
                 </div>
             </div>
           </div>
-
-
-
-
-
-
-
-
-
-
         </div>
       </div>
     </section>

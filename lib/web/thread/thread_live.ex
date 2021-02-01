@@ -17,6 +17,7 @@ defmodule Bonfire.Me.Web.ThreadLive do
   end
 
   defp mounted(params, session, socket) do
+
     {:ok,
      socket
      |> assign(
