@@ -9,6 +9,10 @@ defmodule Bonfire.Me.AccessControl.Accesses do
     }
   end
 
+  def accesses_fixture do
+    Enum.map(accesses(), fn {k, v} -> %{id: v} end)
+  end
+
   def create(%{}=attrs) when not is_struct(attrs) do
     repo().insert(changeset(attrs))
   end
