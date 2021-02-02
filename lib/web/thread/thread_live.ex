@@ -4,6 +4,7 @@ defmodule Bonfire.Me.Web.ThreadLive do
   alias Bonfire.Common.Web.LivePlugs
   alias Bonfire.Me.Users
   alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive}
+  import Bonfire.Me.Integration
 
   def mount(params, session, socket) do
     LivePlugs.live_plug(params, session, socket, [
@@ -18,23 +19,24 @@ defmodule Bonfire.Me.Web.ThreadLive do
 
   defp mounted(params, session, socket) do
 
-
-    post = with {:ok, post} <- Bonfire.Me.Social.Posts.get(Map.get(params, "post_id")) do
-      post
+    # TODO: optimise to reduce num of queries
+    thread = with {:ok, post} <- Bonfire.Me.Social.Posts.get(Map.get(params, "post_id")) do
+      post |> repo().maybe_preload([thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content]]])
       # TODO: handle error
     end
+    # IO.inspect(thread)
 
-    IO.inspect(post)
+    replies = Bonfire.Me.Social.Posts.replies_tree(e(thread, :thread_replies, []))
+    IO.inspect(replies)
 
     {:ok,
      socket
      |> assign(
        page_title: "Thread",
-       post: post
+       thread: thread,
+       replies: replies || []
      )}
   end
-
-
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do
   #   {:noreply,
@@ -49,4 +51,10 @@ defmodule Bonfire.Me.Web.ThreadLive do
   #      current_user: Fake.user_live()
   #    )}
   # end
+
+  def handle_event("reply", attrs, socket) do
+
+    Bonfire.Me.Social.Posts.live_post(attrs, socket)
+  end
+
 end

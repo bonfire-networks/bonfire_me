@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Social.Migration do
   use Ecto.Migration
   import Pointers.Migration
 
-  defp mms(:up) do
+  def mms(:up) do
     quote do
       require Bonfire.Data.Social.Article.Migration
       require Bonfire.Data.Social.Block.Migration
@@ -22,6 +22,7 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Activity.Migration
       require Bonfire.Data.Social.Feed.Migration
       require Bonfire.Data.Social.FeedPublish.Migration
+      require Bonfire.Data.Social.Replied.Migration
 
       Bonfire.Data.Social.Article.Migration.migrate_article()
       Bonfire.Data.Social.Block.Migration.migrate_block()
@@ -41,10 +42,11 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Activity.Migration.migrate_activity()
       Bonfire.Data.Social.Feed.Migration.migrate_feed()
       Bonfire.Data.Social.FeedPublish.Migration.migrate_feed_publish()
+      Bonfire.Data.Social.Replied.Migration.migrate_replied()
     end
   end
 
-  defp mms(:down) do
+  def mms(:down) do
     quote do
       require Bonfire.Data.Social.Article.Migration
       require Bonfire.Data.Social.Block.Migration
@@ -64,6 +66,7 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Activity.Migration
       require Bonfire.Data.Social.Feed.Migration
       require Bonfire.Data.Social.FeedPublish.Migration
+      require Bonfire.Data.Social.Replied.Migration
 
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
@@ -83,6 +86,7 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Activity.Migration.migrate_activity()
       Bonfire.Data.Social.Feed.Migration.migrate_feed()
       Bonfire.Data.Social.FeedPublish.Migration.migrate_feed_publish()
+      Bonfire.Data.Social.Replied.Migration.migrate_replied()
     end
   end
 
