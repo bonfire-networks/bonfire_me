@@ -43,6 +43,18 @@ defmodule Bonfire.Me.Social.Posts do
     |> Changeset.cast_assoc(:created)
   end
 
+  def get(id) do
+    repo().single(get_query(id))
+  end
+
+  def get_query(id) do
+    from p in Post,
+     join: pc in assoc(p, :post_content),
+     join: cr in assoc(p, :created),
+     where: p.id == ^id,
+     preload: [post_content: pc, created: cr]
+  end
+
   def by_user(user_id) do
     repo().all(by_user_query(user_id))
   end
