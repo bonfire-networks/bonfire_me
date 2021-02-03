@@ -21,13 +21,13 @@ defmodule Bonfire.Me.Web.ThreadLive do
 
     # TODO: optimise to reduce num of queries
     thread = with {:ok, post} <- Bonfire.Me.Social.Posts.get(Map.get(params, "post_id")) do
-      post |> repo().maybe_preload([thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content]]])
+      post |> repo().maybe_preload([thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content, created: [:creator]]]])
       # TODO: handle error
     end
-    # IO.inspect(thread)
+    IO.inspect(thread, label: "THREAD:")
 
     replies = Bonfire.Me.Social.Posts.replies_tree(e(thread, :thread_replies, []))
-    IO.inspect(replies)
+    # IO.inspect(replies)
 
     {:ok,
      socket

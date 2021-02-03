@@ -17,8 +17,10 @@
 <div class="lg:flex mt-8 ">
   <div class="w-full lg:w-2/3 mx-auto lg:px-2">
     <section class="p-3">
-      <h1 class="text-3xl font-semibold font-serif text-gray-900"><%= e(@thread, :post_content, :name, "") %></h1>
-      <div class="mt-4">
+      <%= if e(@thread, :post_content, :name, "") != "" do %>
+        <h1 class="text-3xl font-semibold font-serif mb-4 text-gray-900"><%= e(@thread, :post_content, :name, "No title") %></h1>
+      <% end %>
+      <div>
         <article class="max-w-prose">
           <%= e(@thread, :post_content, :summary, "") %>
           <%= e(@thread, :post_content, :html_body, "") %>
@@ -45,7 +47,7 @@
         </div>
 
         <div class="my-6 p-2 border rounded-md">
-          <h4 class="p-2 -m-2 mb-2 rounded-t border-b text-xs uppercase font-semibold text-gray-100 bg-indigo-900">Add a reply</h4>
+          <h4 class="p-2 -m-2 mb-2 rounded-t border-b text-xs uppercase font-medium text-gray-800">Add a reply</h4>
           <%# <div class="mb-2 flex rounded-md shadow-sm">
             <label class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
               Title

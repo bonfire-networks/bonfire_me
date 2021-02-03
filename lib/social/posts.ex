@@ -23,7 +23,7 @@ defmodule Bonfire.Me.Social.Posts do
   def live_post(params, socket) do
     attrs = params
     |> Bonfire.Common.Utils.input_to_atoms()
-    # |> IO.inspect
+    |> IO.inspect
 
     with {:ok, published} <- publish(socket.assigns.current_user, attrs) do
       {:noreply,
