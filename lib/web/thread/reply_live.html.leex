@@ -1,8 +1,8 @@
 <form phx-submit="reply">
-<input type="hidden" name="reply_to[reply_to_id]" value="<%= e(@reply_to, :id, "") %>" />
-<input type="hidden" name="reply_to[thread_id]" value="<%= e(@thread, :id, "") %>" />
-<textarea name="html_body" class="block w-full mb-2" placeholder="Write something remarkable.."></textarea>
-<div class="flex rounded-b items-center py-1.5 px-2  bg-blueGray-100 -m-2 mt-2 justify-end	">
-<button class="inline-flex items-center px-4 py-1.5 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">Publish</button>
-</div>
+  <input type="hidden" name="reply_to[reply_to_id]" value="<%= e(@reply_to, :id, "") %>" />
+  <input type="hidden" name="reply_to[thread_id]" value="<%= e(@thread, :id, "") %>" />
+  <textarea name="html_body" class="block w-full mb-2" placeholder="Write something remarkable.."></textarea>
+  <div class="flex rounded-b items-center py-1.5 px-2  bg-blueGray-100 -m-2 mt-2 justify-end	">
+    <button class="inline-flex items-center px-4 py-1.5 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">Publish</button>
+  </div>
 </form>
