@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
          socket
          |> assign(
          page_title: "Settings",
-         selected_tab: "general",
+         selected_tab: "user",
          trigger_submit: false,
          )}
 
