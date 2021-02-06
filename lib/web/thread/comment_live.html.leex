@@ -29,15 +29,20 @@
     </div>
 
     <div class="mt-4 replies replies-level-<%= @thread_level+1 %>">
-        <%= for  {_id, reply} <- e(@comment, :direct_replies, []) do %>
-            <%= live_component(@socket, Bonfire.Me.Web.CommentLive, thread: @thread, comment: reply, thread_level: @thread_level+1) %>
-        <% end %>
+          <%= for {reply, sub_child_replies} <- @child_replies do %>
+            <%= live_component(@socket, Bonfire.Me.Web.CommentLive, thread: @thread, comment: reply, child_replies: sub_child_replies, thread_max_depth: @thread_max_depth, thread_level: @thread_level+1) %>
+          <% end %>
+
+
+        <%= if @thread_max_depth == @thread_level do %>
         <div class="flex -mt-1 -mx-2 items-center">
           <%# <button class="inline-flex items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">View activity</button> %>
-          <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
-            <span class="group-hover:text-indigo-700 text-indigo-700 font-semibold text-xs">Other 5 replies</span></span>
+          <div phx-click="load_replies" phx-value-id="<%= @comment.id %>" phx-value-level="<%= @thread_level %>"  class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-200">
+            <span class="group-hover:text-indigo-700 text-indigo-700 font-semibold text-xs">Show more replies</span></span>
           </div>
         </div>
+        <% end %>
+
     </div>
   </div>
 </div>

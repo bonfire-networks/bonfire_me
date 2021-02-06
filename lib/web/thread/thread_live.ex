@@ -6,6 +6,8 @@ defmodule Bonfire.Me.Web.ThreadLive do
   alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive}
   import Bonfire.Me.Integration
 
+  @thread_max_depth 3 # TODO: put in config
+
   def mount(params, session, socket) do
     LivePlugs.live_plug(params, session, socket, [
       LivePlugs.LoadCurrentAccount,
@@ -21,20 +23,29 @@ defmodule Bonfire.Me.Web.ThreadLive do
 
     # TODO: optimise to reduce num of queries
     thread = with {:ok, post} <- Bonfire.Me.Social.Posts.get(Map.get(params, "post_id")) do
-      post |> repo().maybe_preload([thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content, created: [:creator]]]])
+      post
+      #|> repo().maybe_preload([:replied, thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content, created: [:creator]]]])
       # TODO: handle error
     end
     IO.inspect(thread, label: "THREAD:")
 
-    replies = Bonfire.Me.Social.Posts.replies_tree(e(thread, :thread_replies, []))
-    # IO.inspect(replies)
+    # replies = Bonfire.Data.Social.Replied.descendants(thread)
+    # IO.inspect(replies, label: "REPLIES:")
+    # replies = replies |> repo().all
+
+    # replies = Bonfire.Me.Social.Posts.replies_tree(e(thread, :thread_replies, []))
+
+    replies = Bonfire.Me.Social.Posts.list_replies(thread, @thread_max_depth)
+    # IO.inspect(replies, label: "REPLIES:")
 
     {:ok,
      socket
      |> assign(
        page_title: "Thread",
+       thread_max_depth: @thread_max_depth,
        thread: thread,
-       replies: replies || []
+       replies: replies || [],
+       threaded_replies: Bonfire.Me.Social.Posts.arrange_replies_tree(replies || []) || []
      )}
   end
 
@@ -52,9 +63,32 @@ defmodule Bonfire.Me.Web.ThreadLive do
   #    )}
   # end
 
+  def handle_event("load_replies", %{"id" => id, "level" => level}, socket) do
+    {level, _} = Integer.parse(level)
+    replies = Bonfire.Me.Social.Posts.list_replies(id, level + @thread_max_depth)
+    replies = replies ++ socket.assigns.replies
+    {:noreply,
+        assign(socket,
+        replies: replies,
+        threaded_replies: Bonfire.Me.Social.Posts.arrange_replies_tree(replies) || []
+     )}
+  end
+
   def handle_event("reply", attrs, socket) do
 
-    Bonfire.Me.Social.Posts.live_post(attrs, socket)
+    attrs = attrs
+    |> Bonfire.Common.Utils.input_to_atoms()
+
+    with {:ok, published} <- Bonfire.Me.Social.Posts.reply(socket.assigns.current_user, attrs) do
+      replies = [published] ++ socket.assigns.replies
+    IO.inspect(replies, label: "rep:")
+      {:noreply,
+        assign(socket,
+        replies: replies,
+        threaded_replies: Bonfire.Me.Social.Posts.arrange_replies_tree(replies) || []
+     )}
+    end
+
   end
 
 end

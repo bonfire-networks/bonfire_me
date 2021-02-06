@@ -1,29 +1,15 @@
 defmodule Bonfire.Me.Social.Posts do
 
-  alias Bonfire.Data.Social.{Post, PostContent}
+  alias Bonfire.Data.Social.{Post, PostContent, Replied}
   alias Ecto.Changeset
   import Ecto.Query
-
+  import Ecto.Preloader
   import Bonfire.Me.Integration
-
-  def draft(creator, attrs) do
-    # TODO: create as private
-    with {:ok, post} <- create(creator, attrs) do
-      {:ok, post}
-    end
-  end
-
-  def publish(creator, attrs) do
-    with {:ok, post} <- create(creator, attrs) do
-      activity = Bonfire.Me.Social.Feeds.publish(creator, :create, post)
-      {:ok, %{post: post, activity: activity}}
-    end
-  end
 
   def live_post(params, socket) do
     attrs = params
     |> Bonfire.Common.Utils.input_to_atoms()
-    |> IO.inspect
+    # |> IO.inspect
 
     with {:ok, published} <- publish(socket.assigns.current_user, attrs) do
       {:noreply,
@@ -33,22 +19,52 @@ defmodule Bonfire.Me.Social.Posts do
     end
   end
 
+  def draft(creator, attrs) do
+    # TODO: create as private
+    with {:ok, post} <- create(creator, attrs) do
+      {:ok, post}
+    end
+  end
+
+  def publish(creator, attrs) do
+    with  {:ok, post} <- create(creator, attrs),
+          {:ok, activity} <- Bonfire.Me.Social.Feeds.publish(creator, :create, post) do
+      {:ok, %{post: post, activity: activity}}
+    end
+  end
+
+  def reply(creator, attrs) do
+    with  {:ok, published} <- publish(creator, attrs),
+          {:ok, r} <- get_replied(published.post.id) do
+      {:ok, Map.merge(r, published)}
+    end
+  end
+
   defp create(creator, attrs) do
     attrs = attrs
+      |> Map.put(:post_content, attrs |> Map.merge(Map.get(attrs, :post_content, %{})))
       |> Map.put(:created, %{creator_id: creator.id})
-      |> Map.put(:post_content, Map.merge(attrs, Map.get(attrs, :post_content, %{})))
+      |> Map.put(:reply_to, maybe_reply(attrs))
 
     repo().put(changeset(:create, attrs))
   end
+
+  def maybe_reply(%{reply_to: %{reply_to_id: reply_to_id} = reply_attrs}) when is_binary(reply_to_id) and reply_to_id !="" do
+     with {:ok, r} <- get_replied(reply_to_id) do
+      Map.merge(reply_attrs, %{reply_to: r})
+     end
+  end
+  def maybe_reply(%{reply_to: reply_attrs}), do: Map.merge(reply_attrs, maybe_reply(nil))
+  def maybe_reply(_), do: %{set: true}
 
   defp changeset(:create, attrs) do
     Post.changeset(%Post{}, attrs)
     |> Changeset.cast_assoc(:post_content, [:required, with: &PostContent.changeset/2])
     |> Changeset.cast_assoc(:created)
-    |> Changeset.cast_assoc(:reply_to)
+    |> Changeset.cast_assoc(:reply_to, [:required, with: &Replied.changeset/2])
   end
 
-  def get(id) do
+  def get(id) when is_binary(id) do
     repo().single(get_query(id))
   end
 
@@ -73,58 +89,80 @@ defmodule Bonfire.Me.Social.Posts do
      preload: [post_content: pc, created: cr]
   end
 
-
-
-  def replies_tree(replies) do
-    thread = replies
-    |> Enum.reverse()
-    |> Enum.map(&Map.from_struct/1)
-    |> Enum.reduce(%{}, &Map.put(&2, &1.id, &1))
-    # |> IO.inspect
-
-    do_reply_tree = fn
-      {_id, %{reply_to_id: reply_to_id, thread_id: thread_id} =_reply} = reply_with_id,
-      acc
-      when is_binary(reply_to_id) and reply_to_id != thread_id ->
-        # IO.inspect(acc: acc)
-        # IO.inspect(reply_ok: reply)
-        # IO.inspect(reply_to_id: reply_to_id)
-
-        if Map.get(acc, reply_to_id) do
-
-            acc
-            |> put_in(
-                [reply_to_id, :direct_replies],
-                Bonfire.Common.Utils.maybe_get(acc[reply_to_id], :direct_replies, []) ++ [reply_with_id]
-              )
-            # |> IO.inspect
-            # |> Map.delete(id)
-
-        else
-          acc
-        end
-
-      reply, acc ->
-        # IO.inspect(reply_skip: reply)
-
-        acc
-    end
-
-    Enum.reduce(thread, thread, do_reply_tree)
-    |> Enum.reduce(thread, do_reply_tree)
-    # |> IO.inspect
-    |> Enum.reduce(%{}, fn
-
-      {id, %{reply_to_id: reply_to_id, thread_id: thread_id} =reply} = reply_with_id, acc when not is_binary(reply_to_id) or reply_to_id == thread_id ->
-
-        acc |> Map.put(id, reply)
-
-      reply, acc ->
-
-        acc
-
-    end)
+  def get_replied(id) do
+    repo().single(from p in Replied, where: p.id == ^id)
   end
+
+  def list_replies(%{id: thread_id}, max_depth \\ 3), do: list_replies(thread_id, max_depth)
+  def list_replies(%{thread_id: thread_id}, max_depth), do: list_replies(thread_id, max_depth)
+  def list_replies(thread_id, max_depth) when is_binary(thread_id), do: Pointers.ULID.dump(thread_id) |> do_list_replies(max_depth)
+
+  defp do_list_replies({:ok, thread_id}, max_depth) do
+    %Replied{id: thread_id}
+      |> Replied.descendants()
+      |> Replied.where_depth(is_smaller_than_or_equal_to: max_depth)
+      |> preload_join(:post)
+      |> preload_join(:post, :post_content)
+      |> preload_join(:activity)
+      |> preload_join(:activity, :subject_user)
+      |> preload_join(:activity, :subject_user, :profile)
+      |> preload_join(:activity, :subject_user, :character)
+      |> IO.inspect
+      |> repo().all
+  end
+
+  def arrange_replies_tree(replies), do: replies |> Replied.arrange()
+
+  # def replies_tree(replies) do
+  #   thread = replies
+  #   |> Enum.reverse()
+  #   |> Enum.map(&Map.from_struct/1)
+  #   |> Enum.reduce(%{}, &Map.put(&2, &1.id, &1))
+  #   # |> IO.inspect
+
+  #   do_reply_tree = fn
+  #     {_id, %{reply_to_id: reply_to_id, thread_id: thread_id} =_reply} = reply_with_id,
+  #     acc
+  #     when is_binary(reply_to_id) and reply_to_id != thread_id ->
+  #       # IO.inspect(acc: acc)
+  #       # IO.inspect(reply_ok: reply)
+  #       # IO.inspect(reply_to_id: reply_to_id)
+
+  #       if Map.get(acc, reply_to_id) do
+
+  #           acc
+  #           |> put_in(
+  #               [reply_to_id, :direct_replies],
+  #               Bonfire.Common.Utils.maybe_get(acc[reply_to_id], :direct_replies, []) ++ [reply_with_id]
+  #             )
+  #           # |> IO.inspect
+  #           # |> Map.delete(id)
+
+  #       else
+  #         acc
+  #       end
+
+  #     reply, acc ->
+  #       # IO.inspect(reply_skip: reply)
+
+  #       acc
+  #   end
+
+  #   Enum.reduce(thread, thread, do_reply_tree)
+  #   |> Enum.reduce(thread, do_reply_tree)
+  #   # |> IO.inspect
+  #   |> Enum.reduce(%{}, fn
+
+  #     {id, %{reply_to_id: reply_to_id, thread_id: thread_id} =reply} = reply_with_id, acc when not is_binary(reply_to_id) or reply_to_id == thread_id ->
+
+  #       acc |> Map.put(id, reply)
+
+  #     reply, acc ->
+
+  #       acc
+
+  #   end)
+  # end
 
 
 end
