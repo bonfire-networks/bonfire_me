@@ -1,5 +1,5 @@
 <%= if @current_account_users && length(@current_account_users)>0 do %>
-  <div class="flex items-center px-3 py-2 bg-white rounded-lg shadow">
+  <div class="flex items-center px-3 py-2 bg-white rounded-lg border">
     <h3 class="text-xs font-bold tracking-wider text-gray-700 uppercase">Select a user</h3>
     <ul class="flex items-center pl-4 ml-4 space-x-3 border-l">
       <%= for user <- @current_account_users do %>
@@ -21,14 +21,14 @@
                 </dl>
             </div>
           </div>
+          <% end %>
         </li>
-        <% end %>
       <% end %>
       <li class="flex flex-col col-span-1 text-center divide-y divide-gray-200 group">
         <%= live_redirect to: Routes.create_user_path(@socket, :index) do %>
           <div class="flex flex-col items-center flex-1">
             <div class="w-12 h-12">
-              <svg class="w-12 h-12 text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>          
+              <svg class="w-12 h-12 text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
             </div>
             <h3 class="mt-2 sr-only ">Add a new user</h3>
           </div>
