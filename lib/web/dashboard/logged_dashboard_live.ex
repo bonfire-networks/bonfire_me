@@ -22,6 +22,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       |> assign(page_title: "Bonfire home page",
       feed_title: "My feed",
       feed: [],
+      page_info: nil,
       go: ""
       )}
     end
