@@ -23,7 +23,7 @@
           <span class="group-hover:text-gray-600 font-semibold text-xs text-gray-400">Report</span>
         </div>
       </div>
-      <div x-show="reply" class="p-2 border rounded-md mt-2 mb-4">
+      <div x-show="reply" class="mt-2 mb-4">
         <%= live_component(@socket, Bonfire.Me.Web.ReplyLive, thread: @thread, reply_to: @comment) %>
       </div>
     </div>

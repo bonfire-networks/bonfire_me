@@ -1,7 +1,7 @@
 <div x-data="{toggle_zen_mode: false}" class="bg-white p-2">
 
   <div class="bg-gray-800 p-2 -m-2 flex items-center justify-between">
-    <h2 class="text-gray-100 font-bold text-sm"><%= e(@thread, :post_content, :name, "") %></h2>
+    <h2 class="py-1 text-gray-100 font-bold text-sm"><%= e(@thread, :post_content, :name, "") %></h2>
     <div class="flex items-center space-x-3">
       <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-600" @click="toggle_zen_mode =!toggle_zen_mode" >
         <svg class="group-hover:text-gray-100 text-gray-100 w-6 h-6 pr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path></svg>
@@ -58,15 +58,17 @@
             </div>
           </div>
 
-          <div class="my-6 p-2 border rounded-md">
-            <h4 class="p-2 -m-2 mb-2 rounded-t border-b text-xs uppercase font-medium text-gray-800">Add a reply</h4>
+          <div class="my-6 flex">
             <%# <div class="mb-2 flex rounded-md shadow-sm">
               <label class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
                 Title
               </label>
               <input type="text" name="company_website" id="company_website" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300" placeholder="www.example.com">
             </div> %>
-            <%= live_component(@socket, Bonfire.Me.Web.ReplyLive, thread: @thread, reply_to: @thread) %>
+            <img class="inline-block h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+            <div class="flex-1 ml-2">
+              <%= live_component(@socket, Bonfire.Me.Web.ReplyLive, thread: @thread, reply_to: @thread) %>
+            </div>
           </div>
 
 
