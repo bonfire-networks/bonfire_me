@@ -19,12 +19,12 @@ defmodule Bonfire.Me.Social.FeedActivities do
       |> preload_join(:activity, :subject_user)
       |> preload_join(:activity, :subject_user, :profile)
       |> preload_join(:activity, :subject_user, :character)
-      |> Bonfire.Repo.many_paginated(after: cursor_after)
+      |> Bonfire.Repo.many_paginated(before: cursor_after)
   end
 
-  def feed(%{feed_publishes: _} = feed_for, _) do
-    repo().maybe_preload(feed_for, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]) |> Map.get(:feed_publishes)
-  end
+  # def feed(%{feed_publishes: _} = feed_for, _) do
+  #   repo().maybe_preload(feed_for, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]) |> Map.get(:feed_publishes)
+  # end
 
 
 end
