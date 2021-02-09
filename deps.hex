@@ -10,7 +10,6 @@ ok = "~> 2.3.0"
 pointers_ulid = "~> 0.2"
 pointers = "~> 0.5.1"
 postgrex = ">= 0.0.0"
-ecto_preloader = "~> 0.1.0"
 recase = "~> 0.5" # string recasing
 telemetry_metrics = "~> 0.4"
 telemetry_poller = "~> 0.4"

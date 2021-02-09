@@ -2,9 +2,10 @@ defmodule Bonfire.Me.Social.Posts do
 
   alias Bonfire.Data.Social.{Post, PostContent, Replied}
   alias Ecto.Changeset
-  import Ecto.Query
-  import Ecto.Preloader
-  import Bonfire.Me.Integration
+  use Bonfire.Repo.Query,
+      schema: Post,
+      searchable_fields: [:id],
+      sortable_fields: [:id]
 
   def live_post(params, socket) do
     attrs = params

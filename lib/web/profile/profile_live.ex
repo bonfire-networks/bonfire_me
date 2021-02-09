@@ -28,12 +28,13 @@ defmodule Bonfire.Me.Web.ProfileLive do
           user
         end
     end
-    IO.inspect(user)
+    # IO.inspect(user: user)
 
     following = if current_user && user, do: Bonfire.Me.Social.Follows.following?(current_user, user)
 
     # feed = if user, do: Bonfire.Me.Social.Activities.by_user(user)
-    feed = if user, do: e(repo().maybe_preload(user, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]), :feed_publishes, [])
+    feed = if user, do: Bonfire.Me.Social.FeedActivities.feed(user)
+    # IO.inspect(feed: feed)
 
     {:ok,
       socket
@@ -45,7 +46,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
         current_user: current_user,
         user: user, # the user to display
         following: following,
-        feed: feed || []
+        feed: e(feed, :entries, []),
+        page_info: e(feed, :metadata, [])
       )}
   end
 
@@ -68,6 +70,16 @@ defmodule Bonfire.Me.Web.ProfileLive do
      )}
   end
 
+  def handle_event("load-more", %{"after" => cursor_after}, socket) do
+    feed = Bonfire.Me.Social.FeedActivities.feed(socket.assigns.user, cursor_after)
+    # IO.inspect(feed_pagination: feed)
+    {:noreply,
+      socket
+      |> assign(
+        feed: socket.assigns.feed ++ e(feed, :entries, []),
+        page_info: e(feed, :metadata, [])
+      )}
+  end
 
   def handle_event("follow", _, socket) do
     with {:ok, _follow} <- Bonfire.Me.Social.Follows.follow(e(socket.assigns, :current_user, nil), e(socket.assigns, :user, nil)) do

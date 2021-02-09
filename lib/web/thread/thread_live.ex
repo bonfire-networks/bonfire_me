@@ -25,7 +25,9 @@ defmodule Bonfire.Me.Web.ThreadLive do
     thread = with {:ok, post} <- Bonfire.Me.Social.Posts.get(Map.get(params, "post_id")) do
       post
       #|> repo().maybe_preload([:replied, thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content, created: [:creator]]]])
+    else _e ->
       # TODO: handle error
+      nil
     end
     IO.inspect(thread, label: "THREAD:")
 
@@ -35,7 +37,7 @@ defmodule Bonfire.Me.Web.ThreadLive do
 
     # replies = Bonfire.Me.Social.Posts.replies_tree(e(thread, :thread_replies, []))
 
-    replies = Bonfire.Me.Social.Posts.list_replies(thread, @thread_max_depth)
+    replies = if thread, do: Bonfire.Me.Social.Posts.list_replies(thread, @thread_max_depth)
     # IO.inspect(replies, label: "REPLIES:")
 
     {:ok,
