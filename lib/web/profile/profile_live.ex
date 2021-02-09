@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
       |> assign(
         page_title: "Profile",
         selected_tab: "about",
-        feed_title: "User feed",
+        feed_title: "User timeline",
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
         user: user, # the user to display
@@ -70,17 +70,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
      )}
   end
 
-  def handle_event("load-more", %{"after" => cursor_after}, socket) do
-    feed = Bonfire.Me.Social.FeedActivities.feed(socket.assigns.user, cursor_after)
-    # IO.inspect(feed_pagination: feed)
-    {:noreply,
-      socket
-      |> assign(
-        feed: socket.assigns.feed ++ e(feed, :entries, []),
-        page_info: e(feed, :metadata, [])
-      )}
-  end
-
   def handle_event("follow", _, socket) do
     with {:ok, _follow} <- Bonfire.Me.Social.Follows.follow(e(socket.assigns, :current_user, nil), e(socket.assigns, :user, nil)) do
       {:noreply, assign(socket,
@@ -100,6 +89,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
       {:noreply, socket} # TODO: handle errors
     end
   end
+
+  def handle_event("load-more", attrs, socket), do: socket.assigns.user |> Bonfire.Me.Social.FeedActivities.live_more(attrs, socket)
 
   def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
 end

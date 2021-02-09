@@ -1,4 +1,4 @@
-defmodule Bonfire.UI.Social.FeedPageLive do
+defmodule Bonfire.Me.Web.MyFeedLive do
   use Bonfire.Web, :live_view
   alias Bonfire.Fake
   alias Bonfire.Common.Web.LivePlugs
@@ -23,7 +23,8 @@ defmodule Bonfire.UI.Social.FeedPageLive do
     |> assign(
       page_title: "My Feed",
       feed_title: title,
-      feed: []
+      feed: [],
+      page_info: nil
     )}
   end
 
@@ -41,6 +42,8 @@ defmodule Bonfire.UI.Social.FeedPageLive do
   #      current_user: Fake.user_live()
   #    )}
   # end
+
+  # def handle_event("load-more", attrs, socket), do: Bonfire.Me.Social.FeedActivities.live_more(attrs, socket)
 
   def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
 

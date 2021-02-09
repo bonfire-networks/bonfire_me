@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Social.Follows do
 
   alias Bonfire.Data.Identity.User
   alias Bonfire.Data.Social.Follow
+  alias Bonfire.Me.Social.FeedActivities
   import Ecto.Query
   import Bonfire.Me.Integration
 
@@ -14,7 +15,7 @@ defmodule Bonfire.Me.Social.Follows do
 
   def follow(%User{} = follower, %{} = followed) do
     with {:ok, follow} <- create(follower, followed) do
-      Bonfire.Me.Social.Feeds.publish(follower, :follow, followed)
+      FeedActivities.publish(follower, :follow, followed)
       {:ok, follow}
     end
   end

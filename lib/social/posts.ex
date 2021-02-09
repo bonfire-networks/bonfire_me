@@ -1,6 +1,7 @@
 defmodule Bonfire.Me.Social.Posts do
 
   alias Bonfire.Data.Social.{Post, PostContent, Replied}
+  alias Bonfire.Me.Social.FeedActivities
   alias Ecto.Changeset
   use Bonfire.Repo.Query,
       schema: Post,
@@ -15,7 +16,7 @@ defmodule Bonfire.Me.Social.Posts do
     with {:ok, published} <- publish(socket.assigns.current_user, attrs) do
       {:noreply,
         Phoenix.LiveView.assign(socket,
-          feed: [published.activity] ++ Map.get(socket.assigns, :feed, [])
+          feed: [%{published.activity | object_post: published.post, subject_user: socket.assigns.current_user}] ++ Map.get(socket.assigns, :feed, [])
       )}
     end
   end
@@ -29,7 +30,7 @@ defmodule Bonfire.Me.Social.Posts do
 
   def publish(creator, attrs) do
     with  {:ok, post} <- create(creator, attrs),
-          {:ok, activity} <- Bonfire.Me.Social.Feeds.publish(creator, :create, post) do
+          {:ok, activity} <- FeedActivities.publish(creator, :create, post) do
       {:ok, %{post: post, activity: activity}}
     end
   end
@@ -43,12 +44,19 @@ defmodule Bonfire.Me.Social.Posts do
 
   defp create(creator, attrs) do
     attrs = attrs
-      |> Map.put(:post_content, attrs |> Map.merge(Map.get(attrs, :post_content, %{})))
+      |> Map.put(:post_content, prepare_content(attrs))
       |> Map.put(:created, %{creator_id: creator.id})
       |> Map.put(:reply_to, maybe_reply(attrs))
 
     repo().put(changeset(:create, attrs))
   end
+
+  def prepare_content(%{post_content: %{} = attrs}), do: prepare_content(attrs)
+  def prepare_content(%{name: name, html_body: body} = attrs) when is_nil(body) or body=="" do
+    # use title as body if no body entered
+    Map.merge(attrs, %{html_body: name, name: ""})
+  end
+  def prepare_content(attrs), do: attrs
 
   def maybe_reply(%{reply_to: %{reply_to_id: reply_to_id} = reply_attrs}) when is_binary(reply_to_id) and reply_to_id !="" do
      with {:ok, r} <- get_replied(reply_to_id) do

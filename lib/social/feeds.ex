@@ -7,22 +7,8 @@ defmodule Bonfire.Me.Social.Feeds do
   import Ecto.Query
   import Bonfire.Me.Integration
 
-  @doc """
-  Creates an activity and publishes it to appropriate feeds
-  """
-  def publish(subject, verb, object) when is_atom(verb) do
-    with {:ok, activity} = Activities.create(subject, verb, object),
-    {:ok, feed} <- feed_for_id(subject),
-    {:ok, _published} <- feed_publish(feed, activity)
-     do
-      {:ok, activity}
-    end
-  end
-
-  defp feed_publish(%{id: feed_id}, %{id: object_id}) do
-    attrs = %{feed_id: feed_id, object_id: object_id}
-    repo().put(FeedPublish.changeset(attrs))
-  end
+  def instance_feed_id, do: Bonfire.Me.Social.Circles.circles[:local]
+  def fediverse_feed_id, do: Bonfire.Me.Social.Circles.circles[:activity_pub]
 
   def create_outbox(%{id: character_id}=_character) do
     attrs = %{id: character_id}
