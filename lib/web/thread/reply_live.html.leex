@@ -2,8 +2,8 @@
   x-data="{open: false}"
   phx-submit="reply">
   <label for="html_body_<%= e(@reply_to, :id, "") %>" class="sr-only">Add a reply</label>
-  <input type="hidden" name="reply_to[@reply_to_id]" value="<%= e(@reply_to, :id, "") %>" />
-  <input type="hidden" name="reply_to[@thread_id]" value="<%= e(@thread, :id, "") %>" />
+  <input type="hidden" name="reply_to[reply_to_id]" value="<%= e(@reply_to, :id, "") %>" />
+  <input type="hidden" name="reply_to[thread_id]" value="<%= e(@thread, :id, "") %>" />
   <textarea
     name="html_body"
     @keydown.window.escape="open = false;"
