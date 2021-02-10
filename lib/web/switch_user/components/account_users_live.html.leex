@@ -1,33 +1,53 @@
 <%= if @current_account_users && length(@current_account_users)>0 do %>
-
-<ul class="flex items-center space-x-3">
+<ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
   <%= for user <- @current_account_users do %>
-    <li class="flex flex-col col-span-1 p-2 transition-colors duration-200 ease-in-out bg-white border divide-y divide-gray-200 rounded-md shadow group hover:bg-blueGray-200">
+
+    <li class="col-span-1 bg-white border rounded-lg">
       <%= live_redirect to: Routes.switch_user_path(@socket, :show, user.character.username || "") <> @go do %>
-      <div class="flex-1">
-        <img class="flex-shrink-0 w-40 h-40 mx-auto mr-1 rounded-lg" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
-        <div class="mt-3">
-          <h3 class="text-base font-semibold text-left text-gray-700 transition-colors duration-200 ease-in-out"><%= user.profile.name %></h3>
-          <dl class="flex flex-col justify-between flex-grow mt-0">
+      <div class="bg-green-300 h-32 rounded-t-lg"></div>
+      <div class="-mt-8 px-3 pb-2">
+        <div class="">
+          <div class="flex items-center justify-between">
+            <img class="inline-block h-16 w-16 ring-4 ring-white rounded-md" src="https://thispersondoesnotexist.com/image" alt="">
+          </div>
+          <div class="mt-1">
+            <h2 class="text-lg font-bold text-gray-800"><%= e(user, :profile, :name, "Anonymous") %></h1>
             <%= if e(user, :shared_user, :label, nil) do %>
-              <span class="inline-flex items-center px-2 py-1 mt-1 text-sm font-medium leading-5 text-center text-pink-800 bg-pink-100 rounded-md">
-                <%= e(user, :shared_user, :label, nil) %>
-              </span>
+              <h3 class="-mt-1 text-sm font-normal text-gray-600">@<%= e(user, :shared_user, :label, "") %></h3>
             <% else %>
-              <dt class="sr-only">preferred username</dt>
-              <dd class="text-sm text-gray-500">@<%= user.character.username %></dd>
+              <h3 class="-mt-1 text-sm font-normal text-gray-600">@<%= e(user, :character, :username, "") %></h3>
             <% end %>
-            </dl>
+          </div>
+        </div>
+        <div class="flex items-center mt-2 mb-4">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          <a class="ml-2 text-sm text-gray-800 mr-2 underline" href="#"> <b>71</b> Followers </a> · <a class="ml-2 text-sm text-gray-800 underline" href="#"> <b>18</b> Following</a>
         </div>
       </div>
+      <%= if e(user, :profile, :location, nil) != nil or e(user, :profile, :website, nil) != nil do %>
+      <div class="flex flex-col p-3 border-t">
+        <%= if e(user, :profile, :location, nil) do %>
+        <div class="flex mb-3 items-center">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span class="ml-2 text-sm text-gray-800"><%= e(user, :profile, :website, "") %></span>
+        </div>
+        <% end %>
+        <%= if e(user, :profile, :website, nil) do %>
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          <a href="<%= e(user, :profile, :website, "") %>" target="blank" class="underline ml-2 text-sm text-gray-800"><%= e(user, :profile, :website, "") %></a>
+        </div>
+        <% end %>
+      </div>
+      <% end %>
+      <% end %>
     </li>
-    <% end %>
   <% end %>
   <li class="flex flex-col col-span-1 text-center divide-y divide-gray-200 group">
     <%= live_redirect to: Routes.create_user_path(@socket, :index) do %>
       <div class="flex flex-col items-center flex-1">
         <div class="w-40 h-40">
-          <svg class="w-40 h-40 text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>          
+          <svg class="w-40 h-40 text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
         </div>
         <h3 class="mt-2 sr-only ">Add a new user</h3>
       </div>
