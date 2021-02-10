@@ -8,22 +8,22 @@ defmodule Bonfire.Me.Social.Likes do
   import Bonfire.Me.Integration
   alias Bonfire.Common.Utils
 
-  def live_action("like-yes", %{"id"=> id}, socket) do
+  def live_action("like", %{"direction"=>"up", "id"=> id}, socket) do
     IO.inspect(id)
     IO.inspect(socket)
-    with {:ok, _like} <- Bonfire.Me.Social.Likes.like(socket.assigns.current_user, id) do
+    with {:ok, _like} <- Bonfire.Me.Social.Likes.like(socket.assigns.current_user, %{id: id}) do
       {:noreply, Phoenix.LiveView.assign(socket,
-       liked: socket.assign.liked ++ [{id, true}]
+       liked: Map.get(socket.assigns, :liked, []) ++ [{id, true}]
      )}
     else e ->
       {:noreply, socket} # TODO: handle errors
     end
   end
 
-  def live_action("like-no", %{"id"=> id}, socket) do
-    with _ <- Bonfire.Me.Social.Likes.unlike(socket.assigns.current_user, id) do
+  def live_action("like", %{"direction"=>"down", "id"=> id}, socket) do
+    with _ <- Bonfire.Me.Social.Likes.unlike(socket.assigns.current_user, %{id: id}) do
       {:noreply, Phoenix.LiveView.assign(socket,
-       liked: socket.assign.liked ++ [{id, false}]
+       liked: Map.get(socket.assigns, :liked, []) ++ [{id, false}]
      )}
     else e ->
       {:noreply, socket} # TODO: handle errors
