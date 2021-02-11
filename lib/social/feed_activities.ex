@@ -20,9 +20,8 @@ defmodule Bonfire.Me.Social.FeedActivities do
       |> preload_join(:activity, :object_post)
       |> preload_join(:activity, :object_post, :post_content)
       |> preload_join(:activity, :reply_to)
-      |> preload_join(:activity, :subject_user)
-      |> preload_join(:activity, :subject_user, :profile)
-      |> preload_join(:activity, :subject_user, :character)
+      |> preload_join(:activity, :subject_profile)
+      |> preload_join(:activity, :subject_character)
       |> Bonfire.Repo.many_paginated(before: cursor_after)
   end
 

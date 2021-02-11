@@ -46,7 +46,7 @@ defmodule Bonfire.Me.Social.Posts do
     attrs = attrs
       |> Map.put(:post_content, prepare_content(attrs))
       |> Map.put(:created, %{creator_id: creator.id})
-      |> Map.put(:reply_to, maybe_reply(attrs))
+      |> Map.put(:replied, maybe_reply(attrs))
 
     repo().put(changeset(:create, attrs))
   end
@@ -70,7 +70,7 @@ defmodule Bonfire.Me.Social.Posts do
     Post.changeset(%Post{}, attrs)
     |> Changeset.cast_assoc(:post_content, [:required, with: &PostContent.changeset/2])
     |> Changeset.cast_assoc(:created)
-    |> Changeset.cast_assoc(:reply_to, [:required, with: &Replied.changeset/2])
+    |> Changeset.cast_assoc(:replied, [:required, with: &Replied.changeset/2])
   end
 
   def get(id) when is_binary(id) do
@@ -113,9 +113,8 @@ defmodule Bonfire.Me.Social.Posts do
       |> preload_join(:post)
       |> preload_join(:post, :post_content)
       |> preload_join(:activity)
-      |> preload_join(:activity, :subject_user)
-      |> preload_join(:activity, :subject_user, :profile)
-      |> preload_join(:activity, :subject_user, :character)
+      |> preload_join(:activity, :subject_profile)
+      |> preload_join(:activity, :subject_character)
       |> IO.inspect
       |> repo().all
   end

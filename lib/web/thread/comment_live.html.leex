@@ -2,7 +2,7 @@
   <span class="absolute top-8 bottom-2 left-3 -ml-px w-0.5 bg-gray-100" aria-hidden="true"></span>
   <img class="inline-block h-6 w-6 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
   <div class="flex-1 ml-2">
-    <h3 class="text-sm text-gray-700"><a class="font-bold" href="#"><%= e(@comment, :activity, :subject_user, :profile, :name, "") %></a>  <span class="text-sm text-gray-400">@<%= e(@comment, :activity, :subject_user, :character, :username, "") %> </span> <span class="float-right text-sm text-gray-500"><%=@date_ago%></span></h3>
+    <h3 class="text-sm text-gray-700"><a class="font-bold" href="#"><%= e(@comment, :activity, :subject_profile, :name, "") %></a>  <span class="text-sm text-gray-400">@<%= e(@comment, :activity, :subject_character, :username, "") %> </span> <span class="float-right text-sm text-gray-500"><%=@date_ago%></span></h3>
     <div class="max-w-prose prose text-sm">
       <h3><%= e(@comment, :post, :post_content, :name, "") %></h3>
       <%= e(@comment, :post, :post_content, :summary, "") %>
