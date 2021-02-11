@@ -25,6 +25,7 @@ defmodule Bonfire.Me.Web.MyFeedLive do
 
     {:ok, socket
     |> assign(
+      page: "feed",
       page_title: "My Feed",
       feed_title: title,
       feed: e(feed, :entries, []),

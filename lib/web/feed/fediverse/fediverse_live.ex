@@ -24,6 +24,7 @@ defmodule Bonfire.Me.Web.FediverseLive do
 
     {:ok, socket
     |> assign(
+      page: "fediverse",
       page_title: "Fediverse Feed",
       feed_title: title,
       feed: [],
