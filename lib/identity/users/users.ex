@@ -90,8 +90,7 @@ defmodule Bonfire.Me.Identity.Users do
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:accounted)
-    |> Changeset.cast_assoc(:follow_count)
-    |> Changeset.cast_assoc(:like_count)
+    # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
   end
 
@@ -100,8 +99,7 @@ defmodule Bonfire.Me.Identity.Users do
     |> override(:create, :remote)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    |> Changeset.cast_assoc(:follow_count)
-    |> Changeset.cast_assoc(:like_count)
+    # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
   end
 
@@ -112,8 +110,7 @@ defmodule Bonfire.Me.Identity.Users do
   defp override(changeset, :create, %Account{}=account) do
     Changeset.cast changeset, %{
       accounted:    %{account_id: account.id},
-      follow_count: %{follower_count: 0, followed_count: 0},
-      like_count:   %{liker_count: 0,    liked_count: 0},
+      # like_count:   %{liker_count: 0,    liked_count: 0},
       encircles:    [%{circle_id: Circles.circles().local}]
     }, []
   end

@@ -32,8 +32,12 @@ defmodule Bonfire.Me.Identity.Characters do
     char
     |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)
-    |> Changeset.cast(%{feed: %{}}, [])
+    |> Changeset.cast(%{
+      feed: %{},
+      follow_count: %{follower_count: 0, followed_count: 0},
+    }, [])
     |> Changeset.cast_assoc(:feed)
+    |> Changeset.cast_assoc(:follow_count)
   end
 
   def display_username(%{username: username}) when not is_nil(username) do
