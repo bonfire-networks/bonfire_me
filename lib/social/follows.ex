@@ -75,7 +75,7 @@ defmodule Bonfire.Me.Social.Follows do
 
   def by_both_q(follower, followed) when is_binary(follower) and is_binary(followed) do
     from f in Follow,
-      where: f.follower_id == ^follower or f.followed_id == ^followed,
+      where: f.follower_id == ^follower and f.followed_id == ^followed,
       select: f.id
   end
 

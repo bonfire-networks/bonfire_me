@@ -5,17 +5,21 @@ defmodule Bonfire.Me.Social.Activities do
   alias Bonfire.Me.AccessControl.Verbs
   alias Ecto.Changeset
   import Ecto.Query
-
   import Bonfire.Me.Integration
 
   @doc """
   Create an Activity
   NOTE: you will usually want to use `Feeds.publish/3` instead
   """
-  def create(%{id: subject_id}=_subject, verb, %{id: object_id}=_object) when is_atom(verb) do
+  def create(%{id: subject_id}=subject, verb, %{id: object_id}=object) when is_atom(verb) do
+
     verb_id = Verbs.verbs()[verb]
+
     attrs = %{subject_id: subject_id, verb_id: verb_id, object_id: object_id}
-    repo().put(changeset(attrs))
+
+    with {:ok, activity} <- repo().put(changeset(attrs)) do
+       {:ok, %{activity | object: object, subject: subject, subject_profile: Map.get(subject, :profile), subject_character: Map.get(subject, :character)}}
+    end
   end
 
   def changeset(activity \\ %Activity{}, %{} = attrs) do

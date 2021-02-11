@@ -93,4 +93,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def handle_event("load-more", attrs, socket), do: socket.assigns.user |> Bonfire.Me.Social.FeedActivities.live_more(attrs, socket)
 
   def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
+
+  def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
+
 end

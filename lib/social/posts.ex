@@ -14,10 +14,13 @@ defmodule Bonfire.Me.Social.Posts do
     # |> IO.inspect
 
     with {:ok, published} <- publish(socket.assigns.current_user, attrs) do
+      IO.inspect("published!")
       {:noreply,
-        Phoenix.LiveView.assign(socket,
-          feed: [%{published.activity | object_post: published.post, subject_user: socket.assigns.current_user}] ++ Map.get(socket.assigns, :feed, [])
-      )}
+        socket
+        # Phoenix.LiveView.assign(socket,
+        #   feed: [%{published.activity | object_post: published.post, subject_user: socket.assigns.current_user}] ++ Map.get(socket.assigns, :feed, [])
+        # )
+      }
     end
   end
 
