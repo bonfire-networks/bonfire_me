@@ -1,24 +1,22 @@
 <%= if @current_account_users && length(@current_account_users)>0 do %>
-  <div class="flex items-center px-3 py-2 bg-white rounded-lg border">
-    <h3 class="text-xs font-bold tracking-wider text-gray-700 uppercase">Select a user</h3>
-    <ul class="flex items-center pl-4 ml-4 space-x-3 border-l">
+  <div class="flex items-center py-2">
+    <h3 class="text-xs font-bold tracking-wider text-gray-100 px-2 py-1.5 bg-gray-900 rounded text-center uppercase">Select a user</h3>
+    <ul class="flex items-center pl-4 ml-4 space-x-3">
       <%= for user <- @current_account_users do %>
-        <li class="flex flex-col col-span-1 p-2 text-center transition-colors duration-200 ease-in-out divide-y divide-gray-200 rounded-md group hover:bg-blueGray-200">
+        <li class="flex flex-col col-span-1 p-2 text-center transition-colors duration-200 ease-in-out divide-y divide-gray-200 rounded-md group ">
           <%= live_redirect to: Routes.switch_user_path(@socket, :show, user.character.username || "") <> @go do %>
-          <div class="flex items-center flex-1">
-            <img class="flex-shrink-0 w-12 h-12 mx-auto mr-1 rounded-lg" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
-            <div class="ml-1">
-              <h3 class="text-base font-semibold text-left text-gray-700 transition-colors duration-200 ease-in-out"><%= user.profile.name %></h3>
-              <dl class="flex flex-col justify-between flex-grow mt-0">
-                <%= if e(user, :shared_user, :label, nil) do %>
-                  <span class="inline-flex items-center px-2 py-1 mt-1 text-sm font-medium leading-5 text-center text-pink-800 bg-pink-100 rounded-md">
-                    <%= e(user, :shared_user, :label, nil) %>
-                  </span>
-                <% else %>
-                  <dt class="sr-only">preferred username</dt>
-                  <dd class="text-sm text-gray-500">@<%= user.character.username %></dd>
-                <% end %>
-                </dl>
+          <div class="flex flex-col items-center flex-1">
+            <img class="flex-shrink-0 w-12 h-12 mx-auto mr-1 rounded-full ring-4 ring-pink-600 group-hover:ring-pink-600" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
+            <div class="mt-0">
+              <%= if e(user, :shared_user, :label, nil) do %>
+                <span class="inline-flex items-center px-2 py-1 mt-1 text-sm font-medium leading-5 text-center text-pink-800 bg-pink-100 rounded-md group-hover:text-pink-600">
+                  <%= e(user, :shared_user, :label, nil) %>
+                </span>
+              <% else %>
+                <span class="inline-flex items-center text-sm font-medium text-center text-gray-700">
+                  @<%= e(user, :character, :username, nil) %>
+                </span>
+              <% end %>
             </div>
           </div>
           <% end %>
@@ -28,9 +26,13 @@
         <%= live_redirect to: Routes.create_user_path(@socket, :index) do %>
           <div class="flex flex-col items-center flex-1">
             <div class="w-12 h-12">
-              <svg class="w-12 h-12 text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
+              <svg class="text-gray-300 transition-colors duration-200 ease-in-out group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
             </div>
-            <h3 class="mt-2 sr-only ">Add a new user</h3>
+            <div class="mt-0">
+              <span class="inline-flex items-center text-sm font-medium text-center text-gray-700">
+                Create a new user
+              </span>
+            </div>
           </div>
         <% end %>
       </li>
