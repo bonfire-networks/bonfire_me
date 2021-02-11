@@ -39,6 +39,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:ok,
       socket
       |> assign(
+        page: "profile",
         page_title: "Profile",
         selected_tab: "about",
         feed_title: "User timeline",

@@ -23,6 +23,7 @@ defmodule Bonfire.Me.Web.InstanceLive do
     title = "Feed of all activities by users on this instance"
     {:ok, socket
     |> assign(
+      page: "instance",
       page_title: "Instance Feed",
       feed_title: title,
       feed: e(feed, :entries, []),

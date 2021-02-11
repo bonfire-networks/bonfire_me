@@ -25,6 +25,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
 
       {:ok, socket
       |> assign(
+        page: "dashboard",
         page_title: "Bonfire Dashboard",
         feed_title: title,
         feed: e(feed, :entries, []),
