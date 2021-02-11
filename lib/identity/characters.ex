@@ -33,10 +33,10 @@ defmodule Bonfire.Me.Identity.Characters do
     |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)
     |> Changeset.cast(%{
-      feed: %{},
+      # feed: %{},
       follow_count: %{follower_count: 0, followed_count: 0},
     }, [])
-    |> Changeset.cast_assoc(:feed)
+    # |> Changeset.cast_assoc(:feed)
     |> Changeset.cast_assoc(:follow_count)
   end
 

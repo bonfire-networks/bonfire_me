@@ -9,7 +9,8 @@ defmodule Bonfire.Me.Social.Follows do
   def following?(%User{}=user, followed), do: not is_nil(get!(user, followed))
   def get(%User{}=user, followed), do: repo().single(by_both_q(user, followed))
   def get!(%User{}=user, followed), do: repo().one(by_both_q(user, followed))
-  def by_follower(%User{}=user), do: repo().all(by_follower_q(user))
+  def by_follower(%User{}=user), do: repo().all(followed_by_follower_q(user))
+  # def by_follower(%User{}=user), do: repo().all(by_follower_q(user))
   def by_followed(%User{}=user), do: repo().all(by_followed_q(user))
   def by_any(%User{}=user), do: repo().all(by_any_q(user))
 
@@ -33,21 +34,29 @@ defmodule Bonfire.Me.Social.Follows do
   end
 
   @doc "Delete Follows where i am the follower"
-  defp delete_by_follower(%User{}=me), do: elem(repo().delete_all(by_follower_q(me)), 1)
+  defp delete_by_follower(%User{}=me), do: do_delete(by_follower_q(me))
 
   @doc "Delete Follows where i am the followed"
-  defp delete_by_followed(%User{}=me), do: elem(repo().delete_all(by_followed_q(me)), 1)
+  defp delete_by_followed(%User{}=me), do: do_delete(by_followed_q(me))
 
   @doc "Delete Follows where i am the follower or the followed."
-  defp delete_by_any(%User{}=me), do: elem(repo().delete_all(by_any_q(me)), 1)
+  defp delete_by_any(%User{}=me), do: do_delete(by_any_q(me))
 
   @doc "Delete Follows where i am the follower and someone else is the followed."
-  defp delete_by_both(%User{}=me, %{}=followed), do: elem(repo().delete_all(by_both_q(me, followed)), 1)
+  defp delete_by_both(%User{}=me, %{}=followed), do: do_delete(by_both_q(me, followed))
+
+  defp do_delete(q), do: elem(repo().delete_all(q), 1)
 
   def by_follower_q(%User{id: id}) do
     from f in Follow,
       where: f.follower_id == ^id,
       select: f.id
+  end
+
+  def followed_by_follower_q(%User{id: id}) do
+    from f in Follow,
+      where: f.follower_id == ^id,
+      select: f.followed_id
   end
 
   def by_followed_q(%User{id: id}) do

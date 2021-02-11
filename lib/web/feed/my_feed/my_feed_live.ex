@@ -18,14 +18,19 @@ defmodule Bonfire.Me.Web.MyFeedLive do
   end
 
   defp mounted(params, session, socket) do
-    title = "@#{socket.assigns.current_user.character.username}'s feed"
+
+    feed = Bonfire.Me.Social.FeedActivities.my_feed(socket.assigns.current_user)
+
+    title = "My Feed"
+
     {:ok, socket
     |> assign(
       page_title: "My Feed",
       feed_title: title,
-      feed: [],
-      page_info: nil
-    )}
+      feed: e(feed, :entries, []),
+      page_info: e(feed, :metadata, [])
+      )}
+
   end
 
 
@@ -43,7 +48,7 @@ defmodule Bonfire.Me.Web.MyFeedLive do
   #    )}
   # end
 
-  # def handle_event("load-more", attrs, socket), do: Bonfire.Me.Social.FeedActivities.live_more(attrs, socket)
+  def handle_event("load-more", attrs, socket), do: Bonfire.Me.Social.FeedActivities.my_live_more(attrs, socket)
 
   def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
 

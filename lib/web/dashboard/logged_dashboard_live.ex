@@ -18,13 +18,20 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
     end
 
     defp mounted(params, session, socket) do
+
+      feed = Bonfire.Me.Social.FeedActivities.my_feed(socket.assigns.current_user)
+
+      title = "My Feed"
+
       {:ok, socket
-      |> assign(page_title: "Bonfire home page",
-      feed_title: "My feed",
-      feed: [],
-      page_info: nil,
-      go: ""
-      )}
+      |> assign(
+        page_title: "Bonfire Dashboard",
+        feed_title: title,
+        feed: e(feed, :entries, []),
+        page_info: e(feed, :metadata, []),
+        go: ""
+        )}
+
     end
 
     # def handle_params(%{"tab" => tab} = _params, _url, socket) do
@@ -40,6 +47,8 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
     #      current_user: Fake.user_live()
     #    )}
     # end
+
+  def handle_event("load-more", attrs, socket), do: Bonfire.Me.Social.FeedActivities.my_live_more(attrs, socket)
 
   def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
 
