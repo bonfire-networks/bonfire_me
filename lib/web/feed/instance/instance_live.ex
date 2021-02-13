@@ -18,7 +18,7 @@ defmodule Bonfire.Me.Web.InstanceLive do
 
   defp mounted(params, session, socket) do
 
-    feed = Bonfire.Me.Social.Feeds.instance_feed_id() |> Bonfire.Me.Social.FeedActivities.feed()
+    feed = Bonfire.Me.Social.Feeds.instance_feed_id() |> Bonfire.Me.Social.FeedActivities.feed(e(socket.assigns, :current_user, nil))
 
     title = "Feed of all activities by users on this instance"
     {:ok, socket

@@ -3,13 +3,13 @@ defmodule Bonfire.Me.Social.Likes do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Data.Social.Like
   alias Bonfire.Data.Social.LikeCount
-  alias Bonfire.Me.Social.FeedActivities
+  alias Bonfire.Me.Social.{Activities, FeedActivities}
   import Ecto.Query
   import Bonfire.Me.Integration
   alias Bonfire.Common.Utils
 
-  def live_action("like", %{"direction"=>"up", "id"=> id}, socket) do
-    IO.inspect(id)
+  def live_action("like", %{"direction"=>"up", "id"=> id}, socket) do # like in LV
+  Utils.undead(socket, fn ->
     IO.inspect(socket)
     with {:ok, _like} <- Bonfire.Me.Social.Likes.like(socket.assigns.current_user, %{id: id}) do
       {:noreply, Phoenix.LiveView.assign(socket,
@@ -18,9 +18,11 @@ defmodule Bonfire.Me.Social.Likes do
     else e ->
       {:noreply, socket} # TODO: handle errors
     end
+  end)
   end
 
-  def live_action("like", %{"direction"=>"down", "id"=> id}, socket) do
+  def live_action("like", %{"direction"=>"down", "id"=> id}, socket) do # unlike in LV
+  Utils.undead(socket, fn ->
     with _ <- Bonfire.Me.Social.Likes.unlike(socket.assigns.current_user, %{id: id}) do
       {:noreply, Phoenix.LiveView.assign(socket,
        liked: Map.get(socket.assigns, :liked, []) ++ [{id, false}]
@@ -28,6 +30,7 @@ defmodule Bonfire.Me.Social.Likes do
     else e ->
       {:noreply, socket} # TODO: handle errors
     end
+  end)
   end
 
   def liked?(%User{}=user, liked), do: not is_nil(get!(user, liked))
@@ -46,7 +49,8 @@ defmodule Bonfire.Me.Social.Likes do
   end
 
   def unlike(%User{}=liker, %{}=liked) do
-    delete_by_both(liker, liked)
+    delete_by_both(liker, liked) # delete the Like
+    Activities.delete_by_subject_verb_object(liker, :like, liked) # delete the like activity & feed entries
     # TODO: decrement the like count
   end
 

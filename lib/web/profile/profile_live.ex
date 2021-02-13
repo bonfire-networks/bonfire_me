@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     following = if current_user && user, do: Bonfire.Me.Social.Follows.following?(current_user, user)
 
     # feed = if user, do: Bonfire.Me.Social.Activities.by_user(user)
-    feed = if user, do: Bonfire.Me.Social.FeedActivities.feed(user)
+    feed = if user, do: Bonfire.Me.Social.FeedActivities.feed(user, e(socket.assigns, :current_user, nil))
     # IO.inspect(feed: feed)
 
     {:ok,

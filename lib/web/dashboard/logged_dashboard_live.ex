@@ -40,15 +40,11 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
     #    )}
     # end
 
-    # def handle_params(%{} = _params, _url, socket) do
-    #   {:noreply,
-    #    assign(socket,
-    #      current_user: Fake.user_live()
-    #    )}
-    # end
+    def handle_params(_params, _url, socket) do
+      {:noreply, socket}
+    end
 
   def handle_event("load-more", attrs, socket), do: Bonfire.Me.Social.FeedActivities.my_live_more(attrs, socket)
-# undead(socket, fn -> :foo + 1 end)
 
   def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
 

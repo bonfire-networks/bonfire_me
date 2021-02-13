@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Social.FeedActivities do
 
-  alias Bonfire.Data.Social.{Feed, FeedPublish}
+  alias Bonfire.Data.Social.{Feed, FeedPublish, Like}
   alias Bonfire.Data.Identity.{User}
   alias Bonfire.Me.Social.Feeds
   alias Bonfire.Me.Social.Activities
@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Social.FeedActivities do
 
   use Bonfire.Repo.Query,
       schema: FeedPublish,
-      searchable_fields: [:id, :feed_id, :verb],
+      searchable_fields: [:id, :feed_id, :object_id],
       sortable_fields: [:id]
 
   def my_feed(user, cursor_after \\ nil) do
@@ -17,26 +17,16 @@ defmodule Bonfire.Me.Social.FeedActivities do
     feed_ids = Feeds.my_feed_ids(user)
     # IO.inspect(inbox_feed_ids: feed_ids)
 
-    feed(feed_ids, cursor_after)
+    feed(feed_ids, user, cursor_after)
   end
 
-  def feed(%{id: feed_id}, cursor_after \\ nil), do: feed(feed_id, cursor_after)
+  def feed(%{id: feed_id}, current_user \\ nil, cursor_after \\ nil), do: feed(feed_id, current_user, cursor_after)
 
-  def feed(feed_id, cursor_after) when is_binary(feed_id) do
-    build_query(feed_id: feed_id)
-      |> do_feed(feed_id, cursor_after)
-  end
-
-  def feed(feed_ids, cursor_after) when is_list(feed_ids) do
-    build_query(feed_id__in: feed_ids)
-      |> do_feed(feed_ids, cursor_after)
-  end
-
-  def do_feed(q, feed_id_or_ids, cursor_after \\ nil) do
+  def feed(feed_id_or_ids, current_user, cursor_after) when is_binary(feed_id_or_ids) or is_list(feed_id_or_ids) do
 
     Utils.pubsub_subscribe(feed_id_or_ids) # subscribe to realtime feed updates
 
-    q
+    build_query(feed_id: feed_id_or_ids) # query FeedPublish + assocs needed in timelines/feeds
       |> preload_join(:activity)
       |> preload_join(:activity, :verb)
       |> preload_join(:activity, :object)
@@ -47,11 +37,21 @@ defmodule Bonfire.Me.Social.FeedActivities do
       |> preload_join(:activity, :reply_to)
       |> preload_join(:activity, :subject_profile)
       |> preload_join(:activity, :subject_character)
-      |> Bonfire.Repo.many_paginated(before: cursor_after)
+      |> maybe_my_like(current_user)
+      # |> IO.inspect
+      # |> Bonfire.Repo.all()
+      |> Bonfire.Repo.many_paginated(before: cursor_after) # return a page of items + pagination metadata
       # |> IO.inspect
   end
 
-  def live_more(feed_id, %{"after" => cursor_after} = attrs, socket) when is_binary(feed_id), do: Bonfire.Me.Social.FeedActivities.feed(feed_id, cursor_after) |> live_more(socket)
+  def maybe_my_like(q, %{id: current_user_id} = _current_user) do
+    q
+    |> join(:left, [a], l in Like, on: l.liked_id == a.object_id and l.liker_id == ^current_user_id)
+    |> preload([l], activity: [:my_like])
+  end
+  def maybe_my_like(q, _), do: q
+
+  def live_more(feed_id, %{"after" => cursor_after} = attrs, socket) when is_binary(feed_id), do: Bonfire.Me.Social.FeedActivities.feed(feed_id, Utils.e(socket.assigns, :current_user, nil), cursor_after) |> live_more(socket)
 
   def my_live_more(%{"after" => cursor_after} = attrs, socket), do: Bonfire.Me.Social.FeedActivities.my_feed(socket.assigns.current_user, cursor_after) |> live_more(socket)
 
@@ -120,5 +120,10 @@ defmodule Bonfire.Me.Social.FeedActivities do
     attrs = %{feed_id: feed_id, object_id: activity_or_object_id}
     repo().put(FeedPublish.changeset(attrs))
   end
+
+  @doc "Delete an activity (usage by things like unlike)"
+  def delete_for_object(%{id: id}), do: delete_for_object(id)
+  def delete_for_object(id) when is_binary(id), do: build_query(object_id: id) |> repo().delete_all() |> elem(1)
+
 
 end
