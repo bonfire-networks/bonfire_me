@@ -6,14 +6,9 @@ defmodule Bonfire.Me.Web.CommentLive do
 
     {:ok, assign(socket, assigns
     |> Map.merge(%{
-        date_ago: date_ago(assigns.comment.id),
+        date_ago: date_from_now(assigns.comment),
       })) }
   end
 
-  def date_ago(id) do
-    with {:ok, ts} <- Pointers.ULID.timestamp(id) do
-      date_from_now(ts)
-    end
-  end
 
 end
