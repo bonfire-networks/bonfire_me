@@ -3,7 +3,7 @@
     <%= cond do %>
       <% @selected_tab == "followers" ->  %>
         <div class="rounded border">
-          <h2 class="text-xl font-bold text-gray-800 border-b p-3">Followers</h2>
+          <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuSocialLive, assigns) %>
           <div>
             <div class="flow-root my-4">
               <ul class="-my-5 divide-y divide-gray-200">
@@ -22,70 +22,7 @@
                     </div>
                     <div>
                       <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
-                      </a>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="py-4 px-3">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Floyd Miles
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @floydmiles
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
-                      </a>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="py-4 px-3">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Emily Selman
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @emilyselman
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
-                      </a>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="py-4 px-3">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Kristin Watson
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @kristinwatson
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
+                        Follow
                       </a>
                     </div>
                   </div>
@@ -101,7 +38,7 @@
         </div>
       <% @selected_tab == "following" ->  %>
         <div class="rounded border">
-          <h2 class="text-xl font-bold text-gray-800 border-b p-3">Following</h2>
+          <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuSocialLive, assigns) %>
           <div>
             <div class="flow-root my-4">
               <ul class="-my-5 divide-y divide-gray-200">
@@ -120,70 +57,7 @@
                     </div>
                     <div>
                       <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
-                      </a>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="py-4 px-3">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Floyd Miles
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @floydmiles
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
-                      </a>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="py-4 px-3">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Emily Selman
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @emilyselman
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
-                      </a>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="py-4 px-3">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Kristin Watson
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @kristinwatson
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        View
+                        Follow
                       </a>
                     </div>
                   </div>
@@ -197,68 +71,17 @@
             </div>
           </div>
         </div>
-      <% true -> %>
-    <%= if @current_user do %>
-      <%= if maybe_get(@current_user, :id) != maybe_get(@user, :id) do %>
-        <span class="inline-flex px-2 py-1 mb-2 bg-blueGray-800 text-white rounded text-xs">Share something with them</span>
-      <% end %>
-      <div class="mb-4">
-        <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
-      </div>
-    <% end %>
-    <div class="flex flex-col bg-blueGray-800 rounded-lg overflow-hidden mb-3">
-      <div class="flex-shrink-0 flex h-16 justify-between">
-        <div class="flex items-center flex-shrink-0 px-4">
-          <div class="pr-2">
-            <img class="inline-block h-10 w-10 rounded-md" src="https://thispersondoesnotexist.com/image" alt="">
-          </div>
-          <div>
-            <div class="sm:block ml-2">
-              <nav class="flex space-x-4" aria-label="Tabs">
-                <%= live_patch to: "/user/" <>  e(@current_user, :character, :username, "") <> "/about" do %>
-                  <div aria-current="<%= if @selected_tab == "about", do: "page" %>" class="<%= if @selected_tab == "about", do: "bg-rose-500 text-gray-100" %> text-gray-100 hover:text-gray-200 px-3 py-2 font-medium text-sm rounded-md">
-                    About
-                  </div>
-                <% end %>
-
-                <%= live_patch to: "/user/" <>  e(@current_user, :character, :username, "") <> "/timeline" do %>
-                  <div aria-current="<%= if @selected_tab == "timeline", do: "page" %>" class="<%= if @selected_tab == "timeline", do: "bg-rose-500 text-gray-100" %> text-gray-100 hover:text-gray-200 px-3 py-2 font-medium text-sm rounded-md">
-                    Timeline
-                  </div>
-                <% end %>
-
-                <%= live_patch to: "/user/" <>  e(@current_user, :character, :username, "") <> "/likes" do %>
-                  <div aria-current="<%= if @selected_tab == "likes", do: "page" %>" class="<%= if @selected_tab == "likes", do: "bg-rose-500 text-gray-100" %> text-gray-100 hover:text-gray-200 px-3 py-2 font-medium text-sm rounded-md">
-                    Likes
-                  </div>
-                <% end %>
-
-                <%= live_patch to: "/user/" <>  e(@current_user, :character, :username, "") <> "/media" do %>
-                  <div aria-current="<%= if @selected_tab == "media", do: "page" %>" class="<%= if @selected_tab == "media", do: "bg-rose-500 text-gray-100" %> text-gray-100 hover:text-gray-200 px-3 py-2 font-medium text-sm rounded-md">
-                    Media
-                  </div>
-                <% end %>
-              </nav>
+      <% @selected_tab == "about" ->  %>
+          <%= if @current_user do %>
+            <%= if maybe_get(@current_user, :id) != maybe_get(@user, :id) do %>
+              <span class="inline-flex px-2 py-1 mb-2 bg-blueGray-800 text-white rounded text-xs">Share something with them</span>
+            <% end %>
+            <div class="mb-4">
+              <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
             </div>
-          </div>
-        </div>
-        <%# <div class="px-4 flex ">
-          <div class="ml-4 flex items-center md:ml-6">
-            <span class="inline-flex ml-3">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
-            </span>
-          </div>
-        </div> %>
-      </div>
-    </div>
+          <% end %>
 
-
-    <%= cond do %>
-        <% @selected_tab == "timeline" ->  %>
-          <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
-        <% @selected_tab == "media" ->  %>
-          <div>media</div>
-        <% true -> %>
+          <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuLive, assigns) %>
           <div class="mt-6 mb-8 border rounded-lg">
             <div class="p-3 border-b">
               <div class="flex items-center justify-between flex-wrap sm:flex-no-wrap">
@@ -271,7 +94,56 @@
               <%= e(@user, :profile, :summary, "") %>
             </div>
           </div>
-      <% end %>
+      <% @selected_tab == "timeline" ->  %>
+        <%= if @current_user do %>
+          <%= if maybe_get(@current_user, :id) != maybe_get(@user, :id) do %>
+            <span class="inline-flex px-2 py-1 mb-2 bg-blueGray-800 text-white rounded text-xs">Share something with them</span>
+          <% end %>
+          <div class="mb-4">
+            <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
+          </div>
+        <% end %>
+
+        <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuLive, assigns) %>
+        <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
+
+        <% @selected_tab == "media" ->  %>
+           <%= if @current_user do %>
+          <%= if maybe_get(@current_user, :id) != maybe_get(@user, :id) do %>
+            <span class="inline-flex px-2 py-1 mb-2 bg-blueGray-800 text-white rounded text-xs">Share something with them</span>
+          <% end %>
+          <div class="mb-4">
+            <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
+          </div>
+        <% end %>
+
+        <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuLive, assigns) %>
+        <div>media</div>
+
+
+        <% true -> %>
+        <%= if @current_user do %>
+          <%= if maybe_get(@current_user, :id) != maybe_get(@user, :id) do %>
+            <span class="inline-flex px-2 py-1 mb-2 bg-blueGray-800 text-white rounded text-xs">Share something with them</span>
+          <% end %>
+          <div class="mb-4">
+            <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
+          </div>
+        <% end %>
+
+        <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuLive, assigns) %>
+          <div class="mt-6 mb-8 border rounded-lg">
+            <div class="p-3 border-b">
+              <div class="flex items-center justify-between flex-wrap sm:flex-no-wrap">
+                <h3 class="text-base capitalize font-bold text-gray-700">
+                  About
+                </h3>
+              </div>
+            </div>
+            <div class="prose p-3">
+              <%= e(@user, :profile, :summary, "") %>
+            </div>
+          </div>
     <% end %>
   </div>
   <div class="w-full lg:w-1/3 px-2">
