@@ -5,3 +5,5 @@ bonfire_data_identity="https://github.com/bonfire-ecosystem/bonfire_data_identit
 bonfire_data_social="https://github.com/bonfire-ecosystem/bonfire_data_social#main"
 # bonfire_web_phoenix = "https://github.com/commonspub/bonfire_web_phoenix#main"
 pointers = "https://github.com/commonspub/pointers#main"
+bonfire_ui_social = "https://github.com/bonfire-ecosystem/bonfire_ui_social#main"
+# verbs = "https://github.com/shannonwells/verbs_ex"

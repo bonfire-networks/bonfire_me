@@ -45,10 +45,10 @@ defmodule Bonfire.Me.Social.Posts do
     end
   end
 
-  defp create(creator, attrs) do
+  defp create(%{id: creator_id}, attrs) do
     attrs = attrs
       |> Map.put(:post_content, prepare_content(attrs))
-      |> Map.put(:created, %{creator_id: creator.id})
+      |> Map.put(:created, %{creator_id: creator_id})
       |> Map.put(:replied, maybe_reply(attrs))
 
     repo().put(changeset(:create, attrs))
@@ -74,6 +74,22 @@ defmodule Bonfire.Me.Social.Posts do
     |> Changeset.cast_assoc(:post_content, [:required, with: &PostContent.changeset/2])
     |> Changeset.cast_assoc(:created)
     |> Changeset.cast_assoc(:replied, [:required, with: &Replied.changeset/2])
+  end
+
+  def read(post_id, current_user) when is_binary(post_id) do
+
+    build_query(id: post_id) # query FeedPublish + assocs needed in timelines/feeds
+      |> preload_join(:post_content)
+      |> preload_join(:creator_profile)
+      |> preload_join(:creator_character)
+      # |> preload_join(:reply_to)
+      |> preload_join(:reply_to_post_content)
+      |> preload_join(:thread_post_content)
+      # |> maybe_my_like(current_user)
+      # |> IO.inspect
+      # |> Bonfire.Repo.all()
+      |> repo().single()
+      # |> IO.inspect
   end
 
   def get(id) when is_binary(id) do
