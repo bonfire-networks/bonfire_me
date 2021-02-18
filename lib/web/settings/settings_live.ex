@@ -6,7 +6,8 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
   alias Bonfire.Me.Web.SettingsLive.{
     SettingsNavigationLive,
-    SettingsGeneralLive
+    EditProfileLive,
+    ExtensionsLive
   }
   alias Bonfire.Common.Web.LivePlugs
 
@@ -46,7 +47,8 @@ defmodule Bonfire.Me.Web.SettingsLive do
   end
 
   def handle_event("profile_save", params, socket) do
-    # params = input_to_atoms(params)
+  undead(socket, fn ->
+  # params = input_to_atoms(params)
 
     with {:ok, edit_profile} <-
       Users.update(socket.assigns.current_user, params, socket.assigns.current_account) do
@@ -69,6 +71,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
           |> push_redirect(to: "/user")
           }
       end
-      end
+    end
+  end)
   end
 end

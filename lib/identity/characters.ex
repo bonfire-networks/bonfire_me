@@ -28,7 +28,15 @@ defmodule Bonfire.Me.Identity.Characters do
     Regex.replace(@username_forbidden, username, "_") |> String.slice(0..29)
   end
 
-  defp do_changeset(char \\ %Character{}, params) do
+  defp do_changeset(char \\ %Character{}, params)
+
+  defp do_changeset(%Character{id: _} = char, params) do # update
+    char
+    |> Character.changeset(params, :hash)
+    |> Changeset.validate_format(:username, @username_regex)
+  end
+
+  defp do_changeset(%Character{} = char, params) do # create
     char
     |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)

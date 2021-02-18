@@ -1,0 +1,28 @@
+<div class="divide-y divide-gray-200 lg:col-span-9">
+  <!-- Profile section -->
+  <div class="px-4 py-6 sm:p-6 lg:pb-8">
+    <div>
+      <h2 class="text-lg font-medium leading-6 text-gray-900">Profile</h2>
+      <p class="mt-1 text-sm text-gray-500">
+        This information will be displayed publicly so be careful what you share.
+      </p>
+    </div>
+
+    <div class="flex flex-col mt-6 lg:flex-row">
+      <div class="flex-grow mt-6 lg:mt-0 lg:mr-6 lg:flex-grow-0 lg:flex-shrink-0">
+      <%= for dep <- @extensions do %>
+        <p class="text-sm font-medium text-gray-700" aria-hidden="true">
+          <a href="<%= get_link(dep) %>" target="_blank"><%= e(dep, :app, "Unknown") %> <%= get_version(dep) %></a>
+        </p>
+      <% end %>
+
+      <hr/>
+
+      <%= for dep <- @other_deps do %>
+        <p class="text-sm font-medium text-gray-700" aria-hidden="true">
+          <a href="<%= get_link(dep) %>" target="_blank"><%= e(dep, :app, "Unknown") %> <%= get_version(dep) %></a>
+        </p>
+      <% end %>
+    </div>
+  </div>
+</div>
