@@ -4,6 +4,7 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionsLive do
   @prefix "bonfire_"
   @prefix_data "bonfire_data_"
 
+  require Logger
   # import Mix.Dep, only: [loaded: 1, format_dep: 1, format_status: 1, check_lock: 1]
 
   def update(assigns, socket) do
@@ -64,14 +65,16 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionsLive do
   defp get_branch(dep), do: ""
 
   defp get_link(%{opts: opts}) when is_list(opts), do: get_link(Enum.into(opts, %{}))
-  defp get_link(%{git: url, branch: branch}), do: "#{url}/tree/#{branch}"
-  defp get_link(%{git: url}), do: url
   defp get_link(%{hex: hex}), do: "https://hex.pm/packages/#{hex}"
+  defp get_link(%{lock: {:git, "https://github.com/"<>url, ref, [branch: branch]}}), do: "https://github.com/#{url}/compare/#{ref}...#{branch}"
   defp get_link(%{lock: {:git, url, _, [branch: branch]}}), do: "#{url}/tree/#{branch}"
   defp get_link(%{lock: {:git, url, _, _}}), do: url
+  defp get_link(%{git: url, branch: branch}), do: "#{url}/tree/#{branch}"
+  defp get_link(%{git: url}), do: url
   defp get_link(%{path: url}), do: "?path="<>url
   defp get_link(dep) do
     IO.inspect(dep)
     "#"
   end
+
 end

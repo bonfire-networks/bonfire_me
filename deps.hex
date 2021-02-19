@@ -13,6 +13,7 @@ postgrex = ">= 0.0.0"
 recase = "~> 0.5" # string recasing
 telemetry_metrics = "~> 0.4"
 telemetry_poller = "~> 0.4"
+git_diff = "~> 0.6.3" # diffing for extensions
 # plugins
 # bonfire_data_access_control = "~> 0.1"
 # bonfire_data_activity_pub = "~> 0.1"
