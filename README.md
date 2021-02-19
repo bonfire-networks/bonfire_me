@@ -10,6 +10,13 @@ An extension for [Bonfire](https://bonfire.cafe/) that handles:
 - User Profile
 - Settings
 
+It temporarily also includes functionality destined for Bonfire:Social, like:
+- Follow
+- Posts
+- Likes
+- Feeds/Timelines
+- etc
+
 ## Handy commands
 
 ## Copyright and License
