@@ -77,9 +77,14 @@
 
       <%= cond do %>
         <% @selected_tab == "admin" ->  %>
-          <div>Admin</div>
+          <h2>Admin</h2>
         <% @selected_tab == "account" ->  %>
-          <div>account</div>
+          <%= live_component(
+            @socket,
+            EditAccountLive,
+            assigns
+          )  %>
+
         <% @selected_tab == "extensions" ->  %>
            <%= live_component(
             @socket,
@@ -89,11 +94,22 @@
         <% @selected_tab == "admin" ->  %>
           <div>admin</div>
         <% true -> %>
+
+        <%= if @current_user do %>
           <%= live_component(
             @socket,
             EditProfileLive,
             assigns
           )  %>
+        <%= else %>
+
+          <%= live_component(
+            @socket,
+            EditAccountLive,
+            assigns
+          )  %>
+        <% end %>
+
         <% end %>
       </div>
     </div>

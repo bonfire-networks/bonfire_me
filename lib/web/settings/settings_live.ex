@@ -7,7 +7,8 @@ defmodule Bonfire.Me.Web.SettingsLive do
   alias Bonfire.Me.Web.SettingsLive.{
     SettingsNavigationLive,
     EditProfileLive,
-    ExtensionsLive
+    ExtensionsLive,
+    EditAccountLive
   }
   alias Bonfire.Common.Web.LivePlugs
 
