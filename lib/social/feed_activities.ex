@@ -54,28 +54,6 @@ defmodule Bonfire.Me.Social.FeedActivities do
   end
   def maybe_my_like(q, _), do: q
 
-  def live_more(feed_id, %{"after" => cursor_after} = attrs, socket) when is_binary(feed_id), do: Bonfire.Me.Social.FeedActivities.feed(feed_id, Utils.e(socket.assigns, :current_user, nil), cursor_after) |> live_more(socket)
-
-  def my_live_more(%{"after" => cursor_after} = attrs, socket), do: Bonfire.Me.Social.FeedActivities.my_feed(socket.assigns.current_user, cursor_after) |> live_more(socket)
-
-  def live_more(%{} = feed, socket) do
-    # IO.inspect(feed_pagination: feed)
-    {:noreply,
-      socket
-      |> Phoenix.LiveView.assign(
-        feed: socket.assigns.feed ++ Utils.e(feed, :entries, []),
-        page_info: Utils.e(feed, :metadata, [])
-      )}
-  end
-
-  def live_add(fp, socket) do
-    IO.inspect(pubsub_received: fp)
-
-    {:noreply,
-        Phoenix.LiveView.assign(socket,
-          feed: [fp] ++ Map.get(socket.assigns, :feed, [])
-      )}
-  end
 
   # def feed(%{feed_publishes: _} = feed_for, _) do
   #   repo().maybe_preload(feed_for, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]) |> Map.get(:feed_publishes)

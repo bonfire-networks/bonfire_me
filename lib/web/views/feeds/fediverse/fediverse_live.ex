@@ -18,7 +18,9 @@ defmodule Bonfire.Me.Web.FediverseLive do
 
   defp mounted(params, session, socket) do
 
-    feed = Bonfire.Me.Social.Feeds.fediverse_feed_id() |> Bonfire.Me.Social.FeedActivities.feed(e(socket.assigns, :current_user, nil))
+    feed_id = Bonfire.Me.Social.Feeds.fediverse_feed_id()
+
+    feed = Bonfire.Me.Social.FeedActivities.feed(feed_id, e(socket.assigns, :current_user, nil))
 
     title = "Feed of activities from around the fediverse"
 
@@ -27,8 +29,9 @@ defmodule Bonfire.Me.Web.FediverseLive do
       page: "fediverse",
       page_title: "Fediverse Feed",
       feed_title: title,
-      feed: [],
-      page_info: nil
+      feed_id: feed_id,
+      feed: e(feed, :entries, []),
+      page_info: e(feed, :metadata, [])
     )}
   end
 
@@ -47,10 +50,12 @@ defmodule Bonfire.Me.Web.FediverseLive do
   #    )}
   # end
 
-  def handle_event("load-more", attrs, socket), do: Bonfire.Me.Social.Feeds.fediverse_feed_id() |> Bonfire.Me.Social.FeedActivities.live_more(attrs, socket)
+  # def handle_event("feed_load_more", attrs, socket), do: Bonfire.Me.Social.Feeds.fediverse_feed_id() |> Bonfire.Me.Web.LiveHandlers.Feeds.live_more(attrs, socket)
 
-  def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
+  # def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
+  defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
 
-  def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
+  # def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
+  defdelegate handle_info(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
 
 end

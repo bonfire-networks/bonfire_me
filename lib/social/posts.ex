@@ -8,21 +8,6 @@ defmodule Bonfire.Me.Social.Posts do
       searchable_fields: [:id],
       sortable_fields: [:id]
 
-  def live_post(params, socket) do
-    attrs = params
-    |> Bonfire.Common.Utils.input_to_atoms()
-    # |> IO.inspect
-
-    with {:ok, published} <- publish(socket.assigns.current_user, attrs) do
-      IO.inspect("published!")
-      {:noreply,
-        socket
-        # Phoenix.LiveView.assign(socket,
-        #   feed: [%{published.activity | object_post: published.post, subject_user: socket.assigns.current_user}] ++ Map.get(socket.assigns, :feed, [])
-        # )
-      }
-    end
-  end
 
   def draft(creator, attrs) do
     # TODO: create as private

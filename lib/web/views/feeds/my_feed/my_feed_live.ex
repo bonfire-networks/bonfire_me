@@ -21,13 +21,11 @@ defmodule Bonfire.Me.Web.MyFeedLive do
 
     feed = Bonfire.Me.Social.FeedActivities.my_feed(socket.assigns.current_user)
 
-    title = "My Feed"
-
     {:ok, socket
     |> assign(
       page: "feed",
       page_title: "My Feed",
-      feed_title: title,
+      feed_title: "My Feed",
       feed: e(feed, :entries, []),
       page_info: e(feed, :metadata, [])
       )}
@@ -49,10 +47,12 @@ defmodule Bonfire.Me.Web.MyFeedLive do
   #    )}
   # end
 
-  def handle_event("load-more", attrs, socket), do: Bonfire.Me.Social.FeedActivities.my_live_more(attrs, socket)
+  # def handle_event("feed_load_more", attrs, socket), do: Bonfire.Me.Web.LiveHandlers.Feeds.my_live_more(attrs, socket)
 
-  def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
+  # def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
+  defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
 
-  def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
+  # def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
+  defdelegate handle_info(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
 
 end
