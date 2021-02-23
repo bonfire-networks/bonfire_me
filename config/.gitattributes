@@ -1,0 +1,14 @@
+*.css   diff=css
+*.html  diff=html
+*.xhtml diff=html
+*.ex    diff=elixir
+*.exs   diff=elixir
+*.md    diff=markdown
+*.rs    diff=rust
+*.js    diff=javascript
+*.ts    diff=javascript
+*.pdf   diff=pdf
+*.png   diff=exif
+*.jpg   diff=exif
+*.jpeg  diff=exif
+*.gif   diff=exif

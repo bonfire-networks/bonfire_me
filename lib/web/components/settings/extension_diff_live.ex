@@ -15,6 +15,19 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionDiffLive do
   end
 
   defp mounted(params, session, socket) do
+    # necessary to avoid running it twice (and interupting an already-running diffing)
+    case connected?(socket) do
+      true -> mounted_connected(params, session, socket)
+      false ->  {:ok,
+        socket
+        |> assign(
+        page_title: "Loading...",
+        diffs: []
+        )}
+    end
+  end
+
+  defp mounted_connected(params, session, socket) do
     # diff = generate_diff(package, repo_path)
     diffs = with {:ok, patches} <- generate_diff(:bonfire_me, "./forks/bonfire_me") do
       patches
@@ -30,8 +43,7 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionDiffLive do
     {:ok,
         socket
         |> assign(
-        page_title: "Settings",
-        selected_tab: "user",
+        page_title: "Extension",
         diffs: diffs
         )}
   end
@@ -89,7 +101,8 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionDiffLive do
     path_diff = tmp_path("diff-#{package}-")
 
     with  :ok <- git_fetch(repo_path),
-          # :ok <- git_add_all(repo_path),
+          :ok <- git_config(repo_path),
+          :ok <- git_add_all(repo_path),
           :ok <- git_diff(repo_path, path_diff) do
 
       parse_repo_latest_diff(path_diff)
@@ -120,10 +133,17 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionDiffLive do
     {:ok, stream}
   end
 
+  def git_config(repo_path) do
+
+  # Enable better diffing
+    ["config", "core.attributesfile", "../../config/.gitattributes"]
+    |> git!(repo_path)
+  end
+
   def git_fetch(repo_path) do
 
   # Fetch remote data
-    ["fetch", "--force"]#, "--quiet"]
+    ["fetch", "--force", "--quiet"]
     # |> Kernel.++(tags_switch(opts[:tag]))
     |> git!(repo_path)
   end
@@ -150,6 +170,8 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionDiffLive do
   end
 
   def git!(args, repo_path \\ ".", into \\ default_into()) do
+    Logger.info(inspect %{repo: repo_path, git: args, cwd: File.cwd()})
+
     File.cd!(repo_path, fn ->
 
       opts = cmd_opts(into: into, stderr_to_stdout: true)

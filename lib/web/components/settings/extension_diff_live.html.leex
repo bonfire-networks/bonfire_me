@@ -10,6 +10,7 @@
 
   <style>
 
+<%= Makeup.stylesheet() %>
  # TODO: put in assets
 
 .ghd-container, .ghd-text, .ghd-text span, .ghd-text-user, .ghd-text-user span {
@@ -128,19 +129,19 @@
   padding: 0 10px;
 }
 
-.ghd-line-type-add {
+.ghd-line-type-add, .ghd-line-type-add .highlight {
   background-color: #dfd;
 }
 
-.ghd-line-type-add .ghd-line-number {
+.ghd-line-type-add .ghd-line-number, .ghd-line-type-add .ghd-line-number .highlight {
   background-color: #bdffbd;
 }
 
-.ghd-line-type-remove {
+.ghd-line-type-remove, .ghd-line-type-remove .highlight {
   background-color: #fee8e9;
 }
 
-.ghd-line-type-remove .ghd-line-number {
+.ghd-line-type-remove .ghd-line-number, .ghd-line-type-remove .ghd-line-number .highlight {
   background-color: #ffd7d9;
 }
 
@@ -156,6 +157,9 @@
   padding: 0 90px;
 }
 
+.ghd-text-user pre {
+  display: inline;
+}
   </style>
 
     <div class="flex flex-col lg:flex-row">

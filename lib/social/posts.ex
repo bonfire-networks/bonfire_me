@@ -8,7 +8,6 @@ defmodule Bonfire.Me.Social.Posts do
       searchable_fields: [:id],
       sortable_fields: [:id]
 
-
   def draft(creator, attrs) do
     # TODO: create as private
     with {:ok, post} <- create(creator, attrs) do
