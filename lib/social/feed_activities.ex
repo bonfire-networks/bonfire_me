@@ -85,10 +85,8 @@ defmodule Bonfire.Me.Social.FeedActivities do
   defp feed_publish(feed_or_subject, activity) do
     with {:ok, %{id: feed_id} = feed} <- Feeds.feed_for_id(feed_or_subject),
     {:ok, published} <- do_feed_publish(feed, activity) do
-      IO.inspect(feed_id: feed_id)
 
       published = %{published | activity: activity}
-      IO.inspect(published: published)
 
       # Utils.pubsub_broadcast(feed.id, {:feed_activity, activity}) # push to online users
       Utils.pubsub_broadcast(feed_id, published) # push to online users
