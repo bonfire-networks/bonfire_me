@@ -8,11 +8,11 @@ defmodule Bonfire.Me.PostsTest do
     attrs = %{post_content: %{summary: "summary", name: "name", html_body: "<p>epic html message</p>"}}
     account = Fake.fake_account!()
     user = Fake.fake_user!(account)
-    assert {:ok, post} = Posts.publish(user, attrs)
-    assert post.post_content.html_body == "<p>epic html message</p>"
-    assert post.post_content.name == "name"
-    assert post.post_content.summary == "summary"
-    assert post.created.creator_id == user.id
+    assert {:ok, activty} = Posts.publish(user, attrs)
+    assert activity.post.post_content.html_body == "<p>epic html message</p>"
+    assert activity.post.post_content.name == "name"
+    assert activity.post.post_content.summary == "summary"
+    assert activity.post.created.creator_id == user.id
   end
 
   test "fetching by creator" do
