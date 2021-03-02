@@ -141,6 +141,9 @@ defmodule Bonfire.Me.Identity.Users do
       Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
     end
 
+    # Ecto doesn't liked mixed keys so we convert them all to strings
+    params = for {k, v} <- params, do: {to_string(k), v}, into: %{}
+
     user
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
