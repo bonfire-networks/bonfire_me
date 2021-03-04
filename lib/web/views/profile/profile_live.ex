@@ -81,6 +81,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
   defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
 
   # def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
-  defdelegate handle_info(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
+  defdelegate handle_info(info, socket), to: Bonfire.Me.Web.LiveHandlers
 
 end

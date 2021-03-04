@@ -49,12 +49,14 @@ defmodule Bonfire.Me.Web.InstanceLive do
   #    )}
   # end
 
+  defdelegate handle_params(params, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
+
   # def handle_event("feed_load_more", attrs, socket), do: Bonfire.Me.Social.Feeds.instance_feed_id() |> Bonfire.Me.Web.LiveHandlers.Feeds.live_more(attrs, socket)
 
   # def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
   defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
 
   # def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
-  defdelegate handle_info(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
+  defdelegate handle_info(info, socket), to: Bonfire.Me.Web.LiveHandlers
 
 end
