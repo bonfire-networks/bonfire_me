@@ -18,14 +18,14 @@ defmodule Bonfire.Me.Social.Likes do
   def like(%User{} = liker, %{} = liked) do
     with {:ok, like} <- create(liker, liked) do
       # TODO: increment the like count
-      FeedActivities.publish(liker, :like, liked)
+      # FeedActivities.publish(liker, :like, liked)
       {:ok, like}
     end
   end
 
   def unlike(%User{}=liker, %{}=liked) do
     delete_by_both(liker, liked) # delete the Like
-    Activities.delete_by_subject_verb_object(liker, :like, liked) # delete the like activity & feed entries
+    Activities.delete_by_subject_verb_object(liker, :like, liked) # delete the like activity & feed entries (TODO: not needed if not publishing likes to feeds)
     # TODO: decrement the like count
   end
 

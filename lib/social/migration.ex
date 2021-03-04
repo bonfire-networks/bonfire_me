@@ -23,6 +23,8 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Feed.Migration
       require Bonfire.Data.Social.FeedPublish.Migration
       require Bonfire.Data.Social.Replied.Migration
+      require Bonfire.Data.Social.Boost.Migration
+      require Bonfire.Data.Social.BoostCount.Migration
 
       Bonfire.Data.Social.Article.Migration.migrate_article()
       Bonfire.Data.Social.Block.Migration.migrate_block()
@@ -43,6 +45,8 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Feed.Migration.migrate_feed()
       Bonfire.Data.Social.FeedPublish.Migration.migrate_feed_publish()
       Bonfire.Data.Social.Replied.Migration.migrate_replied()
+      Bonfire.Data.Social.Boost.Migration.migrate_boost()
+      Bonfire.Data.Social.BoostCount.Migration.migrate_boost_count()
     end
   end
 
@@ -67,6 +71,8 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.Feed.Migration
       require Bonfire.Data.Social.FeedPublish.Migration
       require Bonfire.Data.Social.Replied.Migration
+      require Bonfire.Data.Social.Boost.Migration
+      require Bonfire.Data.Social.BoostCount.Migration
 
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
@@ -87,6 +93,8 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.Feed.Migration.migrate_feed()
       Bonfire.Data.Social.FeedPublish.Migration.migrate_feed_publish()
       Bonfire.Data.Social.Replied.Migration.migrate_replied()
+      Bonfire.Data.Social.Boost.Migration.migrate_boost()
+      Bonfire.Data.Social.BoostCount.Migration.migrate_boost_count()
     end
   end
 

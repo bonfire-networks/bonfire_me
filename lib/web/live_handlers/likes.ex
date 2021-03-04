@@ -10,8 +10,6 @@ defmodule Bonfire.Me.Web.LiveHandlers.Likes do
       {:noreply, Phoenix.LiveView.assign(socket,
       liked: Map.get(socket.assigns, :liked, []) ++ [{id, true}]
     )}
-    else e ->
-      {:noreply, socket} # TODO: handle errors
     end
   end
 
@@ -20,8 +18,6 @@ defmodule Bonfire.Me.Web.LiveHandlers.Likes do
       {:noreply, Phoenix.LiveView.assign(socket,
       liked: Map.get(socket.assigns, :liked, []) ++ [{id, false}]
     )}
-    else e ->
-      {:noreply, socket} # TODO: handle errors
     end
   end
 

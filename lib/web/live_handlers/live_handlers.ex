@@ -2,9 +2,10 @@ defmodule Bonfire.Me.Web.LiveHandlers do
 
   # start handler pattern matching
 
-  alias Bonfire.Me.Web.LiveHandlers.{Likes, Posts, Feeds, Follows, Profiles}
+  alias Bonfire.Me.Web.LiveHandlers.{Boosts, Likes, Posts, Feeds, Follows, Profiles}
 
   @like_events ["like"]
+  @boost_events ["boost", "boost_undo"]
   @post_events ["post", "post_reply", "post_load_replies"]
   @feed_events ["feed_load_more"]
   @follow_events ["follow", "unfollow"]
@@ -12,6 +13,9 @@ defmodule Bonfire.Me.Web.LiveHandlers do
 
   # Likes
   defp do_handle_event(event, attrs, socket) when event in @like_events or binary_part(event, 0, 4) == "like", do: Likes.handle_event(event, attrs, socket)
+
+  # Boosts
+  defp do_handle_event(event, attrs, socket) when event in @boost_events or binary_part(event, 0, 5) == "boost", do: Boosts.handle_event(event, attrs, socket)
 
   # Posts
   defp do_handle_event(event, attrs, socket) when event in @post_events or binary_part(event, 0, 4) == "post", do: Posts.handle_event(event, attrs, socket)

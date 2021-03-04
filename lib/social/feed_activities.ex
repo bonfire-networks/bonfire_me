@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Social.FeedActivities do
 
-  alias Bonfire.Data.Social.{Feed, FeedPublish, Like}
+  alias Bonfire.Data.Social.{Feed, FeedPublish, Like, Boost}
   alias Bonfire.Data.Identity.{User}
   alias Bonfire.Me.Social.Feeds
   alias Bonfire.Me.Social.Activities
@@ -41,6 +41,7 @@ defmodule Bonfire.Me.Social.FeedActivities do
       |> preload_join(:activity, :subject_profile)
       |> preload_join(:activity, :subject_character)
       |> maybe_my_like(current_user)
+      |> maybe_my_boost(current_user)
       # |> IO.inspect
       # |> Bonfire.Repo.all()
       |> Bonfire.Repo.many_paginated(before: cursor_after) # return a page of items + pagination metadata
@@ -54,6 +55,12 @@ defmodule Bonfire.Me.Social.FeedActivities do
   end
   def maybe_my_like(q, _), do: q
 
+  def maybe_my_boost(q, %{id: current_user_id} = _current_user) do
+    q
+    |> join(:left, [a], l in Boost, on: l.boosted_id == a.object_id and l.booster_id == ^current_user_id)
+    |> preload([l], activity: [:my_boost])
+  end
+  def maybe_my_boost(q, _), do: q
 
   # def feed(%{feed_publishes: _} = feed_for, _) do
   #   repo().maybe_preload(feed_for, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]) |> Map.get(:feed_publishes)
@@ -102,7 +109,9 @@ defmodule Bonfire.Me.Social.FeedActivities do
 
   @doc "Delete an activity (usage by things like unlike)"
   def delete_for_object(%{id: id}), do: delete_for_object(id)
-  def delete_for_object(id) when is_binary(id), do: build_query(object_id: id) |> repo().delete_all() |> elem(1)
+  def delete_for_object(id) when is_binary(id) and id !="", do: build_query(object_id: id) |> repo().delete_all() |> elem(1)
+  def delete_for_object(ids) when is_list(ids), do: Enum.each(ids, fn x -> delete_for_object(x) end)
+  def delete_for_object(_), do: nil
 
 
 end
