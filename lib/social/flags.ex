@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Social.Flags do
     with {:ok, flag} <- create(flagger, flagged) do
       # TODO: increment the flag count
       # TODO: put in admin(s) inbox feed
-      # FeedActivities.publish(flagger, :flag, flagged)
+      FeedActivities.maybe_notify_admins(flagger, :flag, flagged)
       {:ok, flag}
     end
   end

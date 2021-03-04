@@ -25,14 +25,20 @@ defmodule Bonfire.Me.Social.Feeds do
 
   def my_feed_ids(_, extra_feeds), do: extra_feeds
 
+  def my_inbox_feed_id(%{current_user: %{character: %{inbox: %{feed_id: feed_id}}}, current_account:  %{inbox: %{feed_id: account_feed_id}}}) when is_binary(feed_id) do
+    [feed_id, account_feed_id]
+  end
   def my_inbox_feed_id(%{current_user: %{character: %{inbox: %{feed_id: feed_id}}}}) when is_binary(feed_id) do
     feed_id
   end
-  def my_inbox_feed_id(%{current_user: user}) do
+  def my_inbox_feed_id(%{current_user: user}) when not is_nil(user) do
     inbox_feed_id(user)
   end
-  def my_inbox_feed_id(%{current_account: account}) do
-    # TODO: get inboxes of all account's users?
+  def my_inbox_feed_id(%{current_account: %{inbox: %{feed_id: account_feed_id}}}) when is_binary(account_feed_id) do
+    account_feed_id
+  end
+  def my_inbox_feed_id(%{current_account: account}) when not is_nil(account) do
+    inbox_feed_id(account)
   end
 
   def inbox_feed_id(%{} = for_subject) do

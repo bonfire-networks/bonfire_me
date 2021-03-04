@@ -12,7 +12,8 @@ defmodule Bonfire.Me.AccessControl.Verbs do
        delete:  "MAKESTVFFG0AWAYPERMANENT1Y",
        follow:  "T0SVBSCR1BET0THE0VTPVT0F1T",
        like:    "11KES1ND1CATEAM11DAPPR0VA1",
-       boost:    "B00ST0R0RANN0VCEANACT1V1TY",
+       boost:   "B00ST0R0RANN0VCEANACT1V1TY",
+       flag:    "F1AGSPAM0RVNACCEPTAB1E1TEM",
        mention: "REFERENC1NGTH1NGSE1SEWHERE",
        tag:     "CATEG0R1S1NGNGR0VP1NGSTVFF",
     }

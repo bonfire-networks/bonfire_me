@@ -65,11 +65,28 @@ defmodule Bonfire.Me.Social.FeedActivities do
     # TODO: notify remote users via AP
   end
 
-  defp do_notify(subject, verb, object, feed_id) when is_binary(feed_id) do
+  def maybe_notify_admins(subject, verb, object) when is_atom(verb) do
+    admins = Bonfire.Me.Identity.Accounts.list_admins()
+
+    inboxes = admins_inbox(admins) |> IO.inspect
+
+    do_notify(subject, verb, object, inboxes)
+    # TODO: notify remote users via AP
+  end
+
+  defp admins_inbox(admins) when is_list(admins), do: Enum.map(admins, fn x -> admins_inbox(x) end)
+  defp admins_inbox(admin) do
+    admin = admin |> Bonfire.Repo.maybe_preload(:inbox) |> IO.inspect
+    Utils.e(admin, :inbox, :feed_id, nil)
+      || Feeds.inbox_feed_id(admin)
+  end
+
+  defp do_notify(subject, verb, object, feed_id) when is_binary(feed_id) or is_list(feed_id) do
     with {:ok, activity} <- Activities.create(subject, verb, object),
     {:ok, published} <- feed_publish(feed_id, activity)
      do
       {:ok, published}
+     else e -> IO.inspect(e)
     end
   end
 
@@ -81,6 +98,8 @@ defmodule Bonfire.Me.Social.FeedActivities do
       {:ok, published}
     end
   end
+
+  defp feed_publish(feeds, activity) when is_list(feeds), do: Enum.each(feeds, fn x -> feed_publish(x, activity) end) # TODO: optimise?
 
   defp feed_publish(feed_or_subject, activity) do
     with {:ok, %{id: feed_id} = feed} <- Feeds.feed_for_id(feed_or_subject),
