@@ -10,7 +10,7 @@ defmodule Bonfire.Me.Web.MyFeedLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
-      LivePlugs.LoadCurrentAccountUsers,
+      # LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,

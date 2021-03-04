@@ -27,6 +27,7 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.BoostCount.Migration
       require Bonfire.Data.Social.Flag.Migration
       require Bonfire.Data.Social.FlagCount.Migration
+      require Bonfire.Data.Social.Inbox.Migration
 
       Bonfire.Data.Social.Article.Migration.migrate_article()
       Bonfire.Data.Social.Block.Migration.migrate_block()
@@ -51,6 +52,7 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.BoostCount.Migration.migrate_boost_count()
       Bonfire.Data.Social.Flag.Migration.migrate_flag()
       Bonfire.Data.Social.FlagCount.Migration.migrate_flag_count()
+      Bonfire.Data.Social.Inbox.Migration.migrate_inbox()
     end
   end
 
@@ -79,6 +81,7 @@ defmodule Bonfire.Me.Social.Migration do
       require Bonfire.Data.Social.BoostCount.Migration
       require Bonfire.Data.Social.Flag.Migration
       require Bonfire.Data.Social.FlagCount.Migration
+      require Bonfire.Data.Social.Inbox.Migration
 
       Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Social.PostContent.Migration.migrate_post_content()
@@ -103,6 +106,7 @@ defmodule Bonfire.Me.Social.Migration do
       Bonfire.Data.Social.BoostCount.Migration.migrate_boost_count()
       Bonfire.Data.Social.Flag.Migration.migrate_flag()
       Bonfire.Data.Social.FlagCount.Migration.migrate_flag_count()
+      Bonfire.Data.Social.Inbox.Migration.migrate_inbox()
     end
   end
 

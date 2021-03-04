@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Social.Feeds do
 
-  alias Bonfire.Data.Social.{Feed, FeedPublish}
+  alias Bonfire.Data.Social.{Feed, FeedPublish, Inbox}
   alias Bonfire.Data.Identity.{User}
   alias Bonfire.Me.Social.{Activities, Follows}
   alias Ecto.Changeset
@@ -25,11 +25,37 @@ defmodule Bonfire.Me.Social.Feeds do
 
   def my_feed_ids(_, extra_feeds), do: extra_feeds
 
+  def my_inbox_feed_id(%{current_user: %{character: %{inbox: %{feed_id: feed_id}}}}) when is_binary(feed_id) do
+    feed_id
+  end
+  def my_inbox_feed_id(%{current_user: user}) do
+    inbox_feed_id(user)
+  end
+  def my_inbox_feed_id(%{current_account: account}) do
+    # TODO: get inboxes of all account's users?
+  end
+
+  def inbox_feed_id(%{} = for_subject) do
+    with {:ok, %{feed_id: feed_id} = inbox} <- create_inbox(for_subject) do
+      feed_id
+    end
+  end
+
   @doc """
-  Create a feed for an existing Pointable (eg. User)
+  Create a OUTBOX feed for an existing Pointable (eg. User)
   """
   def create(%{id: id}=_thing) do
     do_create(%{id: id})
+  end
+
+  @doc """
+  Create a INBOX feed for an existing Pointable (eg. User)
+  """
+  def create_inbox(%{id: id}=_thing) do
+    with {:ok, %{id: feed_id} = feed} <- create() do
+      # IO.inspect(feed: feed)
+      do_create_inbox(%{id: id, feed_id: feed_id})
+    end
   end
 
   @doc """
@@ -45,6 +71,10 @@ defmodule Bonfire.Me.Social.Feeds do
 
   def changeset(activity \\ %Feed{}, %{} = attrs) do
     Feed.changeset(activity, attrs)
+  end
+
+  defp do_create_inbox(attrs) do
+    repo().put(Inbox.changeset(attrs))
   end
 
   @doc """

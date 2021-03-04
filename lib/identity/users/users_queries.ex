@@ -72,12 +72,13 @@ defmodule Bonfire.Me.Identity.Users.Queries do
 
   def current(user_id) do
     from u in User,
-      join: c in assoc(u, :character),
+      left_join: c in assoc(u, :character),
       join: ac in assoc(u, :accounted),
       join: a in assoc(ac, :account),
-      join: p in assoc(u, :profile),
+      left_join: p in assoc(u, :profile),
+      left_join: i in assoc(c, :inbox),
       where: u.id == ^user_id,
-      preload: [character: c, accounted: {ac, account: a}, profile: p]
+      preload: [character: {c, inbox: i}, accounted: {ac, account: a}, profile: p]
   end
 
   # defp macro_filter(query, {join_: [{source, [{rel, as}]}]}, _env),

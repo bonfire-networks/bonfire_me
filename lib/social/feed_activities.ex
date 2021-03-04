@@ -32,6 +32,8 @@ defmodule Bonfire.Me.Social.FeedActivities do
       # |> IO.inspect
   end
 
+  def feed(_, _, _), do: []
+
   # def feed(%{feed_publishes: _} = feed_for, _) do
   #   repo().maybe_preload(feed_for, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]) |> Map.get(:feed_publishes)
   # end
@@ -48,6 +50,27 @@ defmodule Bonfire.Me.Social.FeedActivities do
   """
   def save_fediverse_incoming_activity(subject, verb, object) when is_atom(verb) do
     do_publish(subject, verb, object, Feeds.fediverse_feed_id())
+  end
+
+  @doc """
+  Creates a new local activity and publishes to creator's inbox
+  """
+  def maybe_notify_creator(subject, verb, object) when is_atom(verb) do
+    object = object |> Bonfire.Repo.maybe_preload([creator_character: [:inbox]]) |> IO.inspect
+
+    inbox_feed_id = Utils.e(object, :creator_character, :inbox, :feed_id, nil)
+                    || Feeds.inbox_feed_id(Utils.e(object, :creator_character, nil))
+
+    do_notify(subject, verb, object, inbox_feed_id)
+    # TODO: notify remote users via AP
+  end
+
+  defp do_notify(subject, verb, object, feed_id) when is_binary(feed_id) do
+    with {:ok, activity} <- Activities.create(subject, verb, object),
+    {:ok, published} <- feed_publish(feed_id, activity)
+     do
+      {:ok, published}
+    end
   end
 
   defp do_publish(subject, verb, object, extra_feed) do

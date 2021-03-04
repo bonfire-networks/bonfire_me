@@ -1,9 +1,10 @@
-defmodule Bonfire.Me.Web.InstanceLive do
+defmodule Bonfire.Me.Web.InboxLive do
   use Bonfire.Web, :live_view
   alias Bonfire.Fake
   alias Bonfire.Common.Web.LivePlugs
   alias Bonfire.Me.Identity.Users
   alias Bonfire.Me.Web.{CreateUserLive}
+  alias Bonfire.UI.Social.FeedLive
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
@@ -18,20 +19,21 @@ defmodule Bonfire.Me.Web.InstanceLive do
 
   defp mounted(params, session, socket) do
 
-    feed_id = Bonfire.Me.Social.Feeds.instance_feed_id()
+    # IO.inspect(socket.assigns.current_user)
+    feed_id = Bonfire.Me.Social.Feeds.my_inbox_feed_id(socket.assigns)
 
     feed = Bonfire.Me.Social.FeedActivities.feed(feed_id, e(socket.assigns, :current_user, nil))
 
-    title = "Feed of all activities by users on this instance"
     {:ok, socket
     |> assign(
-      page: "instance",
-      page_title: "Instance Feed",
-      feed_title: title,
+      page: "notifications",
+      page_title: "Notifications",
+      feed_title: "Notifications",
       feed_id: feed_id,
       feed: e(feed, :entries, []),
       page_info: e(feed, :metadata, [])
       )}
+
   end
 
 
@@ -49,9 +51,7 @@ defmodule Bonfire.Me.Web.InstanceLive do
   #    )}
   # end
 
-  defdelegate handle_params(params, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
-
-  # def handle_event("feed_load_more", attrs, socket), do: Bonfire.Me.Social.Feeds.instance_feed_id() |> Bonfire.Me.Web.LiveHandlers.Feeds.live_more(attrs, socket)
+  # def handle_event("feed_load_more", attrs, socket), do: Bonfire.Me.Web.LiveHandlers.Feeds.my_live_more(attrs, socket)
 
   # def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
   defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
