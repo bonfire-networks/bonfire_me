@@ -27,40 +27,10 @@ defmodule Bonfire.Me.Social.FeedActivities do
     Utils.pubsub_subscribe(feed_id_or_ids) # subscribe to realtime feed updates
 
     build_query(feed_id: feed_id_or_ids) # query FeedPublish + assocs needed in timelines/feeds
-      |> preload_join(:activity)
-      |> preload_join(:activity, :verb)
-      # |> preload_join(:activity, :object)
-      |> preload_join(:activity, :object_post_content)
-      # |> preload_join(:activity, :object_post, :post_content)
-      |> preload_join(:activity, :object_creator_profile)
-      |> preload_join(:activity, :object_creator_character)
-      # |> preload_join(:activity, :reply_to)
-      |> preload_join(:activity, :reply_to_post_content)
-      |> preload_join(:activity, :reply_to_creator_profile)
-      |> preload_join(:activity, :reply_to_creator_character)
-      |> preload_join(:activity, :subject_profile)
-      |> preload_join(:activity, :subject_character)
-      |> maybe_my_like(current_user)
-      |> maybe_my_boost(current_user)
-      # |> IO.inspect
-      # |> Bonfire.Repo.all()
+      |> Activities.activity_preloads(current_user)
       |> Bonfire.Repo.many_paginated(before: cursor_after) # return a page of items + pagination metadata
       # |> IO.inspect
   end
-
-  def maybe_my_like(q, %{id: current_user_id} = _current_user) do
-    q
-    |> join(:left, [a], l in Like, on: l.liked_id == a.object_id and l.liker_id == ^current_user_id)
-    |> preload([l], activity: [:my_like])
-  end
-  def maybe_my_like(q, _), do: q
-
-  def maybe_my_boost(q, %{id: current_user_id} = _current_user) do
-    q
-    |> join(:left, [a], l in Boost, on: l.boosted_id == a.object_id and l.booster_id == ^current_user_id)
-    |> preload([l], activity: [:my_boost])
-  end
-  def maybe_my_boost(q, _), do: q
 
   # def feed(%{feed_publishes: _} = feed_for, _) do
   #   repo().maybe_preload(feed_for, [feed_publishes: [activity: [:verb, :object, subject_user: [:profile, :character]]]]) |> Map.get(:feed_publishes)

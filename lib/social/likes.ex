@@ -18,6 +18,7 @@ defmodule Bonfire.Me.Social.Likes do
   def like(%User{} = liker, %{} = liked) do
     with {:ok, like} <- create(liker, liked) do
       # TODO: increment the like count
+      # TODO: put in creator's inbox feed
       # FeedActivities.publish(liker, :like, liked)
       {:ok, like}
     end

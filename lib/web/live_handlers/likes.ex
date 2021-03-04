@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Likes do
   import Phoenix.LiveView
 
   def handle_event("like", %{"direction"=>"up", "id"=> id}, socket) do # like in LV
-    IO.inspect(socket)
+    # IO.inspect(socket)
     with {:ok, _like} <- Bonfire.Me.Social.Likes.like(socket.assigns.current_user, %{id: id}) do
       {:noreply, Phoenix.LiveView.assign(socket,
       liked: Map.get(socket.assigns, :liked, []) ++ [{id, true}]

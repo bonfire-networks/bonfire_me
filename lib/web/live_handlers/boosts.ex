@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Boosts do
   import Phoenix.LiveView
 
   def handle_event("boost", %{"id"=> id}, socket) do # boost in LV
-    IO.inspect(socket)
+    # IO.inspect(socket)
     with {:ok, _boost} <- Bonfire.Me.Social.Boosts.boost(socket.assigns.current_user, %{id: id}) do
       {:noreply, Phoenix.LiveView.assign(socket,
       boosted: Map.get(socket.assigns, :boosted, []) ++ [{id, true}]

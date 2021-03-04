@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Social.Feeds do
   end
 
   @doc """
-  Create a new feed (eg. for a user inbox)
+  Create a new generic feed
   """
   def create() do
     do_create(%{})
