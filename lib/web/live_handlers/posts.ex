@@ -10,7 +10,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Posts do
     # |> IO.inspect
 
     with {:ok, published} <- Bonfire.Me.Social.Posts.publish(socket.assigns.current_user, attrs) do
-      IO.inspect("published!")
+      # IO.inspect("published!")
       {:noreply,
         socket
         # Phoenix.LiveView.assign(socket,
@@ -38,7 +38,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Posts do
 
     with {:ok, published} <- Bonfire.Me.Social.Posts.reply(socket.assigns.current_user, attrs) do
       replies = [published] ++ socket.assigns.replies
-    IO.inspect(replies, label: "rep:")
+    # IO.inspect(replies, label: "rep:")
       {:noreply,
         assign(socket,
         replies: replies,

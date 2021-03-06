@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Web.LiveHandlers do
 
   def handle_params(params, uri, socket) do
     undead(socket, fn ->
-      IO.inspect(params: params)
+      # IO.inspect(params: params)
       do_handle_params(params, uri, socket)
     end)
   end

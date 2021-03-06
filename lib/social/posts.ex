@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Social.Posts do
 
   alias Bonfire.Data.Social.{Post, PostContent, Replied}
   alias Bonfire.Me.Social.FeedActivities
+  alias Bonfire.Common.Utils
   alias Ecto.Changeset
   use Bonfire.Repo.Query,
       schema: Post,
@@ -17,9 +18,16 @@ defmodule Bonfire.Me.Social.Posts do
 
   def publish(creator, attrs) do
     with  {:ok, post} <- create(creator, attrs),
-          {:ok, activity} <- FeedActivities.publish(creator, :create, post) do
+          {:ok, maybe_tagged} <- maybe_tag(creator, post),
+          {:ok, activity} <- FeedActivities.publish(creator, :create, Map.merge(post, maybe_tagged)) do
+
       {:ok, %{post: post, activity: activity}}
     end
+  end
+
+  defp maybe_tag(creator, post) do
+    if Utils.module_enabled?(Bonfire.Tag.Tags), do: Bonfire.Tag.Tags.maybe_tag(creator, post), #|> IO.inspect
+    else: {:ok, post}
   end
 
   def reply(creator, attrs) do
@@ -118,7 +126,7 @@ defmodule Bonfire.Me.Social.Posts do
       |> preload_join(:activity)
       |> preload_join(:activity, :subject_profile)
       |> preload_join(:activity, :subject_character)
-      |> IO.inspect
+      #|> IO.inspect
       |> repo().all
   end
 

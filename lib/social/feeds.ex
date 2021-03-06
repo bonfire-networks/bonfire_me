@@ -86,6 +86,7 @@ defmodule Bonfire.Me.Social.Feeds do
   @doc """
   Get or create feed for something
   """
+  def feed_for_id(%Feed{id: _} = feed), do: feed
   def feed_for_id(%{id: subject_id}), do: feed_for_id(subject_id)
   def feed_for_id(subject_id) when is_binary(subject_id) do
     with {:error, _} <- repo().single(feed_for_id_query(subject_id)) do

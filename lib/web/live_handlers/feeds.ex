@@ -35,7 +35,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Feeds do
   end
 
   def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket) do
-    IO.inspect(pubsub_received: fp)
+    # IO.inspect(pubsub_received: fp)
 
     {:noreply,
         Phoenix.LiveView.assign(socket,

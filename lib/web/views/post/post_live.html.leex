@@ -83,7 +83,40 @@
     <div
       x-show="toggle_zen_mode == false"
       class="w-full lg:w-1/3 px-2">
+
+            <div class="rounded-md border mt-3 p-3">
+        <h4 class="font-bold text-sm -mx-3 -mt-3 rounded-t p-3 bg-indigo-100">By</h4>
+        <!-- This example requires Tailwind CSS v2.0+ -->
+        <div>
+          <div class="flow-root mt-6">
+            <ul class="-my-5 divide-y divide-gray-200">
+              <li class="py-4">
+                <div class="flex items-center space-x-4">
+                  <div class="flex-shrink-0">
+                    <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      <%= e(@post, :creator_profile, :name, "Anonymous")%>
+                    </p>
+                    <p class="text-sm text-gray-500 truncate">
+                      @<%= e(@post, :creator_character, :username, "anon")%>
+                    </p>
+                  </div>
+                  <div>
+                    <a href="/user/<%= e(@post, :creator_character, :username, "anon")%>" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
+                      View
+                    </a>
+                  </div>
+                </div>
+              </li>
+              </ul>
+              </div>
+              </div>
+              </div>
+
       <div class="rounded-md border mt-2 p-3">
+        <h4 class="font-bold text-sm -mx-3 -mt-3 rounded-t p-3 bg-indigo-100">Posted in</h4>
         <div class="flex items-center mb-3">
           <div class= "w-16 h-16 rounded-md bg-green-300"></div>
           <div class="ml-2 flex-1">

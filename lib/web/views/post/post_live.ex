@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Web.PostLive do
     post = with {:ok, post} <- Bonfire.Me.Social.Posts.read(Map.get(params, "post_id"), e(socket, :assigns, :current_user, nil)) do
       post
       #|> repo().maybe_preload([:replied, thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content, created: [:creator]]]])
-      IO.inspect(post, label: "the post:")
+      # IO.inspect(post, label: "the post:")
     else _e ->
       # TODO: handle error
       nil

@@ -41,6 +41,19 @@ defmodule Bonfire.Me.Social.FeedActivities do
   @doc """
   Creates a new local activity and publishes to appropriate feeds
   """
+
+  def publish(subject, verb, %{replied: %{reply_to_id: reply_to_id}} = object) when is_atom(verb) and is_binary(reply_to_id) do
+    # publishing a reply to something
+    # IO.inspect(publish_reply: object)
+    do_publish(subject, verb, object, [Feeds.instance_feed_id(), creator_feed(object)])
+  end
+
+  def publish(subject, verb, %{tags: tags} = object) when is_atom(verb) and is_list(tags) do
+    # publishing something with @ mentions or other tags
+    # IO.inspect(publish_tagged: tags)
+    do_publish(subject, verb, object, [Feeds.instance_feed_id(), tags_feed(tags)])
+  end
+
   def publish(subject, verb, object) when is_atom(verb) do
     do_publish(subject, verb, object, Feeds.instance_feed_id())
   end
@@ -56,50 +69,57 @@ defmodule Bonfire.Me.Social.FeedActivities do
   Creates a new local activity and publishes to creator's inbox
   """
   def maybe_notify_creator(subject, verb, object) when is_atom(verb) do
-    object = object |> Bonfire.Repo.maybe_preload([creator_character: [:inbox]]) |> IO.inspect
 
-    inbox_feed_id = Utils.e(object, :creator_character, :inbox, :feed_id, nil)
-                    || Feeds.inbox_feed_id(Utils.e(object, :creator_character, nil))
-
-    do_notify(subject, verb, object, inbox_feed_id)
+    do_put_in_feeds(subject, verb, object, creator_feed(object))
     # TODO: notify remote users via AP
+  end
+
+  def creator_feed(object) do
+    object = object |> Bonfire.Repo.maybe_preload([creator_character: [:inbox]]) #|> IO.inspect
+
+    Utils.e(object, :creator_character, :inbox, :feed_id, nil)
+      || Feeds.inbox_feed_id(Utils.e(object, :creator_character, nil))
+  end
+
+  def tags_feed(tags) when is_list(tags), do: Enum.map(tags, fn x -> tags_feed(x) end)
+  def tags_feed(%{character: character}) do
+    character = character |> Bonfire.Repo.maybe_preload([:inbox]) #|> IO.inspect
+
+    Utils.e(character, :inbox, :feed_id, nil)
+      || Feeds.inbox_feed_id(character)
   end
 
   def maybe_notify_admins(subject, verb, object) when is_atom(verb) do
     admins = Bonfire.Me.Identity.Accounts.list_admins()
 
-    inboxes = admins_inbox(admins) |> IO.inspect
+    inboxes = admins_inbox(admins) #|> IO.inspect
 
-    do_notify(subject, verb, object, inboxes)
+    do_put_in_feeds(subject, verb, object, inboxes)
     # TODO: notify remote users via AP
   end
 
   defp admins_inbox(admins) when is_list(admins), do: Enum.map(admins, fn x -> admins_inbox(x) end)
   defp admins_inbox(admin) do
-    admin = admin |> Bonfire.Repo.maybe_preload(:inbox) |> IO.inspect
+    admin = admin |> Bonfire.Repo.maybe_preload(:inbox) #|> IO.inspect
     Utils.e(admin, :inbox, :feed_id, nil)
       || Feeds.inbox_feed_id(admin)
   end
 
-  defp do_notify(subject, verb, object, feed_id) when is_binary(feed_id) or is_list(feed_id) do
+  defp do_put_in_feeds(subject, verb, object, feed_id) when is_binary(feed_id) or is_list(feed_id) do
     with {:ok, activity} <- Activities.create(subject, verb, object),
-    {:ok, published} <- feed_publish(feed_id, activity)
+    {:ok, published} <- feed_publish(feed_id, activity) # publish in specified feed
      do
       {:ok, published}
-     else e -> IO.inspect(e)
+     else
+      publishes when is_list(publishes) -> List.first(publishes)
     end
   end
 
-  defp do_publish(subject, verb, object, extra_feed) do
-    with {:ok, activity} <- Activities.create(subject, verb, object),
-    {:ok, published} <- feed_publish(subject, activity), # publish in user's timeline
-    {:ok, _published} <- feed_publish(extra_feed, activity) # publish in local instance or fediverse feed
-     do
-      {:ok, published}
-    end
-  end
+  defp do_publish(subject, verb, object, feeds) when is_list(feeds), do: do_put_in_feeds(subject, verb, object, feeds ++ [subject])
+  defp do_publish(subject, verb, object, feed_id), do: do_put_in_feeds(subject, verb, object, [feed_id, subject])
+  defp do_publish(subject, verb, object), do: do_put_in_feeds(subject, verb, object, subject) # just publish to outbox
 
-  defp feed_publish(feeds, activity) when is_list(feeds), do: Enum.each(feeds, fn x -> feed_publish(x, activity) end) # TODO: optimise?
+  defp feed_publish(feeds, activity) when is_list(feeds), do: Enum.map(feeds, fn x -> feed_publish(x, activity) end) # TODO: optimise?
 
   defp feed_publish(feed_or_subject, activity) do
     with {:ok, %{id: feed_id} = feed} <- Feeds.feed_for_id(feed_or_subject),
