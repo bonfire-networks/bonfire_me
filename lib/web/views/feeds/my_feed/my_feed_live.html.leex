@@ -1,7 +1,16 @@
   <div class="mt-6 lg:flex lg:-mx-2">
     <div class="w-full lg:w-2/3 lg:px-2">
       <%= live_component(@socket, Bonfire.UI.Social.CreateActivityLive, assigns) %>
+      <div class="bg-white rounded-lg shadow">
+      <div class="p-3 border-b">
+        <div class="flex items-center justify-between flex-wrap sm:flex-no-wrap">
+          <h3 class="text-base font-bold text-gray-700">
+            <%= @feed_title %>
+          </h3>
+        </div>
+      </div>
       <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
+      </div>
     </div>
     <div class="w-full px-2 lg:w-1/3">
       <div class="">

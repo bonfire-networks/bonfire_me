@@ -42,7 +42,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
       |> assign(
         page: "profile",
         page_title: "Profile",
-        selected_tab: "about",
+        selected_tab: "timeline",
         feed_title: "User timeline",
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
