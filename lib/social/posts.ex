@@ -28,6 +28,7 @@ defmodule Bonfire.Me.Social.Posts do
   defp maybe_tag(creator, post) do
     if Utils.module_enabled?(Bonfire.Tag.Tags), do: Bonfire.Tag.Tags.maybe_tag(creator, post), #|> IO.inspect
     else: {:ok, post}
+    # {:ok, post}
   end
 
   def reply(creator, attrs) do

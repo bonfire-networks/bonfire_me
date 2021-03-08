@@ -1,15 +1,15 @@
-<div x-data="{toggle_zen_mode: false}" class="bg-white p-2">
+<div class="mt-4 bg-white p-2">
 
-  <div class="bg-gray-800 p-2 -m-2 flex items-center justify-between">
+  <div class="bg-gray-800 rounded-t p-2 -m-2 flex items-center justify-between">
     <h2 class="py-1 text-gray-100 font-bold text-sm"><%= e(@post, :post_content, :name, nil) || e(@post, :thread_post_content, :name, "") %></h2>
     <div class="flex items-center space-x-3">
-      <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-600" @click="toggle_zen_mode =!toggle_zen_mode" >
+      <%# <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-600" @click="toggle_zen_mode =!toggle_zen_mode" >
         <svg class="group-hover:text-gray-100 text-gray-100 w-6 h-6 pr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path></svg>
         <span class="group-hover:text-gray-100 text-gray-100 font-bold text-xs">Zen mode</span>
-      </div>
+      </div> %>
       <div class="flex items-center cursor-pointer rounded py-1 px-2 group hover:bg-gray-600">
-        <svg class="text-gray-100 w-6 h-6 pr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
-        <span class="text-gray-100 font-bold text-xs">Close</span>
+        <svg class="text-gray-100 w-6 h-6 pr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
+        <span class="text-gray-100 font-bold text-xs">Subscribe</span>
       </div>
     </div>
   </div>
@@ -45,13 +45,37 @@
         <% end %>
 
         <%= if e(@post, :post_content, :name, "") != "" do %>
-          <h1 class="text-3xl font-semibold font-serif mb-4 text-gray-900"><%= e(@post, :post_content, :name, "No title") %></h1>
+          <h1 class="text-4xl font-bold mt-6 mb-4 text-gray-800"><%= e(@post, :post_content, :name, "No title") %></h1>
         <% end %>
-        <div>
-          <h2 class="text-1xl">
-            <%= e(@post, :post_content, :summary, "") %>
-          </h2>
-          <article class="text-2xl max-w-prose">
+
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
+          </div>
+          <div class="flex-1 ml-2">
+            <a href="/user/<%= e(@post, :creator_character, :username, "anon")%>">
+              <span class="text-sm font-semibold text-gray-800 truncate">
+                <%= e(@post, :creator_profile, :name, "Anonymous")%>
+              </span>
+            </a>
+            <div class="-mt-1 text-sm text-gray-600">
+              2 days ago
+            </div>
+          </div>
+          <div>
+          </div>
+        </div>
+
+
+        <div class="mt-4">
+          <%= if e(@post, :post_content, :summary, "") != "" do %>
+            <span class="uppercase tracking-wider text-xs font-bold text-gray-800">Summary</span>
+            <h2 class="prose-sm mb-6 text-gray-700 mt-2">
+              <%= e(@post, :post_content, :summary, "") %>
+            </h2>
+          <% end %>
+
+          <article class="prose max-w-prose">
             <%= e(@post, :post_content, :html_body, "") %>
           </article>
 
@@ -79,157 +103,6 @@
 
         </div>
       </section>
-    </div>
-    <div
-      x-show="toggle_zen_mode == false"
-      class="w-full lg:w-1/3 px-2">
-
-            <div class="rounded-md border mt-3 p-3">
-        <h4 class="font-bold text-sm -mx-3 -mt-3 rounded-t p-3 bg-indigo-100">By</h4>
-        <!-- This example requires Tailwind CSS v2.0+ -->
-        <div>
-          <div class="flow-root mt-6">
-            <ul class="-my-5 divide-y divide-gray-200">
-              <li class="py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      <%= e(@post, :creator_profile, :name, "Anonymous")%>
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      @<%= e(@post, :creator_character, :username, "anon")%>
-                    </p>
-                  </div>
-                  <div>
-                    <a href="/user/<%= e(@post, :creator_character, :username, "anon")%>" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                      View
-                    </a>
-                  </div>
-                </div>
-              </li>
-              </ul>
-              </div>
-              </div>
-              </div>
-
-      <div class="rounded-md border mt-2 p-3">
-        <h4 class="font-bold text-sm -mx-3 -mt-3 rounded-t p-3 bg-indigo-100">Posted in</h4>
-        <div class="flex items-center mb-3">
-          <div class= "w-16 h-16 rounded-md bg-green-300"></div>
-          <div class="ml-2 flex-1">
-            <h3 class="text-gray-800 text-sm font-semibold">Funny things</h3>
-            <p class="text-gray-700 text-sm font-normal mt-1">Welcome to r/Funny, Reddit's largest humour depository.</p>
-          </div>
-        </div>
-        <div class="border-t -mx-3 p-3 pb-0">
-          <button type="button" class="flex w-full place-content-center text-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              <svg class="-ml-0.5 mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
-              Follow
-            </button>
-        </div>
-      </div>
-      <div class="rounded-md border mt-3 p-3">
-        <h4 class="font-bold text-sm -mx-3 -mt-3 rounded-t p-3 bg-indigo-100">Moderators</h4>
-        <!-- This example requires Tailwind CSS v2.0+ -->
-        <div>
-          <div class="flow-root mt-6">
-            <ul class="-my-5 divide-y divide-gray-200">
-              <li class="py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Leonard Krasner
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      @leonardkrasner
-                    </p>
-                  </div>
-                  <div>
-                    <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                      View
-                    </a>
-                  </div>
-                </div>
-              </li>
-
-              <li class="py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Floyd Miles
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      @floydmiles
-                    </p>
-                  </div>
-                  <div>
-                    <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                      View
-                    </a>
-                  </div>
-                </div>
-              </li>
-
-              <li class="py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Emily Selman
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      @emilyselman
-                    </p>
-                  </div>
-                  <div>
-                    <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                      View
-                    </a>
-                  </div>
-                </div>
-              </li>
-
-              <li class="py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Kristin Watson
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      @kristinwatson
-                    </p>
-                  </div>
-                  <div>
-                    <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                      View
-                    </a>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div class="mt-6">
-            <a href="#" class="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              View all
-            </a>
-          </div>
-        </div>
-
-      </div>
     </div>
   </div>
 </div>
