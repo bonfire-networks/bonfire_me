@@ -46,6 +46,9 @@ defmodule Bonfire.Me.Social.Feeds do
       feed_id
     end
   end
+  def inbox_feed_id(_) do
+    nil
+  end
 
   @doc """
   Create a OUTBOX feed for an existing Pointable (eg. User)
@@ -93,6 +96,7 @@ defmodule Bonfire.Me.Social.Feeds do
       create(%{id: subject_id})
     end
   end
+  def feed_for_id(_), do: nil
 
   def feed_for_id_query(subject_id) do
     from f in Feed,
