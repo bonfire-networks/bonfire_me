@@ -52,15 +52,17 @@
               </div>
             <% end %>
 
-            <%= live_patch to: "/settings/admin" do %>
-              <div aria-current="<%= if @selected_tab == "admin", do: "page" %>" class="<%= if @selected_tab == "admin", do: "border-pink-500 text-white font-bold hover:text-white", else: "text-gray-400" %> flex items-center px-3 py-2 mt-3 text-sm font-medium border-l-4 border-transparent  hover:text-gray-100 group">
-                <svg class="flex-shrink-0 w-6 h-6 mr-3 -ml-1 group-hover:text-gray-500 <%= if @selected_tab == "admin", do: "text-white group-hover:text-white", else: "text-gray-400" %>" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-                </svg>
-                <span class="truncate">
-                  Admin
-                </span>
-              </div>
+            <%= if Bonfire.Me.Identity.Users.is_admin(@current_user) do %>
+              <%= live_patch to: "/settings/admin" do %>
+                <div aria-current="<%= if @selected_tab == "admin", do: "page" %>" class="<%= if @selected_tab == "admin", do: "border-pink-500 text-white font-bold hover:text-white", else: "text-gray-400" %> flex items-center px-3 py-2 mt-3 text-sm font-medium border-l-4 border-transparent  hover:text-gray-100 group">
+                  <svg class="flex-shrink-0 w-6 h-6 mr-3 -ml-1 group-hover:text-gray-500 <%= if @selected_tab == "admin", do: "text-white group-hover:text-white", else: "text-gray-400" %>" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                  </svg>
+                  <span class="truncate">
+                    Admin
+                  </span>
+                </div>
+              <% end %>
             <% end %>
 
           </nav>
@@ -68,7 +70,11 @@
 
       <%= cond do %>
         <% @selected_tab == "admin" ->  %>
-          <h2>Admin</h2>
+            <%= live_component(
+            @socket,
+            AdminLive,
+            assigns
+          )  %>
         <% @selected_tab == "account" ->  %>
           <%= live_component(
             @socket,
@@ -82,8 +88,8 @@
             ExtensionsLive,
             assigns
           )  %>
-        <% @selected_tab == "admin" ->  %>
-          <div>admin</div>
+        <% @selected_tab == "preferences" ->  %>
+          <div>preferences</div>
         <% true -> %>
 
         <%= if @current_user do %>

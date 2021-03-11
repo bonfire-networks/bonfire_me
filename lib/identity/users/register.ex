@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Identity.Users.Register do
   # We create a user.
   #   A user needs some default ACLs creating:
   #     * Public
-  #     * Instance Local 
+  #     * Instance Local
   #     * Followers
   #   They all need to reference the predefined verbs
   def acls() do
@@ -44,13 +44,13 @@ defmodule Bonfire.Me.Identity.Users.Register do
   end
 
   def self_acl(%User{}=user) do
-    
+
   end
 
   defp self_access(%User{}=user) do
     Accesses.create(%{name: "", can_see: true, can_read: true})
   end
-  
+
  # owned by commons
   # access: full, read only, interact
     # acl:
@@ -69,20 +69,20 @@ defmodule Bonfire.Me.Identity.Users.Register do
     # public interactions
     # public read, local user interactions
     # local user read
- # 
+ #
  # create commons user
  # create access read-only
  # create acl local-read-only
  # create object for access read-only, acl local-read-only, caretaker commons
- # 
- # 
- # 
- # 
- # 
- # 
- # 
- # 
- #   
- # 
- #     
+ #
+ #
+ #
+ #
+ #
+ #
+ #
+ #
+ #
+ #
+ #
 end

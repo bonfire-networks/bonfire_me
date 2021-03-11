@@ -42,7 +42,7 @@ defmodule Bonfire.Me.Queries do
       case unquote(user) do
         nil ->
           unquote(guest_can(controlled))
-        %{accounted: %{account: %{is_instance_admin: true}}} ->
+        %{instance_admin: %{is_instance_admin: true}} ->
           unquote(admin_can(controlled, user))
         %{id: user_id} ->
           unquote(user_can(controlled, user))
@@ -77,7 +77,7 @@ defmodule Bonfire.Me.Queries do
         on: grant.subject_id == circle.id,
         where: interact.verb_id == ^verb,
         where: controlled.id == parent_as(unquote(controlled)).id,
-        group_by: [controlled.id],
+        group_by: [controlled.id, interact.id],
         having: fragment("agg_perms(?)", interact.value),
         select: struct(interact, [:id])
     end

@@ -6,9 +6,8 @@ defmodule Bonfire.Me.Identity.Accounts.Queries do
   def current(id) when is_binary(id) do
     from a in Account,
       where: a.id == ^id,
-      left_join: ia in assoc(a, :instance_admin),
       left_join: i in assoc(a, :inbox),
-      preload: [instance_admin: ia, inbox: i]
+      preload: [inbox: i]
   end
 
   def by_email(email) when is_binary(email) do
@@ -61,12 +60,6 @@ defmodule Bonfire.Me.Identity.Accounts.Queries do
       ]
   end
 
-  def admins() do
-    from a in Account,
-      left_join: ia in assoc(a, :instance_admin),
-      where: ia.is_instance_admin == true,
-      preload: [instance_admin: ia]
-  end
 
 
 end

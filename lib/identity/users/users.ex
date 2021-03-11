@@ -4,9 +4,12 @@ defmodule Bonfire.Me.Identity.Users do
   """
   use OK.Pipe
   alias Bonfire.Data.Identity.{Account, User}
+  alias Bonfire.Data.AccessControl.InstanceAdmin
+
   alias Bonfire.Me.Identity.Characters
   alias Bonfire.Me.Identity.Users.Queries
   alias Bonfire.Me.Social.{Circles, Profiles}
+
   # alias Pointers.Changesets
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
@@ -44,6 +47,7 @@ defmodule Bonfire.Me.Identity.Users do
   end
 
   def list, do: repo().all(Queries.with_mixins())
+  def list_admins(), do: repo().all(Queries.admins())
 
   def flatten(user) do
     user
@@ -55,6 +59,9 @@ defmodule Bonfire.Me.Identity.Users do
     repo().single(query)
   end
 
+  def is_admin(%User{} = user) do
+    Utils.e(user, :instance_admin, :is_instance_admin, false)
+  end
 
   ### Mutations
 
@@ -90,6 +97,7 @@ defmodule Bonfire.Me.Identity.Users do
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:accounted)
+    |> Changeset.cast_assoc(:instance_admin)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
   end
@@ -103,6 +111,14 @@ defmodule Bonfire.Me.Identity.Users do
     |> Changeset.cast_assoc(:encircles)
   end
 
+  def admin_changeset(params),
+    do: InstanceAdmin.changeset(%InstanceAdmin{}, params, [:id, :is_instance_admin])
+
+  ## instance admin
+
+  def make_admin(%{id: id}),
+    do: admin_changeset(%{id: id, is_instance_admin: true}) |> repo().upsert
+
   # this is where we are very careful to explicitly set all the things
   # a user should have but shouldn't have control over the input for.
   defp override(changeset, changeset_type, extra \\ nil)
@@ -111,6 +127,7 @@ defmodule Bonfire.Me.Identity.Users do
     Changeset.cast changeset, %{
       accounted:    %{account_id: account.id},
       # like_count:   %{liker_count: 0,    liked_count: 0},
+      instance_admin:    %{is_instance_admin: is_first_user?}, # first user to be created is automatically admin # TODO: make this more secure (eg. only active if an env flag is set)
       encircles:    [%{circle_id: Circles.circles().local}]
     }, []
   end
@@ -119,6 +136,10 @@ defmodule Bonfire.Me.Identity.Users do
     Changeset.cast changeset, %{
       encircles: [%{circle_id: Circles.circles().activity_pub}]
     }, []
+  end
+
+  def is_first_user? do
+    Bonfire.Me.Identity.Users.Queries.count <1
   end
 
 

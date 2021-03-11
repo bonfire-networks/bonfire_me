@@ -2,6 +2,7 @@ defmodule Bonfire.Me.AccessControl.Verbs do
 
   alias Bonfire.Data.AccessControl.Verb
   import Bonfire.Me.Integration
+  import Ecto.Query
 
   def verbs do
     %{
@@ -30,5 +31,7 @@ defmodule Bonfire.Me.AccessControl.Verbs do
   def changeset(verb \\ %Verb{}, attrs) do
     Verb.changeset(verb, attrs)
   end
+
+  def list, do: repo().all(from(u in Verb))
 
 end

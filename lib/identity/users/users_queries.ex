@@ -77,9 +77,22 @@ defmodule Bonfire.Me.Identity.Users.Queries do
       join: a in assoc(ac, :account),
       left_join: p in assoc(u, :profile),
       left_join: i in assoc(c, :inbox),
+      left_join: ia in assoc(u, :instance_admin),
       where: u.id == ^user_id,
-      preload: [character: {c, inbox: i}, accounted: {ac, account: a}, profile: p]
+      preload: [instance_admin: ia, character: {c, inbox: i}, accounted: {ac, account: a}, profile: p]
   end
+
+  def count() do
+    repo().one(from p in User, select: count(p.id))
+  end
+
+  def admins() do
+    from a in User,
+      left_join: ia in assoc(a, :instance_admin),
+      where: ia.is_instance_admin == true,
+      preload: [instance_admin: ia]
+  end
+
 
   # defp macro_filter(query, {join_: [{source, [{rel, as}]}]}, _env),
   #   do: join_as(query, source, :inner, rel, as)

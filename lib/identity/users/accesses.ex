@@ -26,11 +26,11 @@ defmodule Bonfire.Me.Identity.Users.Accesses do
   def list_visible_q(%User{id: user_id}=user) do
     cs = can_see?(:access, user)
     from access in Access, as: :access,
-      join: caretaker in assoc(access, :caretaker),
+      # join: caretaker in assoc(access, :caretaker),
       join: named in assoc(access, :named),
       left_lateral_join: _cs in ^cs,
-      where: caretaker.caretaker_id == ^user_id,
-      preload: [caretaker: caretaker, named: named]
+      # where: caretaker.caretaker_id == ^user_id,
+      preload: [named: named]
   end
 
 end

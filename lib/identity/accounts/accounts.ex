@@ -10,7 +10,6 @@ defmodule Bonfire.Me.Identity.Accounts do
     ResetPasswordFields,
     Queries,
   }
-  alias Bonfire.Data.AccessControl.InstanceAdmin
   alias Ecto.Changeset
   alias Pointers.Changesets
   import Bonfire.Me.Integration
@@ -26,8 +25,6 @@ defmodule Bonfire.Me.Identity.Accounts do
 
   def get_by_email(email) when is_binary(email),
     do: repo().one(Queries.by_email(email))
-
-  def list_admins(), do: repo().all(Queries.admins())
 
   @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
 
@@ -54,8 +51,6 @@ defmodule Bonfire.Me.Identity.Accounts do
     |> Changeset.cast_assoc(:credential)
   end
 
-  def changeset(:instance_admin, params, _opts),
-    do: InstanceAdmin.changeset(%InstanceAdmin{}, params, [:id, :is_instance_admin])
 
   ### signup
 
@@ -195,9 +190,5 @@ defmodule Bonfire.Me.Identity.Accounts do
   defp mailer_response({:ok, _}, account), do: {:ok, account}
   defp mailer_response(_, _), do: {:error, :email}
 
-  ## instance admin
-
-  def make_admin(%{id: id}),
-    do: changeset(:instance_admin, %{id: id, is_instance_admin: true}) |> repo().upsert
 
 end

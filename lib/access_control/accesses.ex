@@ -2,6 +2,7 @@ defmodule Bonfire.Me.AccessControl.Accesses do
 
   alias Bonfire.Data.AccessControl.Access
   import Bonfire.Me.Integration
+  import Ecto.Query
 
   def accesses do
     %{ read_only:  "THE0N1YACCESS1SREADACCESS1",
@@ -20,5 +21,7 @@ defmodule Bonfire.Me.AccessControl.Accesses do
   def changeset(access \\ %Access{}, attrs) do
     Access.changeset(access, attrs)
   end
+
+  def list, do: repo().all(from(u in Access))
 
 end

@@ -8,7 +8,8 @@ defmodule Bonfire.Me.Web.SettingsLive do
     SettingsNavigationLive,
     EditProfileLive,
     ExtensionsLive,
-    EditAccountLive
+    EditAccountLive,
+    AdminLive
   }
   alias Bonfire.Common.Web.LivePlugs
 

@@ -1,7 +1,8 @@
 defmodule Bonfire.Me.Social.Circles do
 
-  alias CommonsPub.Circles.Circle
+  alias Bonfire.Data.Social.Circle
   import Bonfire.Me.Integration
+  import Ecto.Query
 
   def circles do
     %{ guest:        "RAND0MSTRANGERS0FF1NTERNET",
@@ -22,6 +23,8 @@ defmodule Bonfire.Me.Social.Circles do
   def circles_named_fixture do
     Enum.map(circles(), fn {k, v} -> %{id: v, name: circle_names()[k]} end)
   end
+
+  def list, do: repo().all(from(u in Circle))
 
   def create(%{}=attrs) do
     repo().insert(changeset(:create, attrs))

@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Identity.SharedUsers do
   alias Bonfire.Me.Identity.Accounts
   alias Bonfire.Me.Identity.Users
 
+  alias Bonfire.Common.Utils
   import Bonfire.Common.Config, only: [repo: 0]
   alias Ecto.Changeset
   import Ecto.Query
@@ -62,7 +63,7 @@ defmodule Bonfire.Me.Identity.SharedUsers do
 
   defp changeset(:make_shared_user, %User{} = user, params) do
 
-    params = Bonfire.Common.Utils.put_new_in(params, ["shared_user", "label"], "Organisation") # default label for shared users
+    params = Utils.put_new_in(params, ["shared_user", "label"], "Organisation") # default label for shared users
 
     user
     |> repo().preload(:shared_user)
