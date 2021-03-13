@@ -40,6 +40,6 @@ defmodule Bonfire.Me.Web.SettingsLive do
     {:noreply, socket}
   end
 
-  defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
+  defdelegate handle_event(action, attrs, socket), to: Bonfire.Web.LiveHandler
 
 end

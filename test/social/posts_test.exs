@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.PostsTest do
   use Bonfire.DataCase
 
-  alias Bonfire.Me.Social.Posts
+  alias Bonfire.Social.Posts
   alias Bonfire.Me.Fake
 
   test "creation works" do

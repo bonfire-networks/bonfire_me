@@ -16,7 +16,7 @@ defmodule Bonfire.Me.Queries do
   alias Bonfire.Data.Social.Circle
   alias Bonfire.Me.AccessControl.Verbs
   alias Bonfire.Me.Identity.Users
-  alias Bonfire.Me.Social.Circles
+  alias Bonfire.Me.AccessControl.Circles
 
   @doc "The `add_perms(bool?, bool?)` postgres function for combining permissions."
   defmacro add_perms(l, r) do

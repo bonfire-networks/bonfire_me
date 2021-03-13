@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Social.Profiles do
+defmodule Bonfire.Me.Profiles do
 
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset

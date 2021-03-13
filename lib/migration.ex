@@ -32,11 +32,9 @@ defmodule Bonfire.Me.Migration do
       require Bonfire.Me.AccessControl.Migration
       require Bonfire.Me.ActivityPub.Migration
       require Bonfire.Me.Identity.Migration
-      require Bonfire.Me.Social.Migration
       Bonfire.Me.AccessControl.Migration.migrate_me_access_control()
       Bonfire.Me.ActivityPub.Migration.migrate_me_activity_pub()
       Bonfire.Me.Identity.Migration.migrate_me_identity()
-      Bonfire.Me.Social.Migration.migrate_me_social()
       Bonfire.Me.Migration.migrate_functions()
       Ecto.Migration.flush()
       Bonfire.Me.Fixtures.insert()
@@ -48,9 +46,7 @@ defmodule Bonfire.Me.Migration do
       require Bonfire.Me.AccessControl.Migration
       require Bonfire.Me.ActivityPub.Migration
       require Bonfire.Me.Identity.Migration
-      require Bonfire.Me.Social.Migration
       Bonfire.Me.Migration.migrate_functions()
-      Bonfire.Me.Social.Migration.migrate_me_social()
       Bonfire.Me.Identity.Migration.migrate_me_identity()
       Bonfire.Me.ActivityPub.Migration.migrate_me_activity_pub()
       Bonfire.Me.AccessControl.Migration.migrate_me_access_control()

@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
 
     defp mounted(params, session, socket) do
 
-      feed = Bonfire.Me.Social.FeedActivities.my_feed(socket.assigns.current_user)
+      feed = Bonfire.Social.FeedActivities.my_feed(socket.assigns.current_user)
 
       {:ok, socket
       |> assign(
@@ -43,12 +43,8 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       {:noreply, socket}
     end
 
-  # def handle_event("feed_load_more", attrs, socket), do: Bonfire.Me.Web.LiveHandlers.Feeds.my_live_more(attrs, socket)
+    defdelegate handle_params(params, attrs, socket), to: Bonfire.Web.LiveHandler
+    defdelegate handle_event(action, attrs, socket), to: Bonfire.Web.LiveHandler
+    defdelegate handle_info(info, socket), to: Bonfire.Web.LiveHandler
 
-  # def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
-  defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
-
-  # def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
-  defdelegate handle_info(info, socket), to: Bonfire.Me.Web.LiveHandlers
-
-end
+  end

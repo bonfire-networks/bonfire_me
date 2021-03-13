@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Fixtures do
   alias Bonfire.Data.Social.{Circle, Named}
   alias Bonfire.Me.AccessControl.{Accesses, Verbs, Acls, Grants}
   alias Bonfire.Me.Identity.Users
-  alias Bonfire.Me.Social.Circles
+  alias Bonfire.Me.AccessControl.Circles
   alias Ecto.UUID
   alias Pointers.ULID
   import Bonfire.Me.Integration

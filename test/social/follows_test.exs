@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.FollowsTest do
   use Bonfire.DataCase
 
-  alias Bonfire.Me.Social.Follows
+  alias Bonfire.Social.Follows
   alias Bonfire.Me.Fake
 
   test "follow works" do

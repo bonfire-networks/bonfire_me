@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Identity.Users.Circles do
   alias Bonfire.Data.Social.Encircle
   alias Bonfire.Data.Identity.Caretaker
 
-  alias Bonfire.Me.Social.Circles
+  alias Bonfire.Me.AccessControl.Circles
 
   alias Ecto.Changeset
   import Bonfire.Me.Integration

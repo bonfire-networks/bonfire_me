@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Social.Circles do
+defmodule Bonfire.Me.AccessControl.Circles do
 
   alias Bonfire.Data.Social.Circle
   import Bonfire.Me.Integration

@@ -30,11 +30,11 @@ defmodule Bonfire.Me.Web.ProfileLive do
     end
     # IO.inspect(user: user)
 
-    following = if current_user && user, do: Bonfire.Me.Social.Follows.following?(current_user, user)
+    following = if current_user && user && module_enabled?(Bonfire.Social.Follows), do: Bonfire.Social.Follows.following?(current_user, user)
 
-    # feed = if user, do: Bonfire.Me.Social.Activities.by_user(user)
+    # feed = if user, do: Bonfire.Social.Activities.by_user(user)
     feed_id = e(socket.assigns, :current_user, nil)
-    feed = if feed_id, do: Bonfire.Me.Social.FeedActivities.feed(feed_id, feed_id)
+    feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, feed_id)
     # IO.inspect(feed: feed)
 
     {:ok,
@@ -73,14 +73,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      )}
   end
 
-
-
-  # def handle_event("feed_load_more", attrs, socket), do: socket.assigns.user |> Bonfire.Me.Web.LiveHandlers.Feeds.live_more(attrs, socket)
-
-  # def handle_event("post", attrs, socket), do: Bonfire.Me.Social.Posts.live_post(attrs, socket)
-  defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
-
-  # def handle_info(%Bonfire.Data.Social.FeedPublish{}=fp, socket), do: Bonfire.Me.Social.FeedActivities.live_add(fp, socket)
-  defdelegate handle_info(info, socket), to: Bonfire.Me.Web.LiveHandlers
+  defdelegate handle_event(action, attrs, socket), to: Bonfire.Web.LiveHandler
+  defdelegate handle_info(info, socket), to: Bonfire.Web.LiveHandler
 
 end
