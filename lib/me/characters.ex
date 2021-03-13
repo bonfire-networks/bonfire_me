@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Identity.Characters do
+defmodule Bonfire.Me.Characters do
 
   alias Bonfire.Data.Identity.Character
   alias Ecto.Changeset

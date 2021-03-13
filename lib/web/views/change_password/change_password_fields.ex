@@ -1,8 +1,8 @@
-defmodule Bonfire.Me.Identity.Accounts.ChangePasswordFields do
+defmodule Bonfire.Me.Accounts.ChangePasswordFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias Bonfire.Me.Identity.Accounts.ChangePasswordFields
+  alias Bonfire.Me.Accounts.ChangePasswordFields
 
   embedded_schema do
     field :old_password, :string

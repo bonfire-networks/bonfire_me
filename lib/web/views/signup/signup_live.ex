@@ -1,12 +1,12 @@
 defmodule Bonfire.Me.Web.SignupLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Me.Identity.Accounts
+  alias Bonfire.Me.Accounts
   alias Bonfire.Me.Web.HeroProfileLive
   alias Bonfire.Me.Web.ProfileNavigationLive
   alias Bonfire.Me.Web.ProfileAboutLive
   alias Bonfire.UI.Social.SignupLive
   alias Bonfire.Me.Fake
-  alias Bonfire.Common.Web.LivePlugs
+  alias Bonfire.Web.LivePlugs
   alias Ecto.Changeset
 
   # because this isn't a live link and it will always be accessed by a

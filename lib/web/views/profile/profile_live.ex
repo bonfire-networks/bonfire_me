@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   alias Bonfire.Me.Web.ProfileNavigationLive
   alias Bonfire.Me.Web.ProfileAboutLive
   alias Bonfire.Me.Fake
-  alias Bonfire.Common.Web.LivePlugs
+  alias Bonfire.Web.LivePlugs
   import Bonfire.Me.Integration
 
   def mount(params, session, socket) do
@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     user = case Map.get(params, "username") do
       nil -> e(socket.assigns, :current_user, Fake.user_live())
       username ->
-        with {:ok, user} <- Bonfire.Me.Identity.Users.by_username(username) do
+        with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
           user
         end
     end

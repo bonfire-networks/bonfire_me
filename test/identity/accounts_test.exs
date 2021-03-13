@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Identity.AccountsTest do
+defmodule Bonfire.Me.AccountsTest do
 
   use Bonfire.DataCase, async: true
   alias Bonfire.Data.Identity.Credential
   alias Bonfire.Me.Fake
-  alias Bonfire.Me.Identity.Accounts
+  alias Bonfire.Me.Accounts
 
   describe "signup" do
 

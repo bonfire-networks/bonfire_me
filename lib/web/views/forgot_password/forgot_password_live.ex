@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Web.ForgotPasswordLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Common.Web.LivePlugs
-  alias Bonfire.Me.Identity.Accounts
+  alias Bonfire.Web.LivePlugs
+  alias Bonfire.Me.Accounts
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [

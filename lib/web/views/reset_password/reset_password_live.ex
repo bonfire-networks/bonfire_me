@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.ResetPasswordLive do
   use Bonfire.Web, :live_view
-  # alias Bonfire.Common.Web.LivePlugs
+  # alias Bonfire.Web.LivePlugs
 
   def mount(params, session, socket) do
     {:ok,

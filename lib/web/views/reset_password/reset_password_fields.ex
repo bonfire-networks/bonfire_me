@@ -1,8 +1,8 @@
-defmodule Bonfire.Me.Identity.Accounts.ResetPasswordFields do
+defmodule Bonfire.Me.Accounts.ResetPasswordFields do
 
   use Ecto.Schema
   alias Ecto.Changeset
-  alias Bonfire.Me.Identity.Accounts.ResetPasswordFields
+  alias Bonfire.Me.Accounts.ResetPasswordFields
 
   embedded_schema do
     field :reset_token, :string

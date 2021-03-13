@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Identity.Accounts.Queries do
+defmodule Bonfire.Me.Accounts.Queries do
 
   import Ecto.Query
   alias Bonfire.Data.Identity.Account

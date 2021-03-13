@@ -3,7 +3,7 @@ defmodule Bonfire.Me.Web.LoginLive do
   alias Bonfire.UI.Social.HeaderGuestLive
   alias Bonfire.UI.Social.LogoHeaderLive
   alias Bonfire.UI.Social.LoginLive
-  alias Bonfire.Me.Identity.Accounts
+  alias Bonfire.Me.Accounts
 
   # because this isn't a live link and it will always be accessed by a
   # guest, it will always be offline

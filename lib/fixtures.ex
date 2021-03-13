@@ -3,9 +3,9 @@ defmodule Bonfire.Me.Fixtures do
   alias Bonfire.Data.AccessControl.{Access, Acl, Controlled, Grant, Interact, Verb}
   alias Bonfire.Data.Identity.User
   alias Bonfire.Data.Social.{Circle, Named}
-  alias Bonfire.Me.AccessControl.{Accesses, Verbs, Acls, Grants}
-  alias Bonfire.Me.Identity.Users
-  alias Bonfire.Me.AccessControl.Circles
+  alias Bonfire.Boundaries.{Accesses, Verbs, Acls, Grants}
+  alias Bonfire.Me.Users
+  alias Bonfire.Boundaries.Circles
   alias Ecto.UUID
   alias Pointers.ULID
   import Bonfire.Me.Integration

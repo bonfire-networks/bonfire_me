@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Identity.Accounts do
+defmodule Bonfire.Me.Accounts do
 
   alias Bonfire.Data.Identity.{Account, Credential, Email, User}
   alias Bonfire.Common.Utils
-  alias Bonfire.Me.Identity.Mails
-  alias Bonfire.Me.Identity.Accounts.{
+  alias Bonfire.Me.Mails
+  alias Bonfire.Me.Accounts.{
     ChangePasswordFields,
     ConfirmEmailFields,
     LoginFields,

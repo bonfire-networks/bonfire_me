@@ -1,8 +1,8 @@
-defmodule Bonfire.Me.Identity.Migration do
+defmodule Bonfire.Me.Migrations do
   use Ecto.Migration
   import Pointers.Migration
 
-  defp mmi(:up) do
+  defp mm(:up) do
     quote do
       require Bonfire.Data.Identity.Account.Migration
       require Bonfire.Data.Identity.Accounted.Migration
@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Identity.Migration do
     end
   end
 
-  defp mmi(:down) do
+  defp mm(:down) do
     quote do
       require Bonfire.Data.Identity.Account.Migration
       require Bonfire.Data.Identity.Accounted.Migration
@@ -46,13 +46,13 @@ defmodule Bonfire.Me.Identity.Migration do
     end
   end
 
-  defmacro migrate_me_identity() do
+  defmacro migrate_me() do
     quote do
       if Ecto.Migration.direction() == :up,
-        do: unquote(mmi(:up)),
-        else: unquote(mmi(:down))
+        do: unquote(mm(:up)),
+        else: unquote(mm(:down))
     end
   end
-  defmacro migrate_me_identity(dir), do: mmi(dir)
+  defmacro migrate_me(dir), do: mm(dir)
 
 end

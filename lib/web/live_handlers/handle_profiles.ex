@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Profiles do
   import Utils
   import Phoenix.LiveView
 
-  alias Bonfire.Me.Identity.Users # TODO: use Profiles context instead?
+  alias Bonfire.Me.Users # TODO: use Profiles context instead?
 
   def handle_event("profile_save", _data, %{assigns: %{trigger_submit: trigger_submit}} = socket)
       when trigger_submit == true do

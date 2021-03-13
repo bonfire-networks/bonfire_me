@@ -1,8 +1,8 @@
 defmodule Bonfire.Me.Web.CreateUserLive do
   use Bonfire.Web, {:live_view, [layout: {Bonfire.Web.LayoutView, "without_sidebar.html"}]}
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Me.Identity.{Accounts, Users}
-  alias Bonfire.Common.Web.LivePlugs
+  alias Bonfire.Me.{Accounts, Users}
+  alias Bonfire.Web.LivePlugs
   alias Bonfire.Me.Web.CreateUserLive
 
   def mount(params, session, socket) do

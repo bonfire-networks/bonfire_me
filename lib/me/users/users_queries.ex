@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Identity.Users.Queries do
+defmodule Bonfire.Me.Users.Queries do
 
   import Ecto.Query
   import Bonfire.Me.Integration
 
-  # alias Bonfire.Me.Identity.Users
+  # alias Bonfire.Me.Users
   alias Bonfire.Data.Identity.User
   alias Bonfire.Common.Utils
 
@@ -56,7 +56,7 @@ defmodule Bonfire.Me.Identity.Users.Queries do
 
   def for_switch_user(username, account_id) do
     if Utils.module_exists?(Bonfire.Data.SharedUser) do
-      Bonfire.Me.Identity.SharedUsers.query_for_switch_user(username, account_id)
+      Bonfire.Me.SharedUsers.query_for_switch_user(username, account_id)
 
     else
       from u in User,

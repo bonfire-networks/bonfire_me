@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
 
   use Bonfire.Web, :controller
   alias Bonfire.Data.Identity.Account
-  alias Bonfire.Me.Identity.{Accounts, Users}
+  alias Bonfire.Me.{Accounts, Users}
   alias Bonfire.Common.Web.Misc
   alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive, SwitchUserLive}
 

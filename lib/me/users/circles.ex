@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Identity.Users.Circles do
+defmodule Bonfire.Me.Users.Circles do
 
   alias Bonfire.Data.Identity.User
   alias Bonfire.Data.Social.Named
@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Identity.Users.Circles do
   alias Bonfire.Data.Social.Encircle
   alias Bonfire.Data.Identity.Caretaker
 
-  alias Bonfire.Me.AccessControl.Circles
+  alias Bonfire.Boundaries.Circles
 
   alias Ecto.Changeset
   import Bonfire.Me.Integration
@@ -40,7 +40,7 @@ defmodule Bonfire.Me.Identity.Users.Circles do
   end
 
   import Ecto.Query
-  import Bonfire.Me.Queries
+  import Bonfire.Boundaries.Queries
 
   @doc """
   Lists the circles we are the registered caretakers of that we are

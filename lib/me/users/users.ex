@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Identity.Users do
+defmodule Bonfire.Me.Users do
   @doc """
   A User is a logical identity within the system belonging to an Account.
   """
@@ -6,9 +6,10 @@ defmodule Bonfire.Me.Identity.Users do
   alias Bonfire.Data.Identity.{Account, User}
   alias Bonfire.Data.AccessControl.InstanceAdmin
 
-  alias Bonfire.Me.Identity.Characters
-  alias Bonfire.Me.Identity.Users.Queries
-  alias Bonfire.Social.{Circles, Profiles}
+  alias Bonfire.Me.Characters
+  alias Bonfire.Me.Users.Queries
+  alias Bonfire.Me.Profiles
+  alias Bonfire.Boundaries.Circles
 
   # alias Pointers.Changesets
   alias Bonfire.Common.Utils
@@ -32,7 +33,7 @@ defmodule Bonfire.Me.Identity.Users do
 
   def by_account(account) do
     if Utils.module_exists?(Bonfire.Data.SharedUser) do
-      Bonfire.Me.Identity.SharedUsers.by_account(account)
+      Bonfire.Me.SharedUsers.by_account(account)
     else
       do_by_account(account)
     end
@@ -139,7 +140,7 @@ defmodule Bonfire.Me.Identity.Users do
   end
 
   def is_first_user? do
-    Bonfire.Me.Identity.Users.Queries.count <1
+    Bonfire.Me.Users.Queries.count <1
   end
 
 

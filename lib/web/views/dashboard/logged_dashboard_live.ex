@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Web.LoggedDashboardLive do
     use Bonfire.Web, :live_view
     alias Bonfire.Me.Fake
-    alias Bonfire.Common.Web.LivePlugs
+    alias Bonfire.Web.LivePlugs
     alias Bonfire.Me.Users
     alias Bonfire.Me.Web.CreateUserLive
     alias Bonfire.UI.Social.FeedLive

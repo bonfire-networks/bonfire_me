@@ -1,11 +1,11 @@
-defmodule Bonfire.Me.Identity.SharedUsers do
+defmodule Bonfire.Me.SharedUsers do
   alias Bonfire.Data.SharedUser
 
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Data.Identity.User
 
-  alias Bonfire.Me.Identity.Accounts
-  alias Bonfire.Me.Identity.Users
+  alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Users
 
   alias Bonfire.Common.Utils
   import Bonfire.Common.Config, only: [repo: 0]
@@ -87,7 +87,7 @@ defmodule Bonfire.Me.Identity.SharedUsers do
   end
 
   def by_account(account_id) when is_binary(account_id),
-    do: by_account(Bonfire.Me.Identity.Accounts.fetch_current(account_id))
+    do: by_account(Bonfire.Me.Accounts.fetch_current(account_id))
 
 
   def query_for_switch_user(username, account_id) do

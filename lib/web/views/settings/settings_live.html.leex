@@ -52,7 +52,7 @@
               </div>
             <% end %>
 
-            <%= if Bonfire.Me.Identity.Users.is_admin(@current_user) do %>
+            <%= if Bonfire.Me.Users.is_admin(@current_user) do %>
               <%= live_patch to: "/settings/admin" do %>
                 <div aria-current="<%= if @selected_tab == "admin", do: "page" %>" class="<%= if @selected_tab == "admin", do: "border-pink-500 text-white font-bold hover:text-white", else: "text-gray-400" %> flex items-center px-3 py-2 mt-3 text-sm font-medium border-l-4 border-transparent  hover:text-gray-100 group">
                   <svg class="flex-shrink-0 w-6 h-6 mr-3 -ml-1 group-hover:text-gray-500 <%= if @selected_tab == "admin", do: "text-white group-hover:text-white", else: "text-gray-400" %>" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

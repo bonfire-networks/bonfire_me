@@ -1,8 +1,8 @@
-defmodule Bonfire.Me.Identity.UsersTest do
+defmodule Bonfire.Me.UsersTest do
 
   use Bonfire.DataCase, async: true
   alias Bonfire.Me.Fake
-  alias Bonfire.Me.Identity.{Accounts, Users}
+  alias Bonfire.Me.{Accounts, Users}
   alias Bonfire.Repo
 
   test "creation works" do

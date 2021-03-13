@@ -1,8 +1,8 @@
 defmodule Bonfire.Me.Web.SwitchUserLive do
   use Bonfire.Web, :live_view
   alias Bonfire.Fake
-  alias Bonfire.Common.Web.LivePlugs
-  alias Bonfire.Me.Identity.Users
+  alias Bonfire.Web.LivePlugs
+  alias Bonfire.Me.Users
   alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive}
 
   def mount(params, session, socket) do

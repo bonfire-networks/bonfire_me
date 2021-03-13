@@ -1,8 +1,8 @@
-defmodule Bonfire.Me.Identity.Users.ActivityPub do
-  alias Bonfire.Me.Identity.Users
+defmodule Bonfire.Me.Users.ActivityPub do
+  alias Bonfire.Me.Users
   alias Bonfire.Data.ActivityPub.Peer
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Me.Identity.Users.Queries
+  alias Bonfire.Me.Users.Queries
   alias ActivityPub.Actor
   alias Ecto.Changeset
 

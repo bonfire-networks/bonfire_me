@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Fake do
 
   alias Bonfire.Data.Identity.Account
-  alias Bonfire.Me.Identity.{Accounts, Users}
+  alias Bonfire.Me.{Accounts, Users}
 
   import Bonfire.Me.Integration
 

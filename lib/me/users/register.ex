@@ -1,8 +1,8 @@
-defmodule Bonfire.Me.Identity.Users.Register do
+defmodule Bonfire.Me.Users.Register do
 
   alias Bonfire.Data.Identity.{Account, User}
-  alias Bonfire.Me.AccessControl.Accesses
-  alias Bonfire.Me.Identity.Users.CreateUserFields
+  alias Bonfire.Boundaries.Accesses
+  alias Bonfire.Me.Users.CreateUserFields
   alias Pointers.Changesets
 
   def form(attrs \\ %{}, _opts \\ []) do

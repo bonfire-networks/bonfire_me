@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Identity.Users.Accesses do
+defmodule Bonfire.Me.Users.Accesses do
 
   alias Bonfire.Data.AccessControl.{Access, Acl}
   alias Bonfire.Data.Identity.User
   import Bonfire.Me.Integration
-  import Bonfire.Me.Queries
+  import Bonfire.Boundaries.Queries
 
   ## invariants:
 
