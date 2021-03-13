@@ -12,7 +12,7 @@ defmodule Bonfire.Me.Web.PostLive do
     LivePlugs.live_plug(params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
-      LivePlugs.LoadCurrentAccountUsers,
+      # LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3
@@ -21,22 +21,24 @@ defmodule Bonfire.Me.Web.PostLive do
 
   defp mounted(params, session, socket) do
 
-    # TODO: optimise to reduce num of queries
-    post = with {:ok, post} <- Bonfire.Me.Social.Posts.read(Map.get(params, "post_id"), e(socket, :assigns, :current_user, nil)) do
-      post
-      #|> repo().maybe_preload([:replied, thread_replies: [activity: [:verb, subject_user: [:profile, :character]], post: [:post_content, created: [:creator]]]])
-      IO.inspect(post, label: "the post:")
+    with {:ok, post} <- Bonfire.Me.Social.Posts.read(Map.get(params, "post_id"), e(socket, :assigns, :current_user, nil)) do
+      # IO.inspect(post, label: "the post:")
+
+      {activity, object} = Map.pop(post, :activity)
+
+      {:ok,
+      socket
+      |> assign(
+        page_title: "Post",
+        activity: activity,
+        object: object
+      )}
+
     else _e ->
-      # TODO: handle error
-      nil
+      {:error, "Not found"}
     end
 
-    {:ok,
-     socket
-     |> assign(
-       page_title: "Post",
-       post: post
-     )}
+
   end
 
   # def handle_params(%{"tab" => tab} = _params, _url, socket) do
@@ -52,5 +54,8 @@ defmodule Bonfire.Me.Web.PostLive do
   #      current_user: Fake.user_live()
   #    )}
   # end
+
+  defdelegate handle_event(action, attrs, socket), to: Bonfire.Me.Web.LiveHandlers
+  defdelegate handle_info(info, socket), to: Bonfire.Me.Web.LiveHandlers
 
 end

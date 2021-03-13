@@ -27,6 +27,7 @@ defmodule Bonfire.Me.Social.FeedActivities do
     Utils.pubsub_subscribe(feed_id_or_ids) # subscribe to realtime feed updates
 
     build_query(feed_id: feed_id_or_ids) # query FeedPublish + assocs needed in timelines/feeds
+      |> preload_join(:activity)
       |> Activities.activity_preloads(current_user)
       |> Bonfire.Repo.many_paginated(before: cursor_after) # return a page of items + pagination metadata
       # |> IO.inspect
@@ -90,7 +91,7 @@ defmodule Bonfire.Me.Social.FeedActivities do
   end
 
   def maybe_notify_admins(subject, verb, object) when is_atom(verb) do
-    admins = Bonfire.Me.Identity.Accounts.list_admins()
+    admins = Bonfire.Me.Identity.Users.list_admins()
 
     inboxes = admins_inbox(admins) #|> IO.inspect
 

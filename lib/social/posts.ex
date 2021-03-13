@@ -1,7 +1,8 @@
 defmodule Bonfire.Me.Social.Posts do
 
-  alias Bonfire.Data.Social.{Post, PostContent, Replied}
-  alias Bonfire.Me.Social.FeedActivities
+  alias Bonfire.Data.Social.{Post, PostContent, Replied, Activity}
+  alias Bonfire.Me.Social.{Activities, FeedActivities}
+  alias Bonfire.Me.AccessControl.Verbs
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   use Bonfire.Repo.Query,
@@ -34,6 +35,7 @@ defmodule Bonfire.Me.Social.Posts do
   def reply(creator, attrs) do
     with  {:ok, published} <- publish(creator, attrs),
           {:ok, r} <- get_replied(published.post.id) do
+      # TODO: send pubsub to thread
       {:ok, Map.merge(r, published)}
     end
   end
@@ -43,6 +45,7 @@ defmodule Bonfire.Me.Social.Posts do
       |> Map.put(:post_content, prepare_content(attrs))
       |> Map.put(:created, %{creator_id: creator_id})
       |> Map.put(:replied, maybe_reply(attrs))
+      # |> IO.inspect
 
     repo().put(changeset(:create, attrs))
   end
@@ -54,13 +57,17 @@ defmodule Bonfire.Me.Social.Posts do
   end
   def prepare_content(attrs), do: attrs
 
-  def maybe_reply(%{reply_to: %{reply_to_id: reply_to_id} = reply_attrs}) when is_binary(reply_to_id) and reply_to_id !="" do
+  def maybe_reply(%{reply_to: reply_attrs}), do: maybe_reply(reply_attrs)
+  def maybe_reply(%{reply_to_id: reply_to_id} = reply_attrs) when is_binary(reply_to_id) and reply_to_id !="" do
      with {:ok, r} <- get_replied(reply_to_id) do
       Map.merge(reply_attrs, %{reply_to: r})
+     else _ ->
+      Map.drop(reply_attrs, :reply_to_id)
+      |> maybe_reply()
      end
   end
-  def maybe_reply(%{reply_to: reply_attrs}), do: Map.merge(reply_attrs, maybe_reply(nil))
-  def maybe_reply(_), do: %{set: true}
+  def maybe_reply(%{} = reply_attrs), do: Map.merge(reply_attrs, maybe_reply(nil))
+  def maybe_reply(_), do: %{set: true} # makes sure a Replied entry is inserted even for first posts
 
   defp changeset(:create, attrs) do
     Post.changeset(%Post{}, attrs)
@@ -71,16 +78,15 @@ defmodule Bonfire.Me.Social.Posts do
 
   def read(post_id, current_user) when is_binary(post_id) do
 
-    build_query(id: post_id) # query FeedPublish + assocs needed in timelines/feeds
-      |> preload_join(:post_content)
-      |> preload_join(:creator_profile)
-      |> preload_join(:creator_character)
+    build_query(id: post_id)
+      # |> preload_join(:post_content)
+      # |> preload_join(:creator_profile)
+      # |> preload_join(:creator_character)
       # |> preload_join(:reply_to)
-      |> preload_join(:reply_to_post_content)
-      |> preload_join(:thread_post_content)
-      # |> maybe_my_like(current_user)
+      # |> preload_join(:reply_to_post_content)
+      # |> preload_join(:thread_post_content)
+      |> Activities.object_preload_create_activity(current_user)
       # |> IO.inspect
-      # |> Bonfire.Repo.all()
       |> repo().single()
       # |> IO.inspect
   end
@@ -114,21 +120,22 @@ defmodule Bonfire.Me.Social.Posts do
     repo().single(from p in Replied, where: p.id == ^id)
   end
 
-  def list_replies(%{id: thread_id}, max_depth \\ 3), do: list_replies(thread_id, max_depth)
-  def list_replies(%{thread_id: thread_id}, max_depth), do: list_replies(thread_id, max_depth)
-  def list_replies(thread_id, max_depth) when is_binary(thread_id), do: Pointers.ULID.dump(thread_id) |> do_list_replies(max_depth)
+  def list_replies(%{id: thread_id}, current_user, max_depth \\ 3), do: list_replies(thread_id, current_user, max_depth)
+  def list_replies(%{thread_id: thread_id}, current_user, max_depth), do: list_replies(thread_id, current_user, max_depth)
+  def list_replies(thread_id, current_user, max_depth) when is_binary(thread_id), do: Pointers.ULID.dump(thread_id) |> do_list_replies(current_user, max_depth)
 
-  defp do_list_replies({:ok, thread_id}, max_depth) do
+  defp do_list_replies({:ok, thread_id}, current_user, max_depth) do
     %Replied{id: thread_id}
       |> Replied.descendants()
       |> Replied.where_depth(is_smaller_than_or_equal_to: max_depth)
-      |> preload_join(:post)
-      |> preload_join(:post, :post_content)
-      |> preload_join(:activity)
-      |> preload_join(:activity, :subject_profile)
-      |> preload_join(:activity, :subject_character)
+      |> Activities.object_preload_create_activity(current_user)
+      # |> preload_join(:post)
+      # |> preload_join(:post, :post_content)
+      # |> preload_join(:activity)
+      # |> preload_join(:activity, :subject_profile)
+      # |> preload_join(:activity, :subject_character)
       #|> IO.inspect
-      |> repo().all
+      |> repo().all # TODO: pagination
   end
 
   def arrange_replies_tree(replies), do: replies |> Replied.arrange()

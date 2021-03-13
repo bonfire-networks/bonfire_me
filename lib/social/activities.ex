@@ -45,47 +45,69 @@ defmodule Bonfire.Me.Social.Activities do
       select: f.id
   end
 
+  def object_preload_create_activity(q, current_user, preloads \\ :without_creator) do
+    verb_id = Verbs.verbs()[:create]
 
-  def activity_preloads(query, current_user) do
+    q
+    |> join(:left, [o], activity in Activity, as: :activity, on: activity.object_id == o.id and activity.verb_id == ^verb_id)
+    |> preload([activity], :activity)
+    |> activity_preloads(current_user, preloads)
+  end
+
+  def activity_preloads(query, current_user, :all \\ :all) do
 
     query
-      |> preload_join(:activity)
-      |> preload_join(:activity, :verb)
-      # |> preload_join(:activity, :object)
-      |> preload_join(:activity, :object_post_content)
-      # |> preload_join(:activity, :object_post, :post_content)
-      |> preload_join(:activity, :object_creator_profile)
-      |> preload_join(:activity, :object_creator_character)
       # |> preload_join(:activity, :reply_to)
       |> preload_join(:activity, :reply_to_post_content)
       |> preload_join(:activity, :reply_to_creator_profile)
       |> preload_join(:activity, :reply_to_creator_character)
+      |> preload_join(:activity, :thread_post_content)
+      |> activity_preloads(current_user, :without_parents)
+      # |> IO.inspect
+  end
+
+
+  def activity_preloads(query, current_user, :without_parents) do
+
+    query
+      |> preload_join(:activity, :object_creator_profile)
+      |> preload_join(:activity, :object_creator_character)
+      |> activity_preloads(current_user, :without_creator)
+      # |> IO.inspect
+  end
+
+  def activity_preloads(query, current_user, :without_creator) do
+
+    query
+      |> preload_join(:activity, :verb)
+      # |> preload_join(:activity, :object)
+      |> preload_join(:activity, :object_post_content)
       |> preload_join(:activity, :subject_profile)
       |> preload_join(:activity, :subject_character)
       |> maybe_my_like(current_user)
       |> maybe_my_boost(current_user)
       |> maybe_my_flag(current_user)
       # |> IO.inspect
-      # |> Bonfire.Repo.all()
   end
+
 
   def maybe_my_like(q, %{id: current_user_id} = _current_user) do
     q
-    |> join(:left, [a], l in Like, on: l.liked_id == a.object_id and l.liker_id == ^current_user_id)
+    |> join(:left, [o, activity: a], l in Like, on: l.liked_id == a.object_id and l.liker_id == ^current_user_id)
     |> preload([l], activity: [:my_like])
   end
   def maybe_my_like(q, _), do: q
 
   def maybe_my_boost(q, %{id: current_user_id} = _current_user) do
     q
-    |> join(:left, [a], l in Boost, on: l.boosted_id == a.object_id and l.booster_id == ^current_user_id)
+    |> join(:left, [o, activity: a], l in Boost, on: l.boosted_id == a.object_id and l.booster_id == ^current_user_id)
     |> preload([l], activity: [:my_boost])
   end
   def maybe_my_boost(q, _), do: q
 
   def maybe_my_flag(q, %{id: current_user_id} = _current_user) do
     q
-    |> join(:left, [a], l in Flag, on: l.flagged_id == a.object_id and l.flagger_id == ^current_user_id)
+    |> join(:left, [o, activity: a], l in Flag, on: l.flagged_id == a.object_id and l.flagger_id == ^current_user_id)
     |> preload([l], activity: [:my_flag])
   end
   def maybe_my_flag(q, _), do: q

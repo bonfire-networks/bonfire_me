@@ -33,11 +33,10 @@ defmodule Bonfire.Me.Web.LiveHandlers.Posts do
 
   def handle_event("post_reply", attrs, socket) do
 
-    attrs = attrs
-    |> input_to_atoms()
+    attrs = attrs |> input_to_atoms()
 
     with {:ok, published} <- Bonfire.Me.Social.Posts.reply(socket.assigns.current_user, attrs) do
-      replies = [published] ++ socket.assigns.replies
+      replies = [published] ++ socket.assigns.replies # TODO: replace with pubsub
     # IO.inspect(replies, label: "rep:")
       {:noreply,
         assign(socket,
