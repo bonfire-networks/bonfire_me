@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Users.Acls do
     |> Changeset.cast(%{
       caretaker: %{caretaker_id: user.id}
     }, [])
-    |> IO.inspect
+    # |> IO.inspect
   end
 
   @doc """
