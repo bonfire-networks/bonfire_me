@@ -24,6 +24,8 @@ defmodule Bonfire.Me.Characters do
 
   def changeset(char, params), do: do_changeset(char, params)
 
+  def remote_changeset(char, params), do: do_remote_changeset(char, params)
+
   defp clean_username(username) do
     Regex.replace(@username_forbidden, username, "_") |> String.slice(0..29)
   end
@@ -40,6 +42,22 @@ defmodule Bonfire.Me.Characters do
     char
     |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)
+    |> Changeset.cast(%{
+      # feed: %{},
+      follow_count: %{follower_count: 0, followed_count: 0},
+    }, [])
+    # |> Changeset.cast_assoc(:feed)
+    |> Changeset.cast_assoc(:follow_count)
+  end
+
+  defp do_remote_changeset(%Character{id: _} = char, params) do # update
+    char
+    |> Character.changeset(params, :hash)
+  end
+
+  defp do_remote_changeset(%Character{} = char, params) do # create
+    char
+    |> Character.changeset(params, :hash)
     |> Changeset.cast(%{
       # feed: %{},
       follow_count: %{follower_count: 0, followed_count: 0},

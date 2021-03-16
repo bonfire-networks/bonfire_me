@@ -106,10 +106,11 @@ defmodule Bonfire.Me.Users do
   def changeset(:create, user, params, :remote) do
     User.changeset(user, params)
     |> override(:create, :remote)
-    |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
+    |> Changeset.cast_assoc(:character, with: &Characters.remote_changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
+    |> Changeset.cast_assoc(:peered)
   end
 
   def admin_changeset(params),
