@@ -49,7 +49,7 @@ defmodule Bonfire.Me.Users.Queries do
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
       left_join: a in assoc(u, :actor),
-      join: ac in assoc(u, :accounted),
+      left_join: ac in assoc(u, :accounted),
       where: c.username == ^username,
       preload: [profile: p, character: c, actor: a, accounted: ac]
   end

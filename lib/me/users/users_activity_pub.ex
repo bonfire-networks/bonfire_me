@@ -78,8 +78,10 @@ defmodule Bonfire.Me.Users.ActivityPub do
 
     attrs = %{
       character: %{
+        username: actor.username
+      },
+      profile: %{
         name: actor.data["name"],
-        username: actor.username,
         summary: actor.data["summary"]
       },
       peered: %{peer_id: peer.id}
