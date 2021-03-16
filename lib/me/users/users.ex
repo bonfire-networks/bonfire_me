@@ -110,6 +110,7 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
+    |> Changeset.cast_assoc(:peered)
   end
 
   def admin_changeset(params),

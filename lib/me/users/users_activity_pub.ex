@@ -13,9 +13,8 @@ defmodule Bonfire.Me.Users.ActivityPub do
     do: repo().single(Queries.by_username(username))
 
   @doc "Creates a remote user"
-  def create(params, %Peer{id: id}) do
+  def create(params) do
     Users.changeset(:create, %User{}, params, :remote)
-    |> Changeset.change(peer_id: id)
     |> repo().insert()
   end
 
@@ -54,8 +53,9 @@ defmodule Bonfire.Me.Users.ActivityPub do
   end
 
   def peer_url_query(url) do
-    from p in Peer,
-    where: p.ap_base_uri == ^url
+    from(p in Peer,
+      where: p.ap_base_uri == ^url
+    )
   end
 
   defp get_or_create_peer(actor) do
@@ -63,7 +63,9 @@ defmodule Bonfire.Me.Users.ActivityPub do
     ap_base_url = uri.scheme <> "://" <> uri.host
 
     case repo().single(peer_url_query(ap_base_url)) do
-      {:ok, peer} -> {:ok, peer}
+      {:ok, peer} ->
+        {:ok, peer}
+
       {:error, _} ->
         params = %{ap_base_uri: ap_base_url, display_hostname: uri.host}
         repo().insert(Peer.changeset(%Peer{}, params))
@@ -71,17 +73,20 @@ defmodule Bonfire.Me.Users.ActivityPub do
   end
 
   def create_remote_actor(actor) do
-    attrs = %{
-      name: actor.data["name"],
-      username: actor.username,
-      summary: actor.data["summary"]
-    }
-
     {:ok, peer} = get_or_create_peer(actor)
     actor_object = ActivityPub.Object.get_by_ap_id(actor.ap_id)
 
+    attrs = %{
+      character: %{
+        name: actor.data["name"],
+        username: actor.username,
+        summary: actor.data["summary"]
+      },
+      peered: %{peer_id: peer.id}
+    }
+
     repo().transact_with(fn ->
-      with {:ok, user} <- create(attrs, peer),
+      with {:ok, user} <- create(attrs),
            {:ok, _object} <- ActivityPub.Object.update(actor_object, %{pointer_id: user.id}) do
         {:ok, user}
       end
