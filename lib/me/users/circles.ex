@@ -16,27 +16,25 @@ defmodule Bonfire.Me.Users.Circles do
   ## * Created circles will have the user as a caretaker
 
 
-  @doc "Create a circle owned by the provided user and with the user in the circle."
+  @doc "Create a circle for the provided user (and with the user in the circle?)"
   def create(%User{}=user, name \\ nil, %{}=attrs \\ %{}) do
     repo().insert(changeset(:create,
     user,
     attrs
       |> Utils.deep_merge(%{
         named: %{name: name},
-        encircles: [%{subject_id: user.id}] # add user to circle
+        caretaker: %{caretaker_id: user.id}
+        # encircles: [%{subject_id: user.id}] # add myself to circle?
       })
     ))
   end
 
   def changeset(:create, %User{}=user, attrs) do
-    Circle.changeset(attrs)
+    Circles.changeset(:create, attrs)
     |> Changeset.cast(%{
       caretaker: %{caretaker_id: user.id}
     }, [])
-    |> Changeset.cast_assoc(:named, with: &Named.changeset/2)
-    |> Changeset.cast_assoc(:caretaker, with: &Caretaker.changeset/2)
-    |> Changeset.cast_assoc(:encircles, with: &Encircle.changeset/2)
-    |> IO.inspect
+    # |> IO.inspect
   end
 
   import Ecto.Query
@@ -55,11 +53,11 @@ defmodule Bonfire.Me.Users.Circles do
   def list_my_q(%User{id: user_id}=user) do
     cs = can_see?(:circle, user)
     from circle in Circle, as: :circle,
-      join: caretaker in assoc(circle, :caretaker),
-      join: named in assoc(circle, :named),
+      # join: caretaker in assoc(circle, :caretaker),
+      left_join: named in assoc(circle, :named),
       left_lateral_join: _cs in ^cs,
-      where: caretaker.caretaker_id == ^user_id,
-      preload: [caretaker: caretaker]
+      # where: caretaker.caretaker_id == ^user_id,
+      preload: [named: named]
   end
 
 end
