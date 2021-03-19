@@ -11,6 +11,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
+      LivePlugs.LoadCurrentUserCircles,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
