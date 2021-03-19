@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
-      LivePlugs.LoadCurrentUserCircles,
+      # LivePlugs.LoadCurrentUserCircles,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
       &mounted/3,
@@ -44,6 +44,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
         page: "profile",
         page_title: "Profile",
         selected_tab: "timeline",
+        smart_input: true,
         feed_title: "User timeline",
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
