@@ -31,14 +31,26 @@ defmodule Bonfire.Me.Users.Circles do
 
   def changeset(:create, %User{}=user, attrs) do
     Circles.changeset(:create, attrs)
-    |> Changeset.cast(%{
-      caretaker: %{caretaker_id: user.id}
-    }, [])
-    # |> IO.inspect
   end
 
   import Ecto.Query
   import Bonfire.Boundaries.Queries
+
+  @doc """
+  Lists the circles that we are permitted to see.
+  """
+  def list_visible(%User{}=user) do
+    repo().all(list_visible_q(user))
+  end
+
+  @doc "query for `list_visible`"
+  def list_visible_q(%User{id: _}=user) do
+    cs = can_see?(:circle, user)
+    from circle in Circle, as: :circle,
+      left_join: named in assoc(circle, :named),
+      left_lateral_join: _cs in ^cs,
+      preload: [named: named]
+  end
 
   @doc """
   Lists the circles we are the registered caretakers of that we are
@@ -51,13 +63,8 @@ defmodule Bonfire.Me.Users.Circles do
 
   @doc "query for `list_my`"
   def list_my_q(%User{id: user_id}=user) do
-    cs = can_see?(:circle, user)
-    from circle in Circle, as: :circle,
-      # join: caretaker in assoc(circle, :caretaker),
-      left_join: named in assoc(circle, :named),
-      left_lateral_join: _cs in ^cs,
-      # where: caretaker.caretaker_id == ^user_id,
-      preload: [named: named]
+    list_visible_q(user)
+    |> join(:inner, [circle: circle], caretaker in assoc(circle, :caretaker), as: :caretaker)
+    |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
   end
-
 end
