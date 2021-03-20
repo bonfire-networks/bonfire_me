@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         LivePlugs.LoadCurrentAccount,
         LivePlugs.LoadCurrentUser,
         LivePlugs.LoadCurrentAccountUsers,
-        LivePlugs.LoadCurrentUserCircles,
+        # LivePlugs.LoadCurrentUserCircles,
         LivePlugs.StaticChanged,
         LivePlugs.Csrf,
         &mounted/3,
@@ -25,6 +25,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       {:ok, socket
       |> assign(
         page: "dashboard",
+        smart_input: true,
         page_title: "Bonfire Dashboard",
         feed_title: "My Feed",
         feed: e(feed, :entries, []),

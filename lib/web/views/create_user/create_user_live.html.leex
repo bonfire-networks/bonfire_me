@@ -1,4 +1,4 @@
-<div class="w-full mt-6 mx-auto h-full mb-6">
+<div class="container h-full max-w-lg mx-auto mt-16">
   <%= f = form_for @form, Routes.create_user_path(@socket, :create), id: "create-form" %>
     <!-- <div class="section__preview"> -->
     <!--   <div class="preview__card"> -->
@@ -14,9 +14,9 @@
     <!--     </div> -->
     <!--   </div> -->
     <!-- </div> -->
-    <section class="bg-white border rounded-lg">
-      <div class="bg-white px-4 py-5 sm:px-6 border-b rounded-t-lg border-gray-200">
-        <h3 class="text-3xl leading-6 font-bold text-gray-800">
+    <section class="bg-white rounded-lg shadow-xl">
+      <div class="px-4 py-5 bg-white border-b border-gray-200 rounded-t-lg sm:px-6">
+        <h3 class="text-3xl font-bold leading-6 text-gray-800">
           Create a new user
         </h3>
         <p class="mt-2 text-base text-gray-700">
@@ -24,7 +24,7 @@
         </p>
       </div>
       <div class="space-y-8 divide-y divide-gray-200">
-        <div class="mt-0 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 p-4">
+        <div class="grid grid-cols-1 p-4 mt-0 gap-y-6 gap-x-4 sm:grid-cols-6">
           <%= for g <- inputs_for(f, :character) do %>
             <div class="sm:col-span-6">
               <%= label g, :username, "What username will you use?", class: "block text-sm font-medium text-gray-700" %>
@@ -47,7 +47,7 @@
             </div>
           <% end %>
           <div class="sm:col-span-6">
-            <button type="submit" class="w-full items-center px-4 py-2 text-sm leading-5 font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700 transition ease-in-out duration-150">Create</button>
+            <button type="submit" class="items-center w-full px-4 py-2 text-sm font-medium leading-5 text-gray-100 transition duration-150 ease-in-out bg-gray-900 rounded-md hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-200 active:bg-gray-700">Create</button>
           </div>
         </div>
       </div>
