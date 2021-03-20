@@ -14,7 +14,8 @@ defmodule Bonfire.Me.Users.Queries do
       # join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
       join: p in assoc(u, :profile),
-      preload: [character: c, profile: p]
+      left_join: ia in assoc(u, :instance_admin),
+      preload: [instance_admin: ia, character: c, profile: p]
     )
   end
 
@@ -22,8 +23,9 @@ defmodule Bonfire.Me.Users.Queries do
     from u in User,
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
+      left_join: ia in assoc(u, :instance_admin),
       where: u.id == ^id,
-      preload: [profile: p, character: c]
+      preload: [instance_admin: ia, profile: p, character: c]
   end
 
 
@@ -40,8 +42,9 @@ defmodule Bonfire.Me.Users.Queries do
       join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
       join: p in assoc(u, :profile),
+      left_join: ia in assoc(u, :instance_admin),
       where: a.account_id == ^account_id,
-      preload: [character: c, profile: p]
+      preload: [instance_admin: ia, character: c, profile: p]
   end
 
   def by_username(username) do
@@ -50,8 +53,9 @@ defmodule Bonfire.Me.Users.Queries do
       join: c in assoc(u, :character),
       left_join: a in assoc(u, :actor),
       left_join: ac in assoc(u, :accounted),
+      left_join: ia in assoc(u, :instance_admin),
       where: c.username == ^username,
-      preload: [profile: p, character: c, actor: a, accounted: ac]
+      preload: [instance_admin: ia, profile: p, character: c, actor: a, accounted: ac]
   end
 
   def for_switch_user(username, account_id) do
