@@ -5,72 +5,12 @@
       <% @selected_tab == "followers" ->  %>
         <div class="pb-1 bg-white rounded-lg shadow">
           <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuSocialLive, assigns) %>
-          <div>
-            <div class="flow-root my-4">
-              <ul class="-my-5 divide-y divide-gray-200">
-                <li class="px-3 py-4">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="w-8 h-8 rounded-full" src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Leonard Krasner
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @leonardkrasner
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        Follow
-                      </a>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="m-3 my-3">
-              <a href="#" class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
-                Load more
-              </a>
-            </div>
-          </div>
+          <%= live_component(@socket, Bonfire.UI.Social.FollowersLive, assigns) %>
         </div>
       <% @selected_tab == "following" ->  %>
         <div class="pb-1 bg-white rounded-lg shadow">
           <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuSocialLive, assigns) %>
-          <div>
-            <div class="flow-root my-4">
-              <ul class="-my-5 divide-y divide-gray-200">
-                <li class="px-3 py-4">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <img class="w-8 h-8 rounded-full" src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">
-                        Leonard Krasner
-                      </p>
-                      <p class="text-sm text-gray-500 truncate">
-                        @leonardkrasner
-                      </p>
-                    </div>
-                    <div>
-                      <a href="#" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
-                        Follow
-                      </a>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="m-3 my-3">
-              <a href="#" class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
-                Load more
-              </a>
-            </div>
-          </div>
+          <%= live_component(@socket, Bonfire.UI.Social.FollowedLive, assigns) %>
         </div>
       <% @selected_tab == "timeline" ->  %>
         <div class="bg-white rounded-lg shadow">
