@@ -44,7 +44,8 @@ defmodule Bonfire.Me.Users.Accesses do
     cs = can_see?(:access, user)
     from access in Access, as: :access,
       join: named in assoc(access, :named),
-      left_lateral_join: _cs in ^cs,
+      left_lateral_join: cs in ^cs,
+      where: cs.can_see == true,
       preload: [named: named]
   end
 

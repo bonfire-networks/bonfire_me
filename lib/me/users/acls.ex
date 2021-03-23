@@ -43,7 +43,8 @@ defmodule Bonfire.Me.Users.Acls do
     cs = can_see?(:acl, user)
     from acl in Acl, as: :acl,
       join: named in assoc(acl, :named),
-      left_lateral_join: _cs in ^cs,
+      left_lateral_join: cs in ^cs,
+      where: cs.can_see == true,
       preload: [named: named]
   end
 
