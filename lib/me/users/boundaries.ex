@@ -7,8 +7,8 @@ defmodule Bonfire.Me.Users.Boundaries do
   def maybe_grant_read_to_circles(%User{id: user_id}=user, %{id: object_id} = _object, circle_ids) when is_list(circle_ids) do
     with {:ok, %{id: acl_id}} <- Bonfire.Me.Users.Acls.create(user, nil),
     {:ok, controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}),
-    {:ok, grants} <- Bonfire.Boundaries.Grants.grant(circle_ids ++ [user_id], acl_id) do
-      :ok
+    {:ok, grants} <- Bonfire.Boundaries.Grants.grant(circle_ids ++ [user_id], acl_id, :read_only) do
+        :ok
     end
   end
 
