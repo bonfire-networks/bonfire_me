@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Users.Circles do
   alias Bonfire.Data.Identity.Caretaker
 
   alias Bonfire.Boundaries.Circles
+  alias Bonfire.Me.Users
 
   alias Ecto.Changeset
   import Bonfire.Me.Integration
@@ -18,7 +19,7 @@ defmodule Bonfire.Me.Users.Circles do
 
   @doc "Create a circle for the provided user (and with the user in the circle?)"
   def create(%User{}=user, name \\ nil, %{}=attrs \\ %{}) do
-    repo().insert(changeset(:create,
+    with {:ok, circle} <- repo().insert(changeset(:create,
     user,
     attrs
       |> Utils.deep_merge(%{
@@ -26,7 +27,10 @@ defmodule Bonfire.Me.Users.Circles do
         caretaker: %{caretaker_id: user.id}
         # encircles: [%{subject_id: user.id}] # add myself to circle?
       })
-    ))
+    )) do
+      Users.Boundaries.maybe_grant_read_to_circles(user, circle)
+      {:ok, circle}
+    end
   end
 
   def changeset(:create, %User{}=user, attrs) do
