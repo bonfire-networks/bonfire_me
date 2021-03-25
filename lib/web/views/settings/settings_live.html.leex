@@ -1,14 +1,18 @@
-<header class="relative mt-8 p-3 bg-white rounded-lg shadow ">
-  <h1 class="text-lg font-bold text-gray-800">
-    Settings
-  </h1>
-</header>
+<main class="relative">
+    <div class="overflow-hidden bg-white">
+      <div class="divide-y divide-gray-200 lg:grid lg:grid-cols-10 lg:divide-y-0 lg:divide-x">
+        <aside class="py-6 lg:col-span-2 bg-blueGray-800">
+          <nav class="fixed h-full flex flex-col flex-grow overflow-y-auto w-full">
 
-<main class="relative my-4">
-    <div class="overflow-hidden bg-white rounded-lg shadow">
-      <div class="divide-y divide-gray-200 lg:grid lg:grid-cols-12 lg:divide-y-0 lg:divide-x">
-        <aside class="py-6 lg:col-span-3 bg-blueGray-800">
-          <nav>
+            <%= live_patch to: "/dashboard" do %>
+              <div class="flex items-center px-3 py-2 mt-0 text-sm font-medium  hover:text-gray-100 group text-gray-100">
+                <span class="w-8 h-8 items-center flex place-content-center hover:bg-blueGray-700 rounded-full">
+                  <svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </span>
+                <span class="ml-2 truncate">Back to dashboard</span>
+              </div>
+            <% end %>
+
             <%= live_patch to: "/settings/user" do %>
               <div aria-current="<%= if @selected_tab == "user", do: "page" %>" class="flex items-center px-3 py-2 mt-3 text-sm font-medium border-l-4 border-transparent  hover:text-gray-100 group <%= if @selected_tab == "user", do: "border-pink-500 text-white font-bold hover:text-white", else: "text-gray-400" %>">
                 <svg class="flex-shrink-0 w-6 h-6 mr-3 -ml-1 group-hover:text-gray-100 <%= if @selected_tab == "user", do: "text-white group-hover:text-white", else: "text-gray-400" %>" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -68,6 +72,7 @@
           </nav>
         </aside>
 
+      <div class="lg:col-span-8">
       <%= cond do %>
         <% @selected_tab == "admin" ->  %>
             <%= live_component(
@@ -108,6 +113,7 @@
         <% end %>
 
         <% end %>
+        </div>
       </div>
     </div>
 </main>
