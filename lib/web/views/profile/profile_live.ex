@@ -20,7 +20,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
   defp mounted(params, session, socket) do
 
-    current_user = Map.get(socket.assigns, :current_user)
+    current_user = e(socket.assigns, :current_user, nil)
 
     user = case Map.get(params, "username") do
       nil -> e(socket.assigns, :current_user, Fake.user_live())
@@ -33,11 +33,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     following = if current_user && user && module_enabled?(Bonfire.Social.Follows), do: Bonfire.Social.Follows.following?(current_user, user)
 
-    # feed = if user, do: Bonfire.Social.Activities.by_user(user)
-    feed_id = e(socket.assigns, :current_user, nil)
-    feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, feed_id)
-    # IO.inspect(feed: feed)
-
     {:ok,
       socket
       |> assign(
@@ -49,29 +44,64 @@ defmodule Bonfire.Me.Web.ProfileLive do
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
         user: user, # the user to display
-        following: following,
-        feed_id: feed_id,
+        following: following
+      )}
+  end
+
+  def handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
+    current_user = e(socket.assigns, :current_user, nil)
+
+    feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
+
+    {:noreply,
+     assign(socket,
+       selected_tab: tab,
+       feed: e(feed, :entries, []),
+       page_info: e(feed, :metadata, [])
+     )}
+  end
+
+  def handle_params(%{"tab" => "boosts" = tab} = _params, _url, socket) do
+    current_user = e(socket.assigns, :current_user, nil)
+
+    feed = if module_enabled?(Bonfire.Social.Boosts), do: Bonfire.Social.Boosts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
+
+    {:noreply,
+      assign(socket,
+        selected_tab: tab,
         feed: e(feed, :entries, []),
         page_info: e(feed, :metadata, [])
       )}
   end
 
+  def handle_params(%{"tab" => "timeline" = tab} = _params, _url, socket) do
+
+    handle_params(%{}, nil, socket)
+  end
+
   def handle_params(%{"tab" => tab} = _params, _url, socket) do
+    IO.inspect(tab: tab)
     {:noreply,
      assign(socket,
        selected_tab: tab
-       #  current_user: socket.assigns.current_user
      )}
   end
 
   def handle_params(%{} = _params, _url, socket) do
-    # logged_url = url =~ "my/profile"
+    IO.inspect(tab: "default")
+
+    current_user = e(socket.assigns, :current_user, nil)
+
+     # feed = if user, do: Bonfire.Social.Activities.by_user(user)
+     feed_id = e(socket.assigns, :user, :id, nil)
+     feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, current_user)
+     # IO.inspect(feed: feed)
 
     {:noreply,
      assign(socket,
-       #  me: logged_url
-       #  user: user,
-       current_user: socket.assigns.current_user
+     selected_tab: "timeline",
+     feed: e(feed, :entries, []),
+     page_info: e(feed, :metadata, [])
      )}
   end
 

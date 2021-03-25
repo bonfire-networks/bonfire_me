@@ -12,17 +12,25 @@
           <%= live_component(@socket, Bonfire.UI.Social.ProfileMenuSocialLive, assigns) %>
           <%= live_component(@socket, Bonfire.UI.Social.FollowedLive, assigns) %>
         </div>
-      <% @selected_tab == "timeline" ->  %>
-        <div class="bg-white rounded-lg shadow">
-          <%= live_component(@socket, Bonfire.UI.Social.ProfileHeroFullLive, assigns) %>
-          <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
-        </div>
         <% @selected_tab == "media" ->  %>
         <div class="bg-white rounded-lg shadow">
           <%= live_component(@socket, Bonfire.UI.Social.ProfileHeroFullLive, assigns) %>
-          <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
         </div>
-
+        <% @selected_tab == "posts" ->  %>
+          <div class="bg-white rounded-lg shadow">
+            <%= live_component(@socket, Bonfire.UI.Social.ProfileHeroFullLive, assigns) %>
+            <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
+          </div>
+        <% @selected_tab == "boosts" ->  %>
+          <div class="bg-white rounded-lg shadow">
+            <%= live_component(@socket, Bonfire.UI.Social.ProfileHeroFullLive, assigns) %>
+            <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
+          </div>
+        <% @selected_tab == "timeline" ->  %>
+          <div class="bg-white rounded-lg shadow">
+            <%= live_component(@socket, Bonfire.UI.Social.ProfileHeroFullLive, assigns) %>
+            <%= live_component(@socket, Bonfire.UI.Social.FeedLive, assigns) %>
+          </div>
         <% true -> %>
           <div class="bg-white rounded-lg shadow">
             <%= live_component(@socket, Bonfire.UI.Social.ProfileHeroFullLive, assigns) %>
