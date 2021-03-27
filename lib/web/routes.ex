@@ -41,6 +41,7 @@ defmodule Bonfire.Me.Web.Routes do
 
         live "/settings/extension", SettingsLive.ExtensionDiffLive
         live "/settings/:tab", SettingsLive
+        live "/settings/:tab/:id", SettingsLive
 
         resources "/delete", AccountDeleteController, only: [:index, :create]
 

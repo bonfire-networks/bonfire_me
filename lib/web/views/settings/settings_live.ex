@@ -32,6 +32,10 @@ defmodule Bonfire.Me.Web.SettingsLive do
          trigger_submit: false,
          )}
 
+  def handle_params(%{"tab" => tab, "id" => id}, _url, socket) do
+    {:noreply, assign(socket, selected_tab: tab, id: id)}
+  end
+
   def handle_params(%{"tab" => tab}, _url, socket) do
     {:noreply, assign(socket, selected_tab: tab)}
   end

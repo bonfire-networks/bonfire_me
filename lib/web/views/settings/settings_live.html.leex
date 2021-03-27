@@ -1,8 +1,9 @@
 <main class="relative">
     <div class="overflow-hidden bg-white">
       <div class="divide-y divide-gray-200 lg:grid lg:grid-cols-10 lg:divide-y-0 lg:divide-x">
+
         <aside class="py-6 lg:col-span-2 bg-blueGray-800">
-          <nav class="fixed h-full flex flex-col flex-grow overflow-y-auto w-full">
+          <nav class="fixed h-full flex flex-col flex-grow overflow-y-auto">
 
             <%= live_patch to: "/dashboard" do %>
               <div class="flex items-center px-3 py-2 mt-0 text-sm font-medium  hover:text-gray-100 group text-gray-100">
@@ -29,6 +30,17 @@
                 </svg>
                 <span class="truncate">
                   Preferences
+                </span>
+              </div>
+            <% end %>
+
+            <%= live_patch to: "/settings/circles" do %>
+              <div aria-current="<%= if @selected_tab == "circles", do: "page" %>" class="<%= if @selected_tab == "circles", do: "border-pink-500 text-white font-bold hover:text-white", else: "text-gray-400" %> flex items-center px-3 py-2 mt-3 text-sm font-medium border-l-4 border-transparent  hover:text-gray-100 group">
+                <svg class="flex-shrink-0 w-6 h-6 mr-3 -ml-1 group-hover:text-gray-500 <%= if @selected_tab == "preferences", do: "text-white group-hover:text-white", else: "text-gray-400" %>" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                </svg>
+                <span class="truncate">
+                  Circles
                 </span>
               </div>
             <% end %>
@@ -86,7 +98,18 @@
             EditAccountLive,
             assigns
           )  %>
-
+        <% @selected_tab == "circles" ->  %>
+           <%= live_component(
+            @socket,
+            Bonfire.UI.Social.MyCirclesLive,
+            assigns 
+          )  %>
+        <% @selected_tab == "circle" ->  %>
+           <%= live_component(
+            @socket,
+            Bonfire.UI.Social.EditCircleLive,
+            assigns 
+          )  %>
         <% @selected_tab == "extensions" ->  %>
            <%= live_component(
             @socket,
@@ -113,6 +136,7 @@
         <% end %>
 
         <% end %>
+
         </div>
       </div>
     </div>

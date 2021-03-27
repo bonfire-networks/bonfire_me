@@ -73,4 +73,34 @@ defmodule Bonfire.Me.Users.Circles do
     |> join(:inner, [circle: circle], caretaker in assoc(circle, :caretaker), as: :caretaker)
     |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
   end
+
+  def get(id, %User{}=user) do
+    repo().single(get_q(id, user))
+  end
+
+  @doc "query for `list_my`"
+  def get_q(id, %User{id: user_id}=user) do
+    list_visible_q(user)
+    |> join(:inner, [circle: circle], caretaker in assoc(circle, :caretaker), as: :caretaker)
+    |> where([circle: circle, caretaker: caretaker], circle.id == ^id and caretaker.caretaker_id == ^user_id)
+  end
+
+  def update(id, %User{} = user, params) do
+    with {:ok, circle} <- get(id, user)
+    |> repo().maybe_preload([:encircles]) do
+
+      repo().update(changeset(:update, circle, params))
+    end
+  end
+
+  def changeset(:update, circle, params) do
+
+    # Ecto doesn't liked mixed keys so we convert them all to strings
+    params = for {k, v} <- params, do: {to_string(k), v}, into: %{}
+    IO.inspect(params)
+
+    circle
+    |> Circles.changeset(params)
+  end
+
 end
