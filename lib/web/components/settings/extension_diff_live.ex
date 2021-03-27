@@ -52,7 +52,7 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionDiffLive do
     case repo_latest_diff(package, repo_path) do
       {:ok, diff} ->
 
-        # IO.inspect(diff)
+        #IO.inspect(diff)
         # render_diff(diff)
         {:ok, diff}
 
@@ -66,7 +66,7 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionDiffLive do
 
   defp render_diff(patch) do
 
-    # IO.inspect(patch)
+    #IO.inspect(patch)
     Phoenix.View.render_to_iodata(Bonfire.Me.DiffRenderView, "diff_render.html", patch: patch)
 
   end

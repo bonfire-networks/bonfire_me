@@ -43,8 +43,9 @@ defmodule Bonfire.Me.Users.Queries do
       join: c in assoc(u, :character),
       join: p in assoc(u, :profile),
       left_join: ia in assoc(u, :instance_admin),
+      left_join: fc in assoc(c, :follow_count),
       where: a.account_id == ^account_id,
-      preload: [instance_admin: ia, character: c, profile: p]
+      preload: [instance_admin: ia, character: {c, [follow_count: fc]}, profile: p]
   end
 
   def by_username(username) do
@@ -54,12 +55,13 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: a in assoc(u, :actor),
       left_join: ac in assoc(u, :accounted),
       left_join: ia in assoc(u, :instance_admin),
+      left_join: fc in assoc(c, :follow_count),
       where: c.username == ^username,
-      preload: [instance_admin: ia, profile: p, character: c, actor: a, accounted: ac]
+      preload: [instance_admin: ia, profile: p, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
   end
 
   def for_switch_user(username, account_id) do
-    if Utils.module_exists?(Bonfire.Data.SharedUser) do
+    if Utils.module_exists?(Bonfire.Me.SharedUsers) do
       Bonfire.Me.SharedUsers.query_for_switch_user(username, account_id)
 
     else
@@ -67,9 +69,10 @@ defmodule Bonfire.Me.Users.Queries do
         join: p in assoc(u, :profile),
         join: c in assoc(u, :character),
         join: a in assoc(u, :accounted),
+        left_join: fc in assoc(c, :follow_count),
         where: c.username == ^username,
         where: a.account_id == ^account_id,
-        preload: [profile: p, character: c, accounted: a],
+        preload: [profile: p, character: {c, [follow_count: fc]}, accounted: a],
         order_by: [asc: u.id]
     end
   end

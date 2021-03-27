@@ -29,7 +29,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
           user
         end
     end
-    # IO.inspect(user: user)
+    IO.inspect(user: user)
 
     following = if current_user && user && module_enabled?(Bonfire.Social.Follows), do: Bonfire.Social.Follows.following?(current_user, user)
 
@@ -95,7 +95,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      # feed = if user, do: Bonfire.Social.Activities.by_user(user)
      feed_id = e(socket.assigns, :user, :id, nil)
      feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, current_user)
-     # IO.inspect(feed: feed)
+     #IO.inspect(feed: feed)
 
     {:noreply,
      assign(socket,
@@ -105,7 +105,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      )}
   end
 
-  defdelegate handle_event(action, attrs, socket), to: Bonfire.Web.LiveHandler
-  defdelegate handle_info(info, socket), to: Bonfire.Web.LiveHandler
+  def handle_event(action, attrs, socket), do: Bonfire.Web.LiveHandler.handle_event(action, attrs, socket, __MODULE__)
+  def handle_info(info, socket), do: Bonfire.Web.LiveHandler.handle_info(info, socket, __MODULE__)
 
 end

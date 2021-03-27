@@ -10,14 +10,14 @@ defmodule Bonfire.Me.Web.SettingsLive.ExtensionsLive do
   def update(assigns, socket) do
 
     deps = deps()
-    # IO.inspect(List.first(deps))
+    #IO.inspect(List.first(deps))
 
     extensions = filter_bonfire(deps)
     other_deps = filter_bonfire(deps, false)
 
     schemas = filter_bonfire(extensions, true, @prefix_data)
     extensions = filter_bonfire(extensions, false, @prefix_data)
-    # IO.inspect(List.first(extensions))
+    #IO.inspect(List.first(extensions))
 
     {:ok, assign(socket,
       extensions: extensions,

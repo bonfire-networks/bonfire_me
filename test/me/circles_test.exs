@@ -75,7 +75,7 @@ defmodule Bonfire.Me.CirclesTest do
     assert circles = Circles.list_visible(me)
     |> Repo.preload([:named, :caretaker])
 
-    # IO.inspect(circles)
+    #IO.inspect(circles)
     # preset_circles = Bonfire.Boundaries.Circles.circles() |> Map.keys()
     assert length(circles) == 0 #length(preset_circles)
   end

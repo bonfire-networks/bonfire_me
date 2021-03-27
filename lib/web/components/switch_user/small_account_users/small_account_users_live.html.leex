@@ -8,7 +8,7 @@
           <div class="flex flex-col items-center flex-1">
             <img class="flex-shrink-0 w-12 h-12 mx-auto mr-1 rounded-full ring-4 ring-white group-hover:ring-pink-600" src="<%= Bonfire.Me.Fake.image(user) %>" alt="">
             <div class="mt-0">
-              <%= if e(user, :shared_user, :label, nil) do %>
+              <%= if Utils.module_exists?(Bonfire.Me.SharedUsers) && e(user, :shared_user, :label, nil) do %>
                 <span class="inline-flex items-center px-2 py-1 mt-1 text-sm font-medium leading-5 text-center text-pink-800 bg-pink-100 rounded-md group-hover:text-pink-600">
                   <%= e(user, :shared_user, :label, nil) %>
                 </span>

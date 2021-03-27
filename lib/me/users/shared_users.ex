@@ -1,3 +1,4 @@
+if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
 defmodule Bonfire.Me.SharedUsers do
   alias Bonfire.Data.SharedUser
 
@@ -23,7 +24,7 @@ defmodule Bonfire.Me.SharedUsers do
 
     shared_user = init_shared_user(user, params)
 
-    # IO.inspect(made_shared_user: shared_user)
+    #IO.inspect(made_shared_user: shared_user)
 
     if shared_user do
 
@@ -31,7 +32,7 @@ defmodule Bonfire.Me.SharedUsers do
 
       if account do
 
-        # IO.inspect(account: account)
+        #IO.inspect(account: account)
 
         repo().update(changeset(:add_account, shared_user, account))
       else
@@ -103,4 +104,5 @@ defmodule Bonfire.Me.SharedUsers do
         order_by: [asc: u.id]
   end
 
+end
 end

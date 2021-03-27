@@ -12,7 +12,7 @@
           </div>
           <div class="mt-1">
             <h2 class="text-lg font-bold text-gray-800"><%= e(user, :profile, :name, "Anonymous") %></h1>
-            <%= if e(user, :shared_user, :label, nil) do %>
+            <%= if Utils.module_exists?(Bonfire.Me.SharedUsers) && e(user, :shared_user, :label, nil) do %>
               <h3 class="-mt-1 text-sm font-normal text-gray-600">@<%= e(user, :shared_user, :label, "") %></h3>
             <% else %>
               <h3 class="-mt-1 text-sm font-normal text-gray-600">@<%= e(user, :character, :username, "") %></h3>
@@ -21,7 +21,7 @@
         </div>
         <div class="flex items-center mt-2 mb-4">
           <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-          <a class="ml-2 text-sm text-gray-800 mr-2 underline" href="#"> <b>71</b> Followers </a> · <a class="ml-2 text-sm text-gray-800 underline" href="#"> <b>18</b> Following</a>
+          <a class="ml-2 text-sm text-gray-800 mr-2 underline" href="#"> <b><%= e(user, :character, :follow_count, :follower_count, 0) %></b> Followers </a> · <a class="ml-2 text-sm text-gray-800 underline" href="#"> <b><%= e(user, :character, :follow_count, :follow_count, 0) %></b> Following</a>
         </div>
       </div>
       <% end %>
