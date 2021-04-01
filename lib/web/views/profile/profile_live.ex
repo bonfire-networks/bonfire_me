@@ -48,7 +48,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
       )}
   end
 
-  def handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
+  def do_handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
     current_user = e(socket.assigns, :current_user, nil)
 
     feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
@@ -61,7 +61,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      )}
   end
 
-  def handle_params(%{"tab" => "boosts" = tab} = _params, _url, socket) do
+  def do_handle_params(%{"tab" => "boosts" = tab} = _params, _url, socket) do
     current_user = e(socket.assigns, :current_user, nil)
 
     feed = if module_enabled?(Bonfire.Social.Boosts), do: Bonfire.Social.Boosts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
@@ -74,12 +74,12 @@ defmodule Bonfire.Me.Web.ProfileLive do
       )}
   end
 
-  def handle_params(%{"tab" => "timeline" = tab} = _params, _url, socket) do
+  def do_handle_params(%{"tab" => "timeline" = tab} = _params, _url, socket) do
 
-    handle_params(%{}, nil, socket)
+    do_handle_params(%{}, nil, socket)
   end
 
-  def handle_params(%{"tab" => tab} = _params, _url, socket) do
+  def do_handle_params(%{"tab" => tab} = _params, _url, socket) do
     IO.inspect(tab: tab)
     {:noreply,
      assign(socket,
@@ -87,7 +87,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      )}
   end
 
-  def handle_params(%{} = _params, _url, socket) do
+  def do_handle_params(%{} = _params, _url, socket) do
     IO.inspect(tab: "default")
 
     current_user = e(socket.assigns, :current_user, nil)
@@ -103,6 +103,12 @@ defmodule Bonfire.Me.Web.ProfileLive do
      feed: e(feed, :entries, []),
      page_info: e(feed, :metadata, [])
      )}
+  end
+
+  def handle_params(params, uri, socket) do
+    undead_params(socket, fn ->
+      do_handle_params(params, uri, socket)
+    end)
   end
 
   def handle_event(action, attrs, socket), do: Bonfire.Web.LiveHandler.handle_event(action, attrs, socket, __MODULE__)
