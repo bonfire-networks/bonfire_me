@@ -29,9 +29,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
           user
         end
     end
-    IO.inspect(user: user)
+    # IO.inspect(user: user)
 
-    following = if current_user && user && module_enabled?(Bonfire.Social.Follows), do: Bonfire.Social.Follows.following?(current_user, user)
+    following = if current_user && user && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id]
 
     {:ok,
       socket
@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
         user: user, # the user to display
-        following: following
+        following: following || []
       )}
   end
 
