@@ -11,7 +11,6 @@ defmodule Bonfire.Me.Web.Routes do
 
         live "/user/:username", ProfileLive
         live "/user/:username/:tab", ProfileLive
-        live "/user/:username/circles", CirclesLive
         live "/user/:username/posts", PostsLive
 
       end
@@ -43,7 +42,7 @@ defmodule Bonfire.Me.Web.Routes do
         live "/settings/:tab", SettingsLive
         live "/settings/:tab/:id", SettingsLive
 
-        resources "/delete", AccountDeleteController, only: [:index, :create]
+        # resources "/settings/account/delete", AccountDeleteController, only: [:index, :create]
 
         resources "/logout", LogoutController, only: [:index, :create]
       end
@@ -57,7 +56,9 @@ defmodule Bonfire.Me.Web.Routes do
 
         live "/settings", SettingsLive
 
-        resources "/delete", UserDeleteController, only: [:index, :create]
+        live "/user/circles", CirclesLive
+
+        # resources "/settings/user/delete", UserDeleteController, only: [:index, :create]
       end
 
       # pages only admins can view

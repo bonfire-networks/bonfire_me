@@ -10,13 +10,22 @@ defmodule Bonfire.Me.Fake do
     account
   end
 
+  # def fake_account!(attrs \\ %{}) do
+  #   cs = Accounts.signup_changeset(Fake.account(attrs))
+  #   assert {:ok, account} = repo().insert(cs)
+  #   account
+  # end
+
   def fake_user!(account \\ %{}, attrs \\ %{})
 
   def fake_user!(%Account{}=account, attrs) do
     {:ok, user} = Users.create(create_user_form(attrs), account)
     user
   end
-
+  # def fake_user!(%Account{}=account \\ %{}, attrs \\ %{}) do
+  #   assert {:ok, user} = Users.create(Fake.user(attrs), account)
+  #   user
+  # end
   def fake_user!(account_attrs, user_attrs) do
     fake_user!(fake_account!(account_attrs), user_attrs)
   end

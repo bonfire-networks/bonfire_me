@@ -98,7 +98,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   ## Adapter callbacks
 
   def get_actor_by_username(username) do
-    with {:ok, user} <- Users.ActivityPub.by_username(username),
+    with {:ok, user} <- by_username(username),
          actor <- format_actor(user) do
       {:ok, actor}
     else
@@ -108,7 +108,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   end
 
   def update_local_actor(actor, params) do
-    with {:ok, user} <- Users.ActivityPub.by_username(actor.username),
+    with {:ok, user} <- by_username(actor.username),
          {:ok, user} <-
            Users.ActivityPub.update(user, Map.put(params, :actor, %{signing_key: params.keys})),
          actor <- format_actor(user) do
@@ -117,7 +117,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   end
 
   def maybe_create_remote_actor(actor) do
-    case Users.by_username(actor.username) do
+    case by_username(actor.username) do
       {:ok, _} -> :ok
       {:error, _} -> create_remote_actor(actor)
     end
