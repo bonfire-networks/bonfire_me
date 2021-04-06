@@ -4,13 +4,6 @@ defmodule Bonfire.Me.Web.SettingsLive do
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Users
 
-  alias Bonfire.Me.Web.SettingsLive.{
-    SettingsNavigationLive,
-    EditProfileLive,
-    ExtensionsLive,
-    EditAccountLive,
-    AdminLive
-  }
   alias Bonfire.Web.LivePlugs
 
   def mount(params, session, socket) do
