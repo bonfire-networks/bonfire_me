@@ -26,6 +26,8 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       |> assign(
         page: "dashboard",
         smart_input: true,
+        has_private_tab: false,
+        smart_input_placeholder: "Write something meaningful",
         page_title: "Bonfire Dashboard",
         feed_title: "My Feed",
         feed: e(feed, :entries, []),
