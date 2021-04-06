@@ -32,7 +32,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   defp format_actor(user) do
     user = Bonfire.Repo.preload(user, [:actor])
     ap_base_path = Bonfire.Common.Config.get(:ap_base_path, "/pub")
-    id = Bonfire.Web.Endpoint.url() <> ap_base_path <> "/actors/#{user.character.username}"
+    id = Bonfire.Common.URIs.base_url() <> ap_base_path <> "/actors/#{user.character.username}"
 
     data = %{
       "type" => "Person",

@@ -79,11 +79,17 @@ defmodule Bonfire.Me.Accounts do
 
   def login(%Changeset{data: %LoginFields{}}=cs, opts) do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
-      repo().find(Queries.login(form), cs)
+      repo().find(login_query(form), cs)
       ~>> login_check_password(form, cs)
       ~>> login_check_confirmed(opts, cs)
     end
   end
+
+  defp login_query(%{email: email}) when is_binary(email),
+    do: Queries.login_by_email(email)
+
+  defp login_query(%{username: username}) when is_binary(username),
+    do: Queries.login_by_username(username)
 
   defp login_check_password(nil, _form, changeset) do
     Credential.dummy_check()

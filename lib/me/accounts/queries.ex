@@ -31,12 +31,6 @@ defmodule Bonfire.Me.Accounts.Queries do
       preload: [email: e]
   end
 
-  def login(%{email: email}) when is_binary(email),
-    do: login_by_email(email)
-
-  def login(%{username: username}) when is_binary(username),
-    do: login_by_username(username)
-
   def login_by_email(email) when is_binary(email) do
     from a in Account,
       join: e in assoc(a, :email),
@@ -59,7 +53,5 @@ defmodule Bonfire.Me.Accounts.Queries do
         accounted: {ac, user: {u, character: ch, profile: p}},
       ]
   end
-
-
 
 end
