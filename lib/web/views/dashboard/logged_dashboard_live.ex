@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         LivePlugs.LoadCurrentAccount,
         LivePlugs.LoadCurrentUser,
         LivePlugs.LoadCurrentAccountUsers,
-        # LivePlugs.LoadCurrentUserCircles,
+        LivePlugs.LoadCurrentUserCircles,
         LivePlugs.StaticChanged,
         LivePlugs.Csrf,
         &mounted/3,
