@@ -12,6 +12,12 @@ defmodule Bonfire.Me.Users.ActivityPub do
   def by_username(username) when is_binary(username),
     do: repo().single(Queries.by_username(username))
 
+  def by_ap_id(ap_id) do
+    with {:ok, actor} = ActivityPub.Actor.get_cached_by_ap_id(ap_id) do
+      by_username(actor.username)
+    end
+  end
+
   @doc "Creates a remote user"
   def create(params) do
     Users.changeset(:create, %User{}, params, :remote)
@@ -99,6 +105,26 @@ defmodule Bonfire.Me.Users.ActivityPub do
 
   def get_actor_by_username(username) do
     with {:ok, user} <- by_username(username),
+         actor <- format_actor(user) do
+      {:ok, actor}
+    else
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  def get_actor_by_id(id) do
+    with {:ok, user} <- Users.by_id(id),
+         actor <- format_actor(user) do
+      {:ok, actor}
+    else
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  def get_actor_by_ap_id(ap_id) do
+    with {:ok, user} <- by_ap_id(ap_id),
          actor <- format_actor(user) do
       {:ok, actor}
     else
