@@ -32,14 +32,19 @@ defmodule Bonfire.Me.Web.ProfileLive do
     # IO.inspect(user: user)
 
     following = if current_user && user && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id]
-
+    page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Your profile", else: e(user, :profile, :name, "no name") <> " profile"
+    smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Write something public...", else: "Write something to " <> e(user, :profile, :name, "no name")
+    search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search on " <> e(user, :profile, :name, "no name") <> " profile"
     {:ok,
       socket
       |> assign(
         page: "profile",
-        page_title: "Profile",
+        page_title: page_title,
         selected_tab: "timeline",
         smart_input: true,
+        has_private_tab: true,
+        smart_input_placeholder: smart_input_placeholder,
+        search_placholder: search_placeholder,
         feed_title: "User timeline",
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
