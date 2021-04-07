@@ -32,9 +32,16 @@ defmodule Bonfire.Me.Web.ProfileLive do
     # IO.inspect(user: user)
 
     following = if current_user && user && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id]
-    page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Your profile", else: e(user, :profile, :name, "no name") <> " profile"
-    smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Write something public...", else: "Write something to " <> e(user, :profile, :name, "no name")
-    search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search on " <> e(user, :profile, :name, "no name") <> " profile"
+
+    page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Your profile", else: e(user, :profile, :name, "Someone") <> "'s profile"
+
+    smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Write something public...", else: "Write something for " <> e(user, :profile, :name, "this person")
+
+    smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do:
+    "", else: "@"<>e(user, :character, :username, "")<>" "
+
+    search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
+
     {:ok,
       socket
       |> assign(
@@ -44,11 +51,13 @@ defmodule Bonfire.Me.Web.ProfileLive do
         smart_input: true,
         has_private_tab: true,
         smart_input_placeholder: smart_input_placeholder,
+        smart_input_text: smart_input_text,
         search_placholder: search_placeholder,
         feed_title: "User timeline",
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
         user: user, # the user to display
+        to_circle_ids: [user.id],
         following: following || []
       )}
   end
@@ -62,6 +71,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      assign(socket,
        selected_tab: tab,
        feed: e(feed, :entries, []),
+       smart_input_private: false,
        page_info: e(feed, :metadata, [])
      )}
   end
@@ -74,6 +84,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
       assign(socket,
         selected_tab: tab,
+        smart_input_private: false,
         feed: e(feed, :entries, []),
         page_info: e(feed, :metadata, [])
       )}
@@ -84,11 +95,33 @@ defmodule Bonfire.Me.Web.ProfileLive do
     do_handle_params(%{}, nil, socket)
   end
 
-  def do_handle_params(%{"tab" => tab} = _params, _url, socket) do
+  def do_handle_params(%{"tab" => "private" =tab} = _params, _url, socket) do
     IO.inspect(tab: tab)
+    current_user = e(socket.assigns, :current_user, nil)
+
+    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: "Write a private note to self...", else: "Write a private message for " <> e(socket, :assigns, :user, :profile, :name, "this person")
+
+    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) |> IO.inspect
+
     {:noreply,
      assign(socket,
-       selected_tab: tab
+       selected_tab: tab,
+       feed: e(feed, :entries, []),
+       smart_input_placeholder: smart_input_placeholder,
+       smart_input_private: true,
+     )}
+  end
+
+  def do_handle_params(%{"tab" => tab} = _params, _url, socket) do
+    IO.inspect(tab: tab)
+
+    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: "Write something public...", else: "Write something for " <> e(socket, :assigns, :user, :profile, :name, "this person")
+
+    {:noreply,
+     assign(socket,
+       selected_tab: tab,
+       smart_input_private: false,
+       smart_input_placeholder: smart_input_placeholder,
      )}
   end
 
@@ -105,6 +138,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
      assign(socket,
      selected_tab: "timeline",
+     smart_input_private: false,
      feed: e(feed, :entries, []),
      page_info: e(feed, :metadata, [])
      )}
