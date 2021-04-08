@@ -26,13 +26,14 @@ defmodule Bonfire.Me.Web.SignupController do
   end
 
   # TODO: move somewhere for reuse
-  def changeset_errors_string(changeset, include_first_level_of_keys \\ true) do
+  def changeset_errors_string(%Ecto.Changeset{} = changeset, include_first_level_of_keys \\ true) do
     errors = Ecto.Changeset.traverse_errors(changeset, fn
         {msg, opts} -> String.replace(msg, "%{count}", to_string(opts[:count]))
         msg -> msg
       end)
     error_msg = errors_map_string(errors, false)
   end
+  def changeset_errors_string(error, _), do: error
 
   def errors_map_string(errors, include_keys \\ true)
 
