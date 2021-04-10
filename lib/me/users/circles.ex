@@ -64,7 +64,7 @@ defmodule Bonfire.Me.Users.Circles do
   user to see them, they will not be shown.
   """
   def list_my(%User{}=user) do
-    repo().all(list_my_q(user))
+    repo().all(list_my_q(user)) ++ Bonfire.Boundaries.Circles.list_builtins()
   end
 
   @doc "query for `list_my`"

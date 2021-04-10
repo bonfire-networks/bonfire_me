@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
         user: user, # the user to display
-        to_circle_ids: [user.id],
+        to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}],
         following: following || []
       )}
   end
