@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.CirclesTest do
+defmodule Bonfire.Me.UserCirclesTest do
 
   use Bonfire.DataCase, async: true
   alias Bonfire.Me.Fake
@@ -29,7 +29,7 @@ defmodule Bonfire.Me.CirclesTest do
     assert {:ok, circle} = Circles.create(user, name)
 
     assert circles = Circles.list_my(user)
-    assert is_list(circles) and length(circles) > 0
+    assert is_list(circles) and length(circles) > length(Bonfire.Boundaries.Circles.list_builtins())
 
     my_circle = List.first(circles)
     my_circle = Repo.preload(my_circle, [:named, :caretaker])
@@ -40,13 +40,15 @@ defmodule Bonfire.Me.CirclesTest do
   end
 
   test "cannot list someone else's circles (which they're caretaker of) " do
-    me = fake_user!()
+
     user = fake_user!()
     name = "test circle"
     assert {:ok, circle} = Circles.create(user, name)
 
+    me = fake_user!()
     assert circles = Circles.list_my(me)
-    assert length(circles) == 0
+    # IO.inspect(circles)
+    assert length(circles) == length(Bonfire.Boundaries.Circles.list_builtins())
 
   end
 
@@ -76,8 +78,7 @@ defmodule Bonfire.Me.CirclesTest do
     |> Repo.preload([:named, :caretaker])
 
     #IO.inspect(circles)
-    # preset_circles = Bonfire.Boundaries.Circles.circles() |> Map.keys()
-    assert length(circles) == 0 #length(preset_circles)
+    assert length(circles) == 0
   end
 
 end

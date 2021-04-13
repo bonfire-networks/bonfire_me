@@ -1,11 +1,7 @@
 defmodule Bonfire.Me.Web.ProfileLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Me.Web.HeroProfileLive
-  alias Bonfire.Me.Web.ProfileNavigationLive
-  alias Bonfire.Me.Web.ProfileAboutLive
   alias Bonfire.Me.Fake
   alias Bonfire.Web.LivePlugs
-  import Bonfire.Me.Integration
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
@@ -14,11 +10,11 @@ defmodule Bonfire.Me.Web.ProfileLive do
       LivePlugs.LoadCurrentUserCircles,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf,
-      &mounted/3,
+      &mounted/3
     ]
   end
 
-  defp mounted(params, session, socket) do
+  defp mounted(params, _session, socket) do
 
     current_user = e(socket.assigns, :current_user, nil)
 
@@ -90,7 +86,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
       )}
   end
 
-  def do_handle_params(%{"tab" => "timeline" = tab} = _params, _url, socket) do
+  def do_handle_params(%{"tab" => "timeline" = _tab} = _params, _url, socket) do
 
     do_handle_params(%{}, nil, socket)
   end
@@ -108,7 +104,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
        selected_tab: tab,
        feed: e(feed, :entries, []),
        smart_input_placeholder: smart_input_placeholder,
-       smart_input_private: true,
+       smart_input_private: true
      )}
   end
 
@@ -121,7 +117,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      assign(socket,
        selected_tab: tab,
        smart_input_private: false,
-       smart_input_placeholder: smart_input_placeholder,
+       smart_input_placeholder: smart_input_placeholder
      )}
   end
 

@@ -17,7 +17,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Profiles do
   def handle_event("profile_save", params, socket) do
   # params = input_to_atoms(params)
 
-    with {:ok, edit_profile} <-
+    with {:ok, _edit_profile} <-
       Users.update(socket.assigns.current_user, params, socket.assigns.current_account) do
 
       IO.inspect((Map.get(params, "icon")))

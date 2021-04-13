@@ -13,7 +13,7 @@ defmodule Bonfire.Me.Web.ForgotPasswordLive do
     ]
   end
 
-  defp mounted(params, session, socket) do
+  defp mounted(_params, _session, socket) do
     {:ok,
      socket
       |> assign_new(:form, &form/0)}

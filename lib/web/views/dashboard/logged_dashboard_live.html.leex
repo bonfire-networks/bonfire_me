@@ -1,5 +1,5 @@
 <%= if @current_user do %>
-  <%= live_component(@socket, Bonfire.UI.Social.FeedViewLive, assigns) %>
-<%= else %>
+  <%= live_component(@socket, @feed_module, assigns) %>
+<% else %>
     <%= live_component(@socket, Bonfire.UI.Social.SwitchUserViewLive, assigns) %>
 <% end %>

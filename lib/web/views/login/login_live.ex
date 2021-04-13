@@ -1,8 +1,5 @@
 defmodule Bonfire.Me.Web.LoginLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.UI.Social.HeaderGuestLive
-  alias Bonfire.UI.Social.LogoHeaderLive
-  alias Bonfire.UI.Social.LoginLive
   alias Bonfire.Me.Accounts
 
   # because this isn't a live link and it will always be accessed by a

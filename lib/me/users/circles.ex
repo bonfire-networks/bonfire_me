@@ -1,15 +1,11 @@
 defmodule Bonfire.Me.Users.Circles do
 
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Data.Social.Named
   alias Bonfire.Data.Social.Circle
-  alias Bonfire.Data.Social.Encircle
-  alias Bonfire.Data.Identity.Caretaker
 
   alias Bonfire.Boundaries.Circles
   alias Bonfire.Me.Users
 
-  alias Ecto.Changeset
   import Bonfire.Me.Integration
   alias Bonfire.Common.Utils
 
@@ -31,10 +27,6 @@ defmodule Bonfire.Me.Users.Circles do
       Users.Boundaries.maybe_make_visible_for(user, circle)
       {:ok, circle}
     end
-  end
-
-  def changeset(:create, %User{}=user, attrs) do
-    Circles.changeset(:create, attrs)
   end
 
   import Ecto.Query
@@ -91,6 +83,11 @@ defmodule Bonfire.Me.Users.Circles do
 
       repo().update(changeset(:update, circle, params))
     end
+  end
+
+
+  def changeset(:create, %User{}=_user, attrs) do
+    Circles.changeset(:create, attrs)
   end
 
   def changeset(:update, circle, params) do

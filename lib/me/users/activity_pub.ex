@@ -4,7 +4,6 @@ defmodule Bonfire.Me.Users.ActivityPub do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users.Queries
   alias ActivityPub.Actor
-  alias Ecto.Changeset
 
   import Bonfire.Me.Integration
   import Ecto.Query

@@ -31,11 +31,11 @@ defmodule Bonfire.Me.Users.Queries do
 
   # def query
 
-  defmacro filter(query, filters) when is_list(filters) do
-    env = __CALLER__
-    # Enum.reduce(filters, query, &macro_filter(&2, &1, env))
-    nil
-  end
+  # defmacro filter(query, filters) when is_list(filters) do
+  #   env = __CALLER__
+  #   # Enum.reduce(filters, query, &macro_filter(&2, &1, env))
+  #   nil
+  # end
 
   def by_account(account_id) do
     from u in User,

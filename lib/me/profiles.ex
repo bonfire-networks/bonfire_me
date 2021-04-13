@@ -2,10 +2,7 @@ defmodule Bonfire.Me.Profiles do
 
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
-  alias Pointers.Changesets
-  import Bonfire.Me.Integration
 
-  @username_regex ~r(^[a-z][a-z0-9_]{2,30}$)i
 
   def changeset(profile \\ %Profile{}, params) do
     profile

@@ -2,9 +2,9 @@ defmodule Bonfire.Me.Web.SwitchUserController do
 
   use Bonfire.Web, :controller
   alias Bonfire.Data.Identity.Account
-  alias Bonfire.Me.{Accounts, Users}
+  alias Bonfire.Me.Users
   alias Bonfire.Common.Web.Misc
-  alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive, SwitchUserLive}
+  alias Bonfire.Me.Web.{LoggedDashboardLive, SwitchUserLive}
 
   @doc "A listing of users in the account."
   def index(%{assigns: the}=conn, params) do
@@ -18,7 +18,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     |> redirect(to: Routes.create_user_path(conn, :index) <> Misc.copy_go(params))
   end
 
-  defp index([_|_]=users, _, conn, params) do
+  defp index([_|_]=users, _, conn, _params) do
     conn
     |> assign(:current_account_users, users)
     |> assign(:go, Misc.go_query(conn))

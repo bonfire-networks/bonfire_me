@@ -1,9 +1,6 @@
 defmodule Bonfire.Me.Web.SettingsLive do
   use Bonfire.Web, {:live_view, [layout: {Bonfire.Web.LayoutView, "settings_template.html"}]}
 
-  alias Bonfire.Me.Fake
-  alias Bonfire.Me.Users
-
   alias Bonfire.Web.LivePlugs
 
   def mount(params, session, socket) do
@@ -16,13 +13,13 @@ defmodule Bonfire.Me.Web.SettingsLive do
     ]
   end
 
-  defp mounted(params, session, socket),
+  defp mounted(_params, _session, socket),
     do: {:ok,
          socket
          |> assign(
          page_title: "Settings",
          selected_tab: "user",
-         trigger_submit: false,
+         trigger_submit: false
          )}
 
   def handle_params(%{"tab" => tab, "id" => id}, _url, socket) do

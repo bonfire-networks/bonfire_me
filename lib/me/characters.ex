@@ -2,7 +2,6 @@ defmodule Bonfire.Me.Characters do
 
   alias Bonfire.Data.Identity.Character
   alias Ecto.Changeset
-  alias Pointers.Changesets
   import Bonfire.Me.Integration
   import Ecto.Query
 
@@ -31,7 +30,9 @@ defmodule Bonfire.Me.Characters do
       preload: [instance_admin: ia, profile: p, character: c, actor: a]
   end
 
-  def changeset(char \\ %Character{}, %{"username" => username} = params) when is_binary(username) do
+  def changeset(char \\ %Character{}, params)
+
+    def changeset(char, %{"username" => username} = params) when is_binary(username) do
     do_changeset(
       char,
       Map.put(params, "username", clean_username(username))

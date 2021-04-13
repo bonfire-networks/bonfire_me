@@ -1,8 +1,7 @@
 defmodule Bonfire.Web.Plugs.LoadCurrentAccount do
 
   use Bonfire.Web, :plug
-  alias Bonfire.Me.{Accounts, Users}
-  alias Bonfire.Data.Identity.User
+  alias Bonfire.Me.Accounts
 
   def init(opts), do: opts
 

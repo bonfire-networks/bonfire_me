@@ -8,13 +8,13 @@ defmodule Bonfire.Me.Users.Boundaries do
 
   def maybe_grant_access_to(%User{id: user_id}=user, %{id: object_id} = _object, circle_ids, access) when is_list(circle_ids) do
     with {:ok, %{id: acl_id}} <- Bonfire.Me.Users.Acls.create(user, nil),
-    {:ok, controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}),
-    {:ok, grants} <- Bonfire.Boundaries.Grants.grant(circle_ids ++ [user_id], acl_id, access) do
+    {:ok, _controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}),
+    {:ok, _grants} <- Bonfire.Boundaries.Grants.grant(circle_ids ++ [user_id], acl_id, access) do
         :ok
     end
   end
 
-  def maybe_grant_access_to(user, object, _, access) do
+  def maybe_grant_access_to(user, object, nil, access) do
     maybe_grant_access_to(user, object, [], access) # add creator to grants
   end
 

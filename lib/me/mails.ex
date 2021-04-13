@@ -4,7 +4,6 @@ defmodule Bonfire.Me.Mails do
   import Bamboo.Phoenix
 
   alias Bonfire.Data.Identity.Account
-  alias Pointers.Changesets
   alias Bonfire.Me.Web.EmailView
   alias Bonfire.Web.Router.Helpers, as: Routes
 

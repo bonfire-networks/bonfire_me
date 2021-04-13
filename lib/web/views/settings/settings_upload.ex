@@ -18,15 +18,13 @@ defmodule Bonfire.Me.Web.My.SettingsUpload do
   # }
 
   def upload(%{assigns: %{current_user: current_user}} = conn, params) do
-    attrs = CommonsPub.Utils.Utils.input_to_atoms(params)
+    attrs = input_to_atoms(params)
 
     # maybe_upload(params["profile"]["icon"], "icon")
     # maybe_upload(params["profile"]["image"], "image")
 
     {:ok, _edit_profile} =
-      CommonsPub.Web.GraphQL.UsersResolver.update_profile(attrs, %{
-        context: %{current_user: current_user}
-      })
+      Bonfire.Me.Users.update(current_user, attrs)
 
     conn
     |> redirect(external: "/user")

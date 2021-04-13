@@ -1,12 +1,11 @@
 defmodule Bonfire.Me.Users.Accesses do
 
-  alias Bonfire.Data.AccessControl.{Access, Acl}
+  alias Bonfire.Data.AccessControl.Access
   alias Bonfire.Boundaries.Accesses
   alias Bonfire.Data.Identity.User
 
   import Bonfire.Me.Integration
   import Bonfire.Boundaries.Queries
-  alias Ecto.Changeset
   alias Bonfire.Common.Utils
 
   ## invariants:
@@ -26,7 +25,7 @@ defmodule Bonfire.Me.Users.Accesses do
     ))
   end
 
-  def changeset(:create, %User{}=user, attrs) do
+  def changeset(:create, %User{}=_user, attrs) do
     Accesses.changeset(attrs)
   end
 
@@ -40,7 +39,7 @@ defmodule Bonfire.Me.Users.Accesses do
   import Ecto.Query
 
   @doc "query for `list_visible`"
-  def list_visible_q(%User{id: user_id}=user) do
+  def list_visible_q(%User{id: _user_id}=user) do
     cs = can_see?(:access, user)
     from access in Access, as: :access,
       join: named in assoc(access, :named),

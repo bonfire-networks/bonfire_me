@@ -20,33 +20,11 @@ defmodule Bonfire.Me.Web.SignupController do
       {:error, changeset} ->
         conn
         |> assign(:form, changeset)
-        |> assign(:error, changeset_errors_string(changeset, false))
+        |> assign(:error, Bonfire.Repo.ChangesetErrors.changeset_errors_string(changeset, false))
         |> live_render(SignupLive)
     end
   end
 
-  # TODO: move somewhere for reuse
-  def changeset_errors_string(%Ecto.Changeset{} = changeset, include_first_level_of_keys \\ true) do
-    errors = Ecto.Changeset.traverse_errors(changeset, fn
-        {msg, opts} -> String.replace(msg, "%{count}", to_string(opts[:count]))
-        msg -> msg
-      end)
-    error_msg = errors_map_string(errors, false)
-  end
-  def changeset_errors_string(error, _), do: error
 
-  def errors_map_string(errors, include_keys \\ true)
-
-  def errors_map_string(%{} = errors, true) do
-    Enum.map_join(errors, ", ", fn {key, val} -> "#{key} #{errors_map_string(val)}" end)
-  end
-
-  def errors_map_string(%{} = errors, false) do
-    Enum.map_join(errors, ", ", fn {key, val} -> "#{errors_map_string(val)}" end)
-  end
-
-  def errors_map_string(e, _) do
-    e
-  end
 
 end

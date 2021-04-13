@@ -1,13 +1,8 @@
 defmodule Bonfire.Me.Web.ConfirmEmailLive do
   use Bonfire.Web, :live_view
-  alias Bonfire.Me.Web.HeroProfileLive
-  alias Bonfire.Me.Web.ProfileNavigationLive
-  alias Bonfire.Me.Web.ProfileAboutLive
-  alias Bonfire.Me.Fake
-  alias Bonfire.Web.LivePlugs
   alias Bonfire.Me.Accounts
 
-  def mount(params, session, socket) do
+  def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign_new(:error, fn -> nil end)

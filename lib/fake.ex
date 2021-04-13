@@ -3,7 +3,7 @@ defmodule Bonfire.Me.Fake do
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.{Accounts, Users}
 
-  import Bonfire.Me.Integration
+  # import Bonfire.Me.Integration
 
   def fake_account!(attrs \\ %{}) do
     {:ok, account} = Accounts.signup(signup_form(attrs), must_confirm: false)
@@ -43,10 +43,11 @@ defmodule Bonfire.Me.Fake do
   def location, do: Faker.Pokemon.location()
   def icon_url(slug \\ nil), do: Faker.Avatar.image_url(slug, 140,140)
   def image_url(slug \\ nil), do: Faker.Avatar.image_url(slug)
-  def avatar_url, do: "https://thispersondoesnotexist.com/image"
+  def avatar_url(id \\ "anon"), do: "https://thispersondoesnotexist.com/image?#{id}"
 
   def image(%{shared_user: %{label: _}}), do: Faker.Internet.image_url()
-  def image(%{id: id, profile: _}), do: avatar_url()
+  def image(%{id: id, profile: _}), do: avatar_url(id)
+  def image(%{id: id, name: _}), do: avatar_url(id)
   def image(%{id: id}), do: image_url(id)
   def image(_), do: image_url()
 

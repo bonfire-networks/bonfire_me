@@ -15,7 +15,6 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   import Bonfire.Me.Integration
-  import Ecto.Query
 
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
@@ -70,12 +69,75 @@ defmodule Bonfire.Me.Users do
 
   # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
   def create(params_or_changeset, extra)
-  def create(%Changeset{data: %User{}}=changeset, extra) do
+  def create(%Changeset{data: %User{}}=changeset, _extra) do
     repo().insert(changeset)
   end
   def create(params, extra) when not is_struct(params) do
     repo().insert(changeset(:create, %User{}, params, extra))
   end
+
+  ## instance admin
+
+  def make_admin(%{id: id}),
+    do: admin_changeset(%{id: id, is_instance_admin: true}) |> repo().upsert
+
+  # this is where we are very careful to explicitly set all the things
+  # a user should have but shouldn't have control over the input for.
+  defp override(changeset, changeset_type, extra \\ nil)
+
+  defp override(changeset, :create, %Account{}=account) do
+    Changeset.cast changeset, %{
+      accounted:    %{account_id: account.id},
+      # like_count:   %{liker_count: 0,    liked_count: 0},
+      instance_admin:    %{is_instance_admin: is_first_user?()}, # first user to be created is automatically admin # TODO: make this more secure (eg. only active if an env flag is set)
+      encircles:    [%{circle_id: Circles.circles().local}]
+    }, []
+  end
+
+  defp override(changeset, :create, :remote) do
+    Changeset.cast changeset, %{
+      encircles: [%{circle_id: Circles.circles().activity_pub}]
+    }, []
+  end
+
+  def is_first_user? do
+    Bonfire.Me.Users.Queries.count() <1
+  end
+
+
+  ## Update
+
+  def update(%User{} = user, params, extra) do
+  # TODO: check who is doing the update (except if extra==:remote)
+    repo().update(changeset(:update, user, params, extra))
+  end
+
+
+  ## Delete
+
+  # def delete(%User{}=user) do
+  #   preloads =
+  #     [:actor, :character, :follow_count, :like_count, :profile, :self] ++
+  #     [accounted: [:account]]
+  #   user = repo().preload(user, preloads)
+  #   with :ok         <- delete_caretaken(user),
+  #        {:ok, user} <- delete_mixins(user) do
+  #     {:ok, user}
+  #   end
+  # end
+
+  # # TODO: what must we chase down?
+  # # * acls
+  # # * accesses
+  # # * grants
+  # # * posts
+  # # * feeds
+  # defp delete_caretaken(user) do
+  #   :ok
+  # end
+
+  ## Changesets ############
+
 
   @spec changeset(
     name :: changeset_name,
@@ -113,44 +175,6 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:peered)
   end
 
-  def admin_changeset(params),
-    do: InstanceAdmin.changeset(%InstanceAdmin{}, params, [:id, :is_instance_admin])
-
-  ## instance admin
-
-  def make_admin(%{id: id}),
-    do: admin_changeset(%{id: id, is_instance_admin: true}) |> repo().upsert
-
-  # this is where we are very careful to explicitly set all the things
-  # a user should have but shouldn't have control over the input for.
-  defp override(changeset, changeset_type, extra \\ nil)
-
-  defp override(changeset, :create, %Account{}=account) do
-    Changeset.cast changeset, %{
-      accounted:    %{account_id: account.id},
-      # like_count:   %{liker_count: 0,    liked_count: 0},
-      instance_admin:    %{is_instance_admin: is_first_user?}, # first user to be created is automatically admin # TODO: make this more secure (eg. only active if an env flag is set)
-      encircles:    [%{circle_id: Circles.circles().local}]
-    }, []
-  end
-
-  defp override(changeset, :create, :remote) do
-    Changeset.cast changeset, %{
-      encircles: [%{circle_id: Circles.circles().activity_pub}]
-    }, []
-  end
-
-  def is_first_user? do
-    Bonfire.Me.Users.Queries.count <1
-  end
-
-
-  ## Update
-
-  def update(%User{} = user, params, extra) do
-  # TODO: check who is doing the update (except if extra==:remote)
-    repo().update(changeset(:update, user, params, extra))
-  end
 
   def changeset(:update, user, params, _extra) do
     user = repo().preload(user, [:character, :profile])
@@ -174,29 +198,8 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:actor)
   end
 
-
-  ## Delete
-
-  # def delete(%User{}=user) do
-  #   preloads =
-  #     [:actor, :character, :follow_count, :like_count, :profile, :self] ++
-  #     [accounted: [:account]]
-  #   user = repo().preload(user, preloads)
-  #   with :ok         <- delete_caretaken(user),
-  #        {:ok, user} <- delete_mixins(user) do
-  #     {:ok, user}
-  #   end
-  # end
-
-  # # TODO: what must we chase down?
-  # # * acls
-  # # * accesses
-  # # * grants
-  # # * posts
-  # # * feeds
-  # defp delete_caretaken(user) do
-  #   :ok
-  # end
+   def admin_changeset(params),
+    do: InstanceAdmin.changeset(%InstanceAdmin{}, params, [:id, :is_instance_admin])
 
 
 end

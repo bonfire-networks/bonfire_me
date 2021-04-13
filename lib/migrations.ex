@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Migrations do
   use Ecto.Migration
-  import Pointers.Migration
+  # import Pointers.Migration
 
   defp mm(:up) do
     quote do
@@ -12,7 +12,9 @@ defmodule Bonfire.Me.Migrations do
       require Bonfire.Data.Identity.User.Migration
       require Bonfire.Data.Identity.Caretaker.Migration
       require Bonfire.Data.Identity.Self.Migration
+      require Bonfire.Data.Identity.Named.Migration
 
+      Bonfire.Data.Identity.Named.Migration.migrate_named()
       Bonfire.Data.Identity.Account.Migration.migrate_account()
       Bonfire.Data.Identity.Accounted.Migration.migrate_accounted()
       Bonfire.Data.Identity.Character.Migration.migrate_character()
@@ -34,6 +36,7 @@ defmodule Bonfire.Me.Migrations do
       require Bonfire.Data.Identity.User.Migration
       require Bonfire.Data.Identity.Caretaker.Migration
       require Bonfire.Data.Identity.Self.Migration
+      require Bonfire.Data.Identity.Named.Migration
 
       Bonfire.Data.Identity.Self.Migration.migrate_self()
       Bonfire.Data.Identity.Caretaker.Migration.migrate_caretaker()
@@ -43,6 +46,7 @@ defmodule Bonfire.Me.Migrations do
       Bonfire.Data.Identity.Character.Migration.migrate_character()
       Bonfire.Data.Identity.Accounted.Migration.migrate_accounted()
       Bonfire.Data.Identity.Account.Migration.migrate_account()
+      Bonfire.Data.Identity.Named.Migration.migrate_named()
     end
   end
 

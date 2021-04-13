@@ -2,8 +2,7 @@ defmodule Bonfire.Web.LivePlugs.UserRequired do
 
   use Bonfire.Web, :live_plug
   alias Bonfire.Data.Identity.{Account, User}
-  alias Plug.Conn.Query
-  alias Bonfire.Common.Web.Misc
+  # alias Plug.Conn.Query
 
   def mount(_params, _session, %{assigns: the}=socket) do
     check(the[:current_user], the[:current_account], socket)

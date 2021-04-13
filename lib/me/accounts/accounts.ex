@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Accounts do
 
-  alias Bonfire.Data.Identity.{Account, Credential, Email, User}
-  alias Bonfire.Common.Utils
+  alias Bonfire.Data.Identity.{Account, Credential, Email}
+  # alias Bonfire.Common.Utils
   alias Bonfire.Me.Mails
   alias Bonfire.Me.Accounts.{
     ChangePasswordFields,
@@ -11,9 +11,7 @@ defmodule Bonfire.Me.Accounts do
     Queries,
   }
   alias Ecto.Changeset
-  alias Pointers.Changesets
   import Bonfire.Me.Integration
-  import Ecto.Query
   use OK.Pipe
 
   def get_current(nil), do: nil
@@ -131,10 +129,10 @@ defmodule Bonfire.Me.Accounts do
   end
 
 
-  defp rce_check_account(nil, form, changeset, opts),
+  defp rce_check_account(nil, _form, changeset, _opts),
     do: {:error, Changeset.add_error(changeset, :form, "not_found")}
 
-  defp rce_check_account(%Account{}=account, form, changeset, opts),
+  defp rce_check_account(%Account{}=account, _form, changeset, opts),
     do: rce_check_permitted(account.email, changeset, opts)
 
 

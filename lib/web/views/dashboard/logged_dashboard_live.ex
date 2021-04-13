@@ -1,10 +1,6 @@
 defmodule Bonfire.Me.Web.LoggedDashboardLive do
     use Bonfire.Web, :live_view
-    alias Bonfire.Me.Fake
     alias Bonfire.Web.LivePlugs
-    alias Bonfire.Me.Users
-    alias Bonfire.Me.Web.CreateUserLive
-    alias Bonfire.UI.Social.FeedLive
 
     def mount(params, session, socket) do
       LivePlugs.live_plug params, session, socket, [
@@ -18,9 +14,11 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       ]
     end
 
-    defp mounted(params, session, socket) do
+    defp mounted(_params, _session, socket) do
 
-      feed = Bonfire.Social.FeedActivities.my_feed(socket.assigns.current_user)
+      feed_module = if module_enabled?(Bonfire.Social.Web.Feeds.BrowseLive), do: Bonfire.UI.Social.BrowseViewLive,
+      else: Bonfire.UI.Social.FeedViewLive
+
 
       {:ok, socket
       |> assign(
@@ -30,8 +28,8 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         smart_input_placeholder: "Write something meaningful",
         page_title: "Bonfire Dashboard",
         feed_title: "My Feed",
-        feed: e(feed, :entries, []),
-        page_info: e(feed, :metadata, []),
+        feed_module: feed_module,
+        selected_tab: "feed",
         go: ""
         )}
     end
@@ -42,10 +40,6 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
     #      selected_tab: tab
     #    )}
     # end
-
-    def handle_params(_params, _url, socket) do
-      {:noreply, socket}
-    end
 
     defdelegate handle_params(params, attrs, socket), to: Bonfire.Web.LiveHandler
     def handle_event(action, attrs, socket), do: Bonfire.Web.LiveHandler.handle_event(action, attrs, socket, __MODULE__)
