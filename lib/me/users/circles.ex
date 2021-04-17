@@ -55,8 +55,13 @@ defmodule Bonfire.Me.Users.Circles do
   permitted to see. If any circles are created without permitting the
   user to see them, they will not be shown.
   """
-  def list_my(%User{}=user) do
-    repo().all(list_my_q(user)) ++ Bonfire.Boundaries.Circles.list_builtins()
+  def list_my(user, include_builtins \\ true)
+
+  def list_my(user, true) do
+    list_my(user, false) ++ Bonfire.Boundaries.Circles.list_builtins()
+  end
+  def list_my(%User{}=user, _) do
+    repo().all(list_my_q(user))
   end
 
   @doc "query for `list_my`"

@@ -17,9 +17,15 @@ defmodule Bonfire.Me.Web.ProfileLive do
   defp mounted(params, _session, socket) do
 
     current_user = e(socket.assigns, :current_user, nil)
+    current_username = e(current_user, :character, :username, nil)
 
     user = case Map.get(params, "username") do
-      nil -> e(socket.assigns, :current_user, Fake.user_live())
+      nil ->
+        e(socket.assigns, :current_user, Fake.user_live())
+
+      username when username == current_username ->
+        current_user
+
       username ->
         with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
           user
@@ -97,7 +103,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: "Write a private note to self...", else: "Write a private message for " <> e(socket, :assigns, :user, :profile, :name, "this person")
 
-    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) |> IO.inspect
+    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) #|> IO.inspect
 
     {:noreply,
      assign(socket,
