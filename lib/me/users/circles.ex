@@ -66,6 +66,16 @@ defmodule Bonfire.Me.Users.Circles do
     |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
   end
 
+  def list_my_defaults(_user \\ nil) do
+    # TODO make configurable
+    [
+      Bonfire.Boundaries.Circles.get_tuple(:guest),
+      Bonfire.Boundaries.Circles.get_tuple(:local),
+      Bonfire.Boundaries.Circles.get_tuple(:admin),
+      Bonfire.Boundaries.Circles.get_tuple(:activity_pub)
+    ]
+  end
+
   def get(id, %User{}=user) do
     repo().single(get_q(id, user))
   end
