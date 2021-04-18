@@ -68,7 +68,7 @@ defmodule Bonfire.Me.Users do
   ## Create
 
   # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
-  def create(params_or_changeset, extra)
+  def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
     repo().insert(changeset)
   end
@@ -107,7 +107,7 @@ defmodule Bonfire.Me.Users do
 
   ## Update
 
-  def update(%User{} = user, params, extra) do
+  def update(%User{} = user, params, extra \\ nil) do
   # TODO: check who is doing the update (except if extra==:remote)
     repo().update(changeset(:update, user, params, extra))
   end
