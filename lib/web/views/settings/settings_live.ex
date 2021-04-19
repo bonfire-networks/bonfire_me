@@ -19,6 +19,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
       |> assign(
         page_title: "Settings",
         selected_tab: "user",
+        page: "Settings",
         trigger_submit: false,
         uploaded_files: []
       )
