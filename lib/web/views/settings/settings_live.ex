@@ -51,7 +51,9 @@ defmodule Bonfire.Me.Web.SettingsLive do
         end),
         Bonfire.Me.Users.update(user, %{"profile"=> %{"icon"=> uploaded_media, "icon_id"=> uploaded_media.id}}) do
           # IO.inspect(uploaded_media)
-          {:noreply, put_flash(socket, :info, "Avatar changed!")}
+          {:noreply, socket
+          |> assign(current_user: deep_merge(user, %{profile: %{icon: uploaded_media}}))
+          |> put_flash(:info, "Avatar changed!")}
         end
 
     else
@@ -70,7 +72,10 @@ defmodule Bonfire.Me.Web.SettingsLive do
         end),
         Bonfire.Me.Users.update(user, %{"profile"=> %{"image"=> uploaded_media, "image_id"=> uploaded_media.id}}) do
           # IO.inspect(uploaded_media)
-          {:noreply, put_flash(socket, :info, "Background image changed!")}
+          {:noreply,
+          socket
+          |> assign(current_user: deep_merge(user, %{profile: %{image: uploaded_media}}))
+          |> put_flash(:info, "Background image changed!")}
         end
 
     else

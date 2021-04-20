@@ -43,7 +43,8 @@ defmodule Bonfire.Me.Fake do
   def location, do: Faker.Pokemon.location()
   def icon_url(slug \\ nil), do: Faker.Avatar.image_url(slug, 140,140)
   def image_url(slug \\ nil), do: Faker.Avatar.image_url(slug)
-  def avatar_url(id \\ "anon"), do: "https://thispersondoesnotexist.com/image" #?#{id}"
+  def avatar_url(slug \\ nil), do: Faker.Avatar.image_url(slug, 140,140)
+  # def avatar_url(id \\ "anon"), do: "https://thispersondoesnotexist.com/image" #?#{id}"
 
   def image(%{shared_user: %{label: _}}), do: Faker.Internet.image_url()
   def image(%{id: id, profile: _}), do: avatar_url(id)
