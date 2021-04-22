@@ -31,7 +31,7 @@ defmodule Bonfire.Me.Users do
   def by_username(username), do: get_flat(Queries.by_username(username))
 
   def by_account(account) do
-    if Utils.module_exists?(Bonfire.Data.SharedUser) do
+    if Utils.module_enabled?(Bonfire.Data.SharedUser) do
       Bonfire.Me.SharedUsers.by_account(account)
     else
       do_by_account(account)

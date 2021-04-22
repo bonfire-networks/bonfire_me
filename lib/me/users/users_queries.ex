@@ -61,7 +61,7 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   def for_switch_user(username, account_id) do
-    if Utils.module_exists?(Bonfire.Me.SharedUsers) do
+    if Utils.module_enabled?(Bonfire.Me.SharedUsers) do
       Bonfire.Me.SharedUsers.query_for_switch_user(username, account_id)
 
     else
