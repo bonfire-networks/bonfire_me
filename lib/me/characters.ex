@@ -122,4 +122,18 @@ defmodule Bonfire.Me.Characters do
     nil
   end
 
+  def indexing_object_format(%{character: obj}), do: indexing_object_format(obj)
+  def indexing_object_format(%Character{id: _} = obj) do
+
+    %{
+
+      "index_type" => Bonfire.Data.Identity.Character,
+      "username" => obj.username,
+      "url" => character_url(obj),
+   }
+  end
+
+  def indexing_object_format(_), do: nil
+
+
 end
