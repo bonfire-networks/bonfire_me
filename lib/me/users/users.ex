@@ -71,9 +71,11 @@ defmodule Bonfire.Me.Users do
   def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
     repo().insert(changeset)
+    |>  maybe_index_user()
   end
   def create(params, extra) when not is_struct(params) do
     repo().insert(changeset(:create, %User{}, params, extra))
+    |>  maybe_index_user()
   end
 
   ## instance admin
@@ -110,6 +112,7 @@ defmodule Bonfire.Me.Users do
   def update(%User{} = user, params, extra \\ nil) do
   # TODO: check who is doing the update (except if extra==:remote)
     repo().update(changeset(:update, user, params, extra))
+    |>  maybe_index_user()
   end
 
 
@@ -198,8 +201,31 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:actor)
   end
 
-   def admin_changeset(params),
+  def admin_changeset(params),
     do: InstanceAdmin.changeset(%InstanceAdmin{}, params, [:id, :is_instance_admin])
 
+  def indexing_object_format(u) do
+
+    # IO.inspect(obj)
+
+    %{
+      # "index_type" => Bonfire.Data.Social.Activity,
+      "id" => u.id,
+      "index_type" => Bonfire.Data.Identity.User,
+      # "url" => Activities.permalink(obj),
+      "profile" => Bonfire.Me.Profiles.indexing_object_format(u.profile),
+      "character" => Bonfire.Me.Characters.indexing_object_format(u.character),
+    } |> IO.inspect
+  end
+
+  def indexing_object_format(_), do: nil
+
+  # TODO: less boilerplate
+  def maybe_index_user({:ok, object}), do: {:ok, maybe_index_user(object)}
+  def maybe_index_user(object) when is_map(object) do
+    object |> indexing_object_format() |> maybe_index()
+    object
+  end
+  def maybe_index_user(other), do: other
 
 end
