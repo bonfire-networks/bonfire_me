@@ -215,7 +215,7 @@ defmodule Bonfire.Me.Users do
       # "url" => Activities.permalink(obj),
       "profile" => Bonfire.Me.Profiles.indexing_object_format(u.profile),
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character),
-    } |> IO.inspect
+    } #|> IO.inspect
   end
 
   def indexing_object_format(_), do: nil
