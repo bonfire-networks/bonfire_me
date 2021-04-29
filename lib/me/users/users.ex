@@ -19,6 +19,7 @@ defmodule Bonfire.Me.Users do
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
 
+
   ### Queries
 
   def get_current(nil), do: nil

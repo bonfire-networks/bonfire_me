@@ -30,9 +30,10 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         feed_title: "My Feed",
         feed_module: feed_module,
         selected_tab: "feed",
-        to_circles: Bonfire.Me.Users.Circles.list_my_defaults(socket.assigns.current_user),
         go: ""
-        )}
+        )
+        |> cast_self(to_circles: Bonfire.Me.Users.Circles.list_my_defaults(socket))
+      }
     end
 
     # def handle_params(%{"tab" => tab} = _params, _url, socket) do

@@ -59,9 +59,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
         current_account: Map.get(socket.assigns, :current_account),
         current_user: current_user,
         user: user, # the user to display
-        to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}],
         following: following || []
-      )}
+      )
+    |> cast_self(to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}])}
   end
 
   def do_handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
@@ -134,7 +134,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
      # feed = if user, do: Bonfire.Social.Activities.by_user(user)
      feed_id = e(socket.assigns, :user, :id, nil)
-     feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, current_user)
+     feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, socket)
      #IO.inspect(feed: feed)
 
     {:noreply,
