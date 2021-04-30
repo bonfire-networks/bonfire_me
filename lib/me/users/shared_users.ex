@@ -94,13 +94,14 @@ defmodule Bonfire.Me.SharedUsers do
   def query_for_switch_user(username, account_id) do
       from u in User,
         join: p in assoc(u, :profile),
+        left_join: ic in assoc(p, :icon),
         join: c in assoc(u, :character),
         join: a in assoc(u, :accounted),
         left_join: su in assoc(u, :shared_user),
         left_join: ca in assoc(u, :caretaker_accounts),
         where: c.username == ^username,
         where: a.account_id == ^account_id or ca.id == ^account_id ,
-        preload: [profile: p, character: c, accounted: a],
+        preload: [profile: {p, [icon: ic]}, character: c, accounted: a],
         order_by: [asc: u.id]
   end
 

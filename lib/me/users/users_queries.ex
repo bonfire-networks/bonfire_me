@@ -14,8 +14,9 @@ defmodule Bonfire.Me.Users.Queries do
       # join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
       join: p in assoc(u, :profile),
+      left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
-      preload: [instance_admin: ia, character: c, profile: p]
+      preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}]
     )
   end
 
@@ -56,8 +57,9 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: ac in assoc(u, :accounted),
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
+      left_join: ic in assoc(p, :icon),
       where: c.username == ^username,
-      preload: [instance_admin: ia, profile: p, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
+      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
   end
 
   def for_switch_user(username, account_id) do
@@ -70,9 +72,10 @@ defmodule Bonfire.Me.Users.Queries do
         join: c in assoc(u, :character),
         join: a in assoc(u, :accounted),
         left_join: fc in assoc(c, :follow_count),
+        left_join: ic in assoc(p, :icon),
         where: c.username == ^username,
         where: a.account_id == ^account_id,
-        preload: [profile: p, character: {c, [follow_count: fc]}, accounted: a],
+        preload: [profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, accounted: a],
         order_by: [asc: u.id]
     end
   end
@@ -85,8 +88,9 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: p in assoc(u, :profile),
       left_join: i in assoc(c, :inbox),
       left_join: ia in assoc(u, :instance_admin),
+      left_join: ic in assoc(p, :icon),
       where: u.id == ^user_id,
-      preload: [instance_admin: ia, character: {c, inbox: i}, accounted: {ac, account: a}, profile: p]
+      preload: [instance_admin: ia, character: {c, inbox: i}, accounted: {ac, account: a}, profile: {p, [icon: ic]}]
   end
 
   def count() do
