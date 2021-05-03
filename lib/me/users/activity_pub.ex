@@ -4,6 +4,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users.Queries
   alias ActivityPub.Actor
+  alias Bonfire.Federate.ActivityPub.Utils
 
   import Bonfire.Me.Integration
   import Ecto.Query
@@ -29,9 +30,13 @@ defmodule Bonfire.Me.Users.ActivityPub do
   end
 
   defp format_actor(user) do
-    user = Bonfire.Repo.preload(user, [:actor])
+    user = Bonfire.Repo.preload(user, [:actor, profile: [:image, :icon]])
     ap_base_path = Bonfire.Common.Config.get(:ap_base_path, "/pub")
     id = Bonfire.Common.URIs.base_url() <> ap_base_path <> "/actors/#{user.character.username}"
+
+    icon = Utils.maybe_create_image_object(Bonfire.Files.IconUploader.remote_url(user.profile.icon))
+    image = Utils.maybe_create_image_object(Bonfire.Files.ImageUploader.remote_url(user.profile.image))
+
 
     data = %{
       "type" => "Person",
@@ -42,7 +47,9 @@ defmodule Bonfire.Me.Users.ActivityPub do
       "following" => "#{id}/following",
       "preferredUsername" => user.character.username,
       "name" => user.profile.name,
-      "summary" => Map.get(user.profile, :summary)
+      "summary" => Map.get(user.profile, :summary),
+      "icon" => icon,
+      "image" => image
     }
 
     %Actor{
