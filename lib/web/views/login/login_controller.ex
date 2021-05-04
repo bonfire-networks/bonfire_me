@@ -3,7 +3,6 @@ defmodule Bonfire.Me.Web.LoginController do
   use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Web.LoginLive
-  alias Bonfire.Common.Web.Misc
   alias Bonfire.Common.Utils
 
   def index(conn, _) do # GET only supports 'go'
@@ -28,7 +27,7 @@ defmodule Bonfire.Me.Web.LoginController do
     |> put_session(:account_id, account.id)
     |> put_session(:user_id, Utils.e(account, :accounted, :user, :id, nil))
     |> put_flash(:info, "Welcome back!")
-    |> redirect(to: Misc.go_where?(conn, form, Routes.live_path(conn, Bonfire.Me.Web.LoggedDashboardLive)))
+    |> redirect(to: go_where?(conn, form, Routes.live_path(conn, Bonfire.Me.Web.LoggedDashboardLive)))
   end
 
   defp paint(conn, changeset) do

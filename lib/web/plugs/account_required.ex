@@ -2,7 +2,6 @@ defmodule Bonfire.Web.Plugs.AccountRequired do
 
   use Bonfire.Web, :plug
   alias Bonfire.Data.Identity.Account
-  alias Bonfire.Common.Web.Misc
 
   def init(opts), do: opts
 
@@ -13,7 +12,7 @@ defmodule Bonfire.Web.Plugs.AccountRequired do
     conn
     |> clear_session()
     |> put_flash(:error, "You need to log in to view that page.")
-    |> redirect(to: Routes.login_path(conn, :index) <> Misc.go_query(conn))
+    |> redirect(to: Routes.login_path(conn, :index) <> go_query(conn))
     |> halt()
   end
 
