@@ -1,8 +1,5 @@
 defmodule Bonfire.Me.Web.LiveHandlers.Boundaries do
-
-  alias Bonfire.Common.Utils
-  import Utils
-  import Phoenix.LiveView
+  use Bonfire.Web, :live_handler
 
 
   # def handle_event("post_input", %{"circles" => selected_circles} = _attrs, socket) when is_list(selected_circles) and length(selected_circles)>0 do

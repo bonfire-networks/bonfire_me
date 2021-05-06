@@ -1,8 +1,5 @@
 defmodule Bonfire.Me.Web.LiveHandlers.Circles do
-
-  alias Bonfire.Common.Utils
-  import Utils
-  import Phoenix.LiveView
+  use Bonfire.Web, :live_handler
 
   alias Bonfire.Me.Users.Circles
 
