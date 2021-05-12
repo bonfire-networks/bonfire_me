@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.ChangePasswordLive do
-  use Bonfire.Web, :live_view
+  use Bonfire.Web, {:live_view, [layout: {Bonfire.Web.LayoutView, "without_sidebar.html"}]}
   alias Bonfire.Web.LivePlugs
 
   def mount(params, session, socket) do
