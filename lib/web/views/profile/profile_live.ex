@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     user = case Map.get(params, "username") do
       nil ->
-        e(socket.assigns, :current_user, Fake.user_live())
+        current_user
 
       username when username == current_username ->
         current_user
@@ -29,39 +29,50 @@ defmodule Bonfire.Me.Web.ProfileLive do
       username ->
         with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
           user
+        else _ ->
+          nil
         end
     end
     # IO.inspect(user: user)
 
-    following = if current_user && user && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id]
+    if user do
 
-    page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Your profile", else: e(user, :profile, :name, "Someone") <> "'s profile"
+      following = if current_user && user && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id]
 
-    smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Write something public...", else: "Write something for " <> e(user, :profile, :name, "this person")
+      page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Your profile", else: e(user, :profile, :name, "Someone") <> "'s profile"
 
-    smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do:
-    "", else: "@"<>e(user, :character, :username, "")<>" "
+      smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Write something public...", else: "Write something for " <> e(user, :profile, :name, "this person")
 
-    search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
+      smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do:
+      "", else: "@"<>e(user, :character, :username, "")<>" "
 
-    {:ok,
-      socket
-      |> assign(
-        page: "profile",
-        page_title: page_title,
-        selected_tab: "timeline",
-        smart_input: true,
-        has_private_tab: true,
-        smart_input_placeholder: smart_input_placeholder,
-        smart_input_text: smart_input_text,
-        search_placholder: search_placeholder,
-        feed_title: "User timeline",
-        current_account: Map.get(socket.assigns, :current_account),
-        current_user: current_user,
-        user: user, # the user to display
-        following: following || []
-      )
-    |> cast_self(to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}])}
+      search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
+
+      {:ok,
+        socket
+        |> assign(
+          page: "profile",
+          page_title: page_title,
+          selected_tab: "timeline",
+          smart_input: true,
+          has_private_tab: true,
+          smart_input_placeholder: smart_input_placeholder,
+          smart_input_text: smart_input_text,
+          search_placholder: search_placeholder,
+          feed_title: "User timeline",
+          current_account: Map.get(socket.assigns, :current_account),
+          current_user: current_user,
+          user: user, # the user to display
+          following: following || []
+        )
+      |> cast_self(to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}])}
+    else
+      {:ok,
+        socket
+        |> put_flash(:error, "Profile not found")
+        |> push_redirect(to: "/error")
+      }
+    end
   end
 
   def do_handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
