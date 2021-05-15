@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
         conn
         |> put_session(:user_id, user.id)
         |> put_flash(:info, "Hey, #{user.character.username}, nice to meet you!")
-        |> redirect(to: go_where?(conn, params, Routes.live_path(conn, LoggedDashboardLive)))
+        |> redirect(to: go_where?(conn, params, path(LoggedDashboardLive)))
       {:error, changeset} ->
         # IO.inspect(changeset_error: changeset)
         err = Bonfire.Repo.ChangesetErrors.changeset_errors_string(changeset, false) #|> IO.inspect

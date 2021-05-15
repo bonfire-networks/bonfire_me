@@ -13,7 +13,7 @@ defmodule Bonfire.Web.Plugs.AdminRequired do
     conn
     |> clear_session()
     |> put_flash(:error, "That page is only accessible to instance administrators.")
-    |> redirect(to: Routes.live_path(conn, HomeLive))
+    |> redirect(to: path(HomeLive))
     |> halt()
   end
 

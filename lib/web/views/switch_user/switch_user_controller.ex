@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     conn
     |> put_session(:user_id, user.id)
     |> put_flash(:info, "Welcome back, @#{user.character.username}!")
-    |> redirect(to: go_where?(conn, params, Routes.live_path(conn, LoggedDashboardLive)))
+    |> redirect(to: go_where?(conn, params, path(LoggedDashboardLive)))
   end
 
   defp show({:error, _}, conn, params) do

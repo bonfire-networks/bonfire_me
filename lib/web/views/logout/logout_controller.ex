@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Web.LogoutController do
     |> delete_session(:account_id)
     |> clear_session()
     |> put_flash(:info, "Logged out successfully. Until next time!")
-    |> redirect(to: Routes.live_path(conn, HomeLive))
+    |> redirect(to: path(HomeLive))
   end
 
 end
