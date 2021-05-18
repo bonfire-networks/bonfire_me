@@ -30,7 +30,7 @@
         </div>
       <% end %>
       <div class="form__wrapper">
-        <%= f = form_for @form, Routes.login_path(@conn, :create), [method: :post, id: "login-form"] %>
+        <%= f = form_for @form, path(:login, :create), [method: :post, id: "login-form"] %>
           <div class="form__container">
             <%= label f, :email, "Type your email" %>
             <%= text_input f,
@@ -57,12 +57,12 @@
           <p>
             <span>&#x01f44b;</span>
             Don&#39;t have an account yet?
-            <%= link "Create a new one.", to: Routes.signup_path(@conn, :index) %>
+            <%= link "Create a new one.", to: path(:signup) %>
           </p>
           <p>
             <span>&#x01f9d0;</span>
             Trouble logging in?
-            <%= link "Reset your password.", to: Routes.forgot_password_path(@conn, :index) %>.
+            <%= link "Reset your password.", to: path(Bonfire.Me.Web.ForgotPasswordController) %>.
           </p>
         </aside>
       </div>

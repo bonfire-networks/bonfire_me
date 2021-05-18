@@ -10,7 +10,7 @@ defmodule Bonfire.Web.LivePlugs.AdminRequired do
     {:halt,
      socket
      |> put_flash(:error, "That page is only accessible to instance administrators.")
-     |> push_redirect(to: Routes.login_path(socket, :index))}
+     |> push_redirect(to: path(:login))}
   end
 
 end

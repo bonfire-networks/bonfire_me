@@ -5,11 +5,11 @@ defmodule Bonfire.Me.Mails do
 
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Web.EmailView
-  alias Bonfire.Web.Router.Helpers, as: Routes
+  import Bonfire.Common.URIs
 
   def confirm_email(%Account{}=account) do
 
-    if Bonfire.Common.Config.get(:env) != :test, do: IO.inspect(visit_url: Routes.confirm_email_path(Bonfire.Common.Config.get!(:endpoint_module), :show, account.email.confirm_token))
+    if Bonfire.Common.Config.get(:env) != :test, do: IO.inspect(visit_url: path(Bonfire.Me.Web.ConfirmEmailController, [:show, account.email.confirm_token]))
 
     conf =
       Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])

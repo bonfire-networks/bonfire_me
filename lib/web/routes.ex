@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Web.Routes do
       scope "/", Bonfire.Me.Web do
         pipe_through :browser
 
-        live "/user/:username", ProfileLive
+        live "/user/:username", ProfileLive, as: :user_profile
         live "/user/:username/:tab", ProfileLive
         live "/user/:username/posts", PostsLive
 
@@ -17,9 +17,9 @@ defmodule Bonfire.Me.Web.Routes do
       scope "/", Bonfire.Me.Web do
         pipe_through :browser
         pipe_through :guest_only
-        resources "/signup", SignupController, only: [:index, :create]
+        resources "/signup", SignupController, only: [:index, :create], as: :signup
         resources "/confirm-email", ConfirmEmailController, only: [:index, :create, :show]
-        resources "/login", LoginController, only: [:index, :create]
+        resources "/login", LoginController, only: [:index, :create], as: :login
         resources "/forgot-password", ForgotPasswordController, only: [:index, :create]
         resources "/reset-password", ResetPasswordController, only: [:show, :update]
       end
@@ -29,10 +29,10 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :browser
         pipe_through :account_required
 
-        live "/dashboard", LoggedDashboardLive
+        live "/dashboard", LoggedDashboardLive, as: :dashboard
 
-        resources "/switch-user", SwitchUserController, only: [:index, :show]
-        resources "/create-user", CreateUserController, only: [:index, :create]
+        resources "/switch-user", SwitchUserController, only: [:index, :show], as: :switch_user
+        resources "/create-user", CreateUserController, only: [:index, :create], as: :create_user
 
         live "/change-password", ChangePasswordLive
 
@@ -50,9 +50,9 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :browser
         pipe_through :user_required
 
-        live "/user", ProfileLive
+        live "/user", ProfileLive, as: :user_profile
 
-        live "/settings", SettingsLive
+        live "/settings", SettingsLive, as: :settings
 
         live "/user/circles", CirclesLive
 
@@ -63,7 +63,8 @@ defmodule Bonfire.Me.Web.Routes do
       scope "/settings", Bonfire.Me.Web do
         pipe_through :browser
         pipe_through :admin_required
-        live "/", InstanceSettingsLive
+
+        live "/admin", InstanceSettingsLive, as: :settings
       end
 
 

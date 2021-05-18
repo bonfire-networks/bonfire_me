@@ -10,7 +10,7 @@ defmodule Bonfire.Web.LivePlugs.AccountRequired do
     {:halt,
      socket
      |> put_flash(:error, "You must log in to view that page.")
-     |> push_redirect(to: Routes.login_path(socket, :index))}
+     |> push_redirect(to: path(:login))}
   end
 
 end

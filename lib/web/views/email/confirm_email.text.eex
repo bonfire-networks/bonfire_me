@@ -1,3 +1,3 @@
 Welcome to Bonfire!
 
-Please confirm your email by visiting <%= Routes.confirm_email_path(Bonfire.Common.Config.get!(:endpoint_module), :show, @current_account.email.confirm_token) %> in your browser and we'll get you started setting up a user profile.
+Please confirm your email by visiting <%= path(Bonfire.Me.Web.ConfirmEmailController, :show, @current_account.email.confirm_token) %> in your browser and we'll get you started setting up a user profile.

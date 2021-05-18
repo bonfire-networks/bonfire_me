@@ -14,7 +14,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp index([], _, conn, params) do
     conn
     |> put_flash(:info, "Hey there! Let's fill out your profile!")
-    |> redirect(to: Routes.create_user_path(conn, :index) <> copy_go(params))
+    |> redirect(to: path(:create_user) <> copy_go(params))
   end
 
   defp index([_|_]=users, _, conn, _params) do
@@ -47,7 +47,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp show({:error, _}, conn, params) do
     conn
     |> put_flash(:error, "You can only identify as users in your account.")
-    |> redirect(to: Routes.switch_user_path(conn, :index) <> copy_go(params))
+    |> redirect(to: path(:switch_user) <> copy_go(params))
   end
 
 end
