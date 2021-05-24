@@ -49,7 +49,7 @@ defmodule Bonfire.Me.Users.Queries do
       preload: [instance_admin: ia, character: {c, [follow_count: fc]}, profile: p]
   end
 
-  def by_username(username) do
+  def by_username(username) do # OR ID
     from u in User,
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
@@ -58,7 +58,7 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
-      where: c.username == ^username,
+      where: c.username == ^username or c.id == ^username,
       preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
   end
 
