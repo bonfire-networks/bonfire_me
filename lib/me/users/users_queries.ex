@@ -49,7 +49,15 @@ defmodule Bonfire.Me.Users.Queries do
       preload: [instance_admin: ia, character: {c, [follow_count: fc]}, profile: p]
   end
 
-  def by_username(username) do # OR ID
+  def by_username(username_or_id) do # OR ID
+    if Utils.is_ulid?(username_or_id) do
+      by_id_query(username_or_id)
+    else
+      by_username_query(username_or_id)
+    end
+  end
+
+  def by_id_query(username) do
     from u in User,
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
@@ -58,7 +66,20 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
-      where: c.username == ^username or c.id == ^username,
+      where: c.id == ^username,
+      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
+  end
+
+  def by_username_query(username) do
+    from u in User,
+      join: p in assoc(u, :profile),
+      join: c in assoc(u, :character),
+      left_join: a in assoc(u, :actor),
+      left_join: ac in assoc(u, :accounted),
+      left_join: ia in assoc(u, :instance_admin),
+      left_join: fc in assoc(c, :follow_count),
+      left_join: ic in assoc(p, :icon),
+      where: c.username == ^username,
       preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
   end
 
