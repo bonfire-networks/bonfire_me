@@ -34,9 +34,8 @@ defmodule Bonfire.Me.Users.ActivityPub do
     ap_base_path = Bonfire.Common.Config.get(:ap_base_path, "/pub")
     id = Bonfire.Common.URIs.base_url() <> ap_base_path <> "/actors/#{user.character.username}"
 
-    icon = Utils.maybe_create_image_object(Bonfire.Files.IconUploader.remote_url(user.profile.icon))
-    image = Utils.maybe_create_image_object(Bonfire.Files.ImageUploader.remote_url(user.profile.image))
-
+    icon = Utils.maybe_create_image_object_from_path(Bonfire.Files.IconUploader.remote_url(user.profile.icon))
+    image = Utils.maybe_create_image_object_from_path(Bonfire.Files.ImageUploader.remote_url(user.profile.image))
 
     data = %{
       "type" => "Person",
