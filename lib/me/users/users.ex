@@ -193,6 +193,8 @@ defmodule Bonfire.Me.Users do
     end
 
     # Ecto doesn't liked mixed keys so we convert them all to strings
+    # FIXME: Turns out that this can remove nested mapds so we need to figure out a
+    # better way of doing this
     params = for {k, v} <- params, do: {to_string(k), v}, into: %{}
 
     user

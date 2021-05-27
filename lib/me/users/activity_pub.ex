@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   alias Bonfire.Federate.ActivityPub.Utils
 
   import Bonfire.Me.Integration
-  import Ecto.Query
+  import Ecto.Query, only: [from: 2]
 
   def by_username(username) when is_binary(username),
     do: repo().single(Queries.by_username(username))
@@ -88,6 +88,9 @@ defmodule Bonfire.Me.Users.ActivityPub do
     {:ok, peer} = get_or_create_peer(actor)
     actor_object = ActivityPub.Object.get_by_ap_id(actor.ap_id)
 
+    icon_url = Bonfire.Federate.ActivityPub.Utils.maybe_fix_image_object(actor.data["icon"])
+    image_url = Bonfire.Federate.ActivityPub.Utils.maybe_fix_image_object(actor.data["image"])
+
     attrs = %{
       character: %{
         username: actor.username
@@ -101,8 +104,11 @@ defmodule Bonfire.Me.Users.ActivityPub do
 
     repo().transact_with(fn ->
       with {:ok, user} <- create(attrs),
+           icon_id <- Bonfire.Federate.ActivityPub.Utils.maybe_create_icon_object(icon_url, user),
+           image_id <- Bonfire.Federate.ActivityPub.Utils.maybe_create_image_object(image_url, user),
+           {:ok, updated_user} <- update(user, %{"profile" => %{"icon_id" => icon_id, "image_id" => image_id}}),
            {:ok, _object} <- ActivityPub.Object.update(actor_object, %{pointer_id: user.id}) do
-        {:ok, user}
+        {:ok, updated_user}
       end
     end)
   end
