@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
       LivePlugs.LoadCurrentUser,
       LivePlugs.AccountRequired,
       LivePlugs.StaticChanged,
-      LivePlugs.Csrf,
+      LivePlugs.Csrf, LivePlugs.Locale,
       &mounted/3,
     ]
   end

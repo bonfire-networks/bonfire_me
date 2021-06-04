@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Web.ChangePasswordLive do
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
       LivePlugs.StaticChanged,
-      LivePlugs.Csrf,
+      LivePlugs.Csrf, LivePlugs.Locale,
     ]
   end
 

@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
       LivePlugs.LoadCurrentUser,
       LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
-      LivePlugs.Csrf,
+      LivePlugs.Csrf, LivePlugs.Locale,
       &mounted/3,
     ]
   end

@@ -9,7 +9,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
       LivePlugs.LoadCurrentUser,
       LivePlugs.LoadCurrentUserCircles,
       LivePlugs.StaticChanged,
-      LivePlugs.Csrf,
+      LivePlugs.Csrf, LivePlugs.Locale,
       &mounted/3
     ]
   end

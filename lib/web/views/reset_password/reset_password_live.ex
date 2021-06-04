@@ -12,7 +12,7 @@ defmodule Bonfire.Me.Web.ResetPasswordLive do
   #   LivePlugs.live_plug params, session, socket, [
   #     LivePlugs.LoadCurrentAccount,
   #     LivePlugs.StaticChanged,
-  #     LivePlugs.Csrf,
+  #     LivePlugs.Csrf, LivePlugs.Locale,
   #     &mounted/3,
   #   ]
   # end

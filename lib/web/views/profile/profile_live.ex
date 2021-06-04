@@ -9,7 +9,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
       LivePlugs.LoadCurrentUser,
       LivePlugs.LoadCurrentUserCircles,
       LivePlugs.StaticChanged,
-      LivePlugs.Csrf,
+      LivePlugs.Csrf, LivePlugs.Locale,
       &mounted/3
     ]
   end
@@ -128,7 +128,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def do_handle_params(%{"tab" => "followers" =tab} = _params, _url, socket) do
     followers = Bonfire.Social.Follows.list_followers(e(socket, :assigns, :user, nil), e(socket, :assigns, :current_user, nil)) #|> IO.inspect
 
-    {:noreply, 
+    {:noreply,
     assign(socket,
       selected_tab: tab,
       followers: followers
@@ -139,7 +139,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def do_handle_params(%{"tab" => "followed" =tab} = _params, _url, socket) do
     followed = Bonfire.Social.Follows.list_followed(e(socket, :assigns, :user, nil), e(socket, :assigns, :current_user, nil)) #|> IO.inspect
 
-    {:noreply, 
+    {:noreply,
     assign(socket,
       selected_tab: tab,
       followed: followed

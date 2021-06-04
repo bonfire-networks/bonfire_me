@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Web.ForgotPasswordLive do
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
       LivePlugs.StaticChanged,
-      LivePlugs.Csrf,
+      LivePlugs.Csrf, LivePlugs.Locale,
       &mounted/3,
     ]
   end
