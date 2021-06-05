@@ -41,6 +41,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
       "", else: "@"<>e(user, :character, :username, "")<>" "
 
       search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
+
       feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) #|> IO.inspect
 
       {:ok,
@@ -51,16 +52,18 @@ defmodule Bonfire.Me.Web.PrivateLive do
           page_title: "Direct Messages",
           smart_input: true,
           has_private_tab: true,
-          smart_input_placeholder: "Note to self...",
-          smart_input_text: smart_input_text,
           search_placholder: search_placeholder,
           feed_title: "User timeline",
-          current_account: Map.get(socket.assigns, :current_account),
-          current_user: current_user,
           user: user, # the user to display
           following: []
         )
-      |> cast_self(to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}])}
+      |> assign_global(
+        smart_input_private: true,
+        smart_input_placeholder: "Note to self...",
+        smart_input_text: smart_input_text,
+        to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}]
+        )
+      }
     else
       {:ok,
         socket

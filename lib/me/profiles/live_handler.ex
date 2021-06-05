@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Web.LiveHandlers.Profiles do
+defmodule Bonfire.Me.Profiles.LiveHandler do
   use Bonfire.Web, :live_handler
 
   alias Bonfire.Me.Users # TODO: use Profiles context instead?
 
-  def handle_event("profile_save", _data, %{assigns: %{trigger_submit: trigger_submit}} = socket)
+  def handle_event("save", _data, %{assigns: %{trigger_submit: trigger_submit}} = socket)
       when trigger_submit == true do
     {
       :noreply,
@@ -11,11 +11,11 @@ defmodule Bonfire.Me.Web.LiveHandlers.Profiles do
     }
   end
 
-  def handle_event("profile_save", params, socket) do
+  def handle_event("save", params, socket) do
   # params = input_to_atoms(params)
 
     with {:ok, _edit_profile} <-
-      Users.update(socket.assigns.current_user, params, socket.assigns.current_account) do
+      Users.update(e(socket.assigns, :current_user, nil), params, e(socket.assigns, :current_account)) do
 
       IO.inspect((Map.get(params, "icon")))
       cond do

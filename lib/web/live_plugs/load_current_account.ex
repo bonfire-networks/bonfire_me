@@ -9,10 +9,17 @@ defmodule Bonfire.Web.LivePlugs.LoadCurrentAccount do
     {:ok, socket}
   end
 
-  def mount(_, session, socket) do
-    {:ok,
-     socket
-     |> assign(current_account: Accounts.get_current(session["account_id"]))}
+  # current account is in context
+  def mount(_, _, %{assigns: %{__context__: %{current_account: %Account{}}}}=socket) do
+    {:ok, socket}
+  end
+
+  def mount(_, %{"account_id" => account_id}, socket) when is_binary(account_id) do
+    {:ok, assign_global(socket, current_account: Accounts.get_current(account_id))}
+  end
+
+  def mount(_, _, socket) do
+    {:ok, assign_global(socket, current_account: nil)}
   end
 
 end

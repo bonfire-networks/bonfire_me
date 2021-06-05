@@ -10,9 +10,11 @@ defmodule Bonfire.Web.Plugs.AdminRequired do
 
   defp check(%User{instance_admin: %{is_instance_admin: true}}, conn), do: conn
   defp check(_, conn) do
+    e = "That page is only accessible to instance administrators."
+    IO.inspect(e)
     conn
     |> clear_session()
-    |> put_flash(:error, "That page is only accessible to instance administrators.")
+    |> put_flash(:error, e)
     |> redirect(to: path(HomeLive))
     |> halt()
   end

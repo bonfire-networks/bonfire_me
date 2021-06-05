@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Users.Follows do
+defmodule Bonfire.Me.Follows do
   alias Bonfire.Data.Identity.User
 
   @doc """

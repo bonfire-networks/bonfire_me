@@ -1,14 +1,14 @@
-defmodule Bonfire.Me.Web.LiveHandlers.Circles do
+defmodule Bonfire.Me.Circles.LiveHandler do
   use Bonfire.Web, :live_handler
 
   alias Bonfire.Me.Users.Circles
 
 
-  def handle_event("circle_create", %{"name" => name}, socket) do
+  def handle_event("create", %{"name" => name}, socket) do
   # params = input_to_atoms(params)
 
     with {:ok, %{id: id} = _circle} <-
-      Circles.create(socket.assigns.current_user, name) do
+      Circles.create(e(socket.assigns, :current_user, nil), name) do
 
           {:noreply,
           socket
@@ -19,11 +19,11 @@ defmodule Bonfire.Me.Web.LiveHandlers.Circles do
     end
   end
 
-  def handle_event("circle_member_update", %{"circle" => %{"id" => id} = params}, socket) do
+  def handle_event("member_update", %{"circle" => %{"id" => id} = params}, socket) do
     # params = input_to_atoms(params)
 
       with {:ok, _circle} <-
-        Circles.update(id, socket.assigns.current_user, %{encircles: e(params, "encircle", [])}) do
+        Circles.update(id, e(socket.assigns, :current_user, nil), %{encircles: e(params, "encircle", [])}) do
 
             {:noreply,
             socket

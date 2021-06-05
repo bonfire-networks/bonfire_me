@@ -32,7 +32,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         selected_tab: "feed",
         go: ""
         )
-        |> cast_self(to_circles: Bonfire.Me.Users.Circles.list_my_defaults(socket))
+        |> assign_global(to_circles: Bonfire.Me.Users.Circles.list_my_defaults(socket))
       }
     end
 

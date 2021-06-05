@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
           nil
         end
     end
-    IO.inspect(user: user)
+    # IO.inspect(user: user)
 
     if user do
 
@@ -65,7 +65,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
           user: user, # the user to display
           following: following || []
         )
-      |> cast_self(to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}])}
+      |> assign_global(to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}])}
     else
       {:ok,
         socket
@@ -84,7 +84,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
      assign(socket,
        selected_tab: tab,
        feed: e(feed, :entries, []),
-       smart_input_private: false,
        page_info: e(feed, :metadata, [])
      )}
   end
@@ -97,7 +96,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
       assign(socket,
         selected_tab: tab,
-        smart_input_private: false,
         feed: e(feed, :entries, []),
         page_info: e(feed, :metadata, [])
       )}
@@ -119,9 +117,13 @@ defmodule Bonfire.Me.Web.ProfileLive do
      assign(socket,
        selected_tab: tab,
        feed: e(feed, :entries, []),
-       smart_input_placeholder: smart_input_placeholder,
-       smart_input_private: true
-     )}
+     )
+    |> assign_global(
+      smart_input_private: true,
+      smart_input_placeholder: smart_input_placeholder,
+      create_activity_type: "message"
+    )
+    }
   end
 
 
@@ -154,7 +156,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
      assign(socket,
        selected_tab: tab,
-       smart_input_private: false,
        smart_input_placeholder: smart_input_placeholder
      )}
   end
@@ -171,7 +172,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
      assign(socket,
      selected_tab: "timeline",
-     smart_input_private: false,
      feed: e(feed, :entries, []),
      page_info: e(feed, :metadata, [])
      )}

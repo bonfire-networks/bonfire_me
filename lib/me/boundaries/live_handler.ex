@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Web.LiveHandlers.Boundaries do
+defmodule Bonfire.Me.Boundaries.LiveHandler do
   use Bonfire.Web, :live_handler
 
 
@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Boundaries do
 
     {:noreply,
         socket
-        |> cast_self(
+        |> assign_global(
           to_circles: new_circles
         )
     }
@@ -45,7 +45,7 @@ defmodule Bonfire.Me.Web.LiveHandlers.Boundaries do
 
     {:noreply,
         socket
-        |> cast_self(
+        |> assign_global(
           to_circles: new_circles
         )
     }

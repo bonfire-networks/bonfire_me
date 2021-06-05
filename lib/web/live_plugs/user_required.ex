@@ -5,7 +5,7 @@ defmodule Bonfire.Web.LivePlugs.UserRequired do
   # alias Plug.Conn.Query
 
   def mount(_params, _session, %{assigns: the}=socket) do
-    check(the[:current_user], the[:current_account], socket)
+    check(e(the, :current_user, nil), e(the, :current_account, nil), socket)
   end
 
   defp check(%User{}, _account, socket), do: {:ok, socket}
