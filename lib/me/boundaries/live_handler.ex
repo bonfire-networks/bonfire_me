@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
   use Bonfire.Web, :live_handler
 
 
-  # def handle_event("post_input", %{"circles" => selected_circles} = _attrs, socket) when is_list(selected_circles) and length(selected_circles)>0 do
+  # def handle_event("input", %{"circles" => selected_circles} = _attrs, socket) when is_list(selected_circles) and length(selected_circles)>0 do
 
   #   previous_circles = e(socket, :assigns, :to_circles, []) #|> Enum.uniq()
 
@@ -10,22 +10,22 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
 
   #   {:noreply,
   #       socket
-  #       |> cast_self(
+  #       |> assign_global(
   #         to_circles: new_circles
   #       )
   #   }
   # end
 
-  # def handle_event("post_input", _attrs, socket) do # no circle
+  # def handle_event("input", _attrs, socket) do # no circle
   #   {:noreply,
   #     socket
-  #       |> cast_self(
+  #       |> assign_global(
   #         to_circles: []
   #       )
   #   }
   # end
 
-  def handle_event("boundary_select", %{"id" => selected} = _attrs, socket) when is_binary(selected) do
+  def handle_event("select", %{"id" => selected} = _attrs, socket) when is_binary(selected) do
 
     previous_circles = e(socket, :assigns, :to_circles, []) |> IO.inspect
 
@@ -39,7 +39,7 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
     }
   end
 
-  def handle_event("boundary_deselect", %{"id" => deselected} = _attrs, socket) when is_binary(deselected) do
+  def handle_event("deselect", %{"id" => deselected} = _attrs, socket) when is_binary(deselected) do
 
     new_circles = remove_from_circle_tuples([deselected], e(socket, :assigns, :to_circles, [])) |> IO.inspect
 
