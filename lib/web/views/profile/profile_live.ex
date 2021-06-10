@@ -133,7 +133,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
     assign(socket,
       selected_tab: tab,
-      followers: followers
+      followers: e(followers, :entries, []),
+      page_info: e(followers, :metadata, [])
     )}
   end
 
@@ -144,7 +145,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
     assign(socket,
       selected_tab: tab,
-      followed: followed
+      followed: e(followed, :entries, []),
+      page_info: e(followed, :metadata, [])
     )}
   end
 
