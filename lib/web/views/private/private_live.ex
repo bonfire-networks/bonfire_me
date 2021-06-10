@@ -16,7 +16,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
 
   defp mounted(params, _session, socket) do
 
-    current_user = e(socket.assigns, :current_user, nil)
+    current_user = current_user(socket)
     current_username = e(current_user, :character, :username, nil)
 
     user = case Map.get(params, "username") do

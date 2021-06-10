@@ -1,4 +1,4 @@
-<%= if e(assigns, :current_user, nil) do %>
+<%= if current_user(assigns) do %>
   <%= live_component(@socket, @feed_module, assigns_clean(assigns)) %>
 <% else %>
     <%= live_component(@socket, Bonfire.UI.Social.SwitchUserViewLive, assigns_clean(assigns)) %>

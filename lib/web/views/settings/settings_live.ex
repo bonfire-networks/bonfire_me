@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
   defp handle_progress(:icon, entry, socket) do
 
-    user = e(socket, :assigns, :current_user, nil)
+    user = current_user(socket)
 
     if user && entry.done? do
       with {:ok, uploaded_media} <-
@@ -62,7 +62,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
   end
 
   defp handle_progress(:image, entry, socket) do
-    user = e(socket, :assigns, :current_user, nil)
+    user = current_user(socket)
 
     if user && entry.done? do
       with {:ok, uploaded_media} <-

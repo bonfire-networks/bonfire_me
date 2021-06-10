@@ -15,7 +15,7 @@ defmodule Bonfire.Me.Profiles.LiveHandler do
   # params = input_to_atoms(params)
 
     with {:ok, _edit_profile} <-
-      Users.update(e(socket.assigns, :current_user, nil), params, e(socket.assigns, :current_account)) do
+      Users.update(current_user(socket), params, e(socket.assigns, :current_account)) do
 
       IO.inspect((Map.get(params, "icon")))
       cond do

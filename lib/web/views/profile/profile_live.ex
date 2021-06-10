@@ -16,7 +16,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
   defp mounted(params, _session, socket) do
 
-    current_user = e(socket.assigns, :current_user, nil)
+    current_user = current_user(socket)
     current_username = e(current_user, :character, :username, nil)
 
     user = case Map.get(params, "username") do
@@ -76,7 +76,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   def do_handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
-    current_user = e(socket.assigns, :current_user, nil)
+    current_user = current_user(socket)
 
     feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
 
@@ -89,7 +89,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   def do_handle_params(%{"tab" => "boosts" = tab} = _params, _url, socket) do
-    current_user = e(socket.assigns, :current_user, nil)
+    current_user = current_user(socket)
 
     feed = if module_enabled?(Bonfire.Social.Boosts), do: Bonfire.Social.Boosts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
 
@@ -107,7 +107,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   def do_handle_params(%{"tab" => "private" =tab} = _params, _url, socket) do
-    current_user = e(socket.assigns, :current_user, nil)
+    current_user = current_user(socket)
 
     smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: "Write a private note to self...", else: "Write a private message for " <> e(socket, :assigns, :user, :profile, :name, "this person")
 
@@ -128,7 +128,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
 
   def do_handle_params(%{"tab" => "followers" =tab} = _params, _url, socket) do
-    followers = Bonfire.Social.Follows.list_followers(e(socket, :assigns, :user, nil), e(socket, :assigns, :current_user, nil)) #|> IO.inspect
+    followers = Bonfire.Social.Follows.list_followers(e(socket, :assigns, :user, nil), current_user(socket)) #|> IO.inspect
 
     {:noreply,
     assign(socket,
@@ -140,7 +140,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
 
   def do_handle_params(%{"tab" => "followed" =tab} = _params, _url, socket) do
-    followed = Bonfire.Social.Follows.list_followed(e(socket, :assigns, :user, nil), e(socket, :assigns, :current_user, nil)) #|> IO.inspect
+    followed = Bonfire.Social.Follows.list_followed(e(socket, :assigns, :user, nil), current_user(socket)) #|> IO.inspect
 
     {:noreply,
     assign(socket,
@@ -164,7 +164,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
   def do_handle_params(%{} = _params, _url, socket) do
 
-    current_user = e(socket.assigns, :current_user, nil)
+    current_user = current_user(socket)
 
      # feed = if user, do: Bonfire.Social.Activities.by_user(user)
      feed_id = e(socket.assigns, :user, :id, nil)

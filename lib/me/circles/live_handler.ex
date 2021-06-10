@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Circles.LiveHandler do
   # params = input_to_atoms(params)
 
     with {:ok, %{id: id} = _circle} <-
-      Circles.create(e(socket.assigns, :current_user, nil), name) do
+      Circles.create(current_user(socket), name) do
 
           {:noreply,
           socket
@@ -23,7 +23,7 @@ defmodule Bonfire.Me.Circles.LiveHandler do
     # params = input_to_atoms(params)
 
       with {:ok, _circle} <-
-        Circles.update(id, e(socket.assigns, :current_user, nil), %{encircles: e(params, "encircle", [])}) do
+        Circles.update(id, current_user(socket), %{encircles: e(params, "encircle", [])}) do
 
             {:noreply,
             socket
