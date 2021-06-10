@@ -212,9 +212,8 @@ defmodule Bonfire.Me.Users do
     # IO.inspect(obj)
 
     %{
-      # "index_type" => Bonfire.Data.Social.Activity,
       "id" => u.id,
-      "index_type" => Bonfire.Data.Identity.User,
+      "index_type" => "Bonfire.Data.Identity.User",
       # "url" => path(obj),
       "profile" => Bonfire.Me.Profiles.indexing_object_format(u.profile),
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character),

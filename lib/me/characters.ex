@@ -127,7 +127,7 @@ defmodule Bonfire.Me.Characters do
 
     %{
 
-      "index_type" => Bonfire.Data.Identity.Character,
+      "index_type" => "Bonfire.Data.Identity.Character",
       "username" => obj.username,
       "url" => character_url(obj),
    }

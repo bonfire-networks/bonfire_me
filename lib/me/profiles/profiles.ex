@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Profiles do
 
     %{
 
-      "index_type" => Bonfire.Data.Social.Profile,
+      "index_type" => "Bonfire.Data.Social.Profile",
       "name" => obj.name,
       "summary" => obj.summary,
       "icon" => %{"url"=> icon},

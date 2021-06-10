@@ -60,8 +60,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
           smart_input_text: smart_input_text,
           search_placholder: search_placeholder,
           feed_title: "User timeline",
-          current_account: Map.get(socket.assigns, :current_account),
-          current_user: current_user,
           user: user, # the user to display
           following: following || []
         )

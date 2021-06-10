@@ -7,13 +7,13 @@ defmodule Bonfire.Me.Web.CreateUserController do
   def index(conn, _) do # GET only supports 'go'
     conn = fetch_query_params(conn)
     params = Map.take(conn.query_params, [:go, "go"])
-    paint(conn, Users.changeset(:create, params, conn.assigns.current_account))
+    paint(conn, Users.changeset(:create, params, e(conn.assigns, :current_account, nil)))
   end
 
   def create(conn, params) do
     form = Map.get(params, "user", %{})
-    changeset = Users.changeset(:create, form, conn.assigns.current_account)
-    case Users.create(changeset, conn.assigns.current_account) do
+    changeset = Users.changeset(:create, form, e(conn.assigns, :current_account, nil))
+    case Users.create(changeset, e(conn.assigns, :current_account, nil)) do
       {:ok, user} ->
         #IO.inspect(user: user)
         conn
