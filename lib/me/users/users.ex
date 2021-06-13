@@ -29,7 +29,7 @@ defmodule Bonfire.Me.Users do
 
   def by_id(id), do: get_flat(Queries.by_id(id))
 
-  def by_username(username), do: get_flat(Queries.by_username(username))
+  def by_username(username), do: get_flat(Queries.by_username_or_id(username))
 
   def by_account(account) do
     if Utils.module_enabled?(Bonfire.Data.SharedUser) do
@@ -43,11 +43,11 @@ defmodule Bonfire.Me.Users do
   defp do_by_account(account_id) when is_binary(account_id),
     do: repo().all(Queries.by_account(account_id))
 
-  def for_switch_user(username, account_id) do
-    get_flat(Queries.for_switch_user(username, account_id))
+  def by_username_and_account(username, account_id) do
+    get_flat(Queries.by_username_and_account(username, account_id))
   end
 
-  def list, do: repo().all(Queries.with_mixins())
+  def list, do: repo().all(Queries.list())
   def list_admins(), do: repo().all(Queries.admins())
 
   def flatten(user) do

@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Users.Circles do
         # encircles: [%{subject_id: user.id}] # add myself to circle?
       })
     )) do
-      Users.Boundaries.maybe_make_visible_for(user, circle)
+      Users.Boundaries.maybe_make_visible_for(user, circle) # make visible to myself
       {:ok, circle}
     end
   end

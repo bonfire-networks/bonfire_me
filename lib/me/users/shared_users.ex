@@ -91,7 +91,7 @@ defmodule Bonfire.Me.SharedUsers do
     do: by_account(Bonfire.Me.Accounts.fetch_current(account_id))
 
 
-  def query_for_switch_user(username, account_id) do
+  def by_username_and_account_query(username, account_id) do
       from u in User,
         join: p in assoc(u, :profile),
         left_join: ic in assoc(p, :icon),

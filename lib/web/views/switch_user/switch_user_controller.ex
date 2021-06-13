@@ -34,7 +34,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
 
   @doc "Switch to a user, if permitted."
   def show(conn, %{"id" => username} = params) do
-    show(Users.for_switch_user(username, e(conn.assigns, :current_account, nil).id), conn, params)
+    show(Users.by_username_and_account(username, e(conn.assigns, :current_account, nil).id), conn, params)
   end
 
   defp show({:ok, user}, conn, params) do
