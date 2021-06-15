@@ -19,6 +19,7 @@ defmodule Bonfire.Me.Users do
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
 
+  def context_module, do: User
 
   ### Queries
 

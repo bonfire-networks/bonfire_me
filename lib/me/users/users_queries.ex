@@ -7,6 +7,8 @@ defmodule Bonfire.Me.Users.Queries do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Common.Utils
 
+  # def queries_module, do: User
+
   def query(), do: from(u in User, as: :user)
 
   def by_id(id) do

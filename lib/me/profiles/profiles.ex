@@ -3,6 +3,7 @@ defmodule Bonfire.Me.Profiles do
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
 
+  def context_module, do: Profile
 
   def changeset(profile \\ %Profile{}, params) do
     profile

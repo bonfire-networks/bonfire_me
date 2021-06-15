@@ -5,6 +5,8 @@ defmodule Bonfire.Me.Characters do
   import Bonfire.Me.Integration
   import Ecto.Query
 
+  def context_module, do: Character
+
   @username_forbidden ~r/[^a-z0-9_]+/i
   @username_regex ~r(^[a-z][a-z0-9_]{2,30}$)i
 
