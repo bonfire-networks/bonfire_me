@@ -207,9 +207,6 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:actor)
   end
 
-  def admin_changeset(params),
-    do: InstanceAdmin.changeset(%InstanceAdmin{}, params, [:id, :is_instance_admin])
-
   def indexing_object_format(u) do
 
     # IO.inspect(obj)
