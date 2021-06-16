@@ -10,7 +10,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   import Ecto.Query, only: [from: 2]
 
   def by_username(username) when is_binary(username),
-    do: repo().single(Queries.by_username(username))
+    do: repo().single(Queries.by_username_query(username))
 
   def by_ap_id(ap_id) do
     with {:ok, actor} = ActivityPub.Actor.get_cached_by_ap_id(ap_id) do

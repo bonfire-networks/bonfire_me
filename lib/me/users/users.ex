@@ -89,8 +89,6 @@ defmodule Bonfire.Me.Users do
 
   # this is where we are very careful to explicitly set all the things
   # a user should have but shouldn't have control over the input for.
-  defp override(changeset, changeset_type, extra \\ nil)
-
   defp override(changeset, :create, %Account{}=account) do
     Changeset.cast changeset, %{
       accounted:    %{account_id: account.id},
@@ -219,8 +217,6 @@ defmodule Bonfire.Me.Users do
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character),
     } #|> IO.inspect
   end
-
-  def indexing_object_format(_), do: nil
 
   # TODO: less boilerplate
   def maybe_index_user({:ok, object}), do: {:ok, maybe_index_user(object)}
