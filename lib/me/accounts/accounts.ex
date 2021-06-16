@@ -110,11 +110,11 @@ defmodule Bonfire.Me.Accounts do
 
   def request_confirm_email(params_or_changeset_or_form_or_account, opts \\ [])
 
-  def request_confirm_email(params, opts) when not is_struct(params),
-    do: request_confirm_email(changeset(:confirm_email, params, opts), opts)
-
   def request_confirm_email(%Changeset{data: %ConfirmEmailFields{}}=cs, opts),
     do: Changeset.apply_action(cs, :insert) ~>> rce_check_valid(cs, opts)
+
+  def request_confirm_email(params, opts),
+    do: request_confirm_email(changeset(:confirm_email, params, opts), opts)
 
   defp rce_check_valid(form, %Changeset{}=changeset, opts),
     do: rce_check_confirm(Email.must_confirm?(opts), form, changeset, opts)
@@ -133,8 +133,7 @@ defmodule Bonfire.Me.Accounts do
     do: {:error, Changeset.add_error(changeset, :form, "not_found")}
 
   defp rce_check_account(%Account{}=account, _form, changeset, opts),
-    do: rce_check_permitted(account.email, changeset, opts)
-
+    do: rce_check_permitted(account, changeset, opts)
 
   defp rce_check_permitted(account, changeset, opts) do
     case Email.may_request_confirm_email?(account.email, opts) do
@@ -152,7 +151,7 @@ defmodule Bonfire.Me.Accounts do
   defp refresh_confirm_email(%Account{email: %Email{}=email}=account, opts) do
     with {:ok, email} <- repo().update(Email.put_token(email)),
          account = %{ account | email: email },
-         {:ok, _} <- send_confirm_email(Mails.confirm_email(account), opts),
+         {:ok, _} <- send_confirm_email(account, opts),
       do: {:ok, :refreshed, account}
   end
 
