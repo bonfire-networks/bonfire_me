@@ -82,8 +82,10 @@ defmodule Bonfire.Me.Users do
 
   ## instance admin
 
-  def make_admin(%{id: id}),
-    do: admin_changeset(%{id: id, is_instance_admin: true}) |> repo().upsert
+  def make_admin(%InstanceAdmin{} = admin),
+    do: InstanceAdmin.changeset(admin, %{is_instance_admin: true}) |> repo().update!()
+
+  def make_admin(%User{instance_admin: admin}), do: make_admin(admin)
 
   # this is where we are very careful to explicitly set all the things
   # a user should have but shouldn't have control over the input for.
