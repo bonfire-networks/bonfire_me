@@ -28,9 +28,9 @@ defmodule Bonfire.Me.Users do
 
   def fetch_current(id), do: repo().single(Queries.current(id))
 
-  def by_id(id), do: get_flat(Queries.by_id(id))
+  def by_id(id), do: repo().single(Queries.by_id(id))
 
-  def by_username(username), do: get_flat(Queries.by_username_or_id(username))
+  def by_username(username), do: repo().single(Queries.by_username_or_id(username))
 
   def by_account(account) do
     if Utils.module_enabled?(Bonfire.Data.SharedUser) do
@@ -45,7 +45,7 @@ defmodule Bonfire.Me.Users do
     do: repo().all(Queries.by_account(account_id))
 
   def by_username_and_account(username, account_id) do
-    get_flat(Queries.by_username_and_account(username, account_id))
+    repo().single(Queries.by_username_and_account(username, account_id))
   end
 
   def list, do: repo().all(Queries.list())
@@ -55,10 +55,6 @@ defmodule Bonfire.Me.Users do
     user
     |> Map.merge(user, user.profile)
     |> Map.merge(user, user.character)
-  end
-
-  def get_flat(query) do
-    repo().single(query)
   end
 
   def is_admin(%User{} = user) do

@@ -2,7 +2,6 @@ defmodule Bonfire.Me.Users.ActivityPub do
   alias Bonfire.Me.Users
   alias Bonfire.Data.ActivityPub.Peer
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Me.Users.Queries
   alias ActivityPub.Actor
   alias Bonfire.Federate.ActivityPub.Utils
 
@@ -10,11 +9,11 @@ defmodule Bonfire.Me.Users.ActivityPub do
   import Ecto.Query, only: [from: 2]
 
   def by_username(username) when is_binary(username),
-    do: repo().single(Queries.by_username(username))
+    do: Users.by_username(username)
 
   def by_ap_id(ap_id) do
-    with {:ok, actor} = ActivityPub.Actor.get_cached_by_ap_id(ap_id) do
-      by_username(actor.username)
+    with {:ok, %{username: username}} = ActivityPub.Actor.get_cached_by_ap_id(ap_id) do
+      by_username(username)
     end
   end
 
