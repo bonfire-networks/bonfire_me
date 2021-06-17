@@ -8,6 +8,8 @@ defmodule Bonfire.Me.Users.ActivityPub do
   import Bonfire.Me.Integration
   import Ecto.Query, only: [from: 2]
 
+  def federation_module, do: ["Person", "Service", "Application"]
+
   def by_username(username) when is_binary(username),
     do: Users.by_username(username)
 

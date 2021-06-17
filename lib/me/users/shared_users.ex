@@ -13,6 +13,8 @@ defmodule Bonfire.Me.SharedUsers do
   alias Ecto.Changeset
   import Ecto.Query
 
+  def federation_module, do: ["Organization", "Group"]
+
   def add_account(username, email, params \\ %{}) when is_binary(username) do
     with {:ok, user} <- Users.by_username(username) do
       add_account(user, email, params)
