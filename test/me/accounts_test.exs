@@ -60,8 +60,6 @@ defmodule Bonfire.Me.AccountsTest do
 
   describe "confirm_email" do
 
-    # TODO: with: :token
-
     test "with: :account" do
       attrs = Fake.signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
@@ -69,6 +67,15 @@ defmodule Bonfire.Me.AccountsTest do
       assert account.email.confirmed_at
       assert is_nil(account.email.confirm_token)
       assert {:ok, _account} = Accounts.confirm_email(account)
+    end
+
+    test "with: :token" do
+      attrs = Fake.signup_form()
+      assert {:ok, account} = Accounts.signup(attrs)
+      assert account.email.confirm_token
+      assert {:ok, account} = Accounts.confirm_email(account.email.confirm_token)
+      assert account.email.confirmed_at
+      assert is_nil(account.email.confirm_token)
     end
 
   end
