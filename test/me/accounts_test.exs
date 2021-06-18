@@ -42,13 +42,8 @@ defmodule Bonfire.Me.AccountsTest do
 
     test "refreshing" do
       attrs = Fake.signup_form()
-      assert {:ok, account} = Accounts.signup(Fake.signup_form())
-      assert {:ok, :refreshed, account} = Accounts.request_confirm_email(%{
-        email: account.email.email_address,
-        old_password: attrs.credential.password,
-        password: "ineedanewpassword",
-        password_confirmation: "ineedanewpassword",
-      })
+      assert {:ok, account} = Accounts.signup(attrs)
+      assert {:ok, :refreshed, account} = Accounts.request_confirm_email(%{email: attrs.email.email_address})
       assert account.email.confirm_token
       assert account.email.confirm_until
     end
