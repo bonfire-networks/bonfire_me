@@ -1,6 +1,5 @@
 defmodule Bonfire.Me.Users.ActivityPub do
   alias Bonfire.Me.Users
-  alias Bonfire.Data.ActivityPub.Peer
   alias Bonfire.Data.Identity.User
   alias ActivityPub.Actor
   alias Bonfire.Federate.ActivityPub.Utils
@@ -8,7 +7,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
   import Bonfire.Me.Integration
   import Ecto.Query, only: [from: 2]
 
-  def federation_module, do: ["Person", "Service", "Application"]
+  def federation_module, do: ["Person"]
 
   def by_username(username) when is_binary(username),
     do: Users.by_username(username)
@@ -64,53 +63,43 @@ defmodule Bonfire.Me.Users.ActivityPub do
     }
   end
 
-  def peer_url_query(url) do
-    from(p in Peer,
-      where: p.ap_base_uri == ^url
-    )
-  end
-
-  defp get_or_create_peer(actor) do
-    uri = URI.parse(actor.data["id"])
-    ap_base_url = uri.scheme <> "://" <> uri.host
-
-    case repo().single(peer_url_query(ap_base_url)) do
-      {:ok, peer} ->
-        {:ok, peer}
-
-      {:error, _} ->
-        params = %{ap_base_uri: ap_base_url, display_hostname: uri.host}
-        repo().insert(Peer.changeset(%Peer{}, params))
-    end
-  end
-
   def create_remote_actor(actor) do
-    {:ok, peer} = get_or_create_peer(actor)
+
     actor_object = ActivityPub.Object.get_by_ap_id(actor.ap_id)
 
     icon_url = Bonfire.Federate.ActivityPub.Utils.maybe_fix_image_object(actor.data["icon"])
     image_url = Bonfire.Federate.ActivityPub.Utils.maybe_fix_image_object(actor.data["image"])
 
-    attrs = %{
-      character: %{
-        username: actor.username
-      },
-      profile: %{
-        name: actor.data["name"],
-        summary: actor.data["summary"]
-      },
-      peered: %{peer_id: peer.id}
-    }
-
-    repo().transact_with(fn ->
-      with {:ok, user} <- create(attrs),
-           icon_id <- Bonfire.Federate.ActivityPub.Utils.maybe_create_icon_object(icon_url, user),
-           image_id <- Bonfire.Federate.ActivityPub.Utils.maybe_create_image_object(image_url, user),
-           {:ok, updated_user} <- update(user, %{"profile" => %{"icon_id" => icon_id, "image_id" => image_id}}),
-           {:ok, _object} <- ActivityPub.Object.update(actor_object, %{pointer_id: user.id}) do
-        {:ok, updated_user}
+    with {:ok, user} <- repo().transact_with(fn ->
+      with  {:ok, peer} =  Bonfire.Federate.ActivityPub.Peers.get_or_create(actor),
+            {:ok, user} <- create(%{
+              character: %{
+                username: actor.username
+              },
+              profile: %{
+                name: actor.data["name"],
+                summary: actor.data["summary"]
+              },
+              peered: %{
+                peer_id: peer.id,
+                canonical_uri: actor.ap_id
+              }
+            }),
+            {:ok, _object} <- ActivityPub.Object.update(actor_object, %{pointer_id: user.id}) do
+        {:ok, user}
       end
-    end)
+    end) do
+
+      # after creating the user, in case of timeouts downloading the images
+      icon_id = Bonfire.Federate.ActivityPub.Utils.maybe_create_icon_object(icon_url, user)
+      image_id = Bonfire.Federate.ActivityPub.Utils.maybe_create_image_object(image_url, user)
+
+      with {:ok, updated_user} <- update(user, %{"profile" => %{"icon_id" => icon_id, "image_id" => image_id}}) do
+        {:ok, updated_user}
+      else _ ->
+        {:ok, user}
+      end
+    end |> IO.inspect
   end
 
   ## Adapter callbacks
