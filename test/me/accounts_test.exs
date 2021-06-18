@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.AccountsTest do
-
   use Bonfire.DataCase, async: true
+  import Bonfire.Me.Integration
   alias Bonfire.Data.Identity.Credential
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Accounts
@@ -46,6 +46,14 @@ defmodule Bonfire.Me.AccountsTest do
       assert {:ok, :refreshed, account} = Accounts.request_confirm_email(%{email: attrs.email.email_address})
       assert account.email.confirm_token
       assert account.email.confirm_until
+    end
+
+    test "fails for already confirmed emails" do
+      attrs = Fake.signup_form()
+      assert {:ok, account} = Accounts.signup(attrs)
+      assert {:ok, account} = Accounts.confirm_email(account)
+      assert {:error, changeset} = Accounts.request_confirm_email(%{email: attrs.email.email_address})
+      assert [form: {"already_confirmed", []}] = changeset.errors
     end
 
   end
