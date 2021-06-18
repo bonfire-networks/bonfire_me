@@ -99,7 +99,7 @@ defmodule Bonfire.Me.Users.ActivityPub do
       else _ ->
         {:ok, user}
       end
-    end |> IO.inspect
+    end
   end
 
   ## Adapter callbacks
