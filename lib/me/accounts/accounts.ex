@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Accounts do
 
   alias Bonfire.Data.Identity.{Account, Credential, Email}
-  # alias Bonfire.Common.Utils
+  alias Bonfire.Common.Config
   alias Bonfire.Me.Mails
   alias Bonfire.Me.Accounts.{
     ConfirmEmailFields,
@@ -43,12 +43,24 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-    %Account{}
-    |> Account.changeset(params)
-    |> Changeset.cast_assoc(:email, with: &Email.changeset(&1, &2, opts))
-    |> Changeset.cast_assoc(:credential)
+    case Config.get(:invite_only, "true") in ["true", true, 1, "1"] do
+      false -> signup_changeset(params, opts)
+      _ -> invite_only()
+    end
   end
 
+  defp signup_changeset(params, opts) do
+    %Account{}
+      |> Account.changeset(params)
+      |> Changeset.cast_assoc(:email, with: &Email.changeset(&1, &2, opts))
+      |> Changeset.cast_assoc(:credential)
+  end
+
+  defp invite_only() do
+    %Account{}
+      |> Account.changeset(%{})
+      |> Changeset.add_error(:form, "invite_only")
+  end
 
   ### signup
 

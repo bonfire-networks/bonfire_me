@@ -21,7 +21,6 @@ defmodule Bonfire.Me.Web.Routes do
         resources "/confirm-email", ConfirmEmailController, only: [:index, :create, :show]
         resources "/login", LoginController, only: [:index, :create], as: :login
         resources "/forgot-password", ForgotPasswordController, only: [:index, :create]
-        resources "/reset-password", ResetPasswordController, only: [:show, :update]
       end
 
       # pages you need an account to view
