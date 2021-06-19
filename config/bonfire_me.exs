@@ -7,4 +7,4 @@ alias Bonfire.Me.Accounts
 
 config :bonfire_me, Accounts.Emails,
   confirm_email: [subject: "Confirm your email - Bonfire"],
-  reset_password: [subject: "Reset your password - Bonfire"]
+  forgot_password: [subject: "Reset your password - Bonfire"]

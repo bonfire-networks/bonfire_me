@@ -1,3 +1,3 @@
 defmodule Bonfire.Me.Web.EmailView do
-  use Bonfire.Web, :view
+  use Bamboo.View, path: "lib/web/views/email"
 end

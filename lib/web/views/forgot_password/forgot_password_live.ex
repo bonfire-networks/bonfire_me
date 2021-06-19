@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Web.ForgotPasswordLive do
   use Bonfire.Web, :live_view
   alias Bonfire.Web.LivePlugs
   alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Web.ForgotPasswordController
 
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
@@ -16,10 +17,8 @@ defmodule Bonfire.Me.Web.ForgotPasswordLive do
   defp mounted(_params, _session, socket) do
     {:ok,
      socket
-      |> assign_new(:form, &form/0)}
+      |> assign_new(:form, &ForgotPasswordController.form/0)}
   end
-
-  defp form(), do: Accounts.changeset(:change_password, %{})
 
 
 end

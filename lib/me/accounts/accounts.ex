@@ -4,10 +4,10 @@ defmodule Bonfire.Me.Accounts do
   # alias Bonfire.Common.Utils
   alias Bonfire.Me.Mails
   alias Bonfire.Me.Accounts.{
-    ChangePasswordFields,
     ConfirmEmailFields,
+    ForgotPasswordFields,
+    ChangePasswordFields,
     LoginFields,
-    ResetPasswordFields,
     Queries,
   }
   alias Ecto.Changeset
@@ -24,11 +24,14 @@ defmodule Bonfire.Me.Accounts do
   def get_by_email(email) when is_binary(email),
     do: repo().one(Queries.by_email(email))
 
-  @type changeset_name :: :change_password | :confirm_email | :login | :reset_password | :signup
+  @type changeset_name :: :change_password | :confirm_email | :login | :signup
 
   @spec changeset(changeset_name, params :: map) :: Changeset.t
   @spec changeset(changeset_name, params :: map, opts :: Keyword.t) :: Changeset.t
   def changeset(changeset_name, params, opts \\ [])
+
+  def changeset(:forgot_password, params, _opts) when not is_struct(params),
+    do: ForgotPasswordFields.changeset(params)
 
   def changeset(:change_password, params, _opts) when not is_struct(params),
     do: ChangePasswordFields.changeset(params)
@@ -38,9 +41,6 @@ defmodule Bonfire.Me.Accounts do
 
   def changeset(:login, params, _opts) when not is_struct(params),
     do: LoginFields.changeset(params)
-
-  def changeset(:reset_password, params, _opts) when not is_struct(params),
-    do: ResetPasswordFields.changeset(params)
 
   def changeset(:signup, params, opts) do
     %Account{}
@@ -119,7 +119,6 @@ defmodule Bonfire.Me.Accounts do
   defp rce_check_valid(form, %Changeset{}=changeset, opts),
     do: rce_check_confirm(Email.must_confirm?(opts), form, changeset, opts)
 
-
   defp rce_check_confirm(false, _form, changeset, _opts),
     do: {:error, Changeset.add_error(changeset, :form, "confirmation_disabled")}
 
@@ -127,7 +126,6 @@ defmodule Bonfire.Me.Accounts do
     repo().one(Queries.request_confirm_email(form.email))
     |> rce_check_account(form, changeset, opts)
   end
-
 
   defp rce_check_account(nil, _form, changeset, _opts),
     do: {:error, Changeset.add_error(changeset, :form, "not_found")}
@@ -190,7 +188,12 @@ defmodule Bonfire.Me.Accounts do
     |> mailer_response(account)
   end
 
+  ## TODO: request_forgot_password
+
+  ## misc
+
   defp mailer_response({:ok, _}, account), do: {:ok, account}
+  defp mailer_response({:error, error}, _) when is_atom(error), do: {:error, error}
   defp mailer_response(_, _), do: {:error, :email}
 
 
