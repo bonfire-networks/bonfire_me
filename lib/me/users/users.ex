@@ -42,14 +42,14 @@ defmodule Bonfire.Me.Users do
 
   defp do_by_account(%Account{id: id}), do: by_account(id)
   defp do_by_account(account_id) when is_binary(account_id),
-    do: repo().all(Queries.by_account(account_id))
+    do: repo().many(Queries.by_account(account_id))
 
   def by_username_and_account(username, account_id) do
     repo().single(Queries.by_username_and_account(username, account_id))
   end
 
-  def list, do: repo().all(Queries.list())
-  def list_admins(), do: repo().all(Queries.admins())
+  def list, do: repo().many(Queries.list())
+  def list_admins(), do: repo().many(Queries.admins())
 
   def flatten(user) do
     user

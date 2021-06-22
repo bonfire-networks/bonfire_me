@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Users.Accesses do
   Lists all accesses we are permitted to see. Not just by this user.
   """
   def list_visible(%User{}=user) do
-    repo().all(list_visible_q(user))
+    repo().many(list_visible_q(user))
   end
 
   import Ecto.Query
@@ -54,7 +54,7 @@ defmodule Bonfire.Me.Users.Accesses do
   user to see them, they will not be shown.
   """
   def list_my(%User{}=user) do
-    repo().all(list_my_q(user))
+    repo().many(list_my_q(user))
   end
 
   @doc "query for `list_my`"

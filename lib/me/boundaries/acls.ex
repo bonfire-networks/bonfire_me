@@ -34,7 +34,7 @@ defmodule Bonfire.Me.Users.Acls do
   Lists the ACLs permitted to see.
   """
   def list_visible(%User{}=user) do
-    repo().all(list_my_q(user))
+    repo().many(list_my_q(user))
   end
 
   @doc "query for `list_visible`"
@@ -53,7 +53,7 @@ defmodule Bonfire.Me.Users.Acls do
   user to see them, they will not be shown.
   """
   def list_my(%User{}=user) do
-    repo().all(list_my_q(user))
+    repo().many(list_my_q(user))
   end
 
   @doc "query for `list_my`"

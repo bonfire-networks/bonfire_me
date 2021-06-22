@@ -36,7 +36,7 @@ defmodule Bonfire.Me.Users.Circles do
   Lists the circles that we are permitted to see.
   """
   def list_visible(%User{}=user) do
-    repo().all(list_visible_q(user))
+    repo().many(list_visible_q(user))
   end
 
   @doc "query for `list_visible`"
@@ -61,7 +61,7 @@ defmodule Bonfire.Me.Users.Circles do
     list_my(user, false) ++ Bonfire.Boundaries.Circles.list_builtins()
   end
   def list_my(%User{}=user, _) do
-    repo().all(list_my_q(user))
+    repo().many(list_my_q(user))
   end
 
   @doc "query for `list_my`"
