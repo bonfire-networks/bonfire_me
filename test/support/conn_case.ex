@@ -24,9 +24,12 @@ defmodule Bonfire.Me.ConnCase do
       import Phoenix.ConnTest
       import Phoenix.LiveViewTest
       import Bonfire.Me.ConnCase
+
       import Bonfire.Me.Test.ConnHelpers
       import Bonfire.Me.Test.FakeHelpers
+
       alias Bonfire.Me.Fake
+      import Bonfire.Me.Fake
       # alias Bonfire.Me.Web.Router.Helpers, as: Routes
 
       # The default endpoint for testing

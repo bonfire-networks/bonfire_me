@@ -69,12 +69,20 @@ defmodule Bonfire.Me.Users do
   def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
     repo().insert(changeset)
-    |>  maybe_index_user()
+    |> post_mutate()
   end
   def create(params, extra) when not is_struct(params) do
     repo().insert(changeset(:create, %User{}, params, extra))
-    |>  maybe_index_user()
+    |> post_mutate()
   end
+
+  defp post_mutate({:ok, object}), do: {:ok, post_mutate(object)}
+  defp post_mutate(%{} = user) do
+    user
+    |> repo().maybe_preload(:character)
+    |> maybe_index_user()
+  end
+  defp post_mutate(error), do: error
 
   ## instance admin
 
@@ -158,8 +166,8 @@ defmodule Bonfire.Me.Users do
   def changeset(:create, user, params, %Account{}=account) do
     User.changeset(user, params)
     |> override(:create, account)
-    |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
-    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    |> Changeset.cast_assoc(:character, required: true, with: &Characters.changeset/2)
+    |> Changeset.cast_assoc(:profile, required: true, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:accounted)
     |> Changeset.cast_assoc(:instance_admin)
     # |> Changeset.cast_assoc(:like_count)
@@ -169,7 +177,7 @@ defmodule Bonfire.Me.Users do
   def changeset(:create, user, params, :remote) do
     User.changeset(user, params)
     |> override(:create, :remote)
-    |> Changeset.cast_assoc(:character, with: &Characters.remote_changeset/2)
+    |> Changeset.cast_assoc(:character, required: true, with: &Characters.remote_changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
@@ -215,7 +223,6 @@ defmodule Bonfire.Me.Users do
   end
 
   # TODO: less boilerplate
-  def maybe_index_user({:ok, object}), do: {:ok, maybe_index_user(object)}
   def maybe_index_user(object) when is_map(object) do
     object |> indexing_object_format() |> maybe_index()
     object

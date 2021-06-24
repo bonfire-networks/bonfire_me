@@ -3,12 +3,14 @@ defmodule Bonfire.Me.Mails do
 
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Web.EmailView
+  import Bonfire.Me.Integration
   import Bonfire.Common.URIs
   require Logger
 
-  def confirm_email(%Account{}=account) do
+  def confirm_email(%Account{email: %{confirm_token: confirm_token}}=account) when is_binary(confirm_token) do
+
     app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
-    url = url(Bonfire.Me.Web.ConfirmEmailController, [:show, account.email.confirm_token])
+    url = url(Bonfire.Me.Web.ConfirmEmailController, [:show, confirm_token])
 
     if Bonfire.Common.Config.get(:env) != :test, do: Logger.warn("Signup confirmation link: #{url}")
 

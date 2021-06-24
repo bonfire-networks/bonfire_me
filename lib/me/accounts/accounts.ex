@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-    case Config.get(:invite_only, "true") in ["true", true, 1, "1"] do
+    case Config.get(:invite_only, true) in ["true", true] do
       false -> signup_changeset(params, opts)
       _ -> invite_only()
     end
@@ -52,8 +52,8 @@ defmodule Bonfire.Me.Accounts do
   defp signup_changeset(params, opts) do
     %Account{}
       |> Account.changeset(params)
-      |> Changeset.cast_assoc(:email, with: &Email.changeset(&1, &2, opts))
-      |> Changeset.cast_assoc(:credential)
+      |> Changeset.cast_assoc(:email, required: true, with: &Email.changeset(&1, &2, opts))
+      |> Changeset.cast_assoc(:credential, required: true)
   end
 
   defp invite_only() do
@@ -193,12 +193,15 @@ defmodule Bonfire.Me.Accounts do
   defp send_confirm_email(false, account, _opts),
    do: {:ok, account}
 
-  defp send_confirm_email(true, account, _opts) do
+  defp send_confirm_email(true, %Account{email: %{email_address: email_address}}=account, _opts) do
     account = repo().preload(account, :email)
     mail = Mails.confirm_email(account)
-    mailer().send_now(mail, account.email.email_address)
+    mailer().send_now(mail, email_address)
     |> mailer_response(account)
   end
+
+  defp send_confirm_email(_, _account, _opts),
+   do: {:error, :email_missing}
 
   ## TODO: request_forgot_password
 
