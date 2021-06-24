@@ -40,8 +40,18 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp show({:ok, user}, conn, params) do
     conn
     |> put_session(:user_id, user.id)
-    |> put_flash(:info, "Welcome back, @#{user.character.username}!")
+    |> put_flash(:info, "Welcome back, #{greet(user)}!")
     |> redirect(to: go_where?(conn, params, path(LoggedDashboardLive)))
+  end
+
+  defp greet(%{profile: %{name: name}}) when is_binary(name) do
+    name
+  end
+  defp greet(%{character: %{username: username}}) when is_binary(username) do
+    "@#{username}"
+  end
+  defp greet(_) do
+    "stranger"
   end
 
   defp show({:error, _}, conn, params) do

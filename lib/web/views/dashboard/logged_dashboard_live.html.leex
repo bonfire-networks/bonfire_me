@@ -1,5 +1,9 @@
 <%= if current_user(assigns) do %>
+<div id="user_dashboard">
   <%= live_component(@socket, @feed_module, assigns_clean(assigns)) %>
+</div>
 <% else %>
-    <%= live_component(@socket, Bonfire.UI.Social.SwitchUserViewLive, assigns_clean(assigns)) %>
+<div id="account_dashboard">
+  <%= live_component(@socket, Bonfire.UI.Social.SwitchUserViewLive, assigns_clean(assigns)) %>
+</div>
 <% end %>
