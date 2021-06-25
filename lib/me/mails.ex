@@ -6,6 +6,8 @@ defmodule Bonfire.Me.Mails do
   import Bonfire.Me.Integration
   import Bonfire.Common.URIs
   require Logger
+  require Bonfire.Web.Gettext
+  import Bonfire.Web.Gettext.Helpers
 
   def confirm_email(%Account{email: %{confirm_token: confirm_token}}=account) when is_binary(confirm_token) do
 
@@ -22,7 +24,7 @@ defmodule Bonfire.Me.Mails do
     |> assign(:current_account, account)
     |> assign(:confirm_url, url)
     |> assign(:app_name, app_name)
-    |> subject(Keyword.get(conf, :subject, app_name <> " - Confirm your email"))
+    |> subject(Keyword.get(conf, :subject, app_name <> l " - Confirm your email"))
     |> render(:confirm_email)
     # |> put_html_layout({EmailView, "confirm_email.html"})
     # |> put_text_layout({EmailView, "confirm_email.text"})

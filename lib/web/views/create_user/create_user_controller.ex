@@ -23,12 +23,12 @@ defmodule Bonfire.Me.Web.CreateUserController do
         err = Bonfire.Repo.ChangesetErrors.changeset_errors_string(changeset, false) #|> IO.inspect
         conn
         |> assign(:error, err)
-        |> put_flash(:error, "Please double check your inputs... "<>err)
+        |> put_flash(:error, l("Please double check your inputs... ")<>err)
         |> paint(changeset)
       r ->
         IO.inspect(create_user: r)
         conn
-        |> put_flash(:error, "An unexpected error occured... ")
+        |> put_flash(:error, l "An unexpected error occured... ")
         |> paint(changeset)
     end
   end
@@ -36,7 +36,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
   defp greet(conn, params, id, name) do
     conn
     |> put_session(:user_id, id)
-    |> put_flash(:info, "Hey #{name}, nice to meet you!")
+    |> put_flash(:info, l("Hey %{name}, nice to meet you!", name: name))
     |> redirect(to: go_where?(conn, params, path(LoggedDashboardLive)))
   end
 

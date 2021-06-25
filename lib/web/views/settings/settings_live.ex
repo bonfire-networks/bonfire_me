@@ -17,7 +17,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
     do: {:ok,
       socket
       |> assign(
-        page_title: "Settings",
+        page_title: l( "Settings"),
         selected_tab: "user",
         page: "Settings",
         trigger_submit: false,
@@ -53,7 +53,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
           # IO.inspect(uploaded_media)
           {:noreply, socket
           |> assign(current_user: deep_merge(user, %{profile: %{icon: uploaded_media}}))
-          |> put_flash(:info, "Avatar changed!")}
+          |> put_flash(:info, l "Avatar changed!")}
         end
 
     else
@@ -75,7 +75,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
           {:noreply,
           socket
           |> assign(current_user: deep_merge(user, %{profile: %{image: uploaded_media}}))
-          |> put_flash(:info, "Background image changed!")}
+          |> put_flash(:info, l "Background image changed!")}
         end
 
     else

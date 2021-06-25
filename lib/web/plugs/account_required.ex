@@ -11,7 +11,7 @@ defmodule Bonfire.Web.Plugs.AccountRequired do
   defp check(_, conn) do
     conn
     |> clear_session()
-    |> put_flash(:error, "You need to log in to view that page.")
+    |> put_flash(:error, l "You need to log in to view that page.")
     |> redirect(to: path(:login) <> go_query(conn))
     |> halt()
   end

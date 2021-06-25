@@ -39,9 +39,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
       following = if current_user && user && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id]
 
-      page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Your profile", else: e(user, :profile, :name, "Someone") <> "'s profile"
+      page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
 
-      smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Write something public...", else: "Write something for " <> e(user, :profile, :name, "this person")
+      smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write something public..."), else: l("Write something for ") <> e(user, :profile, :name, l("this person"))
 
       smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do:
       "", else: "@"<>e(user, :character, :username, "")<>" "
@@ -59,15 +59,15 @@ defmodule Bonfire.Me.Web.ProfileLive do
           smart_input_placeholder: smart_input_placeholder,
           smart_input_text: smart_input_text,
           search_placholder: search_placeholder,
-          feed_title: "User timeline",
+          feed_title: l( "User timeline"),
           user: user, # the user to display
           following: following || []
         )
-      |> assign_global(to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}])}
+      |> assign_global(to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}])}
     else
       {:ok,
         socket
-        |> put_flash(:error, "Profile not found")
+        |> put_flash(:error, l "Profile not found")
         |> push_redirect(to: "/error")
       }
     end
@@ -107,7 +107,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def do_handle_params(%{"tab" => "private" =tab} = _params, _url, socket) do
     current_user = current_user(socket)
 
-    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: "Write a private note to self...", else: "Write a private message for " <> e(socket, :assigns, :user, :profile, :name, "this person")
+    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(socket, :assigns, :user, :profile, :name, l "this person")
 
     feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) #|> IO.inspect
 
@@ -151,7 +151,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
   def do_handle_params(%{"tab" => tab} = _params, _url, socket) do
 
-    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: "Write something public...", else: "Write something for " <> e(socket, :assigns, :user, :profile, :name, "this person")
+    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: l( "Write something public..."), else: l("Write something for ") <> e(socket, :assigns, :user, :profile, :name, l "this person")
 
     {:noreply,
      assign(socket,

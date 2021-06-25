@@ -25,9 +25,9 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         page: "dashboard",
         smart_input: true,
         has_private_tab: false,
-        smart_input_placeholder: "Write something meaningful",
-        page_title: "Bonfire Dashboard",
-        feed_title: "My Feed",
+        smart_input_placeholder: l("Write something meaningful"),
+        page_title: l("Bonfire Dashboard"),
+        feed_title: l("My Feed"),
         feed_module: feed_module,
         selected_tab: "feed",
         go: ""

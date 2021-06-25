@@ -26,7 +26,7 @@ defmodule Bonfire.Me.Web.LoginController do
     conn
     |> put_session(:account_id, account.id)
     |> put_session(:user_id, Utils.e(account, :accounted, :user, :id, nil))
-    |> put_flash(:info, "Welcome back!")
+    |> put_flash(:info, l "Welcome back!")
     |> redirect(to: go_where?(conn, form, path(Bonfire.Me.Web.LoggedDashboardLive)))
   end
 

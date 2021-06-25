@@ -13,7 +13,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
 
   defp index([], _, conn, params) do
     conn
-    |> put_flash(:info, "Hey there! Let's fill out your profile!")
+    |> put_flash(:info, l "Hey there! Let's fill out your profile!")
     |> redirect(to: path(:create_user) <> copy_go(params))
   end
 
@@ -40,8 +40,14 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   defp show({:ok, user}, conn, params) do
     conn
     |> put_session(:user_id, user.id)
-    |> put_flash(:info, "Welcome back, #{greet(user)}!")
+    |> put_flash(:info, l("Welcome back, %{name}!", name: greet(user)))
     |> redirect(to: go_where?(conn, params, path(LoggedDashboardLive)))
+  end
+
+  defp show({:error, _}, conn, params) do
+    conn
+    |> put_flash(:error, l "You can only identify as users in your account.")
+    |> redirect(to: path(:switch_user) <> copy_go(params))
   end
 
   defp greet(%{profile: %{name: name}}) when is_binary(name) do
@@ -54,10 +60,5 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     "stranger"
   end
 
-  defp show({:error, _}, conn, params) do
-    conn
-    |> put_flash(:error, "You can only identify as users in your account.")
-    |> redirect(to: path(:switch_user) <> copy_go(params))
-  end
 
 end

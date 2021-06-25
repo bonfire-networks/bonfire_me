@@ -40,7 +40,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
       smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do:
       "", else: "@"<>e(user, :character, :username, "")<>" "
 
-      search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
+      search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l ("Search my profile"), else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
 
       feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) #|> IO.inspect
 
@@ -49,25 +49,25 @@ defmodule Bonfire.Me.Web.PrivateLive do
         |> assign(
           page: "private",
           feed: e(feed, :entries, []),
-          page_title: "Direct Messages",
+          page_title: l("Direct Messages"),
           smart_input: true,
           has_private_tab: true,
           search_placholder: search_placeholder,
-          feed_title: "User timeline",
+          feed_title: l("Messages"),
           user: user, # the user to display
           following: []
         )
       |> assign_global(
         smart_input_private: true,
-        smart_input_placeholder: "Note to self...",
+        smart_input_placeholder: l("Note to self..."),
         smart_input_text: smart_input_text,
-        to_circles: [{e(user, :profile, :name, e(user, :character, :username, "someone")), e(user, :id, nil)}]
+        to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
         )
       }
     else
       {:ok,
         socket
-        |> put_flash(:error, "Profile not found")
+        |> put_flash(:error, l "Profile not found")
         |> push_redirect(to: "/error")
       }
     end
