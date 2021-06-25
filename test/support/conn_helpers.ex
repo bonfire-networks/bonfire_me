@@ -84,7 +84,7 @@ defmodule Bonfire.Me.Test.ConnHelpers do
   def floki_attr(elem, :class),
     do: Enum.flat_map(floki_attr(elem, "class"), &String.split(&1, ~r/\s+/, trim: true))
 
-  def floki_attr(elem, attr) when is_binary(attr),
+  def floki_attr(elem, attr),
     do: Floki.attribute(elem, attr)
 
   def floki_response(conn, code \\ 200) do
