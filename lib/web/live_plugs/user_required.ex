@@ -13,14 +13,14 @@ defmodule Bonfire.Web.LivePlugs.UserRequired do
   defp check(_user, %Account{}, socket) do
     {:halt,
      socket
-     |> put_flash(:info, l "You must choose a user to see that page.")
+     |> put_flash(:info, l "You need to choose a user to see that page.")
      |> push_redirect(to: path(:switch_user))}
   end
 
   defp check(_user, _account, socket) do
     {:halt,
      socket
-     |> put_flash(:info, l "You must log in to see that page.")
+     |> put_flash(:info, l "You need to log in to see that page.")
      |> push_redirect(to: path(:login))}
   end
 

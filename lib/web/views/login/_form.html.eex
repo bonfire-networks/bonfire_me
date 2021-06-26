@@ -25,7 +25,7 @@
           <% :not_found -> %>
             <span>Your username and/or password are incorrect.</span>
           <% :email_not_confirmed -> %>
-            <span>You must confirm your email address before logging in. Check your email.</span>
+            <span>You need to confirm your email address before logging in. Check your email.</span>
           <% end %>
         </div>
       <% end %>

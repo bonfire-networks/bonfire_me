@@ -35,7 +35,7 @@ defmodule Bonfire.Me.Accounts.LoginFields do
           Regex.match?(~r(^[^@]{1,128}@[^@]{2,128}$), eou) ->
             Changeset.put_change(changeset, :email, eou)
           true ->
-            Changeset.add_error(changeset, :email_or_username, "You must provide a valid email address or @username.")
+            Changeset.add_error(changeset, :email_or_username, "You need to provide a valid email address or @username.")
         end
       _ -> changeset
     end
