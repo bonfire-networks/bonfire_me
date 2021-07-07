@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.SettingsLive do
-  use Bonfire.Web, {:live_view, [layout: {Bonfire.Web.LayoutView, "settings_template.html"}]}
+  use Bonfire.Web, {:live_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "settings_template.html"}]}
 
   alias Bonfire.Web.LivePlugs
 

@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.LoginLive do
-  use Bonfire.Web, {:live_view, [layout: {Bonfire.Web.LayoutView, "empty_template.html"}]}
+  use Bonfire.Web, {:live_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "empty_template.html"}]}
   alias Bonfire.Me.Accounts
 
   # because this isn't a live link and it will always be accessed by a
@@ -11,11 +11,11 @@ defmodule Bonfire.Me.Web.LoginLive do
       |> assign_new(:current_user, fn -> nil end)
       |> assign_new(:error, fn -> nil end)
       |> assign_new(:feed_title, fn -> "Public Feed" end)
-      |> assign_new(:form, fn -> form(params) end)
+      |> assign_new(:form, fn -> login_form(params) end)
       |> assign_new(:conn, fn -> session["conn"] end)
     }
   end
 
-  defp form(params), do: Accounts.changeset(:login, params)
+  defp login_form(params), do: Accounts.changeset(:login, params)
 
 end
