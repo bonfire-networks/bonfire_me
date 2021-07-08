@@ -109,5 +109,19 @@ defmodule Bonfire.Me.Users.Queries do
     )
   end
 
+  def search(text) do
+    from(u in User, as: :user,
+      # join: a in assoc(u, :accounted),
+      join: c in assoc(u, :character),
+      join: p in assoc(u, :profile),
+      left_join: ic in assoc(p, :icon),
+      left_join: ia in assoc(u, :instance_admin),
+      preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}],
+      where: ilike(p.name, ^"#{text}%")
+      or ilike(p.name, ^"% #{text}%")
+      or ilike(c.username, ^"#{text}%")
+      or ilike(c.username, ^"% #{text}%")
+    )
+  end
 
 end

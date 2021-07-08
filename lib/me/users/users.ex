@@ -19,6 +19,8 @@ defmodule Bonfire.Me.Users do
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
 
+  @search_type "Bonfire.Data.Identity.User"
+
   def context_module, do: User
 
   ### Queries
@@ -48,6 +50,12 @@ defmodule Bonfire.Me.Users do
     repo().single(Queries.by_username_and_account(username, account_id))
   end
 
+  def search(search) do
+    Utils.maybe_apply(Bonfire.Search, :search_by_type, [search, @search_type], &none/2) || search_db(search)
+  end
+  defp none(_, _), do: nil
+
+  def search_db(search), do: repo().many(Queries.search(search))
   def list, do: repo().many(Queries.list())
   def list_admins(), do: repo().many(Queries.admins())
 
@@ -79,7 +87,7 @@ defmodule Bonfire.Me.Users do
   defp post_mutate({:ok, object}), do: {:ok, post_mutate(object)}
   defp post_mutate(%{} = user) do
     user
-    |> repo().maybe_preload(:character)
+    |> repo().maybe_preload([:character, :profile])
     |> maybe_index_user()
   end
   defp post_mutate(error), do: error
@@ -118,7 +126,8 @@ defmodule Bonfire.Me.Users do
   def update(%User{} = user, params, extra \\ nil) do
   # TODO: check who is doing the update (except if extra==:remote)
     repo().update(changeset(:update, user, params, extra))
-    |>  maybe_index_user()
+    |> IO.inspect
+    |> post_mutate()
   end
 
 
@@ -193,7 +202,7 @@ defmodule Bonfire.Me.Users do
       |> Map.merge(%{"profile" => %{"id"=> user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
       |> Map.merge(%{"character" => %{"id"=> user.character.id}}, fn _, a, b -> Map.merge(a, b) end)
 
-    if params["profile"]["location"] && Utils.module_enabled?(Bonfire.Geolocate.Geolocations) do
+    if params["profile"]["location"] && params["profile"]["location"] !="" && Utils.module_enabled?(Bonfire.Geolocate.Geolocations) do
       Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
     end
 
@@ -215,7 +224,7 @@ defmodule Bonfire.Me.Users do
 
     %{
       "id" => u.id,
-      "index_type" => "Bonfire.Data.Identity.User",
+      "index_type" => @search_type,
       # "url" => path(obj),
       "profile" => Bonfire.Me.Profiles.indexing_object_format(u.profile),
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character),
