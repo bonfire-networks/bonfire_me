@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.SettingsLive do
   use Bonfire.Web, {:live_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "settings_template.html"}]}
-
+  require Logger
   alias Bonfire.Web.LivePlugs
 
   def mount(params, session, socket) do
@@ -57,6 +57,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
         end
 
     else
+      Logger.info("Skip uploading because we don't know current_user")
       {:noreply, socket}
     end
   end
@@ -79,6 +80,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
         end
 
     else
+      Logger.info("Skip uploading because we don't know current_user")
       {:noreply, socket}
     end
   end

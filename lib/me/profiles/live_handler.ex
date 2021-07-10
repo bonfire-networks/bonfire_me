@@ -3,6 +3,10 @@ defmodule Bonfire.Me.Profiles.LiveHandler do
 
   alias Bonfire.Me.Users # TODO: use Profiles context instead?
 
+  def handle_event("validate", _params, socket) do
+    {:noreply, socket}
+  end
+
   def handle_event("save", _data, %{assigns: %{trigger_submit: trigger_submit}} = socket)
       when trigger_submit == true do
     {
