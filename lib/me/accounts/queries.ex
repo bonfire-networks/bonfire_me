@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Accounts.Queries do
 
   import Ecto.Query
   alias Bonfire.Data.Identity.Account
+  import Bonfire.Me.Integration
 
   def current(id) when is_binary(id) do
     from a in Account,
@@ -54,4 +55,7 @@ defmodule Bonfire.Me.Accounts.Queries do
       ]
   end
 
+  def count() do
+    repo().one(from p in Account, select: count(p.id))
+  end
 end

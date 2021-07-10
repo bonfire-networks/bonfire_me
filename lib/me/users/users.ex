@@ -117,7 +117,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def is_first_user? do
-    Bonfire.Me.Users.Queries.count() <1
+    Queries.count() <1
   end
 
 

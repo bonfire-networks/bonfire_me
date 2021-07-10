@@ -43,9 +43,10 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-    case Config.get(:invite_only, true) in ["true", true] do
-      false -> signup_changeset(params, opts)
-      _ -> invite_only()
+    if not invite_only? || is_first_account? do
+      signup_changeset(params, opts)
+    else
+      invite_only()
     end
   end
 
@@ -210,6 +211,14 @@ defmodule Bonfire.Me.Accounts do
   defp mailer_response({:ok, _}, account), do: {:ok, account}
   defp mailer_response({:error, error}, _) when is_atom(error), do: {:error, error}
   defp mailer_response(_, _), do: {:error, :email}
+
+  def is_first_account? do
+    Queries.count() <1
+  end
+
+  def invite_only? do
+    Config.get(:invite_only, true) in ["true", true]
+  end
 
 
 end
