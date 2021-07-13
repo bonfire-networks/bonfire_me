@@ -23,6 +23,14 @@ defmodule Bonfire.Me.Web.Routes do
         resources "/forgot-password", ForgotPasswordController, only: [:index, :create]
       end
 
+      scope "/", Bonfire do
+        pipe_through :browser
+        pipe_through :account_required
+
+        live "/settings/extensions/diff", Common.Web.ExtensionDiffLive
+
+      end
+
       # pages you need an account to view
       scope "/", Bonfire.Me.Web do
         pipe_through :browser
@@ -35,7 +43,6 @@ defmodule Bonfire.Me.Web.Routes do
 
         live "/change-password", ChangePasswordLive
 
-        live "/settings/extension", SettingsLive.ExtensionDiffLive
         live "/settings/:tab", SettingsLive
         live "/settings/:tab/:id", SettingsLive
 
