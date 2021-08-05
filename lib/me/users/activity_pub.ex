@@ -149,4 +149,16 @@ defmodule Bonfire.Me.Users.ActivityPub do
       {:error, _} -> create_remote_actor(actor)
     end
   end
+
+  def get_follower_local_ids(actor) do
+    with {:ok, user} <- by_username(actor.username) do
+      Bonfire.Social.Follows.follower_by_followed(user)
+    end
+  end
+
+  def get_following_local_ids(actor) do
+    with {:ok, user} <- by_username(actor.username) do
+      Bonfire.Social.Follows.by_follower(user)
+    end
+  end
 end
