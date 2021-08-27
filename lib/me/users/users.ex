@@ -195,12 +195,20 @@ defmodule Bonfire.Me.Users do
 
 
   def changeset(:update, user, params, _extra) do
-    user = repo().preload(user, [:character, :profile])
+    user = repo().preload(user, [:character, :profile, :actor])
 
     # add the ID for update
     params = params
       |> Map.merge(%{"profile" => %{"id"=> user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
       |> Map.merge(%{"character" => %{"id"=> user.character.id}}, fn _, a, b -> Map.merge(a, b) end)
+
+    params =
+      if user.actor do
+        params
+        |> Map.merge(%{"actor" => %{"id"=> user.actor.id}}, fn _, a, b -> Map.merge(a, b) end)
+      else
+        params
+      end
 
     if params["profile"]["location"] && params["profile"]["location"] !="" && Utils.module_enabled?(Bonfire.Geolocate.Geolocations) do
       Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
