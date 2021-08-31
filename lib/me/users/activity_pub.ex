@@ -48,7 +48,10 @@ defmodule Bonfire.Me.Users.ActivityPub do
       "name" => user.profile.name,
       "summary" => Map.get(user.profile, :summary),
       "icon" => icon,
-      "image" => image
+      "image" => image,
+      "endpoints" => %{
+        "sharedInbox" => Bonfire.Common.URIs.base_url() <> ap_base_path <> "/shared_inbox"
+      }
     }
 
     %Actor{
