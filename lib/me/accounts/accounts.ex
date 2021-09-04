@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-    if not invite_only? || is_first_account? do
+    if not instance_is_invite_only? || is_first_account? do
       signup_changeset(params, opts)
     else
       invite_only()
@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Accounts do
       |> Changeset.cast_assoc(:credential, required: true)
   end
 
-  defp invite_only() do
+  defp invite_only do
     %Account{}
       |> Account.changeset(%{})
       |> Changeset.add_error(:form, "invite_only")
@@ -216,8 +216,8 @@ defmodule Bonfire.Me.Accounts do
     Queries.count() <1
   end
 
-  def invite_only? do
-    Config.get(:invite_only, true) in ["true", true]
+  def instance_is_invite_only? do
+    System.get_env("INVITE_ONLY", "true") in ["true", true]
   end
 
 

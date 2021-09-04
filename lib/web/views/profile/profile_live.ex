@@ -56,14 +56,16 @@ defmodule Bonfire.Me.Web.ProfileLive do
           selected_tab: "timeline",
           smart_input: true,
           has_private_tab: true,
-          smart_input_placeholder: smart_input_placeholder,
-          smart_input_text: smart_input_text,
           search_placholder: search_placeholder,
           feed_title: l( "User timeline"),
           user: user, # the user to display
           following: following || []
         )
-      |> assign_global(to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}])}
+      |> assign_global(
+        smart_input_placeholder: smart_input_placeholder,
+        smart_input_text: smart_input_text,
+        to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
+      )}
     else
       {:ok,
         socket
@@ -106,10 +108,15 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
   def do_handle_params(%{"tab" => "private" =tab} = _params, _url, socket) do
     current_user = current_user(socket)
+    user = e(socket, :assigns, :user, nil)
 
-    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(socket, :assigns, :user, :profile, :name, l "this person")
+    smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(user, :profile, :name, l "this person")
 
-    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) #|> IO.inspect
+    smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""),
+    do: "",
+    else: "@"<>e(user, :character, :username, "")<>" "
+
+    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> IO.inspect
 
     {:noreply,
      assign(socket,
@@ -119,6 +126,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     |> assign_global(
       smart_input_private: true,
       smart_input_placeholder: smart_input_placeholder,
+      smart_input_text: smart_input_text,
       create_activity_type: "message"
     )
     }
