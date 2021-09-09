@@ -4,16 +4,18 @@ defmodule Bonfire.Me.Web.SignupLive do
 
   # because this isn't a live link and it will always be accessed by a
   # guest, it will always be offline
-  def mount(_params, _session, socket) do
+  def mount(params, session, socket) do
+    # IO.inspect(session: session)
     {:ok,
      socket
       |> assign_new(:current_account, fn -> nil end)
       |> assign_new(:current_user, fn -> nil end)
       |> assign_new(:registered, fn -> false end)
       |> assign_new(:error, fn -> nil end)
-      |> assign_new(:form, &form/0)}
+      |> assign_new(:form, fn -> form(session) end)}
   end
 
-  defp form(), do: Accounts.changeset(:signup, %{})
+  defp form(%{"invite" => invite}), do: Accounts.changeset(:signup, %{}, invite: invite)
+  defp form(_), do: Accounts.changeset(:signup, %{})
 
 end

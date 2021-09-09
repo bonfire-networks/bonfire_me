@@ -9,12 +9,22 @@ defmodule Bonfire.Me.Mails do
   require Bonfire.Web.Gettext
   import Bonfire.Web.Gettext.Helpers
 
-  def confirm_email(%Account{email: %{confirm_token: confirm_token}}=account) when is_binary(confirm_token) do
+  def confirm_email(account, opts \\ []) do
+
+    case opts[:confirm_action] do
+     :forgot_password -> forgot_password(account)
+     :login -> forgot_password(account)
+      _ -> signup_confirm_email(account)
+    end
+
+  end
+
+  def signup_confirm_email(%Account{email: %{confirm_token: confirm_token}}=account) when is_binary(confirm_token) do
 
     app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
     url = url(Bonfire.Me.Web.ConfirmEmailController, [:show, confirm_token])
 
-    if Bonfire.Common.Config.get(:env) != :test, do: Logger.warn("Signup confirmation link: #{url}")
+    if Bonfire.Common.Config.get(:env) != :test, do: Logger.warn("Email confirmation link: #{url}")
 
     conf =
       Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])
@@ -31,14 +41,19 @@ defmodule Bonfire.Me.Mails do
     # |> IO.inspect
   end
 
-  def forgot_password(%Account{email: %{email_address: email}}=account) when is_binary(email) do
+  def forgot_password(%Account{email: %{confirm_token: confirm_token}}=account) when is_binary(confirm_token) do
     conf =
       Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])
-      |> Keyword.get(:reset_password_email, [])
+      |> Keyword.get(:forgot_password_email, [])
+
+    app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
+    url = url(Bonfire.Me.Web.ForgotPasswordController, confirm_token)
 
     new_email()
     |> assign(:current_account, account)
-    |> subject(Keyword.get(conf, :subject, Application.get_env(:bonfire, :app_name, "Bonfire") <> " Reset your password"))
+    |> assign(:confirm_url, url)
+    |> assign(:app_name, app_name)
+    |> subject(Keyword.get(conf, :subject, app_name <> " - Reset your password"))
     |> render(:forgot_password)
   end
 

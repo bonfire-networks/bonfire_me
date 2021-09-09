@@ -10,7 +10,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
     case Accounts.confirm_email(token) do
       {:ok, account} ->
         confirmed(conn, account)
-      {:error, :confirmed, _} ->
+      {:error, "already_confirmed", _} ->
         already_confirmed(conn)
       {:error, :expired, _} ->
         conn
@@ -30,7 +30,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
         conn
         |> assign(:requested, true)
         |> live_render(ConfirmEmailLive)
-      {:error, :confirmed} ->
+      {:error, "already_confirmed"} ->
         already_confirmed(conn)
       {:error, :not_found} ->
         conn
@@ -38,7 +38,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
         |> live_render(ConfirmEmailLive)
       {:error, changeset} ->
         conn
-        |> assign(:form, changeset)
+        |> assign(:form, changeset |> IO.inspect)
         |> live_render(ConfirmEmailLive)
     end
   end
@@ -54,7 +54,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
 
   defp already_confirmed(conn) do
     conn
-    |> put_flash(:info, l "You've already confirmed your email address. You can log in now.")
+    |> put_flash(:error, l "You've already confirmed your email address. You can log in now.")
     |> redirect(to: path(:login))
   end
 end

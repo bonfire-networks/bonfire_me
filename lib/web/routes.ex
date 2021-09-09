@@ -18,9 +18,12 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :browser
         pipe_through :guest_only
         resources "/signup", SignupController, only: [:index, :create], as: :signup
-        resources "/confirm-email", ConfirmEmailController, only: [:index, :create, :show]
+        resources "/signup/invitation/:invite", SignupController, only: [:index, :create]
+        resources "/signup/email/confirm", ConfirmEmailController, only: [:index, :create, :show]
         resources "/login", LoginController, only: [:index, :create], as: :login
-        resources "/forgot-password", ForgotPasswordController, only: [:index, :create]
+        resources "/login/forgot-password", ForgotPasswordController, only: [:index, :create]
+        resources "/login/forgot-password/:login_token", ForgotPasswordController, only: [:index]
+        resources "/login/:login_token", LoginController, only: [:index]
       end
 
       scope "/", Bonfire do
@@ -41,7 +44,8 @@ defmodule Bonfire.Me.Web.Routes do
         resources "/switch-user", SwitchUserController, only: [:index, :show], as: :switch_user
         resources "/create-user", CreateUserController, only: [:index, :create], as: :create_user
 
-        live "/change-password", ChangePasswordLive
+        live "/account/password/change", ChangePasswordLive
+        resources "/account/password/change", ChangePasswordController, only: [:create]
 
         live "/settings/:tab", SettingsLive
         live "/settings/:tab/:id", SettingsLive

@@ -43,10 +43,10 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-    if not instance_is_invite_only? || is_first_account? do
+    if not instance_is_invite_only? || opts[:invite] == System.get_env("INVITE_KEY") || is_first_account? do
       signup_changeset(params, opts)
     else
-      invite_only()
+      invite_only_changeset()
     end
   end
 
@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Accounts do
       |> Changeset.cast_assoc(:credential, required: true)
   end
 
-  defp invite_only do
+  defp invite_only_changeset do
     %Account{}
       |> Account.changeset(%{})
       |> Changeset.add_error(:form, "invite_only")
@@ -126,6 +126,9 @@ defmodule Bonfire.Me.Accounts do
   def request_confirm_email(%Changeset{data: %ConfirmEmailFields{}}=cs, opts),
     do: Changeset.apply_action(cs, :insert) ~>> rce_check_valid(cs, opts)
 
+  def request_confirm_email(%Changeset{data: %ForgotPasswordFields{}}=cs, opts),
+    do: Changeset.apply_action(cs, :insert) ~>> rce_check_valid(cs, opts)
+
   def request_confirm_email(params, opts),
     do: request_confirm_email(changeset(:confirm_email, params, opts), opts)
 
@@ -144,18 +147,25 @@ defmodule Bonfire.Me.Accounts do
     do: {:error, Changeset.add_error(changeset, :form, "not_found")}
 
   defp rce_check_account(%Account{}=account, _form, changeset, opts),
-    do: rce_check_permitted(account, changeset, opts)
+    do: rec_check_what_to_do(account, changeset, opts)
 
-  defp rce_check_permitted(account, changeset, opts) do
-    case Email.may_request_confirm_email?(account.email, opts) do
-      {:ok, :resend}  -> resend_confirm_email(account)
+  defp rec_check_what_to_do(account, changeset, opts) do
+
+    what_to_do = if opts[:confirm_action] do
+      Email.should_request_or_refresh?(account.email, opts)
+    else
+      Email.may_request_confirm_email?(account.email, opts)
+    end
+
+    case what_to_do do
+      {:ok, :resend}  -> resend_confirm_email(account, opts)
       {:ok, :refresh} -> refresh_confirm_email(account, opts)
       {:error, error} -> {:error, Changeset.add_error(changeset, :form, error)}
     end
   end
 
-  defp resend_confirm_email(%Account{email: %{}=email}=account) do
-    with {:ok, _} <- mailer().send_now(Mails.confirm_email(account), email.email_address),
+  defp resend_confirm_email(%Account{email: %{}=email}=account, opts) do
+    with {:ok, _} <- mailer().send_now(Mails.confirm_email(account, opts), email.email_address),
       do: {:ok, :resent, account}
   end
 
@@ -183,8 +193,12 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp ce(account, opts) do
-    with :ok <- Email.may_confirm?(account.email, opts),
-      do: confirm_email(account)
+    if opts[:confirm_action] do
+      confirm_email(account)
+    else
+      with :ok <- Email.may_confirm?(account.email, opts),
+        do: confirm_email(account)
+    end
   end
 
   defp send_confirm_email(%Account{}=account, opts) do
@@ -194,9 +208,9 @@ defmodule Bonfire.Me.Accounts do
   defp send_confirm_email(false, account, _opts),
    do: {:ok, account}
 
-  defp send_confirm_email(true, %Account{email: %{email_address: email_address}}=account, _opts) do
+  defp send_confirm_email(true, %Account{email: %{email_address: email_address}}=account, opts) do
     account = repo().preload(account, :email)
-    mail = Mails.confirm_email(account)
+    mail = Mails.confirm_email(account, opts)
     mailer().send_now(mail, email_address)
     |> mailer_response(account)
   end
@@ -204,7 +218,10 @@ defmodule Bonfire.Me.Accounts do
   defp send_confirm_email(_, _account, _opts),
    do: {:error, :email_missing}
 
-  ## TODO: request_forgot_password
+
+  def request_forgot_password(params) do
+    request_confirm_email(params, confirm_action: :forgot_password)
+  end
 
   ## misc
 
@@ -217,6 +234,8 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def instance_is_invite_only? do
+    Config.get(:env) != :test
+    and
     System.get_env("INVITE_ONLY", "true") in ["true", true]
   end
 
