@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.LoggedDashboardLive do
-    use Bonfire.Web, :live_view
-    alias Bonfire.Web.LivePlugs
+  use Bonfire.Web, {:live_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  alias Bonfire.Web.LivePlugs
 
     def mount(params, session, socket) do
       LivePlugs.live_plug params, session, socket, [
