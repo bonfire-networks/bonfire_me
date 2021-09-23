@@ -7,21 +7,25 @@ defmodule Bonfire.Me.Users.Queries do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Common.Utils
 
-  # def queries_module, do: User
+  def queries_module, do: User
 
-  def query(), do: from(u in User, as: :user)
+  def query({:id, id}), do: by_id(id)
+  def query({:username, username}), do: by_username_or_id(username)
+
+  defp query(), do: from(u in User, as: :user)
 
   def by_id(id) do
     from u in User,
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
+      left_join: pe in assoc(c, :peered),
       left_join: a in assoc(u, :actor),
       left_join: ac in assoc(u, :accounted),
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
       where: c.id == ^id,
-      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
+      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc, peered: pe]}, actor: a, accounted: ac]
   end
 
   def by_username_or_id(username_or_id) do # OR ID
@@ -36,13 +40,14 @@ defmodule Bonfire.Me.Users.Queries do
     from u in User,
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
+      left_join: pe in assoc(c, :peered),
       left_join: a in assoc(u, :actor),
       left_join: ac in assoc(u, :accounted),
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
       where: c.username == ^username,
-      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, actor: a, accounted: ac]
+      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc, peered: pe]}, actor: a, accounted: ac]
   end
 
   def by_account(account_id) do
