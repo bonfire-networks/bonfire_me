@@ -15,7 +15,7 @@ defmodule Bonfire.Web.Plugs.AdminRequired do
     conn
     |> clear_session()
     |> put_flash(:error, e)
-    |> redirect(to: path(HomeLive))
+    |> redirect(to: path(:home))
     |> halt()
   end
 
