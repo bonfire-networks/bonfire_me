@@ -7,8 +7,9 @@ defmodule Bonfire.Me.Characters do
 
   def context_module, do: Character
 
+  @username_max_length 62
   @username_forbidden ~r/[^a-z0-9_]+/i
-  @username_regex ~r(^[a-z][a-z0-9_]{2,30}$)i
+  @username_regex ~r(^[a-z0-9_]{2,63}$)i
 
   def by_username(username) when is_binary(username), do: by_username_q(username) |> repo().single()
   def get(id), do: q_by_id(id) |> repo().single()
@@ -28,6 +29,18 @@ defmodule Bonfire.Me.Characters do
       left_join: a in assoc(c, :actor),
       where: c.id == ^id,
       preload: [peered: pe, profile: p, actor: a]
+  end
+
+  def username_available?(username) do
+    not repo().exists?(from c in Character, where: c.username == ^username) and hash_available?(Character.hash(username))
+  end
+
+  def hash_available?(hash) do
+    not repo().exists?(from c in Character, where: c.username_hash == ^hash)
+  end
+
+  def hash_delete(hash) do
+    repo().delete_all(from c in Character, where: c.username_hash == ^hash)
   end
 
   def changeset(char \\ %Character{}, params)
@@ -50,8 +63,10 @@ defmodule Bonfire.Me.Characters do
 
   def remote_changeset(char, params), do: do_remote_changeset(char, params)
 
-  defp clean_username(username) do
-    Regex.replace(@username_forbidden, username, "_") |> String.slice(0..29)
+  def clean_username(username) do
+    Regex.replace(@username_forbidden, username, "_")
+    |> String.slice(0..(@username_max_length-1))
+    |> String.trim("_")
   end
 
   defp do_changeset(char \\ %Character{}, params)
@@ -63,6 +78,8 @@ defmodule Bonfire.Me.Characters do
   end
 
   defp do_changeset(%Character{} = char, params) do # create
+    IO.inspect(username_regex: @username_regex)
+
     char
     |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)

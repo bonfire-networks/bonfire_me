@@ -8,8 +8,11 @@ defmodule Bonfire.Me.Profiles do
   def changeset(profile \\ %Profile{}, params) do
     profile
     |> Profile.changeset(params)
-    |> Changeset.validate_length(:name, min: 3, max: 50)
-    |> Changeset.validate_length(:summary, min: 0, max: 1024)
+    |> Changeset.validate_length(:name,
+      min: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_min, 3),
+      max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_max, 50)
+    )
+    |> Changeset.validate_length(:summary, min: 0, max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_summary_max, 1024))
   end
 
   def indexing_object_format(%{profile: obj}), do: indexing_object_format(obj)
