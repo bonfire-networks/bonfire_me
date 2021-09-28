@@ -140,7 +140,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
 
   def do_handle_params(%{"tab" => "followers" =tab} = _params, _url, socket) do
-    followers = Bonfire.Social.Follows.list_followers(e(socket, :assigns, :user, nil), current_user(socket)) #|> IO.inspect
+    followers = Bonfire.Social.Follows.list_followers(e(socket, :assigns, :user, nil), current_user(socket)) |> IO.inspect(label: tab)
 
     {:noreply,
     assign(socket,
@@ -152,7 +152,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
 
   def do_handle_params(%{"tab" => "followed" =tab} = _params, _url, socket) do
-    followed = Bonfire.Social.Follows.list_followed(e(socket, :assigns, :user, nil), current_user(socket)) #|> IO.inspect
+    followed = Bonfire.Social.Follows.list_followed(e(socket, :assigns, :user, nil), current_user(socket)) |> IO.inspect(label: tab)
 
     {:noreply,
     assign(socket,
