@@ -16,6 +16,7 @@ defmodule Bonfire.Me.MixProject do
         {:phoenix_live_reload, "~> 1.2", only: :dev},
         {:dbg, "~> 1.0", only: [:dev, :test]},
         {:floki, ">= 0.0.0", only: [:dev, :test]},
+        {:bonfire_data_shared_user, git: "https://github.com/bonfire-networks/bonfire_data_shared_user#main", optional: true},
       ]
     ]
   end

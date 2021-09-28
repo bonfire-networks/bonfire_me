@@ -7,7 +7,10 @@ defmodule Bonfire.Me.Web.Routes do
       scope "/", Bonfire.Me.Web do
         pipe_through :browser
 
-        live "/user/:username", ProfileLive, as: Bonfire.Data.Identity.User
+        live "/user/:username", ProfileLive
+        live "/user/@:username", ProfileLive
+        live "/@:username", ProfileLive, as: Bonfire.Data.Identity.User
+
         live "/user/:username/:tab", ProfileLive
         live "/user/:username/posts", PostsLive
 

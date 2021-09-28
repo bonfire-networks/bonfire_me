@@ -55,7 +55,6 @@ defmodule Bonfire.Me.Web.PrivateLive do
           search_placholder: search_placeholder,
           feed_title: l("Messages"),
           user: user, # the user to display
-          following: []
         )
       |> assign_global(
         smart_input_private: true,

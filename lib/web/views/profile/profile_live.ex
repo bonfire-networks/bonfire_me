@@ -26,18 +26,16 @@ defmodule Bonfire.Me.Web.ProfileLive do
       username when username == current_username ->
         current_user
 
+      "@"<>username ->
+        get_user(username)
       username ->
-        with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
-          user
-        else _ ->
-          nil
-        end
+        get_user(username)
     end
     # IO.inspect(user: user)
 
     if user do
 
-      following = if current_user && user && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id]
+      # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> IO.inspect(label: "following")
 
       page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
 
@@ -59,9 +57,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
           search_placholder: search_placeholder,
           feed_title: l( "User timeline"),
           user: user, # the user to display
-          following: following || []
         )
       |> assign_global(
+        # following: following || [],
         smart_input_placeholder: smart_input_placeholder,
         smart_input_text: smart_input_text,
         to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
@@ -72,6 +70,14 @@ defmodule Bonfire.Me.Web.ProfileLive do
         |> put_flash(:error, l "Profile not found")
         |> push_redirect(to: "/error")
       }
+    end
+  end
+
+  def get_user(username) do
+    with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
+      user
+    else _ ->
+      nil
     end
   end
 
