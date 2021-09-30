@@ -6,6 +6,7 @@ defmodule Bonfire.Me.Characters do
   import Ecto.Query
 
   def context_module, do: Character
+  def federation_module, do: ["Service", "Application"] # temporary until these are implemented elsewhere
 
   @username_max_length 62
   @username_forbidden ~r/[^a-z0-9_]+/i
@@ -22,6 +23,7 @@ defmodule Bonfire.Me.Characters do
       where: c.username == ^username,
       preload: [peered: pe, profile: p, actor: a]
   end
+
   def q_by_id(id) do
     from c in Character,
       left_join: p in assoc(c, :profile),
@@ -72,13 +74,24 @@ defmodule Bonfire.Me.Characters do
   defp do_changeset(char \\ %Character{}, params)
 
   defp do_changeset(%Character{id: _} = char, params) do # update
+    char = repo().maybe_preload(char, [:actor])
+
+    params =
+    if Map.get(char, :actor) do
+      params
+      |> Map.merge(%{actor: %{id: char.actor.id}}, fn _, a, b -> Map.merge(a, b) end)
+    else
+      params
+    end
+
     char
     |> Character.changeset(params, :hash)
     |> Changeset.validate_format(:username, @username_regex)
+    |> Changeset.cast_assoc(:actor)
   end
 
   defp do_changeset(%Character{} = char, params) do # create
-    IO.inspect(username_regex: @username_regex)
+    # IO.inspect(username_regex: @username_regex)
 
     char
     |> Character.changeset(params, :hash)
@@ -89,11 +102,13 @@ defmodule Bonfire.Me.Characters do
     }, [])
     # |> Changeset.cast_assoc(:feed)
     |> Changeset.cast_assoc(:follow_count)
+    |> Changeset.cast_assoc(:actor)
   end
 
   defp do_remote_changeset(%Character{id: _} = char, params) do # update
     char
     |> Character.changeset(params, :hash)
+    |> Changeset.cast_assoc(:actor)
   end
 
   defp do_remote_changeset(%Character{} = char, params) do # create

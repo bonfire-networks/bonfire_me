@@ -19,13 +19,13 @@ defmodule Bonfire.Me.Users.Queries do
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
       left_join: pe in assoc(c, :peered),
-      left_join: a in assoc(u, :actor),
+      left_join: a in assoc(c, :actor),
       left_join: ac in assoc(u, :accounted),
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
       where: c.id == ^id,
-      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc, peered: pe]}, actor: a, accounted: ac]
+      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [actor: a,follow_count: fc, peered: pe]}, accounted: ac]
   end
 
   def by_username_or_id(username_or_id) do # OR ID
@@ -41,13 +41,13 @@ defmodule Bonfire.Me.Users.Queries do
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
       left_join: pe in assoc(c, :peered),
-      left_join: a in assoc(u, :actor),
+      left_join: a in assoc(c, :actor),
       left_join: ac in assoc(u, :accounted),
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
       where: c.username == ^username,
-      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [follow_count: fc, peered: pe]}, actor: a, accounted: ac]
+      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [actor: a,follow_count: fc, peered: pe]}, actor: a, accounted: ac]
   end
 
   def by_account(account_id) do

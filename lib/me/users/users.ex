@@ -16,12 +16,19 @@ defmodule Bonfire.Me.Users do
   alias Ecto.Changeset
   import Bonfire.Me.Integration
 
+  alias ActivityPub.Actor
+  alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
+
+  import Bonfire.Me.Integration
+  import Ecto.Query, only: [from: 2]
+
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
 
   @search_type "Bonfire.Data.Identity.User"
 
   def context_module, do: User
+  def federation_module, do: ["Person"]
 
   ### Queries
 
@@ -126,7 +133,7 @@ defmodule Bonfire.Me.Users do
   def update(%User{} = user, params, extra \\ nil) do
   # TODO: check who is doing the update (except if extra==:remote)
     repo().update(changeset(:update, user, params, extra))
-    |> IO.inspect
+    # |> IO.inspect
     |> post_mutate()
   end
 
@@ -153,6 +160,79 @@ defmodule Bonfire.Me.Users do
   # defp delete_caretaken(user) do
   #   :ok
   # end
+
+  ### ActivityPub
+
+  def by_ap_id(ap_id) do
+    with {:ok, %{username: username}} = ActivityPub.Actor.get_cached_by_ap_id(ap_id) do
+      by_username(username)
+    end
+  end
+
+  @doc "Creates a remote user"
+  def create_remote(params) do
+    changeset(:create, %User{}, params, :remote)
+    |> repo().insert()
+  end
+
+  @doc "Updates a remote user"
+  def update_remote(user, params) do
+    update(user, params, :remote)
+  end
+
+  def format_actor(user) do
+    APUtils.format_actor(user, "Person")
+  end
+
+  def create_remote_actor(actor) do
+
+    actor_object = ActivityPub.Object.get_by_ap_id(actor.ap_id)
+
+    icon_url = APUtils.maybe_fix_image_object(actor.data["icon"])
+    image_url = APUtils.maybe_fix_image_object(actor.data["image"])
+
+    with {:ok, user} <- repo().transact_with(fn ->
+      with  {:ok, peer} =  Bonfire.Federate.ActivityPub.Peers.get_or_create(actor),
+            {:ok, user} <- create_remote(%{
+              character: %{
+                username: actor.username
+              },
+              profile: %{
+                name: actor.data["name"],
+                summary: actor.data["summary"]
+              },
+              peered: %{
+                peer_id: peer.id,
+                canonical_uri: actor.ap_id
+              }
+            }),
+            {:ok, _object} <- ActivityPub.Object.update(actor_object, %{pointer_id: user.id}) do
+        {:ok, user}
+      end
+    end) do
+
+      # after creating the user, in case of timeouts downloading the images
+      icon_id = APUtils.maybe_create_icon_object(icon_url, user)
+      image_id = APUtils.maybe_create_image_object(image_url, user)
+
+      with {:ok, updated_user} <- update_remote(user, %{"profile" => %{"icon_id" => icon_id, "image_id" => image_id}}) do
+        {:ok, updated_user}
+      else _ ->
+        {:ok, user}
+      end
+    end
+  end
+
+  ## Adapter callbacks
+
+  def update_local_actor(actor, params) do
+    with {:ok, user} <- by_username(actor.username),
+         {:ok, user} <-
+           update(user, Map.put(params, :actor, %{signing_key: params.keys})),
+         actor <- format_actor(user) do
+      {:ok, actor}
+    end
+  end
 
   ## Changesets ############
 
@@ -195,7 +275,10 @@ defmodule Bonfire.Me.Users do
 
 
   def changeset(:update, user, params, _extra) do
-    user = repo().preload(user, [:character, :profile, :actor])
+    user = repo().preload(user, [:profile, character: [:actor]])
+
+    # Ecto doesn't liked mixed keys so we convert them all to strings
+    params = Utils.stringify_keys(params)
 
     # add the ID for update
     params = params
@@ -203,9 +286,9 @@ defmodule Bonfire.Me.Users do
       |> Map.merge(%{"character" => %{"id"=> user.character.id}}, fn _, a, b -> Map.merge(a, b) end)
 
     params =
-      if user.actor do
+      if Map.get(user, :actor) do
         params
-        |> Map.merge(%{"actor" => %{"id"=> user.actor.id}}, fn _, a, b -> Map.merge(a, b) end)
+        |> Map.merge(%{"character" => %{"actor"=> user.character.actor}}, fn _, a, b -> Map.merge(a, b) end)
       else
         params
       end
@@ -214,16 +297,10 @@ defmodule Bonfire.Me.Users do
       Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
     end
 
-    # Ecto doesn't liked mixed keys so we convert them all to strings
-    # FIXME: Turns out that this can remove nested mapds so we need to figure out a
-    # better way of doing this
-    params = for {k, v} <- params, do: {to_string(k), v}, into: %{}
-
     user
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    |> Changeset.cast_assoc(:actor)
   end
 
   def indexing_object_format(u) do
