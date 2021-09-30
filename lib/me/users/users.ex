@@ -184,44 +184,6 @@ defmodule Bonfire.Me.Users do
     APUtils.format_actor(user, "Person")
   end
 
-  def create_remote_actor(actor) do
-
-    actor_object = ActivityPub.Object.get_by_ap_id(actor.ap_id)
-
-    icon_url = APUtils.maybe_fix_image_object(actor.data["icon"])
-    image_url = APUtils.maybe_fix_image_object(actor.data["image"])
-
-    with {:ok, user} <- repo().transact_with(fn ->
-      with  {:ok, peer} =  Bonfire.Federate.ActivityPub.Peers.get_or_create(actor),
-            {:ok, user} <- create_remote(%{
-              character: %{
-                username: actor.username
-              },
-              profile: %{
-                name: actor.data["name"],
-                summary: actor.data["summary"]
-              },
-              peered: %{
-                peer_id: peer.id,
-                canonical_uri: actor.ap_id
-              }
-            }),
-            {:ok, _object} <- ActivityPub.Object.update(actor_object, %{pointer_id: user.id}) do
-        {:ok, user}
-      end
-    end) do
-
-      # after creating the user, in case of timeouts downloading the images
-      icon_id = APUtils.maybe_create_icon_object(icon_url, user)
-      image_id = APUtils.maybe_create_image_object(image_url, user)
-
-      with {:ok, updated_user} <- update_remote(user, %{"profile" => %{"icon_id" => icon_id, "image_id" => image_id}}) do
-        {:ok, updated_user}
-      else _ ->
-        {:ok, user}
-      end
-    end
-  end
 
   ## Adapter callbacks
 

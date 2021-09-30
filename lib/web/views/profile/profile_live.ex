@@ -77,7 +77,11 @@ defmodule Bonfire.Me.Web.ProfileLive do
     with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
       user
     else _ ->
-      nil
+       with {:ok, character} <- Bonfire.Me.Characters.by_username(username) do
+        Bonfire.Common.Pointers.get!(character.id) # FIXME? this results in extra queries
+      else _ ->
+        nil
+      end
     end
   end
 

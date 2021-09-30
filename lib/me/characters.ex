@@ -6,7 +6,6 @@ defmodule Bonfire.Me.Characters do
   import Ecto.Query
 
   def context_module, do: Character
-  def federation_module, do: ["Service", "Application"] # temporary until these are implemented elsewhere
 
   @username_max_length 62
   @username_forbidden ~r/[^a-z0-9_]+/i
