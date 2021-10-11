@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Fake do
   # import Bonfire.Me.Integration
 
   def fake_account!(attrs \\ %{}) do
-    {:ok, account} = Accounts.signup(signup_form(attrs), must_confirm: false)
+    {:ok, account} = Accounts.signup(signup_form(attrs), must_confirm?: false)
     account
   end
 
