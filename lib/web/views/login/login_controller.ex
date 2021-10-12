@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Web.LoginController do
 
   def index(conn, _) do # GET only supports 'go'
     conn = fetch_query_params(conn)
-    paint(conn, form(Map.take(conn.query_params, [:go, "go"])))
+    paint(conn, form_cs(Map.take(conn.query_params, [:go, "go"])))
   end
 
   def create(conn, params) do
@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Web.LoginController do
     end
   end
 
-  defp form(params \\ %{}), do: Accounts.changeset(:login, params)
+  defp form_cs(params \\ %{}), do: Accounts.changeset(:login, params)
 
   defp logged_in(account, conn, form) do
     IO.inspect(account)

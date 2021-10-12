@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
 
   def create(conn, params) do
     form = Map.get(params, "confirm_email_fields", %{})
-    case Accounts.request_confirm_email(form(form)) do
+    case Accounts.request_confirm_email(form_cs(form)) do
       {:ok, _, _} ->
         conn
         |> assign(:requested, true)
@@ -38,12 +38,12 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
         |> live_render(ConfirmEmailLive)
       {:error, changeset} ->
         conn
-        |> assign(:form, changeset |> IO.inspect)
+        |> assign(:form, changeset)
         |> live_render(ConfirmEmailLive)
     end
   end
 
-  defp form(params \\ %{}), do: Accounts.changeset(:confirm_email, params)
+  defp form_cs(params \\ %{}), do: Accounts.changeset(:confirm_email, params)
 
   defp confirmed(conn, account) do
     conn

@@ -12,10 +12,10 @@ defmodule Bonfire.Me.Web.SignupLive do
       |> assign_new(:current_user, fn -> nil end)
       |> assign_new(:registered, fn -> false end)
       |> assign_new(:error, fn -> nil end)
-      |> assign_new(:form, fn -> form(session) end)}
+      |> assign_new(:form, fn -> form_cs(session) end)}
   end
 
-  defp form(%{"invite" => invite}), do: Accounts.changeset(:signup, %{}, invite: invite)
-  defp form(_), do: Accounts.changeset(:signup, %{})
+  defp form_cs(%{"invite" => invite}), do: Accounts.changeset(:signup, %{}, invite: invite)
+  defp form_cs(_), do: Accounts.changeset(:signup, %{})
 
 end

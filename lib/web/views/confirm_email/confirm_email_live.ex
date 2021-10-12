@@ -9,9 +9,9 @@ defmodule Bonfire.Me.Web.ConfirmEmailLive do
      |> assign_new(:current_account, fn -> nil end)
      |> assign_new(:current_user, fn -> nil end)
      |> assign_new(:requested, fn -> false end)
-     |> assign_new(:form, &form/0)}
+     |> assign_new(:form, &form_cs/0)}
   end
 
-  defp form(), do: Accounts.changeset(:confirm_email, %{})
+  defp form_cs(), do: Accounts.changeset(:confirm_email, %{})
 
 end

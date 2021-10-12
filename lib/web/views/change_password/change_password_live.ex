@@ -17,8 +17,8 @@ defmodule Bonfire.Me.Web.ChangePasswordLive do
   def mounted(_params, _session, socket) do
     {:ok,
      socket
-     |> assign_new(:form, &form/0)}
+     |> assign_new(:form, &form_cs/0)}
   end
 
-  defp form(), do: Accounts.changeset(:change_password, %{})
+  defp form_cs(), do: Accounts.changeset(:change_password, %{})
 end
