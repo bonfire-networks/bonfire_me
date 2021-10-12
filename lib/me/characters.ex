@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Characters do
 
   alias Bonfire.Data.Identity.Character
   alias Ecto.Changeset
+  alias Bonfire.Common.Utils
   import Bonfire.Me.Integration
   import Ecto.Query
 
@@ -76,9 +77,9 @@ defmodule Bonfire.Me.Characters do
     char = repo().maybe_preload(char, [:actor])
 
     params =
-    if Map.get(char, :actor) do
+    if Utils.e(char, :actor, nil) do
       params
-      |> Map.merge(%{actor: %{id: char.actor.id}}, fn _, a, b -> Map.merge(a, b) end)
+      |> Map.merge(%{"actor" => %{"id"=> Utils.e(char, :actor, :id, nil)}}, fn _, a, b -> Map.merge(a, b) end)
     else
       params
     end
