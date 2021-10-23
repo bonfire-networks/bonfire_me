@@ -37,7 +37,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
         auto_upload: true,
         progress: &handle_progress/3
       )
-    }
+    } # |> IO.inspect
 
   defp handle_progress(:icon, entry, socket) do
 

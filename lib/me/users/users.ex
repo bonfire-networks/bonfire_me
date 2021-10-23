@@ -76,6 +76,11 @@ defmodule Bonfire.Me.Users do
     Utils.e(user, :instance_admin, :is_instance_admin, false)
   end
 
+  def is_admin(_) do
+    false
+  end
+
+
   ### Mutations
 
   ## Create
