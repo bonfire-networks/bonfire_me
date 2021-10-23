@@ -1,0 +1,6 @@
+<Bonfire.UI.Social.SettingsViewLive 
+    page_title={@page_title}
+    page={@page}
+    selected_tab={@selected_tab}
+    uploads={@uploads}
+/>

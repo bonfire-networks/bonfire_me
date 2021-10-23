@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.SettingsLive do
-  use Bonfire.Web, {:live_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "settings_template.html"}]}
+  use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   require Logger
   alias Bonfire.Web.LivePlugs
 
