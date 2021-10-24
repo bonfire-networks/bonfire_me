@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Users.Boundaries do
   @doc "Grant access to an object to a list of circles + the user"
   def maybe_grant_access_to(current_user, object, circle_ids \\ [], access \\ :read_only)
 
-  def maybe_grant_access_to(%User{id: user_id}=current_user, %{id: object_id} = _object, circle_ids, access) when is_list(circle_ids) do
+  def maybe_grant_access_to(%User{id: user_id}=current_user, object_id, circle_ids, access) when is_list(circle_ids) and is_binary(object_id) do
 
     grant_subjects = (circle_ids ++ [user_id]) #|> IO.inspect(label: "maybe_grant_access_to")
 
@@ -24,7 +24,11 @@ defmodule Bonfire.Me.Users.Boundaries do
     end
   end
 
-  def maybe_grant_access_to(current_user, object, circle, access) do
+  def maybe_grant_access_to(current_user, %{id: object_id} = _object, circles, access) do
+    maybe_grant_access_to(current_user, object_id, circles, access)
+  end
+
+  def maybe_grant_access_to(current_user, object, circle, access) when not is_list(circle) do
     maybe_grant_access_to(current_user, object, [circle], access)
   end
 
