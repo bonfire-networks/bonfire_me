@@ -41,6 +41,8 @@ defmodule Bonfire.Me.Users do
 
   def by_username(username) when is_binary(username), do: repo().single(Queries.by_username_or_id(username))
 
+  def by_username!(username) when is_binary(username), do: repo().one(Queries.by_username_or_id(username))
+
   def by_account(account) do
     if Utils.module_enabled?(Bonfire.Data.SharedUser) do
       Bonfire.Me.SharedUsers.by_account(account)
@@ -171,6 +173,12 @@ defmodule Bonfire.Me.Users do
   def by_ap_id(ap_id) do
     with {:ok, %{username: username}} = ActivityPub.Actor.get_cached_by_ap_id(ap_id) do
       by_username(username)
+    end
+  end
+
+  def by_ap_id!(ap_id) do
+    with %ActivityPub.Actor{} = actor <- ActivityPub.Actor.get_by_ap_id!(ap_id) do
+      by_username!(actor.username)
     end
   end
 
