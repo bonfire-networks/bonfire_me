@@ -48,7 +48,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
         socket
         |> assign(
           page: "private",
-          feed: feed,
+          feed: e(feed, :entries, []),
           page_title: l("Direct Messages"),
           smart_input: true,
           has_private_tab: true,
@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
           user: user, # the user to display
         )
       |> assign_global(
-        smart_input_private: true,
+        create_activity_type: "message",
         smart_input_placeholder: l("Note to self..."),
         smart_input_text: smart_input_text,
         to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]

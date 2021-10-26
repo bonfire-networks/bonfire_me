@@ -126,7 +126,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     do: "",
     else: "@"<>e(user, :character, :username, "")<>" "
 
-    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> IO.inspect
+    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> IO.inspect(label: "messages")
 
     {:noreply,
      assign(socket,
@@ -134,9 +134,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
        feed: e(feed, :entries, []),
      )
     |> assign_global(
-      smart_input_private: true,
       smart_input_placeholder: smart_input_placeholder,
       smart_input_text: smart_input_text,
+      to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}],
       create_activity_type: "message"
     )
     }
