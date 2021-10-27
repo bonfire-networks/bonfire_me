@@ -79,7 +79,8 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :browser
         pipe_through :admin_required
 
-        live "/admin", InstanceSettingsLive, as: :settings
+        live "/admin", SettingsLive, as: :settings
+        live "/admin/:admin_tab", SettingsLive, as: :settings
       end
 
 

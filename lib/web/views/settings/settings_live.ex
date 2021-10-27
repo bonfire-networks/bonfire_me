@@ -19,6 +19,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
       |> assign(
         page_title: l( "Settings"),
         selected_tab: "user",
+        tab_id: "",
         page: "Settings",
         trigger_submit: false,
         uploaded_files: []
@@ -86,8 +87,14 @@ defmodule Bonfire.Me.Web.SettingsLive do
   end
 
   def handle_params(%{"tab" => tab, "id" => id}, _url, socket) do
-    {:noreply, assign(socket, selected_tab: tab, id: id)}
+    IO.inspect(id)
+    {:noreply, assign(socket, selected_tab: tab, tab_id: id)}
   end
+
+  # def handle_params(%{"tab" => tab, "admin_tab" => admin_tab}, _url, socket) do
+  #   IO.inspect(admin_tab)
+  #   {:noreply, assign(socket, selected_tab: tab, admin_tab: admin_tab)}
+  # end
 
   def handle_params(%{"tab" => tab}, _url, socket) do
     {:noreply, assign(socket, selected_tab: tab)}

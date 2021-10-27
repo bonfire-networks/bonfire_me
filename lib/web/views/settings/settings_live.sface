@@ -3,5 +3,6 @@
     page={@page}
     selected_tab={@selected_tab}
     uploads={@uploads}
+    tab_id={@tab_id}
     current_user={current_user(assigns)}
 />
