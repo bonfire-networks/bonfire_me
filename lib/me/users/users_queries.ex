@@ -87,9 +87,10 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: p in assoc(u, :profile),
       left_join: i in assoc(c, :inbox),
       left_join: ia in assoc(u, :instance_admin),
+      left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
       where: u.id == ^user_id,
-      preload: [instance_admin: ia, character: {c, inbox: i}, accounted: {ac, account: a}, profile: {p, [icon: ic]}]
+      preload: [instance_admin: ia, character: {c, [inbox: i, follow_count: fc]}, accounted: {ac, account: a}, profile: {p, [icon: ic]}]
   end
 
   def count() do

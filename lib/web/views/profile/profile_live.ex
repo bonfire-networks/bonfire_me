@@ -1,5 +1,7 @@
 defmodule Bonfire.Me.Web.ProfileLive do
   use Bonfire.Web, :live_view
+  import Bonfire.Me.Integration
+
   alias Bonfire.Me.Fake
   alias Bonfire.Web.LivePlugs
 
