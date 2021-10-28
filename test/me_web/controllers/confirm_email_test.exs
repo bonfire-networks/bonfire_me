@@ -10,7 +10,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "form renders" do
       conn = conn()
-      conn = get(conn, "/login/email/confirm")
+      conn = get(conn, "/signup/email/confirm")
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#confirm_email")
       assert [form] = Floki.find(view, "form")
@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "absence validation" do
       conn = conn()
-      conn = post(conn, "/login/email/confirm", %{})
+      conn = post(conn, "/signup/email/confirm", %{})
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#confirm_email")
       assert [form] = Floki.find(view, "form")
@@ -34,7 +34,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "format validation" do
       conn = conn()
-      conn = post(conn, "/login/email/confirm", %{"confirm_email_fields" => %{"email" => Faker.Pokemon.name()}})
+      conn = post(conn, "/signup/email/confirm", %{"confirm_email_fields" => %{"email" => Faker.Pokemon.name()}})
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#confirm_email")
       assert [form] = Floki.find(view, "form")
@@ -47,7 +47,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "not found" do
       conn = conn()
-      conn = post(conn, "/login/email/confirm", %{"confirm_email_fields" => %{"email" => Fake.email()}})
+      conn = post(conn, "/signup/email/confirm", %{"confirm_email_fields" => %{"email" => Fake.email()}})
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#confirm_email")
       assert [form] = Floki.find(view, "form")
@@ -63,13 +63,13 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
     test "success" do
       conn = conn()
       account = fake_account!()
-      conn = get(conn, "/login/email/confirm")
+      conn = get(conn, "/signup/email/confirm")
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#confirm_email")
       assert [form] = Floki.find(view, "form")
       assert [_] = Floki.find(form, "input[type='email']")
       assert [_] = Floki.find(form, "button[type='submit']")
-      conn = post(recycle(conn), "/login/email/confirm", %{"confirm_email_fields" => %{"email" => account.email.email_address}})
+      conn = post(recycle(conn), "/signup/email/confirm", %{"confirm_email_fields" => %{"email" => account.email.email_address}})
       doc = floki_response(conn)
       assert [] = Floki.find(doc, "#confirm-email-form")
       assert [conf] = Floki.find(doc, ".form__confirmation")
@@ -86,7 +86,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "not found" do
       conn = conn()
-      conn = get(conn, "/login/email/confirm/#{Fake.confirm_token()}")
+      conn = get(conn, "/signup/email/confirm/#{Fake.confirm_token()}")
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#confirm_email")
       assert [form] = Floki.find(view, "form")
@@ -99,16 +99,16 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
     test "success" do
       conn = conn()
       account = fake_account!()
-      conn = get(conn, "/login/email/confirm/#{account.email.confirm_token}")
+      conn = get(conn, "/signup/email/confirm/#{account.email.confirm_token}")
       assert redirected_to(conn) == "/create-user"
     end
 
     test "cannot confirm twice" do
       conn = conn()
       account = fake_account!()
-      conn = get(conn, "/login/email/confirm/#{account.email.confirm_token}")
+      conn = get(conn, "/signup/email/confirm/#{account.email.confirm_token}")
       assert redirected_to(conn) == "/create-user"
-      conn = get(build_conn(), "/login/email/confirm/#{account.email.confirm_token}")
+      conn = get(build_conn(), "/signup/email/confirm/#{account.email.confirm_token}")
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#confirm_email")
       assert [form] = Floki.find(view, "form")

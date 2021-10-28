@@ -109,7 +109,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     assert [_] = Floki.find(form, "button[type='submit']")
   end
 
-  test "success" do
+  test "successfully create a user" do
     alice = fake_account!()
     conn = conn(account: alice)
     username = Fake.username()

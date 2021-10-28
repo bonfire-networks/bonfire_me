@@ -200,12 +200,16 @@ defmodule Bonfire.Me.Users do
 
   ## Adapter callbacks
 
-  def update_local_actor(actor, params) do
-    with {:ok, user} <- by_username(actor.username),
-         {:ok, user} <-
-           update(user, Map.put(params, :actor, %{signing_key: params.keys})),
+  def update_local_actor(%User{} = user, params) do
+    with {:ok, user} <- update(user, params),
          actor <- format_actor(user) do
       {:ok, actor}
+    end
+  end
+
+  def update_local_actor(actor, params) do
+    with {:ok, user} <- by_username(actor.username) do
+      update_local_actor(user, params)
     end
   end
 
@@ -269,6 +273,7 @@ defmodule Bonfire.Me.Users do
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    # |> IO.inspect(label: "users update changeset")
   end
 
   def indexing_object_format(u) do
