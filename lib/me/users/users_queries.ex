@@ -14,7 +14,7 @@ defmodule Bonfire.Me.Users.Queries do
 
   defp query(), do: from(u in User, as: :user)
 
-  def by_id(id) do
+  def by_id(id) when is_binary(id) do
     from u in User,
       join: p in assoc(u, :profile),
       join: c in assoc(u, :character),
