@@ -183,11 +183,18 @@ defmodule Bonfire.Me.Users do
     end
   end
 
+  def ap_receive_activity(_creator, _activity, object) do
+    IO.inspect(object, label: "Users.ap_receive_activity")
+    Bonfire.Federate.ActivityPub.Adapter.maybe_create_remote_actor(Utils.e(object, :data, object))
+  end
+
   @doc "Creates a remote user"
   def create_remote(params) do
     changeset(:create, %User{}, params, :remote)
     |> repo().insert()
   end
+
+
 
   @doc "Updates a remote user"
   def update_remote(user, params) do
