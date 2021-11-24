@@ -83,7 +83,6 @@ defmodule Bonfire.Me.Users do
     false
   end
 
-
   ### Mutations
 
   ## Create
