@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.LoggedDashboardLive do
-  use Bonfire.Web, {:live_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   alias Bonfire.Web.LivePlugs
 
     def mount(params, session, socket) do

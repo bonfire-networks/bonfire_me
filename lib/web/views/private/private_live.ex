@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.PrivateLive do
-  use Bonfire.Web, :live_view
+  use Bonfire.Web, :surface_view
   alias Bonfire.Me.Fake
   alias Bonfire.Web.LivePlugs
 

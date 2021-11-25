@@ -1,0 +1,6 @@
+<div id="account_dashboard" class="flex-1 mt-2">
+  <Bonfire.UI.Social.SwitchUserViewLive
+    go={@go}
+    current_account_users={@current_account_users}
+  />
+</div>

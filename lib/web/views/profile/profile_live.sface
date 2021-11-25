@@ -1,0 +1,14 @@
+<Bonfire.UI.Social.ProfileViewLive 
+  page_title={@page_title}
+  page={@page}
+  selected_tab={@selected_tab}
+  smart_input={@smart_input}
+  has_private_tab={@has_private_tab}
+  smart_input_placeholder={@smart_input_placeholder}
+  smart_input_text={@smart_input_text}
+  search_placholder={@search_placholder}
+  feed_title={@feed_title}
+  user={@user}
+  feed={@feed}
+  page_info={@page_info}
+/>

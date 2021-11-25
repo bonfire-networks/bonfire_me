@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.ProfileLive do
-  use Bonfire.Web, :live_view
+  use Bonfire.Web, :surface_view
   import Bonfire.Me.Integration
 
   alias Bonfire.Me.Fake

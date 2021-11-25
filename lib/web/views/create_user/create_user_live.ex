@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.CreateUserLive do
-  use Bonfire.Web, {:live_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   # alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users
   alias Bonfire.Web.LivePlugs

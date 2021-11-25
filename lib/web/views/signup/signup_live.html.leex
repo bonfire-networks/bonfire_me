@@ -1,3 +1,6 @@
 <div id="signup">
-<%= live_component(@socket, Bonfire.UI.Social.SignupViewLive, assigns_clean(assigns)) %>
+  <Bonfire.UI.Social.SignupViewLive 
+    form={@form}
+    error={@error}
+  />
 </div>

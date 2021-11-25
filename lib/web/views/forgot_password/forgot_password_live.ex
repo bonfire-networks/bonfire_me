@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.ForgotPasswordLive do
-  use Bonfire.Web, :live_view
+  use Bonfire.Web, :surface_view
   alias Bonfire.Web.LivePlugs
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Web.ForgotPasswordController

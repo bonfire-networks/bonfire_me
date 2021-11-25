@@ -1,0 +1,3 @@
+<div id="switch_user" class="flex-1 mt-2">
+  <Bonfire.UI.Social.SwitchUserViewLive />
+</div>

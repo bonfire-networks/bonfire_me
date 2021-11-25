@@ -1,0 +1,6 @@
+<div id="login">
+  <Bonfire.UI.Social.LoginLive
+    form={@form}
+    error={@error}
+   />
+</div>
