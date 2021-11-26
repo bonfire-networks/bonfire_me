@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :browser
         pipe_through :account_required
 
-        live "/dashboard", LoggedDashboardLive, as: :dashboard
+        # live "/dashboard", LoggedDashboardLive, as: :dashboard
 
         resources "/switch-user", SwitchUserController, only: [:index, :show], as: :switch_user
         resources "/create-user", CreateUserController, only: [:index, :create], as: :create_user

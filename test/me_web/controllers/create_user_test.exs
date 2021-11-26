@@ -115,8 +115,8 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     username = Fake.username()
     params = %{"user" => %{"profile" => %{"summary" => Fake.summary(), "name" => Fake.name()}, "character" => %{"username" => username}}}
     conn = post(conn, "/create-user", params)
-    assert redirected_to(conn) == "/dashboard"
-    conn = get(recycle(conn), "/dashboard")
+    assert redirected_to(conn) == "/home"
+    conn = get(recycle(conn), "/home")
     doc = floki_response(conn)
     assert [ok] = find_flash(doc)
     assert_flash(ok, :info, ~r/nice/)

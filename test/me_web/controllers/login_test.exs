@@ -98,7 +98,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
                   %{"email_or_username" => account.email.email_address,
                     "password" => account.credential.password}}
       conn = post(conn, "/login", params)
-      assert redirected_to(conn) == "/dashboard"
+      assert redirected_to(conn) == "/home"
     end
 
     test "with username" do
@@ -109,7 +109,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
                   %{"email_or_username" => account.email.email_address,
                     "password" => account.credential.password}}
       conn = post(conn, "/login", params)
-      assert redirected_to(conn) == "/dashboard"
+      assert redirected_to(conn) == "/home"
     end
 
   end

@@ -39,7 +39,7 @@ defmodule Bonfire.Me.Web.ForgotPasswordController do
     conn
     |> put_session(:account_id, account.id)
     |> put_flash(:info, l "Welcome back! Thanks for confirming your email address. You can now change your password.")
-    |> redirect(to: path(:dashboard))
+    |> redirect(to: path(:home))
     # |> redirect(to: path(Bonfire.Me.Web.ChangePasswordLive)) # TODO: switch to this once change password works
   end
 
