@@ -10,7 +10,25 @@ defmodule Bonfire.Me.API.GraphQL do
     field(:character, :character)
 
     field :posts, list_of(:post) do
-      arg :paginate, :paginate
+      arg :paginate, :paginate # TODO
+
+      resolve dataloader(Bonfire.Data.Identity.User)
+    end
+
+    field :activities, list_of(:activity) do
+      arg :paginate, :paginate # TODO
+
+      resolve dataloader(Bonfire.Data.Identity.User)
+    end
+
+    # field :likes, list_of(:post) do
+    #   arg :paginate, :paginate # TODO
+
+    #   resolve dataloader(Bonfire.Data.Identity.User)
+    # end
+
+    field :boost_activities, list_of(:activity) do
+      arg :paginate, :paginate # TODO
 
       resolve dataloader(Bonfire.Data.Identity.User)
     end
