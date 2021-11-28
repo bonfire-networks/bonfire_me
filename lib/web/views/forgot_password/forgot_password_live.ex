@@ -14,10 +14,13 @@ defmodule Bonfire.Me.Web.ForgotPasswordLive do
     ]
   end
 
-  defp mounted(_params, _session, socket) do
+  defp mounted(_params, session, socket) do
     {:ok,
      socket
-      |> assign(:form, ForgotPasswordController.form)}
+      |> assign(:form, ForgotPasswordController.form)
+      |> assign(:error,  session["error"])
+      |> assign(:requested, session["requested"])
+    }
   end
 
 

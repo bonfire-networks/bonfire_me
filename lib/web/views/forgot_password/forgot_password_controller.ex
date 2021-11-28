@@ -22,13 +22,18 @@ defmodule Bonfire.Me.Web.ForgotPasswordController do
         conn
         |> assign(:requested, true)
         |> live_render(ForgotPasswordLive)
-      {:error, :not_found} ->
-        conn
-        |> assign(:error, :not_found)
-        |> live_render(ForgotPasswordLive)
       {:error, changeset} ->
         conn
         |> assign(:form, changeset)
+        |> live_render(ForgotPasswordLive)
+      {:error, :not_found} ->
+        # don't tell snoopers if someone is a user or not
+        conn
+        |> assign(:requested, true)
+        |> live_render(ForgotPasswordLive)
+      other ->
+        conn
+        |> assign(:error, other)
         |> live_render(ForgotPasswordLive)
     end
   end

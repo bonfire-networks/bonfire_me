@@ -44,10 +44,18 @@ defmodule Bonfire.Me.API.GraphQL do
     field(:username, :string)
   end
 
+  input_object :character_filters do
+    field(:id, :string)
+    field(:username, :string)
+    field(:autocomplete, :string)
+  end
+
   object :me_queries do
 
     @desc "Get a user"
     field :user, :user do
+      arg :filter, :character_filters
+
       resolve &get_user/3
     end
 
@@ -57,11 +65,16 @@ defmodule Bonfire.Me.API.GraphQL do
 
   end
 
-  def get_user(_parent, %{username: username}, info) do
+  def get_user(_parent, %{filter: %{username: username}}, info) do
     Bonfire.Me.Users.by_username(username)
   end
 
-  def get_user(_parent, _args, info) do
+  def get_user(_parent, %{filter: %{id: id}}, info) do
+    Bonfire.Me.Users.by_id(id)
+  end
+
+  def get_user(_parent, args, info) do
+    IO.inspect(args: args)
     {:ok, GraphQL.current_user(info)}
   end
 
