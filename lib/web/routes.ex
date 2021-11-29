@@ -25,6 +25,7 @@ defmodule Bonfire.Me.Web.Routes do
         resources "/signup", SignupController, only: [:index, :create], as: :signup
         resources "/signup/invitation/:invite", SignupController, only: [:index, :create]
         resources "/signup/email/confirm", ConfirmEmailController, only: [:index, :create, :show]
+        resources "/signup/email/confirm/:id", ConfirmEmailController, only: [:show]
         resources "/login", LoginController, only: [:index, :create], as: :login
         resources "/login/forgot-password", ForgotPasswordController, only: [:index, :create]
         resources "/login/forgot-password/:login_token", ForgotPasswordController, only: [:index]

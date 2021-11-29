@@ -3,5 +3,6 @@
     form={@form}
     error={@error}
     requested={@requested}
+    flash={@flash}
  />
 </div>

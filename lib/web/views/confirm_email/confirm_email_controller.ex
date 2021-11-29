@@ -13,13 +13,9 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
       {:error, "already_confirmed", _} ->
         already_confirmed(conn)
       {:error, :expired, _} ->
-        conn
-        |> assign(:error, :expired_link)
-        |> live_render(ConfirmEmailLive)
+        error(conn, :expired_link)
       _ ->
-        conn
-        |> assign(:error, :not_found)
-        |> live_render(ConfirmEmailLive)
+        error(conn, :not_found)
     end
   end
 
@@ -56,5 +52,12 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
     conn
     |> put_flash(:error, l "You've already confirmed your email address. You can log in now.")
     |> redirect(to: path(:login))
+  end
+
+  defp error(conn, text) do
+    Logger.error(maybe_to_string(text))
+    conn
+      |> assign(:error, text)
+      |> live_render(ConfirmEmailLive)
   end
 end
