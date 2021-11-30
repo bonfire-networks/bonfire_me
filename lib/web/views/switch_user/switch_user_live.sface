@@ -1,3 +1,5 @@
 <div id="switch_user" class="flex-1 mt-2">
-  <Bonfire.UI.Social.SwitchUserViewLive />
+  <Bonfire.UI.Social.SwitchUserViewLive
+  current_account_users={@current_account_users} 
+  />
 </div>
