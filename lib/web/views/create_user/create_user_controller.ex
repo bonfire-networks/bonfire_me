@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
       {:ok, %{id: id, character: %{username: username}} = _user} ->
         greet(conn, params, id, username)
       {:error, changeset} ->
-        # IO.inspect(changeset_error: changeset)
+        IO.inspect(changeset_error: changeset)
         err = Bonfire.Repo.ChangesetErrors.changeset_errors_string(changeset, false) #|> IO.inspect
         conn
         |> assign(:error, err)
