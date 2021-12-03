@@ -15,22 +15,48 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve dataloader(Bonfire.Data.Identity.User)
     end
 
-    field :activities, list_of(:activity) do
+    field :user_activities, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
       resolve dataloader(Bonfire.Data.Identity.User)
     end
 
-    # field :likes, list_of(:post) do
-    #   arg :paginate, :paginate # TODO
-
-    #   resolve dataloader(Bonfire.Data.Identity.User)
-    # end
-
     field :boost_activities, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
       resolve dataloader(Bonfire.Data.Identity.User)
+    end
+
+  end
+
+  object :me do
+    # field(:current_account, :json)
+    field(:user, :user) do
+      resolve &get_user/3
+    end
+
+    field :user_feed, list_of(:activity) do
+      arg :paginate, :paginate # TODO
+
+      resolve &my_feed/3
+    end
+
+    field :like_activities, list_of(:activity) do
+      arg :paginate, :paginate # TODO
+
+      resolve dataloader(Bonfire.Data.Identity.User)
+    end
+
+    field :followers, list_of(:follow) do
+      arg :paginate, :paginate # TODO
+
+      resolve dataloader(Bonfire.Data.Identity.User, args: %{my: :followers})
+    end
+
+    field :followed, list_of(:follow) do
+      arg :paginate, :paginate # TODO
+
+      resolve dataloader(Bonfire.Data.Identity.User, args: %{my: :followed})
     end
 
   end
@@ -59,6 +85,12 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve &get_user/3
     end
 
+    @desc "Get information about and for the current user"
+    field :me, :me do
+
+      resolve &get_user/2
+    end
+
   end
 
   object :me_mutations do
@@ -73,11 +105,29 @@ defmodule Bonfire.Me.API.GraphQL do
     Bonfire.Me.Users.by_id(id)
   end
 
+  def get_user(%Bonfire.Data.Identity.User{} = parent, args, info) do
+    # IO.inspect(parent: parent)
+    {:ok, parent}
+  end
+
   def get_user(_parent, args, info) do
-    IO.inspect(args: args)
+    # IO.inspect(args: args)
     {:ok, GraphQL.current_user(info)}
   end
 
+  def get_user(_args, info) do
+    {:ok, GraphQL.current_user(info)}
+  end
+
+  def my_feed(%Bonfire.Data.Identity.User{} = parent, args, info) do
+    # IO.inspect(parent: parent)
+    {:ok,
+      Bonfire.Social.FeedActivities.my_feed(parent)
+      |> Map.get(:entries) # TODO: handle pagination
+      # |> IO.inspect()
+      |> Enum.map(& Map.get(&1, :activity))
+    }
+  end
 
 end
 end

@@ -59,6 +59,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
           search_placholder: search_placeholder,
           feed_title: l( "User timeline"),
           user: user, # the user to display
+          feed: []
         )
       |> assign_global(
         # following: following || [],
@@ -151,7 +152,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
     assign(socket,
       selected_tab: tab,
-      followers: e(followers, :entries, []),
+      feed: e(followers, :entries, []),
       page_info: e(followers, :metadata, [])
     )}
   end
@@ -163,7 +164,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
     assign(socket,
       selected_tab: tab,
-      followed: e(followed, :entries, []),
+      feed: e(followed, :entries, []),
       page_info: e(followed, :metadata, [])
     )}
   end
