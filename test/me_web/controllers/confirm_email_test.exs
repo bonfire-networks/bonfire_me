@@ -98,14 +98,14 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "success" do
       conn = conn()
-      account = fake_account!()
+      {:ok, account} = Bonfire.Me.Accounts.signup(signup_form())
       conn = get(conn, "/signup/email/confirm/#{account.email.confirm_token}")
       assert redirected_to(conn) == "/create-user"
     end
 
     test "cannot confirm twice" do
       conn = conn()
-      account = fake_account!()
+      {:ok, account} = Bonfire.Me.Accounts.signup(signup_form())
       conn = get(conn, "/signup/email/confirm/#{account.email.confirm_token}")
       assert redirected_to(conn) == "/create-user"
       conn = get(build_conn(), "/signup/email/confirm/#{account.email.confirm_token}")

@@ -80,7 +80,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
                 %{"email_or_username" => account.email.email_address,
                   "password" => account.credential.password}}
     conn = post(conn, "/login", params)
-    doc = floki_response(conn)
+    doc = floki_response(conn, 302)
     assert [login] = Floki.find(doc, "#login")
     # assert [div] = Floki.find(doc, "div.box__warning")
     # assert [span] = Floki.find(div, "span")
