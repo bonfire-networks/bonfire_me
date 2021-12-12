@@ -96,8 +96,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
      assign(socket,
        selected_tab: tab,
-       feed: e(feed, :entries, []),
-       page_info: e(feed, :metadata, [])
+       feed: e(feed, :edges, []),
+       page_info: e(feed, :page_info, [])
      )}
   end
 
@@ -109,8 +109,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
       assign(socket,
         selected_tab: tab,
-        feed: e(feed, :entries, []),
-        page_info: e(feed, :metadata, [])
+        feed: e(feed, :edges, []),
+        page_info: e(feed, :page_info, [])
       )}
   end
 
@@ -134,7 +134,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
      assign(socket,
        selected_tab: tab,
-       feed: e(feed, :entries, []),
+       feed: e(feed, :edges, []),
      )
     |> assign_global(
       smart_input_placeholder: smart_input_placeholder,
@@ -152,8 +152,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
     assign(socket,
       selected_tab: tab,
-      feed: e(followers, :entries, []),
-      page_info: e(followers, :metadata, [])
+      feed: e(followers, :edges, []),
+      page_info: e(followers, :page_info, [])
     )}
   end
 
@@ -164,8 +164,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
     assign(socket,
       selected_tab: tab,
-      feed: e(followed, :entries, []),
-      page_info: e(followed, :metadata, [])
+      feed: e(followed, :edges, []),
+      page_info: e(followed, :page_info, [])
     )}
   end
 
@@ -193,8 +193,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     {:noreply,
      assign(socket,
      selected_tab: "timeline",
-     feed: e(feed, :entries, []),
-     page_info: e(feed, :metadata, [])
+     feed: e(feed, :edges, []),
+     page_info: e(feed, :page_info, [])
      )}
   end
 

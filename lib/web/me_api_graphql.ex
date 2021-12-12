@@ -6,7 +6,7 @@ defmodule Bonfire.Me.API.GraphQL do
   alias Bonfire.Common.Utils
 
   object :user do
-    field(:id, :string)
+    field(:id, :id)
     field(:profile, :profile)
     field(:character, :character)
 
@@ -36,7 +36,7 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve &get_user/3
     end
 
-    field(:account_id, :string) do
+    field(:account_id, :id) do
       resolve &account_id/3
     end
 
@@ -106,7 +106,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   input_object :character_filters do
-    field(:id, :string)
+    field(:id, :id)
     field(:username, :string)
     field(:autocomplete, :string)
   end
@@ -191,7 +191,7 @@ defmodule Bonfire.Me.API.GraphQL do
     |> feed()
   end
 
-  defp feed(%{entries: feed}) when is_list(feed) do
+  defp feed(%{edges: feed}) when is_list(feed) do
     {:ok,
       feed
       |> Enum.map(& Map.get(&1, :activity))

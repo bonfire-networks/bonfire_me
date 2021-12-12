@@ -48,7 +48,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
         socket
         |> assign(
           page: "private",
-          feed: e(feed, :entries, []),
+          feed: e(feed, :edges, []),
           page_title: l("Direct Messages"),
           smart_input: true,
           has_private_tab: true,
