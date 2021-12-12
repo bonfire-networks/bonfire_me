@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Users.Queries do
       join: p in assoc(u, :profile),
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
-      where: a.account_id == ^account_id,
+      where: a.account_id == ^Utils.ulid(account_id),
       preload: [instance_admin: ia, character: {c, [follow_count: fc]}, profile: p]
   end
 
@@ -73,7 +73,7 @@ defmodule Bonfire.Me.Users.Queries do
         left_join: fc in assoc(c, :follow_count),
         left_join: ic in assoc(p, :icon),
         where: c.username == ^username,
-        where: a.account_id == ^account_id,
+        where: a.account_id == ^Utils.ulid(account_id),
         preload: [profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, accounted: a],
         order_by: [asc: u.id]
     end
@@ -89,7 +89,7 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: ia in assoc(u, :instance_admin),
       left_join: fc in assoc(c, :follow_count),
       left_join: ic in assoc(p, :icon),
-      where: u.id == ^user_id,
+      where: u.id == ^Utils.ulid(user_id),
       preload: [instance_admin: ia, character: {c, [inbox: i, follow_count: fc]}, accounted: {ac, account: a}, profile: {p, [icon: ic]}]
   end
 

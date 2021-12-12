@@ -259,6 +259,9 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:peered)
   end
 
+  def changeset(:create, _user, _params, _) do
+    {:error, "Not authenticated"}
+  end
 
   def changeset(:update, user, params, _extra) do
     user = repo().preload(user, [:profile, character: [:actor]])

@@ -3,6 +3,7 @@ defmodule Bonfire.Me.API.GraphQL do
   use Absinthe.Schema.Notation
   import Absinthe.Resolution.Helpers
   alias Bonfire.GraphQL
+  alias Bonfire.Common.Utils
 
   object :user do
     field(:id, :string)
@@ -33,6 +34,14 @@ defmodule Bonfire.Me.API.GraphQL do
     # field(:current_account, :json)
     field(:user, :user) do
       resolve &get_user/3
+    end
+
+    field(:account_id, :string) do
+      resolve &account_id/3
+    end
+
+    field(:users, list_of(:user)) do
+      resolve &account_users/3
     end
 
     field :user_feed, list_of(:activity) do
@@ -73,12 +82,26 @@ defmodule Bonfire.Me.API.GraphQL do
 
   end
 
+
+  object :account_only do
+    field(:account_id, :string) do
+      resolve &account_id/3
+    end
+  end
+
   object :profile do
+    field(:name, :string)
+    field(:summary, :string)
+  end
+  input_object :profile_input do
     field(:name, :string)
     field(:summary, :string)
   end
 
   object :character do
+    field(:username, :string)
+  end
+  input_object :character_input do
     field(:username, :string)
   end
 
@@ -87,6 +110,7 @@ defmodule Bonfire.Me.API.GraphQL do
     field(:username, :string)
     field(:autocomplete, :string)
   end
+
 
   object :me_queries do
 
@@ -105,7 +129,28 @@ defmodule Bonfire.Me.API.GraphQL do
 
   end
 
+  # input_object :an_input do
+  #     arg(:email_or_username, non_null(:string))
+  #     arg(:password, non_null(:string))
+  # end
+
   object :me_mutations do
+
+    field :signup, :account_only do
+      arg(:email, non_null(:string))
+      arg(:password, non_null(:string))
+
+      arg(:invite_code, :string)
+
+      resolve(&signup/2)
+    end
+
+    field :create_user, :me do
+      arg(:profile, non_null(:profile_input))
+      arg(:character, non_null(:character_input))
+
+      resolve(&create_user/2)
+    end
 
   end
 
@@ -151,6 +196,44 @@ defmodule Bonfire.Me.API.GraphQL do
       feed
       |> Enum.map(& Map.get(&1, :activity))
     }
+  end
+
+  defp account_id(%{accounted: %{account_id: account_id}}, _, _) do
+    {:ok, account_id}
+  end
+    defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) do
+    {:ok, current_account_id}
+  end
+  defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) do
+    {:ok, nil}
+  end
+
+  def account_users(_, _, info) do
+    account = GraphQL.current_account(info)
+    if account do
+      with users when is_list(users) <- Utils.maybe_apply(Bonfire.Me.Users, :by_account, account) do
+        {:ok, users }
+      end
+    else
+      {:error, "Not authenticated"}
+    end
+  end
+
+  defp signup(args, _resolution) do
+    params = %{
+      email: %{email_address: args[:email]},
+      credential: %{password: args[:password]}
+    } #|> IO.inspect
+    Bonfire.Me.Accounts.signup(params, invite: args[:invite_code])
+  end
+
+  defp create_user(args, info) do
+    account = GraphQL.current_account(info)
+    if account do
+      Bonfire.Me.Users.create(args, account)
+    else
+      {:error, "Not authenticated"}
+    end
   end
 
 end
