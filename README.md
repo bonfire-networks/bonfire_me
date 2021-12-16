@@ -1,4 +1,4 @@
-# Bonfire:Me
+# Bonfire.Me
 
 An extension for [Bonfire](https://bonfire.cafe/) that handles:
 

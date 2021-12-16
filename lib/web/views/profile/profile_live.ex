@@ -59,7 +59,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
           search_placholder: search_placeholder,
           feed_title: l( "User timeline"),
           user: user, # the user to display
-          feed: []
+          feed: [],
+          page_info: []
         )
       |> assign_global(
         # following: following || [],
