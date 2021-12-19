@@ -23,7 +23,7 @@ defmodule Bonfire.Me.Web.SignupController do
       {:error, changeset} ->
         conn
         |> assign(:form, changeset)
-        |> assign(:error, Bonfire.Repo.ChangesetErrors.changeset_errors_string(changeset, false))
+        |> assign(:error, EctoSparkles.Changesets.Errors.changeset_errors_string(changeset, false))
         |> render_view(params)
     end
   end
