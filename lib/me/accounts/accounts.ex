@@ -83,6 +83,15 @@ defmodule Bonfire.Me.Accounts do
 
   ### login
 
+  @doc """
+  Attempts to log in by password and either username or email.
+  
+  Accepts a map of parameters or a `LoginFields` changeset.
+
+  On success, returns `{:ok, account, user}` if a username was
+  provided and `{:ok, account, nil}` otherwise.
+  On error, returns `{:error, changeset}`
+  """
   def login(params_or_changeset, opts \\ [])
 
   def login(params, opts) when not is_struct(params),
@@ -93,6 +102,7 @@ defmodule Bonfire.Me.Accounts do
       repo().find(login_query(form), cs)
       ~>> login_check_password(form, cs)
       ~>> login_check_confirmed(opts, cs)
+      ~>> login_response()
     end
   end
 
@@ -118,6 +128,9 @@ defmodule Bonfire.Me.Accounts do
       do: {:error, Changeset.add_error(cs, :form, "email_not_confirmed")},
       else: {:ok, account}
   end
+
+  defp login_response(%Account{accounted: %{user: %User{}=user}}=account), do: {:ok, account, user}
+  defp login_response(%Account{}=account), do: {:ok, account, nil}
 
   ### request_confirm_email
 
