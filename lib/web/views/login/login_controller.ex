@@ -14,19 +14,37 @@ defmodule Bonfire.Me.Web.LoginController do
     params = Map.get(params, "login_fields", %{})
     form = Accounts.changeset(:login, params)
     case Accounts.login(form) do
-      {:ok, account} -> logged_in(account, conn, form)
+      {:ok, account, user} -> logged_in(account, user, conn, form)
       {:error, changeset} -> paint(conn, changeset)
     end
   end
 
   defp form_cs(params \\ %{}), do: Accounts.changeset(:login, params)
 
-  defp logged_in(account, conn, form) do
-    IO.inspect(account)
+  # the user logged in via email. if they only have one user in the
+  # account, we can still log them directly into it, otherwise we must
+  # show them the user switcher.
+  defp logged_in(account, nil, conn, form) do
+    case Users.get_only_in_account(account) do
+      {:ok, user} -> logged_in(account, user, conn, form)
+      :error ->
+        conn
+        |> put_session(:account_id, account.id)
+        |> put_session(:user_id, nil)
+        |> put_flash(:info, l "Welcome back!")
+        |> redirect(to: go_where?(conn, form, path(:switch_user)))
+    end
+  end
+
+  # the user logged in via username, or they logged in via email and
+  # we found there was only one user in the account, so we're going to
+  # just send them straight to the homepage and avoid the user
+  # switcher.
+  defp logged_in(account, user, conn, form) do
     conn
     |> put_session(:account_id, account.id)
-    |> put_session(:user_id, Utils.e(account, :accounted, :user, :id, nil))
-    |> put_flash(:info, l "Welcome back!")
+    |> put_session(:user_id, user.id)
+    |> put_flash(:info, l "Welcome back, #{user.character.username}!")
     |> redirect(to: go_where?(conn, form, path(:home)))
   end
 
