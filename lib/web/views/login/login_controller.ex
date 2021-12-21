@@ -2,8 +2,10 @@ defmodule Bonfire.Me.Web.LoginController do
 
   use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Users
   alias Bonfire.Me.Web.LoginLive
   alias Bonfire.Common.Utils
+  require Logger
 
   def index(conn, _) do # GET only supports 'go'
     conn = fetch_query_params(conn)
@@ -16,24 +18,22 @@ defmodule Bonfire.Me.Web.LoginController do
     case Accounts.login(form) do
       {:ok, account, user} -> logged_in(account, user, conn, form)
       {:error, changeset} -> paint(conn, changeset)
+      _ ->
+        Logger.error("LoginController: unhandled error")
+        paint(conn, form)
     end
   end
 
   defp form_cs(params \\ %{}), do: Accounts.changeset(:login, params)
 
-  # the user logged in via email. if they only have one user in the
-  # account, we can still log them directly into it, otherwise we must
-  # show them the user switcher.
+  # the user logged in via email and have more than one user in the
+  # account, so we must show them the user switcher.
   defp logged_in(account, nil, conn, form) do
-    case Users.get_only_in_account(account) do
-      {:ok, user} -> logged_in(account, user, conn, form)
-      :error ->
-        conn
-        |> put_session(:account_id, account.id)
-        |> put_session(:user_id, nil)
-        |> put_flash(:info, l "Welcome back!")
-        |> redirect(to: go_where?(conn, form, path(:switch_user)))
-    end
+    conn
+      |> put_session(:account_id, account.id)
+      |> put_session(:user_id, nil)
+      |> put_flash(:info, l "Welcome back!")
+      |> redirect(to: go_where?(conn, form, path(:switch_user)))
   end
 
   # the user logged in via username, or they logged in via email and
@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Web.LoginController do
     conn
     |> put_session(:account_id, account.id)
     |> put_session(:user_id, user.id)
-    |> put_flash(:info, l "Welcome back, #{user.character.username}!")
+    |> put_flash(:info, l("Welcome back, %{name}", name: e(user, :profile, :name, e(user, :character, :username, "anonymous"))))
     |> redirect(to: go_where?(conn, form, path(:home)))
   end
 

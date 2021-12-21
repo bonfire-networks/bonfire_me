@@ -90,9 +90,10 @@ defmodule Bonfire.Me.Web.LoginController.Test do
 
   describe "success" do
 
-    test "with email" do
+    test "with email for an account with 1 user identity" do
       conn = conn()
       account = fake_account!()
+      _user = fake_user!(account)
       {:ok, account} = Accounts.confirm_email(account)
       params = %{"login_fields" =>
                   %{"email_or_username" => account.email.email_address,
@@ -101,12 +102,26 @@ defmodule Bonfire.Me.Web.LoginController.Test do
       assert redirected_to(conn) == "/home"
     end
 
-    test "with username" do
+    test "with email for an account with multiple user identities" do
       conn = conn()
       account = fake_account!()
+      _user1 = fake_user!(account)
+      _user2 = fake_user!(account)
       {:ok, account} = Accounts.confirm_email(account)
       params = %{"login_fields" =>
                   %{"email_or_username" => account.email.email_address,
+                    "password" => account.credential.password}}
+      conn = post(conn, "/login", params)
+      assert redirected_to(conn) == "/switch-user"
+    end
+
+    test "with username" do
+      conn = conn()
+      account = fake_account!()
+      user = fake_user!(account)
+      {:ok, account} = Accounts.confirm_email(account)
+      params = %{"login_fields" =>
+                  %{"email_or_username" => user.character.username,
                     "password" => account.credential.password}}
       conn = post(conn, "/login", params)
       assert redirected_to(conn) == "/home"

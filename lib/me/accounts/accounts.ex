@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Accounts do
 
-  alias Bonfire.Data.Identity.{Account, Credential, Email}
+  alias Bonfire.Data.Identity.{Account, Credential, Email, User}
   alias Bonfire.Common.Config
   alias Bonfire.Me.Mails
   alias Bonfire.Me.Accounts.{
@@ -10,6 +10,7 @@ defmodule Bonfire.Me.Accounts do
     LoginFields,
     Queries,
   }
+  alias Bonfire.Me.Users
   alias Ecto.Changeset
   import Bonfire.Me.Integration
   use OK.Pipe
@@ -85,7 +86,7 @@ defmodule Bonfire.Me.Accounts do
 
   @doc """
   Attempts to log in by password and either username or email.
-  
+
   Accepts a map of parameters or a `LoginFields` changeset.
 
   On success, returns `{:ok, account, user}` if a username was
@@ -130,7 +131,15 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp login_response(%Account{accounted: %{user: %User{}=user}}=account), do: {:ok, account, user}
-  defp login_response(%Account{}=account), do: {:ok, account, nil}
+  defp login_response(%Account{accounted: [%{user: %User{}=user}]}=account), do: {:ok, account, user}
+  defp login_response(%Account{}=account) do
+    # if there's only one user in the account, we can log them directly into it
+    case Users.get_only_in_account(account) do
+      {:ok, user} -> {:ok, account, user}
+      :error ->
+        {:ok, account, nil}
+    end
+  end
 
   ### request_confirm_email
 
