@@ -15,7 +15,7 @@ defmodule Bonfire.Me.Users.Acls do
   ##   will be hidden from the user
 
   @doc "Create a Acls for the provided user"
-  def create(%User{}=user, name \\ nil, %{}=attrs \\ %{}) do
+  def create(%{}=user, name \\ nil, %{}=attrs \\ %{}) do
     repo().insert(changeset(:create,
     user,
     attrs
@@ -26,19 +26,19 @@ defmodule Bonfire.Me.Users.Acls do
     ))
   end
 
-  def changeset(:create, %User{}=_user, attrs) do
+  def changeset(:create, %{}=_user, attrs) do
     Acls.changeset(attrs)
   end
 
   @doc """
   Lists the ACLs permitted to see.
   """
-  def list_visible(%User{}=user) do
+  def list_visible(%{}=user) do
     repo().many(list_my_q(user))
   end
 
   @doc "query for `list_visible`"
-  def list_visible_q(%User{id: _user_id}=user) do
+  def list_visible_q(%{id: _user_id}=user) do
     cs = can_see?(:acl, user)
     from acl in Acl, as: :acl,
       join: named in assoc(acl, :named),
@@ -52,12 +52,12 @@ defmodule Bonfire.Me.Users.Acls do
   permitted to see. If any are created without permitting the
   user to see them, they will not be shown.
   """
-  def list_my(%User{}=user) do
+  def list_my(%{}=user) do
     repo().many(list_my_q(user))
   end
 
   @doc "query for `list_my`"
-  def list_my_q(%User{id: user_id}=user) do
+  def list_my_q(%{id: user_id}=user) do
     list_visible_q(user)
     |> join(:inner, [acl: acl], caretaker in assoc(acl, :caretaker), as: :caretaker)
     |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
