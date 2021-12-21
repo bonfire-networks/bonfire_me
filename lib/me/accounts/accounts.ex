@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Accounts do
 
-  alias Bonfire.Data.Identity.{Account, Credential, Email}
+  alias Bonfire.Data.Identity.{Account, Credential, Email, User}
   alias Bonfire.Common.Config
   alias Bonfire.Me.Mails
   alias Bonfire.Me.Accounts.{
@@ -10,6 +10,7 @@ defmodule Bonfire.Me.Accounts do
     LoginFields,
     Queries,
   }
+  alias Bonfire.Me.Users
   alias Ecto.Changeset
   import Bonfire.Me.Integration
   use OK.Pipe
@@ -83,6 +84,15 @@ defmodule Bonfire.Me.Accounts do
 
   ### login
 
+  @doc """
+  Attempts to log in by password and either username or email.
+
+  Accepts a map of parameters or a `LoginFields` changeset.
+
+  On success, returns `{:ok, account, user}` if a username was
+  provided and `{:ok, account, nil}` otherwise.
+  On error, returns `{:error, changeset}`
+  """
   def login(params_or_changeset, opts \\ [])
 
   def login(params, opts) when not is_struct(params),
@@ -93,6 +103,7 @@ defmodule Bonfire.Me.Accounts do
       repo().find(login_query(form), cs)
       ~>> login_check_password(form, cs)
       ~>> login_check_confirmed(opts, cs)
+      ~>> login_response()
     end
   end
 
@@ -117,6 +128,17 @@ defmodule Bonfire.Me.Accounts do
     if is_nil(account.email.confirmed_at) and Email.must_confirm?(opts),
       do: {:error, Changeset.add_error(cs, :form, "email_not_confirmed")},
       else: {:ok, account}
+  end
+
+  defp login_response(%Account{accounted: %{user: %User{}=user}}=account), do: {:ok, account, user}
+  defp login_response(%Account{accounted: [%{user: %User{}=user}]}=account), do: {:ok, account, user}
+  defp login_response(%Account{}=account) do
+    # if there's only one user in the account, we can log them directly into it
+    case Users.get_only_in_account(account) do
+      {:ok, user} -> {:ok, account, user}
+      :error ->
+        {:ok, account, nil}
+    end
   end
 
   ### request_confirm_email

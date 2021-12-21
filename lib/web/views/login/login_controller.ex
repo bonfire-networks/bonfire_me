@@ -2,8 +2,10 @@ defmodule Bonfire.Me.Web.LoginController do
 
   use Bonfire.Web, :controller
   alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Users
   alias Bonfire.Me.Web.LoginLive
   alias Bonfire.Common.Utils
+  require Logger
 
   def index(conn, _) do # GET only supports 'go'
     conn = fetch_query_params(conn)
@@ -14,19 +16,35 @@ defmodule Bonfire.Me.Web.LoginController do
     params = Map.get(params, "login_fields", %{})
     form = Accounts.changeset(:login, params)
     case Accounts.login(form) do
-      {:ok, account} -> logged_in(account, conn, form)
+      {:ok, account, user} -> logged_in(account, user, conn, form)
       {:error, changeset} -> paint(conn, changeset)
+      _ ->
+        Logger.error("LoginController: unhandled error")
+        paint(conn, form)
     end
   end
 
   defp form_cs(params \\ %{}), do: Accounts.changeset(:login, params)
 
-  defp logged_in(account, conn, form) do
-    IO.inspect(account)
+  # the user logged in via email and have more than one user in the
+  # account, so we must show them the user switcher.
+  defp logged_in(account, nil, conn, form) do
+    conn
+      |> put_session(:account_id, account.id)
+      |> put_session(:user_id, nil)
+      |> put_flash(:info, l "Welcome back!")
+      |> redirect(to: go_where?(conn, form, path(:switch_user)))
+  end
+
+  # the user logged in via username, or they logged in via email and
+  # we found there was only one user in the account, so we're going to
+  # just send them straight to the homepage and avoid the user
+  # switcher.
+  defp logged_in(account, user, conn, form) do
     conn
     |> put_session(:account_id, account.id)
-    |> put_session(:user_id, Utils.e(account, :accounted, :user, :id, nil))
-    |> put_flash(:info, l "Welcome back!")
+    |> put_session(:user_id, user.id)
+    |> put_flash(:info, l("Welcome back, %{name}", name: e(user, :profile, :name, e(user, :character, :username, "anonymous"))))
     |> redirect(to: go_where?(conn, form, path(:home)))
   end
 

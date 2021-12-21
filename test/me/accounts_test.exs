@@ -98,7 +98,7 @@ defmodule Bonfire.Me.AccountsTest do
       attrs = Fake.signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       {:ok, _} = Accounts.confirm_email(account)
-      assert {:ok, account} = Accounts.login %{
+      assert {:ok, account, _user} = Accounts.login %{
         email_or_username: attrs.email.email_address,
         password: attrs.credential.password,
       }
@@ -108,7 +108,7 @@ defmodule Bonfire.Me.AccountsTest do
     test "by: :email, confirmed: :auto" do
       attrs = Fake.signup_form()
       assert {:ok, _account} = Accounts.signup(attrs, must_confirm?: false)
-      assert {:ok, _account} = Accounts.login %{
+      assert {:ok, _account, _user} = Accounts.login %{
         email_or_username: attrs.email.email_address,
         password: attrs.credential.password,
       }
@@ -117,7 +117,7 @@ defmodule Bonfire.Me.AccountsTest do
     test "by: :email, must_confirm?: false" do
       attrs = Fake.signup_form()
       assert {:ok, _account} = Accounts.signup(attrs)
-      assert {:ok, _account} = Accounts.login %{
+      assert {:ok, _account, _user} = Accounts.login %{
         email_or_username: attrs.email.email_address,
         password: attrs.credential.password,
       }, must_confirm?: false
