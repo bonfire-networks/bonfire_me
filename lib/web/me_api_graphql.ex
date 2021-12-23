@@ -190,6 +190,16 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve(&update_user/2)
     end
 
+    @desc "Share the current user identity with a team member. This will give them full access to the currently authenticated user identity. Warning: anyone you add will have admin-level access over this user identity, meaning they can post as this user, read private messages, etc."
+    field :add_team_member, :string do
+      @desc "Who to add (they need to be an existing user on this instance)"
+      arg(:username_or_email, non_null(:string))
+
+      @desc "What to call this team (eg. Organisation, Team, etc)"
+      arg(:label, non_null(:string))
+
+      resolve(&add_team_member/2)
+    end
 
   end
 
@@ -315,6 +325,22 @@ defmodule Bonfire.Me.API.GraphQL do
       {:error, "Not authenticated"}
     end
   end
+
+  defp add_team_member(%{username_or_email: username_or_email} = args, info) do
+    if Utils.module_enabled?(Bonfire.Me.SharedUsers) do
+      user = GraphQL.current_user(info)
+      if user do
+        with %{} = _shared_user <- Bonfire.Me.SharedUsers.add_account(user, username_or_email, Utils.stringify_keys(args)) do
+          :ok
+        end
+      else
+        {:error, "Not authenticated"}
+      end
+    else
+      {:error, "Feature not available (no SharedUsers module found)"}
+    end
+  end
+
 
 end
 end

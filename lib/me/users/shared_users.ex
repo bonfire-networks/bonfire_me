@@ -17,7 +17,7 @@ defmodule Bonfire.Me.SharedUsers do
 
   def federation_module, do: ["Organization", "Service", "Application"] # temporary until these are implemented elsewhere
 
-  def add_account(shared_user_or_username, email, params \\ %{})
+  def add_account(shared_user_or_username, email_or_username, params \\ %{})
 
   def add_account(username, email, params) when is_binary(username) do
     with {:ok, shared_user} <- Users.by_username(username) do
