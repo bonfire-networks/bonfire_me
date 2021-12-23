@@ -182,6 +182,15 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve(&change_password/2)
     end
 
+    @desc "Edit user profile"
+    field :update_user, :me do
+      arg(:profile, non_null(:profile_input))
+      # arg(:character, non_null(:character_input))
+
+      resolve(&update_user/2)
+    end
+
+
   end
 
   defp get_user(_parent, %{filter: %{username: username}}, info) do
@@ -293,6 +302,15 @@ defmodule Bonfire.Me.API.GraphQL do
     account = GraphQL.current_account(info)
     if account do
       Accounts.change_password(account, Utils.stringify_keys(args))
+    else
+      {:error, "Not authenticated"}
+    end
+  end
+
+  def update_user(params, info) do
+    user = GraphQL.current_user(info)
+    if user do
+      Users.update(user, params, GraphQL.current_account(info))
     else
       {:error, "Not authenticated"}
     end

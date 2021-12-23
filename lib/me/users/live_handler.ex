@@ -12,6 +12,14 @@ defmodule Bonfire.Me.Users.LiveHandler do
     {:noreply, socket |> assign_global(users_autocomplete: options) }
   end
 
+  def handle_event("share_user", %{"add_shared_user"=>email_or_username} = attrs, socket) do
+    with {:ok, shared_user} <- Bonfire.Me.SharedUsers.add_account(current_user(socket), email_or_username, attrs) do
+      {:noreply, socket
+      |> put_flash(:info, "Person added to team!")
+      |> assign(members: e(socket, :assigns, :team, []) ++ [shared_user])
+    }
+    end
+  end
 
   def to_tuple(u) do
     {e(u, :profile, :name, "Someone"), u.id}

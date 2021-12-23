@@ -10,42 +10,63 @@ defmodule Bonfire.Me.SharedUsers do
 
   alias Bonfire.Common.Utils
   import Bonfire.Common.Config, only: [repo: 0]
+  require Bonfire.Web.Gettext
+  import Bonfire.Web.Gettext.Helpers
   alias Ecto.Changeset
   import Ecto.Query
 
   def federation_module, do: ["Organization", "Service", "Application"] # temporary until these are implemented elsewhere
 
-  def add_account(username, email, params \\ %{}) when is_binary(username) do
-    with {:ok, user} <- Users.by_username(username) do
-      add_account(user, email, params)
+  def add_account(shared_user_or_username, email, params \\ %{})
+
+  def add_account(username, email, params) when is_binary(username) do
+    with {:ok, shared_user} <- Users.by_username(username) do
+      add_account(shared_user, email, params)
     end
   end
 
-  def add_account(%User{} = user, email, params) when is_binary(email) do
+  def add_account(%User{} = shared_user, email_or_username, params) when is_binary(email_or_username) do
     # TODO: check that the authenticated account has permission to share this user
 
-    shared_user = init_shared_user(user, params)
+    case init_shared_user(shared_user, params) do
 
-    #IO.inspect(made_shared_user: shared_user)
+      %SharedUser{} = shared_user ->
 
-    if shared_user do
+        case Accounts.get_by_email(email_or_username) do
 
-      account = Accounts.get_by_email(email)
+          %Account{} = account ->
 
-      if account do
+            do_add_account(shared_user, account)
 
-        #IO.inspect(account: account)
+          _ ->
 
-        repo().update(changeset(:add_account, shared_user, account))
-      else
-        {:error, "Could not find an account with that email."}
-      end
-    else
-      {:error, "Could not share this user."}
+            case Users.by_username(email_or_username) |> repo().maybe_preload(accounted: :account) do
+
+            {:ok, %{accounted: %{account: %Account{} = account}}} ->
+
+              do_add_account(shared_user, account)
+
+            _ ->
+              {:error, l "Could not find an existing account on this instance with that email or username."}
+          end
+        end
+
+      other ->
+
+        {:error, "Could not turn this user identity into a shared user (got #{inspect other})"}
     end
   end
 
-  defp init_shared_user(%User{} = user, params) do
+  defp do_add_account(%{shared_user: shared_user} = _user, %Account{} = account) do
+    do_add_account(shared_user, account)
+  end
+
+  defp do_add_account(%SharedUser{} = shared_user, %Account{} = account) do
+    #IO.inspect(account: account)
+    repo().update(changeset(:add_account, shared_user, account))
+  end
+
+  def init_shared_user(%User{} = user, params \\ %{}) do
 
     user = repo().preload(user, :shared_user)
     share_user = Map.get(user, :shared_user)
@@ -53,25 +74,27 @@ defmodule Bonfire.Me.SharedUsers do
     if share_user do
       share_user
     else
-      with {:ok, user} <- make_shared_user(user, params) do
+      with {:ok, user} <- make_shared_user(user, params) |> repo().maybe_preload(:shared_user) do
 
-        user = repo().preload(user, :shared_user)
+        do_add_account(user, Utils.current_account(user)) # add myself
 
         Map.get(user, :shared_user)
       end
     end
   end
 
-  def make_shared_user(%User{} = user, params), do: repo().update(changeset(:make_shared_user, user, params))
+  defp make_shared_user(%User{} = user, params), do: repo().update(changeset(:make_shared_user, user, params))
 
   defp changeset(:make_shared_user, %User{} = user, params) do
 
-    params = Utils.put_new_in(params, ["shared_user", "label"], "Organisation") # default label for shared users
+    params = params
+    |> Utils.e("shared_user", params)
+    |> Map.put_new("label", Bonfire.Common.Config.get_ext(:bonfire_me, :shared_user_default_label, "Team")) # default label for shared users, do not localise here as it is a DB and schema level classification
 
     user
     |> repo().preload(:shared_user)
-    |> User.changeset(params)
-    |> Changeset.cast_assoc(:shared_user)
+    |> User.changeset(%{"shared_user"=> params} |> IO.inspect)
+    |> Changeset.cast_assoc(:shared_user, with: &Bonfire.Data.SharedUser.changeset/2)
   end
 
   defp changeset(:add_account, shared_user, %Account{}=account) do

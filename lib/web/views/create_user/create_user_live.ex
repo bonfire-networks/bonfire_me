@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
   defp mounted(_params, _session, socket) do
     {:ok,
      socket
-     |> assign_new(:form, fn -> user_form(e(socket.assigns, :current_account, nil)) end )
+     |> assign_new(:form, fn -> user_form(current_account(socket)) end )
      |> assign_new(:error, fn -> nil end)
     }
   end
