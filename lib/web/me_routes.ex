@@ -50,8 +50,8 @@ defmodule Bonfire.Me.Web.Routes do
         resources "/switch-user", SwitchUserController, only: [:index, :show], as: :switch_user
         resources "/create-user", CreateUserController, only: [:index, :create], as: :create_user
 
-        live "/account/password/change", ChangePasswordLive
-        resources "/account/password/change", ChangePasswordController, only: [:create]
+        # live "/account/password/change", ChangePasswordLive
+        resources "/account/password/change", ChangePasswordController, only: [:index, :create]
 
         live "/settings/:tab", SettingsLive
         live "/settings/:tab/:id", SettingsLive

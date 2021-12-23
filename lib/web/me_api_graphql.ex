@@ -4,6 +4,9 @@ defmodule Bonfire.Me.API.GraphQL do
   import Absinthe.Resolution.Helpers
   alias Bonfire.GraphQL
   alias Bonfire.Common.Utils
+  alias Bonfire.Data.Identity.User
+  alias Bonfire.Me.Users
+  alias Bonfire.Me.Accounts
 
   object :user do
     field(:id, :id)
@@ -83,12 +86,6 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
 
-  object :account_only do
-    field(:account_id, :string) do
-      resolve &account_id/3
-    end
-  end
-
   object :profile do
     field(:name, :string)
     field(:summary, :string)
@@ -136,7 +133,8 @@ defmodule Bonfire.Me.API.GraphQL do
 
   object :me_mutations do
 
-    field :signup, :account_only do
+    @desc "Register a new account. Returns the created `account_id`"
+    field :signup, :string do
       arg(:email, non_null(:string))
       arg(:password, non_null(:string))
 
@@ -145,6 +143,7 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve(&signup/2)
     end
 
+    @desc "Request a new user identity for the authenticated account"
     field :create_user, :me do
       arg(:profile, non_null(:profile_input))
       arg(:character, non_null(:character_input))
@@ -152,17 +151,48 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve(&create_user/2)
     end
 
+    @desc "Request a new confirmation email"
+    field :request_confirm_email, :string do
+      arg(:email, non_null(:string))
+
+      resolve(&request_confirm_email/2)
+    end
+
+    @desc "Confirm email address using a token generated upon `signup` or with `request_confirm_email` and emailed to the user."
+    field :confirm_email, :me do
+      arg(:token, non_null(:string))
+
+      resolve(&confirm_email/2)
+      middleware(&Bonfire.GraphQL.Auth.set_context_from_resolution/2) # FIXME: this should auto-login
+    end
+
+    @desc "Request an email to be sent to reset a forgotten password"
+    field :request_reset_password, :string do
+      arg(:email, non_null(:string))
+
+      resolve(&request_forgot_password/2)
+    end
+
+    @desc "Change account password"
+    field :change_password, :me do
+      arg(:old_password, non_null(:string))
+      arg(:password, non_null(:string))
+      arg(:password_confirmation, non_null(:string))
+
+      resolve(&change_password/2)
+    end
+
   end
 
   defp get_user(_parent, %{filter: %{username: username}}, info) do
-    Bonfire.Me.Users.by_username(username)
+    Users.by_username(username)
   end
 
   defp get_user(_parent, %{filter: %{id: id}}, info) do
-    Bonfire.Me.Users.by_id(id)
+    Users.by_id(id)
   end
 
-  defp get_user(%Bonfire.Data.Identity.User{} = parent, args, info) do
+  defp get_user(%User{} = parent, args, info) do
     # IO.inspect(parent: parent)
     {:ok, parent}
   end
@@ -176,17 +206,17 @@ defmodule Bonfire.Me.API.GraphQL do
     {:ok, GraphQL.current_user(info)}
   end
 
-  defp my_feed(%Bonfire.Data.Identity.User{} = parent, args, info) do
+  defp my_feed(%User{} = parent, args, info) do
     Bonfire.Social.FeedActivities.my_feed(parent)
     |> feed()
   end
 
-  defp my_notifications(%Bonfire.Data.Identity.User{} = parent, args, info) do
+  defp my_notifications(%User{} = parent, args, info) do
     Bonfire.Social.FeedActivities.feed(:notifications, parent)
     |> feed()
   end
 
-  defp all_flags(%Bonfire.Data.Identity.User{} = parent, args, info) do
+  defp all_flags(%User{} = parent, args, info) do
     Bonfire.Social.Flags.list(parent)
     |> feed()
   end
@@ -211,7 +241,7 @@ defmodule Bonfire.Me.API.GraphQL do
   def account_users(_, _, info) do
     account = GraphQL.current_account(info)
     if account do
-      with users when is_list(users) <- Utils.maybe_apply(Bonfire.Me.Users, :by_account, account) do
+      with users when is_list(users) <- Utils.maybe_apply(Users, :by_account, account) do
         {:ok, users }
       end
     else
@@ -224,13 +254,45 @@ defmodule Bonfire.Me.API.GraphQL do
       email: %{email_address: args[:email]},
       credential: %{password: args[:password]}
     } #|> IO.inspect
-    Bonfire.Me.Accounts.signup(params, invite: args[:invite_code])
+    with {:ok, account} <- Accounts.signup(params, invite: args[:invite_code]) do
+      {:ok, Map.get(account, :id)}
+    end
   end
 
   defp create_user(args, info) do
     account = GraphQL.current_account(info)
     if account do
-      Bonfire.Me.Users.create(args, account)
+      Users.create(args, account)
+    else
+      {:error, "Not authenticated"}
+    end
+  end
+
+  defp confirm_email(%{token: token} = _args, _info) do
+    with {:ok, account} <- Accounts.confirm_email(token) do
+      {:ok, %{
+        current_account: account,
+        current_account_id: Map.get(account, :id)
+      }}
+    end
+  end
+
+  defp request_confirm_email(args, _info) do
+    with {:ok, status, _} <- Accounts.request_confirm_email(args) do
+      {:ok, status}
+    end
+  end
+
+  defp request_forgot_password(args, _info) do
+    with {:ok, status, _} <- Accounts.request_forgot_password(args) do
+      {:ok, status}
+    end
+  end
+
+  defp change_password(args, info) do
+    account = GraphQL.current_account(info)
+    if account do
+      Accounts.change_password(account, Utils.stringify_keys(args))
     else
       {:error, "Not authenticated"}
     end

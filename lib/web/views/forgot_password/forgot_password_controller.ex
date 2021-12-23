@@ -27,7 +27,7 @@ defmodule Bonfire.Me.Web.ForgotPasswordController do
         |> assign(:form, changeset)
         |> live_render(ForgotPasswordLive)
       {:error, :not_found} ->
-        # don't tell snoopers if someone is a user or not
+        # don't tell snoopers if someone has an account here or not
         conn
         |> assign(:requested, true)
         |> live_render(ForgotPasswordLive)
@@ -43,9 +43,10 @@ defmodule Bonfire.Me.Web.ForgotPasswordController do
   defp change_pw(conn, account) do
     conn
     |> put_session(:account_id, account.id)
+    |> put_session(:resetting_password, true) # tell the change password form not to ask for the old password
     |> put_flash(:info, l "Welcome back! Thanks for confirming your email address. You can now change your password.")
-    |> redirect(to: path(:home))
-    # |> redirect(to: path(Bonfire.Me.Web.ChangePasswordLive)) # TODO: switch to this once change password works
+    |> redirect(to: path(Bonfire.Me.Web.ChangePasswordController))
+    # |> redirect(to: path(:home))
   end
 
 end

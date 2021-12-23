@@ -34,8 +34,8 @@ defmodule Bonfire.Me.Accounts do
   def changeset(:forgot_password, params, _opts) when not is_struct(params),
     do: ForgotPasswordFields.changeset(params)
 
-  def changeset(:change_password, params, _opts) when not is_struct(params),
-    do: ChangePasswordFields.changeset(params)
+  def changeset(:change_password, params, opts) when not is_struct(params),
+    do: ChangePasswordFields.changeset(%ChangePasswordFields{}, params, opts[:resetting_password])
 
   def changeset(:confirm_email, params, _opts) when not is_struct(params),
     do: ConfirmEmailFields.changeset(params)
@@ -141,7 +141,7 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  ### request_confirm_email
+  ###  request_confirm_email
 
   def request_confirm_email(params_or_changeset_or_form_or_account, opts \\ [])
 
@@ -240,10 +240,39 @@ defmodule Bonfire.Me.Accounts do
   defp send_confirm_email(_, _account, _opts),
    do: {:error, :email_missing}
 
+  ### forgot/change password
 
   def request_forgot_password(params) do
     request_confirm_email(params, confirm_action: :forgot_password)
   end
+
+
+  def change_password(current_account, params_or_changeset, opts \\ [])
+
+  def change_password(current_account, params, opts) when not is_struct(params),
+    do: change_password(current_account, changeset(:change_password, params, opts), params, opts)
+
+  def change_password(%{id: id} = current_account, %Changeset{}=cs, %{"old_password"=> old_password, "password"=> new_password} = params, opts) do
+    current_account = current_account
+    |> repo().preload(:credential)
+
+    with {:ok, _} <- login_check_password(current_account, %{password: old_password}, cs) do
+      change_password(current_account, cs, %{"password"=> new_password}, [resetting_password: true])
+    end
+  end
+
+  def change_password(%{id: id} = current_account, %Changeset{}=cs, params, opts) do
+    if cs.valid? and opts[:resetting_password] do
+      current_account
+      |> repo().preload(:credential)
+      |> Account.changeset(%{credential: Map.merge(params, %{"id" => id})})
+      |> Changeset.cast_assoc(:credential, required: true)
+      |> repo().update()
+    else
+      {:error, cs} # avoid checking out txn
+    end
+  end
+
 
   ## misc
 

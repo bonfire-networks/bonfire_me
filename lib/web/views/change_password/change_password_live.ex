@@ -14,11 +14,13 @@ defmodule Bonfire.Me.Web.ChangePasswordLive do
     ]
   end
 
-  def mounted(_params, _session, socket) do
+  def mounted(_params, session, socket) do
     {:ok,
      socket
-     |> assign_new(:form, &form_cs/0)}
+     |> assign(:form,  session["form"])
+     |> assign(:error,  session["error"])
+     |> assign(:resetting_password,  session["resetting_password"])
+     |> assign_new(:form, &ChangePasswordController.form_cs/0)}
   end
 
-  defp form_cs(), do: Accounts.changeset(:change_password, %{})
 end
