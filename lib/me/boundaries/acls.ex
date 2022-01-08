@@ -39,11 +39,11 @@ defmodule Bonfire.Me.Users.Acls do
 
   @doc "query for `list_visible`"
   def list_visible_q(%{id: _user_id}=user) do
-    cs = can_see?(:acl, user)
+    vis = filter_invisible(user)
     from acl in Acl, as: :acl,
       join: named in assoc(acl, :named),
-      left_lateral_join: cs in ^cs,
-      where: cs.can_see == true,
+      join: s in subquery(vis),
+      on: acl.id == s.object_id,
       preload: [named: named]
   end
 
