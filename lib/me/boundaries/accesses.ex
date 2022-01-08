@@ -3,9 +3,9 @@ defmodule Bonfire.Me.Users.Accesses do
   alias Bonfire.Data.AccessControl.Access
   alias Bonfire.Boundaries.Accesses
   alias Bonfire.Data.Identity.User
-
   import Bonfire.Me.Integration
   import Bonfire.Boundaries.Queries
+  import Ecto.Query
   alias Bonfire.Common.Utils
 
   ## invariants:
@@ -40,12 +40,13 @@ defmodule Bonfire.Me.Users.Accesses do
 
   @doc "query for `list_visible`"
   def list_visible_q(%User{id: _user_id}=user) do
-    cs = can_see?(:access, user)
+    vis = filter_invisible(user)
     from access in Access, as: :access,
       join: named in assoc(access, :named),
-      left_lateral_join: cs in ^cs,
-      where: cs.can_see == true,
-      preload: [named: named]
+      join: s in subquery(vis),
+      on: access.id == s.object_id,
+      preload: [named: named],
+      select: access
   end
 
   @doc """

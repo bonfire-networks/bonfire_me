@@ -41,11 +41,11 @@ defmodule Bonfire.Me.Users.Circles do
 
   @doc "query for `list_visible`"
   def list_visible_q(%User{id: _}=user) do
-    cs = can_see?(:circle, user) #|> IO.inspect
+    vis = filter_invisible(user)
     from(circle in Circle, as: :circle,
       left_join: named in assoc(circle, :named),
-      left_lateral_join: cs in ^cs,
-      where: cs.can_see == true,
+      join: vis in subquery(vis),
+      on: circle.id == vis.object_id,
       preload: [named: named])
     # |> IO.inspect
   end
