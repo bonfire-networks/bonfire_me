@@ -236,7 +236,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp all_flags(%User{} = parent, args, info) do
-    Bonfire.Social.Flags.list(parent)
+    Bonfire.Social.Flags.list_paginated(parent)
     |> feed()
   end
 
