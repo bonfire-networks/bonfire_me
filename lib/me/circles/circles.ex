@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Users.Circles do
 
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Data.Social.Circle
+  alias Bonfire.Data.AccessControl.Circle
 
   alias Bonfire.Boundaries.Circles
   alias Bonfire.Me.Users
