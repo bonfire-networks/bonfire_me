@@ -119,7 +119,7 @@ defmodule Bonfire.Me.Users do
     Changeset.cast changeset, %{
       accounted:      %{account_id: account.id},
       # like_count:   %{liker_count: 0,    liked_count: 0},
-      instance_admin: %{is_instance_admin: is_first_user?()}, # first user to be created is automatically admin # TODO: make this more secure (eg. only active if an env flag is set)
+      instance_admin: %{is_instance_admin: false},
       encircles:      [%{circle_id: Circles.circles().local}]
     }, []
   end
@@ -128,10 +128,6 @@ defmodule Bonfire.Me.Users do
     Changeset.cast changeset, %{
       encircles: [%{circle_id: Circles.circles().activity_pub}]
     }, []
-  end
-
-  def is_first_user? do
-    Queries.count() <1
   end
 
   def get_only_in_account(%Account{id: id}) do
