@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     conn = conn(account: alice)
     conn = get(conn, "/create-user")
     doc = floki_response(conn)
+    view = Floki.find(doc, "#create_user")
     assert [form] = Floki.find(doc, "#create-form")
     assert [_] = Floki.find(form, "#create-form_character_username")
     assert [_] = Floki.find(form, "#create-form_profile_name")
@@ -109,7 +110,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     assert [_] = Floki.find(form, "button[type='submit']")
   end
 
-  test "successfully create a user" do
+  test "successfully create first user" do
     alice = fake_account!()
     conn = conn(account: alice)
     username = Fake.username()
@@ -117,6 +118,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     conn = post(conn, "/create-user", params)
     assert redirected_to(conn) == "/home"
     conn = get(recycle(conn), "/home")
+    IO.inspect(conn: conn)
     doc = floki_response(conn)
     assert [ok] = find_flash(doc)
     assert_flash(ok, :info, ~r/nice/)

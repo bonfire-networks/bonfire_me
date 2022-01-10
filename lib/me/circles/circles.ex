@@ -2,12 +2,14 @@ defmodule Bonfire.Me.Users.Circles do
 
   alias Bonfire.Data.Identity.User
   alias Bonfire.Data.AccessControl.Circle
-
   alias Bonfire.Boundaries.Circles
   alias Bonfire.Me.Users
+  alias Bonfire.Common.Utils
 
   import Bonfire.Me.Integration
-  alias Bonfire.Common.Utils
+  import Bonfire.Boundaries.Queries
+  import Ecto.Query
+  import EctoSparkles
 
   ## invariants:
   ## * Created circles will have the user as a caretaker
@@ -29,8 +31,6 @@ defmodule Bonfire.Me.Users.Circles do
     end
   end
 
-  import Ecto.Query
-  import Bonfire.Boundaries.Queries
 
   @doc """
   Lists the circles that we are permitted to see.
@@ -41,13 +41,9 @@ defmodule Bonfire.Me.Users.Circles do
 
   @doc "query for `list_visible`"
   def list_visible_q(%User{id: _}=user) do
-    vis = filter_invisible(user)
-    from(circle in Circle, as: :circle,
-      left_join: named in assoc(circle, :named),
-      join: vis in subquery(vis),
-      on: circle.id == vis.object_id,
-      preload: [named: named])
-    # |> IO.inspect
+    from(circle in Circle, as: :circle)
+    |> boundarise(circle.id, [current_user: user])
+    |> proload(:named)
   end
 
   @doc """
@@ -55,12 +51,7 @@ defmodule Bonfire.Me.Users.Circles do
   permitted to see. If any circles are created without permitting the
   user to see them, they will not be shown.
   """
-  def list_my(user, include_builtins \\ true)
-
-  def list_my(user, true) do
-    list_my(user, false) ++ Bonfire.Boundaries.Circles.list_builtins()
-  end
-  def list_my(%User{}=user, _) do
+  def list_my(%User{}=user) do
     repo().many(list_my_q(user))
   end
 
@@ -85,7 +76,7 @@ defmodule Bonfire.Me.Users.Circles do
     repo().single(get_q(id, user))
   end
 
-  @doc "query for `list_my`"
+  @doc "query for `get`"
   def get_q(id, %User{id: user_id}=user) do
     list_visible_q(user)
     |> join(:inner, [circle: circle], caretaker in assoc(circle, :caretaker), as: :caretaker)
