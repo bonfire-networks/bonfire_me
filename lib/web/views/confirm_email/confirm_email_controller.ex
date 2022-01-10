@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
     case Accounts.request_confirm_email(form_cs(form)) do
       {:ok, _, _} ->
         conn
-        |> assign(:requested, true)
+        |> put_session(:requested, true)
         |> live_render(ConfirmEmailLive)
       {:error, "already_confirmed"} ->
         already_confirmed(conn)
@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
   defp error(conn, text) do
     Logger.error(maybe_to_string(text))
     conn
-      |> assign(:error, text)
+      |> put_session(:error, text)
       |> live_render(ConfirmEmailLive)
   end
 end
