@@ -67,7 +67,7 @@ defmodule Bonfire.Me.Web.SignupController.Test do
     })
     doc = floki_response(conn)
     assert [signup] = Floki.find(doc, "#signup")
-    assert [p] = Floki.find(signup, "p")
+    assert [p] = Floki.find(doc, "[data-id=confirmation_success]")
     assert Floki.text(p) =~ ~r/confirm your email/s
     assert [] = Floki.find(doc, "#signup-form")
   end
