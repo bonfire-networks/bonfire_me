@@ -58,18 +58,18 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "success" do
       # needs template fix - no feedback
-      # conn = conn()
-      # account = fake_account!()
-      # conn = get(conn, "/signup/email/confirm")
-      # doc = floki_response(conn)
-      # assert [form] = Floki.find(doc, "#confirm-email-form")
-      # assert [_] = Floki.find(form, "input[type='email']")
-      # assert [_] = Floki.find(form, "button[type='submit']")
-      # conn = post(recycle(conn), "/signup/email/confirm", %{"confirm_email_fields" => %{"email" => account.email.email_address}})
-      # doc = floki_response(conn)
-      # assert [] = Floki.find(doc, "#confirm-email-form")
-      # assert [conf] = Floki.find(doc, ".form__confirmation")
-      # assert Floki.text(conf) =~ ~r/emailed you/
+      conn = conn()
+      account = fake_account!()
+      conn = get(conn, "/signup/email/confirm")
+      doc = floki_response(conn)
+      assert [form] = Floki.find(doc, "#confirm-email-form")
+      assert [_] = Floki.find(form, "input[type='email']")
+      assert [_] = Floki.find(form, "button[type='submit']")
+      conn = post(recycle(conn), "/signup/email/confirm", %{"confirm_email_fields" => %{"email" => account.email.email_address}})
+      doc = floki_response(conn)
+      assert [] = Floki.find(doc, "confirm-email-form")
+      assert [conf] = Floki.find(doc, ".alert-success")
+      assert Floki.text(conf) =~ ~r/emailed you/
     end
 
   end
@@ -81,15 +81,14 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
     end
 
     test "not found" do
-      # needs template fix - no feedback
-      # conn = conn()
-      # conn = get(conn, "/signup/email/confirm/#{Fake.confirm_token()}")
-      # doc = floki_response(conn)
-      # assert [form] = Floki.find(doc, "#confirm-email-form")
-      # assert [_] = Floki.find(form, "input[type='email']")
-      # assert [_] = Floki.find(form, "button[type='submit']")
-      # assert [err] = Floki.find(doc, ".error")
-      # assert Floki.text(err) =~ ~r/invalid confirmation link/i
+      conn = conn()
+      conn = get(conn, "/signup/email/confirm/#{Fake.confirm_token()}")
+      doc = floki_response(conn)
+      assert [form] = Floki.find(doc, "#confirm-email-form")
+      assert [_] = Floki.find(form, "input[type='email']")
+      assert [_] = Floki.find(form, "button[type='submit']")
+      assert [err] = Floki.find(doc, ".alert-error")
+      assert Floki.text(err) =~ ~r/invalid confirmation link/i
     end
 
     test "success" do
@@ -101,17 +100,17 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "cannot confirm twice" do
       # needs template fix - no feedback
-      # conn = conn()
-      # {:ok, account} = Bonfire.Me.Accounts.signup(signup_form())
-      # conn = get(conn, "/signup/email/confirm/#{account.email.confirm_token}")
-      # assert redirected_to(conn) == "/create-user"
-      # conn = get(build_conn(), "/signup/email/confirm/#{account.email.confirm_token}")
-      # doc = floki_response(conn)
-      # assert [form] = Floki.find(doc, "#confirm-email-form")
-      # assert [_] = Floki.find(form, "input[type='email']")
-      # assert [_] = Floki.find(form, "button[type='submit']")
-      # assert [err] = Floki.find(doc, ".error")
-      # assert Floki.text(err) =~ ~r/invalid confirmation link/i
+      conn = conn()
+      {:ok, account} = Bonfire.Me.Accounts.signup(signup_form())
+      conn = get(conn, "/signup/email/confirm/#{account.email.confirm_token}")
+      assert redirected_to(conn) == "/create-user"
+      conn = get(build_conn(), "/signup/email/confirm/#{account.email.confirm_token}")
+      doc = floki_response(conn)
+      assert [form] = Floki.find(doc, "#confirm-email-form")
+      assert [_] = Floki.find(form, "input[type='email']")
+      assert [_] = Floki.find(form, "button[type='submit']")
+      assert [err] = Floki.find(doc, ".alert-error")
+      assert Floki.text(err) =~ ~r/invalid confirmation link/i
     end
   end
 

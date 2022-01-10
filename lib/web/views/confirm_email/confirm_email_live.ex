@@ -3,6 +3,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailLive do
   alias Bonfire.Me.Accounts
 
   def mount(_params, session, socket) do
+    IO.inspect(session)
     {:ok,
      socket
      |> assign(:error,  session["error"])
