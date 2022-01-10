@@ -45,6 +45,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   end
 
   defp show({:error, _}, conn, params) do
+    Logger.error("Wrong user")
     conn
     |> put_flash(:error, l "You can only identify as users in your account.")
     |> redirect(to: path(:switch_user) <> copy_go(params))
