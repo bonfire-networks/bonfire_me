@@ -189,7 +189,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
      # feed = if user, do: Bonfire.Social.Activities.by_user(user)
      feed_id = e(socket.assigns, :user, :id, nil)
      feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, socket)
-     #IO.inspect(feed: feed)
+    #  IO.inspect(feed: feed)
 
     {:noreply,
      assign(socket,
