@@ -327,7 +327,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp add_team_member(%{username_or_email: username_or_email} = args, info) do
-    if Utils.module_enabled?(Bonfire.Me.SharedUsers) do
+    if Utils.module_enabled?(Bonfire.Data.SharedUser) and Utils.module_enabled?(Bonfire.Me.SharedUsers) do
       user = GraphQL.current_user(info)
       if user do
         with %{} = _shared_user <- Bonfire.Me.SharedUsers.add_account(user, username_or_email, Utils.stringify_keys(args)) do
