@@ -2,6 +2,7 @@
   <Bonfire.UI.Social.SignupViewLive 
     form={@form}
     error={@error}
+    invite={@invite} 
     registered={@registered}
   />
 </div>
