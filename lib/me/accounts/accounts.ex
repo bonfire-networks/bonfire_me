@@ -14,6 +14,7 @@ defmodule Bonfire.Me.Accounts do
   alias Ecto.Changeset
   import Bonfire.Me.Integration
   use OK.Pipe
+  require Logger
 
   def get_current(nil), do: nil
   def get_current(id) when is_binary(id),
@@ -44,10 +45,18 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-    if not instance_is_invite_only? || opts[:invite] == System.get_env("INVITE_KEY") || is_first_account? do
-      signup_changeset(params, opts)
+
+    valid_invite = System.get_env("INVITE_KEY")
+    special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
+
+    if not instance_is_invite_only? || opts[:invite] == valid_invite || opts[:invite] == special_invite || is_first_account? do
+
+      signup_changeset(
+        params,
+        opts
+      )
     else
-      invite_only_changeset()
+      invite_error_changeset()
     end
   end
 
@@ -58,7 +67,7 @@ defmodule Bonfire.Me.Accounts do
       |> Changeset.cast_assoc(:credential, required: true)
   end
 
-  defp invite_only_changeset do
+  defp invite_error_changeset do
     %Account{}
       |> Account.changeset(%{})
       |> Changeset.add_error(:form, "invite_only")
@@ -72,10 +81,13 @@ defmodule Bonfire.Me.Accounts do
     do: signup(changeset(:signup, params, opts), opts)
 
   def signup(%Changeset{data: %Account{}}=cs, opts) do
+    special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
+    opts = Keyword.put_new(opts, :must_confirm?, not (opts[:invite] && special_invite && opts[:invite] == special_invite))
+
     if cs.valid? do
       repo().transact_with fn -> # revert if email send fails
         repo().insert(cs)
-        ~>> send_confirm_email(opts)
+        ~>> maybe_send_confirm_email(opts)
       end
     else
       {:error, cs} # avoid checking out txn
@@ -194,7 +206,7 @@ defmodule Bonfire.Me.Accounts do
   defp refresh_confirm_email(%Account{email: %Email{}=email}=account, opts) do
     with {:ok, email} <- repo().update(Email.put_token(email)),
          account = %{ account | email: email },
-         {:ok, _} <- send_confirm_email(account, opts),
+         {:ok, _} <- send_confirm_email(true, account, opts),
       do: {:ok, :refreshed, account}
   end
 
@@ -223,18 +235,23 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  defp send_confirm_email(%Account{}=account, opts) do
+  defp maybe_send_confirm_email(%Account{}=account, opts) do
     send_confirm_email(Email.must_confirm?(opts), account, opts)
   end
 
-  defp send_confirm_email(false, account, _opts),
-   do: {:ok, account}
+  defp send_confirm_email(false, account, _opts) do
+    Logger.debug("Skip email confirmation")
+   {:ok, account}
+  end
 
   defp send_confirm_email(true, %Account{email: %{email_address: email_address}}=account, opts) do
-    account = repo().preload(account, :email)
     mail = Mails.confirm_email(account, opts)
     mailer().send_now(mail, email_address)
     |> mailer_response(account)
+  end
+
+  defp send_confirm_email(true, %Account{email: %{email_address: email_address}}=account, opts) do
+    send_confirm_email(true, repo().preload(account, :email), opts)
   end
 
   defp send_confirm_email(_, _account, _opts),
