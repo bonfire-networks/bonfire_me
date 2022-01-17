@@ -51,9 +51,7 @@ defmodule Bonfire.Me.Users.Circles do
   permitted to see. If any circles are created without permitting the
   user to see them, they will not be shown.
   """
-  def list_my(%User{}=user) do
-    repo().many(list_my_q(user))
-  end
+  def list_my(%User{}=user), do: repo().many(list_my_q(user))
 
   @doc "query for `list_my`"
   def list_my_q(%User{id: user_id}=user) do
@@ -64,12 +62,7 @@ defmodule Bonfire.Me.Users.Circles do
 
   def list_my_defaults(_user \\ nil) do
     # TODO make configurable
-    [
-      Bonfire.Boundaries.Circles.get_tuple(:guest),
-      Bonfire.Boundaries.Circles.get_tuple(:local),
-      Bonfire.Boundaries.Circles.get_tuple(:admin),
-      Bonfire.Boundaries.Circles.get_tuple(:activity_pub)
-    ]
+    Enum.map(&Circles.get_tuple/1, [:guest, :local, :activity_pub])
   end
 
   def get(id, %User{}=user) do

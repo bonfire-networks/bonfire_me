@@ -2,6 +2,9 @@ defmodule Bonfire.Me.Users.Boundaries do
   alias Bonfire.Data.Identity.User
   require Logger
 
+  def maybe_compose_ad_hoc_acl(base_acl, user) do
+  end
+
   def maybe_make_visible_for(current_user, object, circle_ids \\ []), do: maybe_grant_access_to(current_user, object, circle_ids, :read_only)
 
   @doc "Grant access to an object to a list of circles + the user"

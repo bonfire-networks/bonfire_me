@@ -1,9 +1,9 @@
-defmodule Bonfire.Me.Users.Acls do
+defmodule Bonfire.Me.Users.Grants do
 
-  alias Bonfire.Data.AccessControl.Acl
+  alias Bonfire.Data.AccessControl.Grant
   alias Bonfire.Data.Identity.User
 
-  import Bonfire.Boundaries.{Acls, Queries}
+  import Bonfire.Boundaries.{Grants, Queries}
   import Bonfire.Me.Integration
   import Ecto.Query
   import EctoSparkles
@@ -11,7 +11,7 @@ defmodule Bonfire.Me.Users.Acls do
 
   ## invariants:
 
-  ## * All a user's ACLs will have the user as an administrator but it
+  ## * All a user's GRANTs will have the user as an administrator but it
   ##   will be hidden from the user
 
   def create(attrs, opts) do
@@ -23,14 +23,14 @@ defmodule Bonfire.Me.Users.Acls do
     changeset(:create, attrs, opts, Keyword.fetch!(opts, :current_user))
   end
 
-  defp changeset(:create, attrs, opts, :system), do: Acls.changeset(attrs)
+  defp changeset(:create, attrs, opts, :system), do: Grants.changeset(attrs)
   defp changeset(:create, attrs, opts, %User{id: id}) do
-    Changeset.cast(%Acl{}, %{caretaker: %{caretaker_id: id}}, [])
-    |> Acls.changeset(attrs)
+    Changeset.cast(%Grant{}, %{caretaker: %{caretaker_id: id}}, [])
+    |> Grants.changeset(attrs)
   end
 
   @doc """
-  Lists the ACLs permitted to see.
+  Lists the grants permitted to see.
   """
   def list(opts) do
     list_q(opts)
@@ -39,11 +39,11 @@ defmodule Bonfire.Me.Users.Acls do
   end
 
   def list_q(opts), do: list_q(Keyword.fetch!(opts, :current_user), opts)
-  defp list_q(:system, opts), do: from(acl in Acl, as: :acl)
-  defp list_q(%User{}, opts), do: boundarise(list_q(:system, opts), acl.id, opts)
+  defp list_q(:system, opts), do: from(grant in Grant, as: :grant)
+  defp list_q(%User{}, opts), do: boundarise(list_q(:system, opts), grant.id, opts)
 
   @doc """
-  Lists the ACLs we are the registered caretakers of that we are
+  Lists the grants we are the registered caretakers of that we are
   permitted to see. If any are created without permitting the
   user to see them, they will not be shown.
   """
@@ -52,7 +52,7 @@ defmodule Bonfire.Me.Users.Acls do
   @doc "query for `list_my`"
   def list_my_q(%{id: user_id}=user) do
     list_q(user)
-    |> join(:inner, [acl: acl], caretaker in assoc(acl, :caretaker), as: :caretaker)
+    |> join(:inner, [grant: grant], caretaker in assoc(grant, :caretaker), as: :caretaker)
     |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
   end
 

@@ -3,22 +3,16 @@ defmodule Bonfire.Me.Users do
   A User is a logical identity within the system belonging to an Account.
   """
   use OK.Pipe
-  alias Bonfire.Data.Identity.{Account, User}
-  alias Bonfire.Data.AccessControl.InstanceAdmin
-
-  alias Bonfire.Me.Characters
-  alias Bonfire.Me.Users.Queries
-  alias Bonfire.Me.Profiles
-  alias Bonfire.Boundaries.Circles
-
-  # alias Pointers.Changesets
+  alias ActivityPub.Actor
+  alias Bonfire.Data.Identity.{Account, Named, User}
+  alias Bonfire.Data.AccessControl.{Acl, Circle, Grant, InstanceAdmin}
+  alias Bonfire.Me.{Characters, Profiles, Users, Users.Queries}
+  alias Bonfire.Boundaries
+  alias Bonfire.Boundaries.{Acls, Circles, Stereotype, Verbs}
+  alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
-  import Bonfire.Me.Integration
-
-  alias ActivityPub.Actor
-  alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
-
+  alias Pointers.ULID
   import Bonfire.Me.Integration
   import Ecto.Query, only: [from: 2, limit: 2]
 
@@ -43,7 +37,6 @@ defmodule Bonfire.Me.Users do
   def by_username(username) when is_binary(username), do: repo().single(Queries.by_username_or_id(username))
 
   def by_username!(username) when is_binary(username), do: repo().one(Queries.by_username_or_id(username))
-
   def by_account(account) do
     if Utils.module_enabled?(Bonfire.Data.SharedUser) and Utils.module_enabled?(Bonfire.Me.SharedUsers) do
       Bonfire.Me.SharedUsers.by_account(account)
@@ -75,13 +68,8 @@ defmodule Bonfire.Me.Users do
     |> Map.merge(user, user.character)
   end
 
-  def is_admin(%User{} = user) do
-    Utils.e(user, :instance_admin, :is_instance_admin, false)
-  end
-
-  def is_admin(_) do
-    false
-  end
+  def is_admin(%User{} = user), do: Utils.e(user, :instance_admin, :is_instance_admin, false)
+  def is_admin(_), do: false
 
   ### Mutations
 
@@ -90,13 +78,13 @@ defmodule Bonfire.Me.Users do
   # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
   def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
-    repo().insert(changeset)
-    |> post_mutate()
+    with {:ok, user} <- repo().insert(changeset) do
+      create_default_boundaries(user)
+      {:ok, post_mutate(user)}
+    end
   end
-  def create(params, extra) when not is_struct(params) do
-    repo().insert(changeset(:create, %User{}, params, extra))
-    |> post_mutate()
-  end
+  def create(params, extra) when not is_struct(params),
+    do: create(changeset(:create, params, extra))
 
   defp post_mutate({:ok, object}), do: {:ok, post_mutate(object)}
   defp post_mutate(%{} = user) do
@@ -108,25 +96,27 @@ defmodule Bonfire.Me.Users do
 
   ## instance admin
 
-  def make_admin(%InstanceAdmin{} = admin),
-    do: InstanceAdmin.changeset(admin, %{is_instance_admin: true}) |> repo().update!()
-
-  def make_admin(%User{instance_admin: admin}), do: make_admin(admin)
+  @doc "Grants a user superpowers."
+  def make_admin(%User{}=user) do
+    user
+    |> repo().preload(:instance_admin)
+    |> Changeset.cast(%{instance_admin: %{is_instance_admin: true}}, [])
+    |> Changeset.cast_assoc(:instance_admin)
+    |> repo().update!()
+  end
 
   # this is where we are very careful to explicitly set all the things
   # a user should have but shouldn't have control over the input for.
   defp override(changeset, :create, %Account{}=account) do
     Changeset.cast changeset, %{
       accounted:      %{account_id: account.id},
-      # like_count:   %{liker_count: 0,    liked_count: 0},
-      instance_admin: %{is_instance_admin: false},
-      encircles:      [%{circle_id: Circles.circles().local}]
+      encircles:      [%{circle_id: Circles.circles().local.id}]
     }, []
   end
 
   defp override(changeset, :create, :remote) do
     Changeset.cast changeset, %{
-      encircles: [%{circle_id: Circles.circles().activity_pub}]
+      encircles: [%{circle_id: Circles.circles().activity_pub.id}]
     }, []
   end
 
@@ -162,16 +152,6 @@ defmodule Bonfire.Me.Users do
   #   end
   # end
 
-  # # TODO: what must we chase down?
-  # # * acls
-  # # * accesses
-  # # * grants
-  # # * posts
-  # # * feeds
-  # defp delete_caretaken(user) do
-  #   :ok
-  # end
-
   ### ActivityPub
 
   def by_ap_id(ap_id) do
@@ -196,7 +176,6 @@ defmodule Bonfire.Me.Users do
     changeset(:create, %User{}, params, :remote)
     |> repo().insert()
   end
-
 
 
   @doc "Updates a remote user"
@@ -242,6 +221,7 @@ defmodule Bonfire.Me.Users do
 
   def changeset(name , user \\ %User{}, params, extra)
 
+  # TODO: we need to make sure that only user input that we want is given
   def changeset(:create, user, params, %Account{}=account) do
     User.changeset(user, params)
     |> override(:create, account)
@@ -258,7 +238,6 @@ defmodule Bonfire.Me.Users do
     |> override(:create, :remote)
     |> Changeset.cast_assoc(:character, required: true, with: &Characters.remote_changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
     |> Changeset.cast_assoc(:peered)
   end
@@ -291,9 +270,6 @@ defmodule Bonfire.Me.Users do
   end
 
   def indexing_object_format(u) do
-
-    # IO.inspect(obj)
-
     %{
       "id" => u.id,
       "index_type" => @search_type,
@@ -309,5 +285,97 @@ defmodule Bonfire.Me.Users do
     object
   end
   def maybe_index_user(other), do: other
+
+  defp config(), do: Application.get_env(:bonfire_me, Users)
+
+  defp create_default_boundaries(user) do
+    config = Keyword.fetch!(config(), :default_boundaries)
+    circles = for {k, v} <- Map.fetch!(config, :circles), into: %{} do
+      {k, v
+      |> Map.put(:id, ULID.generate())
+      |> stereotype(Circles)}
+    end
+    acls = for {k, v} <- Map.fetch!(config, :acls), into: %{} do
+      {k, v
+      |> Map.put(:id, ULID.generate())
+      |> stereotype(Acls)}
+    end
+    # my_stereotypes = Map.fetch!(acls, :my_stereotypes)
+    grants =
+      for {acl, entries}  <- Map.fetch!(config, :grants),
+          {circle, verbs} <- entries,
+          verb            <- verbs do
+        extra = case verb do
+          _ when is_atom(verb)   -> %{verb_id: Verbs.get_id!(verb), value: true}
+          _ when is_binary(verb) -> %{verb_id: verb, value: true}
+          {verb, v} when is_atom(verb) and is_boolean(v) ->
+            %{verb_id: Verbs.get_id!(verb), value: v}
+          {verb, v} when is_binary(verb) and is_boolean(v) ->
+            %{verb_id: verb, value: v}
+        end
+        Map.merge(%{
+          id:         ULID.generate(),
+          acl_id:     default_acl_id(acls, acl),
+          subject_id: default_subject_id(circles, user, circle),
+        }, extra)
+      end
+    circles = Map.values(circles)
+    acls = Map.values(acls)
+    # grants = grants ++
+    #   for thing <- acls ++ circles,
+    #       verb  <- [:see, :read] do
+    #     %{id:         ULID.generate(),
+    #       acl_id:     thing.id,
+    #       subject_id: user.id,
+    #       verb_id:    Verbs.get_id!(verb),
+    #       value:      true}
+    #   end
+    named =
+      (acls ++ circles)
+      |> Enum.filter(&(&1[:name]))
+      |> Enum.map(&Map.take(&1, [:id, :name]))
+    stereotypes =
+      (acls ++ circles)
+      |> Enum.filter(&(&1[:stereotype]))
+      |> Enum.map(&Map.take(&1, [:id, :name]))
+    # First the pointables
+    repo().insert_all(Acl,    Enum.map(acls,    &Map.take(&1, [:id])))
+    repo().insert_all(Circle, Enum.map(circles, &Map.take(&1, [:id])))
+    repo().insert_all(Grant,  grants)
+    # Then the mixins
+    repo().insert_all(Named,  named)
+    repo().insert_all(Stereotype, stereotypes)
+    Boundaries.take_care_of!([user] ++ acls ++ circles ++ grants, user)
+  end
+
+  # support for create_default_boundaries/1
+  defp stereotype(attrs, module) do
+    case attrs[:stereotype] do
+      nil -> attrs
+      other ->
+        attrs
+        |> Map.put(:stereotype_id, module.get_id!(other))
+        |> Map.delete(:stereotype)
+    end
+  end
+
+  # support for create_default_boundaries/1
+  defp default_acl_id(acls, acl_id) do
+    with nil <- Map.get(acls, acl_id, %{})[:id],
+         nil <- Acls.get_id(acl_id) do
+      raise RuntimeError,
+        message: "invalid acl given in new user boundaries config: #{inspect(acl_id)}"
+    end
+  end
+
+  # support for create_default_boundaries/1
+  defp default_subject_id(_circles, user, :SELF), do: user.id
+  defp default_subject_id(circles, _user, circle_id) do
+    with nil <- Map.get(circles, circle_id, %{})[:id],
+         nil <- Circles.get_id(circle_id) do
+      raise RuntimeError,
+        message: "invalid circle given in new user boundaries config: #{inspect(circle_id)}"
+    end
+ end
 
 end
