@@ -62,7 +62,7 @@ defmodule Bonfire.Me.Users.Circles do
 
   def list_my_defaults(_user \\ nil) do
     # TODO make configurable
-    Enum.map(&Circles.get_tuple/1, [:guest, :local, :activity_pub])
+    Enum.map([:guest, :local, :activity_pub], &Circles.get_tuple/1)
   end
 
   def get(id, %User{}=user) do
