@@ -16,6 +16,8 @@ defmodule Bonfire.Me.Web.Routes do
         live "/user/:username/:tab", ProfileLive
         live "/user/:username/posts", PostsLive
 
+        resources "/login/forgot-password", ForgotPasswordController, only: [:index, :create], as: :forgot_password
+
       end
 
       # pages only guests can view
@@ -27,7 +29,6 @@ defmodule Bonfire.Me.Web.Routes do
         resources "/signup/email/confirm", ConfirmEmailController, only: [:index, :create, :show]
         resources "/signup/email/confirm/:id", ConfirmEmailController, only: [:show]
         resources "/login", LoginController, only: [:index, :create], as: :login
-        resources "/login/forgot-password", ForgotPasswordController, only: [:index, :create]
         resources "/login/forgot-password/:login_token", ForgotPasswordController, only: [:index]
         resources "/login/:login_token", LoginController, only: [:index]
       end
@@ -51,7 +52,7 @@ defmodule Bonfire.Me.Web.Routes do
         resources "/create-user", CreateUserController, only: [:index, :create], as: :create_user
 
         # live "/account/password/change", ChangePasswordLive
-        resources "/account/password/change", ChangePasswordController, only: [:index, :create]
+        resources "/account/password/change", ChangePasswordController, only: [:index, :create], as: :change_password
 
         live "/settings/:tab", SettingsLive
         live "/settings/:tab/:id", SettingsLive
