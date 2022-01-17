@@ -44,7 +44,7 @@ defmodule Bonfire.Me.UsersTest do
     assert {:ok, account} = Accounts.signup(Fake.signup_form())
     assert {:ok, second_user} = Users.create(Fake.create_user_form(), account)
     refute Users.is_admin(second_user)
-    assert Users.make_admin(second_user).is_instance_admin
+    assert Users.make_admin(second_user).instance_admin.is_instance_admin
     assert {:ok, second_user} = Users.by_id(second_user.id)
     assert Users.is_admin(second_user)
   end
