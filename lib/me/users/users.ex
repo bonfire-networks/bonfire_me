@@ -97,6 +97,11 @@ defmodule Bonfire.Me.Users do
   ## instance admin
 
   @doc "Grants a user superpowers."
+  def make_admin(username) when is_binary(username) do
+    with {:ok, user} <- by_username(username) do
+      make_admin(user)
+    end
+  end
   def make_admin(%User{}=user) do
     user
     |> repo().preload(:instance_admin)
