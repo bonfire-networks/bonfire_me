@@ -230,13 +230,13 @@ defmodule Bonfire.Me.API.GraphQL do
     |> feed()
   end
 
-  defp my_notifications(%User{} = parent, args, info) do
-    Bonfire.Social.FeedActivities.feed(:notifications, parent)
+  defp my_notifications(%User{} = user, args, info) do
+    Bonfire.Social.FeedActivities.feed(:notifications, user)
     |> feed()
   end
 
-  defp all_flags(%User{} = parent, args, info) do
-    Bonfire.Social.Flags.list_paginated(parent)
+  defp all_flags(%User{} = user, args, info) do
+    Bonfire.Social.Flags.list_paginated(user)
     |> feed()
   end
 
