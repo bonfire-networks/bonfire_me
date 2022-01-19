@@ -122,11 +122,17 @@ defmodule Bonfire.Me.Characters do
     |> Changeset.cast_assoc(:follow_count)
   end
 
-  def display_username(%{username: username}) when not is_nil(username) do
+  def display_username("@"<>username) do
     username
   end
-  def display_username(%{display_username: username}) when not is_nil(username) do
+  def display_username(username) when is_binary(username) do
     username
+  end
+  def display_username(%{username: username}) when not is_nil(username) do
+    display_username(username)
+  end
+  def display_username(%{display_username: username}) when not is_nil(username) do
+    display_username(username)
   end
   def display_username(%{character: _} = thing) do
     repo().maybe_preload(thing, :character)

@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Users.Grants do
+defmodule Bonfire.Me.Grants do
 
   import Bonfire.Me.Integration
   import Ecto.Query

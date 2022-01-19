@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Users.Boundaries do
+defmodule Bonfire.Me.Boundaries do
   alias Bonfire.Data.Identity.User
   alias Bonfire.Common.Utils
   require Logger
@@ -20,9 +20,9 @@ defmodule Bonfire.Me.Users.Boundaries do
 
     Logger.debug("Boundaries grant #{inspect verbs} on object #{inspect object_id} to #{inspect circle_ids}")
 
-    with {:ok, %{id: acl_id}} <- Bonfire.Me.Users.Acls.create(opts),# |> IO.inspect(label: "acled"),
+    with {:ok, %{id: acl_id}} <- Bonfire.Me.Acls.create(opts),# |> IO.inspect(label: "acled"),
     {:ok, _controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}), #|> IO.inspect(label: "ctled"),
-    {:ok, grant} <- Bonfire.Me.Users.Grants.grant(grant_subjects, acl_id, verbs, true, opts) do
+    {:ok, grant} <- Bonfire.Me.Grants.grant(grant_subjects, acl_id, verbs, true, opts) do
       # IO.inspect(one_grant: grant)
       {:ok, :granted}
     else
