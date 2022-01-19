@@ -87,7 +87,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
   end
 
   def handle_params(%{"tab" => tab, "id" => id}, _url, socket) do
-    IO.inspect(id)
+    # IO.inspect(id)
     {:noreply, assign(socket, selected_tab: tab, tab_id: id)}
   end
 

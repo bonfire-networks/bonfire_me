@@ -3,10 +3,12 @@ defmodule Bonfire.Me.Users.Acls do
   alias Bonfire.Data.AccessControl.Acl
   alias Bonfire.Data.Identity.User
 
-  import Bonfire.Boundaries.{Acls, Queries}
+  alias Bonfire.Boundaries.Acls
+  import Bonfire.Boundaries.Queries
   import Bonfire.Me.Integration
   import Ecto.Query
   import EctoSparkles
+  alias Ecto.Changeset
   alias Bonfire.Common.Utils
 
   ## invariants:
@@ -14,7 +16,7 @@ defmodule Bonfire.Me.Users.Acls do
   ## * All a user's ACLs will have the user as an administrator but it
   ##   will be hidden from the user
 
-  def create(attrs, opts) do
+  def create(attrs \\ %{}, opts) do
     changeset(:create, attrs, opts)
     |> repo().insert()
   end
