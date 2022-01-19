@@ -27,9 +27,9 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
 
   def handle_event("select", %{"id" => selected} = _attrs, socket) when is_binary(selected) do
 
-    previous_circles = e(socket, :assigns, :to_circles, []) |> IO.inspect
+    previous_circles = e(socket, :assigns, :to_circles, []) #|> IO.inspect
 
-    new_circles = set_circles([selected], previous_circles, true) |> IO.inspect
+    new_circles = set_circles([selected], previous_circles, true) #|> IO.inspect
 
     {:noreply,
         socket
@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
 
   def handle_event("deselect", %{"id" => deselected} = _attrs, socket) when is_binary(deselected) do
 
-    new_circles = remove_from_circle_tuples([deselected], e(socket, :assigns, :to_circles, [])) |> IO.inspect
+    new_circles = remove_from_circle_tuples([deselected], e(socket, :assigns, :to_circles, [])) #|> IO.inspect
 
     {:noreply,
         socket

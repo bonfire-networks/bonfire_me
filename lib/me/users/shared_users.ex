@@ -107,7 +107,7 @@ defmodule Bonfire.Me.SharedUsers do
   end
 
   def by_account(%Account{} = account) do
-    IO.inspect("shared by")
+    # IO.inspect("shared by")
     account = repo().maybe_preload(account, [users: [:shared_user, :character, :profile], shared_users: [:shared_user, :character, :profile]], false)
 
     Map.get(account, :users, []) ++ Map.get(account, :shared_users, [])
