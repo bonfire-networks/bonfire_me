@@ -236,6 +236,7 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:instance_admin)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
+    # |> IO.inspect(label: "Users.changeset(:create, ...")
   end
 
   def changeset(:create, user, params, :remote) do
