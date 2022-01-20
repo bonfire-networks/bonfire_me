@@ -1,5 +1,6 @@
 defmodule Bonfire.Me.Accounts do
 
+  use Arrows
   alias Bonfire.Data.Identity.{Account, Credential, Email, User}
   alias Bonfire.Common.Config
   alias Bonfire.Me.Mails
@@ -13,7 +14,6 @@ defmodule Bonfire.Me.Accounts do
   alias Bonfire.Me.Users
   alias Ecto.Changeset
   import Bonfire.Me.Integration
-  use OK.Pipe
   require Logger
 
   def get_current(nil), do: nil
@@ -87,7 +87,7 @@ defmodule Bonfire.Me.Accounts do
     if cs.valid? do
       repo().transact_with fn -> # revert if email send fails
         repo().insert(cs)
-        ~>> maybe_send_confirm_email(opts)
+        ~> maybe_send_confirm_email(opts)
       end
     else
       {:error, cs} # avoid checking out txn
@@ -113,9 +113,9 @@ defmodule Bonfire.Me.Accounts do
   def login(%Changeset{data: %LoginFields{}}=cs, opts) do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
       repo().find(login_query(form), cs)
-      ~>> login_check_password(form, cs)
-      ~>> login_check_confirmed(opts, cs)
-      ~>> login_response()
+      ~> login_check_password(form, cs)
+      ~> login_check_confirmed(opts, cs)
+      ~> login_response()
     end
   end
 

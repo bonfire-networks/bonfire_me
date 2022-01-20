@@ -39,6 +39,13 @@ defmodule Bonfire.Me.Acls do
     |> Enum.map(&(%{acl_id: Acls.get_id!(&1)}))
   end
 
+  defp acls(changeset, preset) do
+    case mentions_grants(changeset, preset) do
+      [] -> base_acls(preset)
+      grants -> [%{acl: %{grants: grants}} | base_acls(preset)]
+    end
+  end
+
   defp reply_to_grants(changeset, preset) do
     if preset == "public" do
       # TODO look up
