@@ -158,10 +158,10 @@ defmodule Bonfire.Me.Accounts do
   def request_confirm_email(params_or_changeset_or_form_or_account, opts \\ [])
 
   def request_confirm_email(%Changeset{data: %ConfirmEmailFields{}}=cs, opts),
-    do: Changeset.apply_action(cs, :insert) ~>> rce_check_valid(cs, opts)
+    do: Changeset.apply_action(cs, :insert) ~> rce_check_valid(cs, opts)
 
   def request_confirm_email(%Changeset{data: %ForgotPasswordFields{}}=cs, opts),
-    do: Changeset.apply_action(cs, :insert) ~>> rce_check_valid(cs, opts)
+    do: Changeset.apply_action(cs, :insert) ~> rce_check_valid(cs, opts)
 
   def request_confirm_email(params, opts),
     do: request_confirm_email(changeset(:confirm_email, params, opts), opts)
@@ -222,7 +222,7 @@ defmodule Bonfire.Me.Accounts do
   def confirm_email(token, opts) when is_binary(token) do
     repo().transact_with fn ->
       repo().single(Queries.confirm_email(token))
-      ~>> ce(opts)
+      ~> ce(opts)
     end
   end
 

@@ -1,4 +1,5 @@
 defmodule Bonfire.Me.Acls do
+  use Bonfire.Common.Utils
 
   alias Bonfire.Data.AccessControl.Acl
   alias Bonfire.Data.Identity.User
@@ -9,7 +10,6 @@ defmodule Bonfire.Me.Acls do
   import Ecto.Query
   import EctoSparkles
   alias Ecto.Changeset
-  alias Bonfire.Common.Utils
 
   def cast(changeset, creator, preset) do
     base = base_acls(preset)
@@ -39,25 +39,45 @@ defmodule Bonfire.Me.Acls do
     |> Enum.map(&(%{acl_id: Acls.get_id!(&1)}))
   end
 
-  defp acls(changeset, preset) do
-    case mentions_grants(changeset, preset) do
-      [] -> base_acls(preset)
-      grants -> [%{acl: %{grants: grants}} | base_acls(preset)]
-    end
-  end
+  # defp acls(changeset, preset) do
+  #   case mentions_grants(changeset, preset) do
+  #     [] -> base_acls(preset)
+  #     grants -> [%{acl: %{grants: grants}} | base_acls(preset)]
+  #   end
+  # end
 
   defp reply_to_grants(changeset, preset) do
-    if preset == "public" do
-      # TODO look up
-      []
-    else
+
+    debug(Utils.e(changeset, :changes, :replied, :replying_to, []), "TODO: creators of reply_to should be added to a new ACL")
+
+    case preset do
+      "public" ->
+        # TODO include all
+        []
+      "local" ->
+        # TODO include only if local
+        []
+      _ ->
       []
     end
   end
 
-  defp mentions_grants(mentions, preset) do
-    # TODO look up
-    []
+  defp mentions_grants(changeset, preset) do
+    debug(Utils.e(changeset, :changes, :post_content, :changes, :mentions, []), "TODO: mentions/tags should be added to a new ACL")
+
+    case preset do
+      "public" ->
+        # TODO include all
+        []
+      "mentions" ->
+        # TODO include all
+        []
+      "local" ->
+        # TODO include only if local
+        []
+      _ ->
+      []
+    end
   end
 
 
