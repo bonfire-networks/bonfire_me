@@ -13,8 +13,8 @@ defmodule Bonfire.Me.Acls do
 
   def cast(changeset, creator, preset) do
     base = base_acls(preset)
-    grants = reply_to_grants(changeset, preset) ++ mentions_grants(changeset, preset)
-    acl = case grants do
+    custom_grants = reply_to_grants(changeset, preset) ++ mentions_grants(changeset, preset)
+    acl = case custom_grants do
       [] ->
         changeset
         |> Changeset.cast(%{controlled: base}, [])
