@@ -83,6 +83,7 @@ defmodule Bonfire.Me.Characters do
     else
       params
     end
+    |> Utils.input_to_atoms()
 
     char
     |> Character.changeset(params, :hash)
