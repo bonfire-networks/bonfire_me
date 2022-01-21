@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Users do
   @doc """
   A User is a logical identity within the system belonging to an Account.
   """
-  use OK.Pipe
+  use Arrows
   alias ActivityPub.Actor
   alias Bonfire.Data.Identity.{Account, Named, User}
   alias Bonfire.Data.AccessControl.{Acl, Circle, Grant, InstanceAdmin}
@@ -112,14 +112,13 @@ defmodule Bonfire.Me.Users do
 
   # this is where we are very careful to explicitly set all the things
   # a user should have but shouldn't have control over the input for.
-  defp override(changeset, :create, %Account{}=account) do
-    Changeset.cast changeset, %{
-      accounted:      %{account_id: account.id},
-      encircles:      [%{circle_id: Circles.circles().local.id}]
-    }, []
+  defp override(changeset, :create, %Account{}=account, params) do
+    %{accounted: %{account_id: account.id},
+      encircles: [%{circle_id: Circles.circles().local.id}]}
+    |> Changeset.cast(changeset, ..., [])
   end
-
-  defp override(changeset, :create, :remote) do
+  # TODO: does ap use the inbox?
+  defp override(changeset, :create, :remote, _params) do
     Changeset.cast changeset, %{
       encircles: [%{circle_id: Circles.circles().activity_pub.id}]
     }, []
@@ -228,8 +227,9 @@ defmodule Bonfire.Me.Users do
 
   # TODO: we need to make sure that only user input that we want is given
   def changeset(:create, user, params, %Account{}=account) do
-    User.changeset(user, params)
-    |> override(:create, account)
+    params
+    |> User.changeset(user, ...)
+    |> override(:create, account, params)
     |> Changeset.cast_assoc(:character, required: true, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, required: true, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:accounted)
@@ -241,7 +241,7 @@ defmodule Bonfire.Me.Users do
 
   def changeset(:create, user, params, :remote) do
     User.changeset(user, params)
-    |> override(:create, :remote)
+    |> override(:create, :remote, params)
     |> Changeset.cast_assoc(:character, required: true, with: &Characters.remote_changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:encircles)
@@ -263,11 +263,10 @@ defmodule Bonfire.Me.Users do
       |> Map.merge(%{"profile" => %{"id"=> user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
       |> Map.merge(%{"character" => %{"id"=> user.character.id}}, fn _, a, b -> Map.merge(a, b) end)
 
-
-    if params["profile"]["location"] && params["profile"]["location"] !="" && Utils.module_enabled?(Bonfire.Geolocate.Geolocations) do
+    loc = params["profile"]["location"]
+    if loc && loc !="" && Utils.module_enabled?(Bonfire.Geolocate.Geolocations) do
       Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
     end
-
     user
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
@@ -348,6 +347,7 @@ defmodule Bonfire.Me.Users do
     repo().insert_all(Acl,    Enum.map(acls,    &Map.take(&1, [:id])))
     repo().insert_all(Circle, Enum.map(circles, &Map.take(&1, [:id])))
     repo().insert_all(Grant,  grants)
+    # TODO: encircles
     # Then the mixins
     repo().insert_all(Named,  named)
     repo().insert_all(Stereotype, stereotypes)
