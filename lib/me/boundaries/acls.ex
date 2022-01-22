@@ -96,7 +96,7 @@ defmodule Bonfire.Me.Acls do
   end
 
   defp changeset(:create, attrs, opts, :system), do: Acls.changeset(attrs)
-  defp changeset(:create, attrs, opts, %User{id: id}) do
+  defp changeset(:create, attrs, opts, %{id: id}) do
     Changeset.cast(%Acl{}, %{caretaker: %{caretaker_id: id}}, [])
     |> Acls.changeset(attrs)
   end

@@ -67,7 +67,7 @@ defmodule Bonfire.Me.Grants do
   end
 
   defp changeset(:create, attrs, opts, :system), do: Grants.changeset(attrs)
-  defp changeset(:create, attrs, opts, %User{id: id}) do
+  defp changeset(:create, attrs, opts, %{id: id}) do
     Changeset.cast(%Grant{}, %{caretaker: %{caretaker_id: id}}, [])
     |> Grants.changeset(attrs)
   end
