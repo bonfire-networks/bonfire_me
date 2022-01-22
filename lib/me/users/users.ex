@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Users do
   use Arrows
   alias ActivityPub.Actor
   alias Bonfire.Data.Identity.{Account, Named, User}
-  alias Bonfire.Data.AccessControl.{Acl, Circle, Grant, InstanceAdmin}
+  alias Bonfire.Data.AccessControl.{Acl, Controlled, Circle, Grant, InstanceAdmin}
   alias Bonfire.Me.{Characters, Profiles, Users, Users.Queries}
   alias Bonfire.Boundaries
   alias Bonfire.Boundaries.{Acls, Circles, Stereotype, Verbs}
@@ -207,8 +207,8 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  ## Changesets ############
 
+  ## Changesets ############
 
   @spec changeset(
     name :: changeset_name,
@@ -305,7 +305,6 @@ defmodule Bonfire.Me.Users do
       |> Map.put(:id, ULID.generate())
       |> stereotype(Acls)}
     end
-    # my_stereotypes = Map.fetch!(acls, :my_stereotypes)
     grants =
       for {acl, entries}  <- Map.fetch!(config, :grants),
           {circle, verbs} <- entries,
@@ -324,32 +323,28 @@ defmodule Bonfire.Me.Users do
           subject_id: default_subject_id(circles, user, circle),
         }, extra)
       end
+    controlleds = 
+      for {:SELF, acls2}  <- Map.fetch!(config, :controlleds),
+          acl <- acls2 do
+        %{id: user.id, acl_id: default_acl_id(acls, acl)}
+      end
     circles = Map.values(circles)
     acls = Map.values(acls)
-    # grants = grants ++
-    #   for thing <- acls ++ circles,
-    #       verb  <- [:see, :read] do
-    #     %{id:         ULID.generate(),
-    #       acl_id:     thing.id,
-    #       subject_id: user.id,
-    #       verb_id:    Verbs.get_id!(verb),
-    #       value:      true}
-    #   end
     named =
       (acls ++ circles)
       |> Enum.filter(&(&1[:name]))
       |> Enum.map(&Map.take(&1, [:id, :name]))
     stereotypes =
       (acls ++ circles)
-      |> Enum.filter(&(&1[:stereotype]))
-      |> Enum.map(&Map.take(&1, [:id, :name]))
+      |> Enum.filter(&(&1[:stereotype_id]))
+      |> Enum.map(&Map.take(&1, [:id, :stereotype_id]))
     # First the pointables
     repo().insert_all(Acl,    Enum.map(acls,    &Map.take(&1, [:id])))
     repo().insert_all(Circle, Enum.map(circles, &Map.take(&1, [:id])))
     repo().insert_all(Grant,  grants)
-    # TODO: encircles
     # Then the mixins
     repo().insert_all(Named,  named)
+    repo().insert_all(Controlled,  controlleds)
     repo().insert_all(Stereotype, stereotypes)
     Boundaries.take_care_of!([user] ++ acls ++ circles ++ grants, user)
   end
@@ -382,6 +377,14 @@ defmodule Bonfire.Me.Users do
       raise RuntimeError,
         message: "invalid circle given in new user boundaries config: #{inspect(circle_id)}"
     end
- end
+  end
+
+  def default_acl(name), do: default_acls()[:name] 
+
+  def default_acls() do
+    config()
+    |> Keyword.fetch!(:default_boundaries)
+    |> Map.fetch!(:acls)
+  end
 
 end
