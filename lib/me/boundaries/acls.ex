@@ -1,10 +1,11 @@
 defmodule Bonfire.Me.Acls do
-  use Bonfire.Common.Utils
 
+  use Arrows
+  use Bonfire.Common.Utils
   alias Bonfire.Data.AccessControl.Acl
   alias Bonfire.Data.Identity.User
-
   alias Bonfire.Boundaries.Acls
+  alias Bonfire.Me.Users
   import Bonfire.Boundaries.Queries
   import Bonfire.Me.Integration
   import Ecto.Query
@@ -12,7 +13,7 @@ defmodule Bonfire.Me.Acls do
   alias Ecto.Changeset
 
   def cast(changeset, creator, preset) do
-    base = base_acls(preset)
+    base = base_acls(creator, preset)
     custom_grants = reply_to_grants(changeset, preset) ++ mentions_grants(changeset, preset)
     acl = case custom_grants do
       [] ->
@@ -30,13 +31,46 @@ defmodule Bonfire.Me.Acls do
   end
 
   # when the user picks a preset, this maps to a set of base acls
-  defp base_acls(preset) do
+  defp base_acls(user, preset) do
     acls = case preset do
       "public" -> [:guests_may_see, :locals_may_reply, :i_may_administer]
       "local"  -> [:locals_may_reply, :i_may_administer]
       _        -> [:i_may_administer]
     end
-    |> Enum.map(&(%{acl_id: Acls.get_id!(&1)}))
+    |> find_acls(user)
+  end
+
+  defp find_acls(acls, user) do
+    acls =
+      acls
+      |> Enum.map(&identify/1)
+      |> Enum.group_by(&elem(&1, 0))
+    globals =
+      acls
+      |> Map.get(:global, [])
+      |> Enum.map(&elem(&1, 1))
+    stereo =
+      case Map.get(acls, :stereo, []) do
+        [] -> []
+        stereo ->
+          stereo
+          |> Enum.map(&elem(&1, 1))
+          |> Acls.find_caretaker_stereotypes(user.id, ...)
+          |> Enum.map(&(&1.id))
+      end
+    Enum.map(globals ++ stereo, &(%{acl_id: &1}))
+  end
+
+  defp identify(name) do
+    defaults = Users.default_acls()
+    case defaults[name] do
+      nil -> {:global, Acls.get_id!(name)}
+      default ->
+        case default[:stereotype] do
+          nil -> raise RuntimeError, message: "Unstereotyped user acl: #{inspect(name)}"
+          stereo -> {:stereo, Acls.get_id!(stereo)}
+        end
+    end
   end
 
   # defp acls(changeset, preset) do
