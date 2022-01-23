@@ -24,9 +24,6 @@ defmodule Bonfire.Me.Acls do
         # TODO: cast a new acl. this is slightly tricky because we
         # need to insert the acl with cast_assoc(:acl) while taking the rest
         # of the controlleds from the base maps
-        changeset
-        |> Changeset.cast(%{controlled: base}, [])
-        |> Changeset.cast_assoc(:controlled)
     end
   end
 
@@ -81,35 +78,46 @@ defmodule Bonfire.Me.Acls do
   # end
 
   defp reply_to_grants(changeset, preset) do
+    reply_to_creator = Utils.e(changeset, :changes, :replied, :changes, :replying_to, :created, :creator, nil)
 
-    debug(Utils.e(changeset, :changes, :replied, :replying_to, []), "TODO: creators of reply_to should be added to a new ACL")
+    if reply_to_creator do
+      debug(reply_to_creator, "TODO: creators of reply_to should be added to a new ACL")
 
-    case preset do
-      "public" ->
-        # TODO include all
+      case preset do
+        "public" ->
+          # TODO include all
+          []
+        "local" ->
+          # TODO include only if local
+          []
+        _ ->
         []
-      "local" ->
-        # TODO include only if local
-        []
-      _ ->
+      end
+    else
       []
     end
   end
 
   defp mentions_grants(changeset, preset) do
-    debug(Utils.e(changeset, :changes, :post_content, :changes, :mentions, []), "TODO: mentions/tags should be added to a new ACL")
+    mentions = Utils.e(changeset, :changes, :post_content, :changes, :mentions, nil)
 
-    case preset do
-      "public" ->
-        # TODO include all
+    if mentions && mentions !=[] do
+      debug(mentions, "TODO: mentions/tags should be added to a new ACL")
+
+      case preset do
+        "public" ->
+          # TODO include all
+          []
+        "mentions" ->
+          # TODO include all
+          []
+        "local" ->
+          # TODO include only if local
+          []
+        _ ->
         []
-      "mentions" ->
-        # TODO include all
-        []
-      "local" ->
-        # TODO include only if local
-        []
-      _ ->
+      end
+    else
       []
     end
   end
