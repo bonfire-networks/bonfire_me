@@ -18,20 +18,20 @@ defmodule Bonfire.Me.Boundaries do
     opts = [current_user: current_user]
     grant_subjects = Utils.ulid(circle_ids ++ [current_user]) #|> IO.inspect(label: "maybe_grant_access_to")
 
-    Logger.debug("Boundaries grant #{inspect verbs} on object #{inspect object_id} to #{inspect circle_ids}")
+    Logger.error("TODO: Refactor needed to grant #{inspect verbs} on object #{inspect object_id} to #{inspect grant_subjects}")
 
-    with {:ok, %{id: acl_id}} <- Bonfire.Me.Acls.create(opts),# |> IO.inspect(label: "acled"),
-    {:ok, _controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}), #|> IO.inspect(label: "ctled"),
-    {:ok, grant} <- Bonfire.Me.Grants.grant(grant_subjects, acl_id, verbs, true, opts) do
-      # IO.inspect(one_grant: grant)
-      {:ok, :granted}
-    else
-      grants when is_list(grants) -> # TODO: check for failures?
-        # IO.inspect(many_grants: grants)
-        {:ok, :granted}
+    # with {:ok, %{id: acl_id}} <- Bonfire.Me.Acls.create(opts),# |> IO.inspect(label: "acled"),
+    # {:ok, _controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}), #|> IO.inspect(label: "ctled"),
+    # {:ok, grant} <- Bonfire.Me.Grants.grant(grant_subjects, acl_id, verbs, true, opts) do
+    #   # IO.inspect(one_grant: grant)
+    #   {:ok, :granted}
+    # else
+    #   grants when is_list(grants) -> # TODO: check for failures?
+    #     # IO.inspect(many_grants: grants)
+    #     {:ok, :granted}
 
-      e -> {:error, e}
-    end
+    #   e -> {:error, e}
+    # end
   end
 
   def maybe_grant_access_to(current_user, %{id: object_id} = _object, circles, verbs) do
