@@ -5,6 +5,7 @@ defmodule Bonfire.Me.Acls do
   alias Pointers.ULID
   alias Bonfire.Data.AccessControl.{Acl, Controlled}
   alias Bonfire.Data.Identity.User
+  alias Bonfire.Me.Boundaries
   alias Bonfire.Boundaries.Acls
   alias Bonfire.Boundaries.Verbs
   alias Bonfire.Me.Users
@@ -30,8 +31,8 @@ defmodule Bonfire.Me.Acls do
   end
 
   # when the user picks a preset, this maps to a set of base acls
-  defp base_acls(user, preset) do
-    acls = case preset do
+  defp base_acls(user, preset_or_custom) do
+    acls = case Boundaries.preset(preset_or_custom) do
       "public" -> [:guests_may_see, :locals_may_reply, :i_may_administer]
       "local"  -> [:locals_may_reply, :i_may_administer]
       _        -> [:i_may_administer]
@@ -75,6 +76,7 @@ defmodule Bonfire.Me.Acls do
   defp acls(changeset, creator, preset_or_custom) do
     case custom_grants(changeset, preset_or_custom) do
       [] -> []
+
       custom_grants when is_list(custom_grants) ->
         acl_id = ULID.generate()
 
@@ -101,16 +103,18 @@ defmodule Bonfire.Me.Acls do
 
   defp custom_grants(changeset, preset_or_custom) do
     if is_list(preset_or_custom), do: preset_or_custom,
-    else: reply_to_grants(changeset, preset_or_custom) ++ mentions_grants(changeset, preset_or_custom)
+    else: reply_to_grants(changeset, preset_or_custom)
+          ++ mentions_grants(changeset, preset_or_custom)
+          ++ Boundaries.maybe_custom_circles_or_users(preset_or_custom)
   end
 
-  defp reply_to_grants(changeset, preset) do
+  defp reply_to_grants(changeset, preset_or_custom) do
     reply_to_creator = Utils.e(changeset, :changes, :replied, :changes, :replying_to, :created, :creator, nil)
 
     if reply_to_creator do
       debug(reply_to_creator, "TODO: creators of reply_to should be added to a new ACL")
 
-      case preset do
+      case Boundaries.preset(preset_or_custom) do
         "public" ->
           # TODO include all
           [ulid(reply_to_creator)]
@@ -126,13 +130,13 @@ defmodule Bonfire.Me.Acls do
     end
   end
 
-  defp mentions_grants(changeset, preset) do
+  defp mentions_grants(changeset, preset_or_custom) do
     mentions = Utils.e(changeset, :changes, :post_content, :changes, :mentions, nil)
 
     if mentions && mentions !=[] do
       debug(mentions, "TODO: mentions/tags should be added to a new ACL")
 
-      case preset do
+      case Boundaries.preset(preset_or_custom) do
         "public" ->
           ulid(mentions)
         "mentions" ->

@@ -5,6 +5,18 @@ defmodule Bonfire.Me.Boundaries do
 
   @visibility_verbs [:see, :read]
 
+  def preset(preset) when is_binary(preset), do: preset
+  def preset(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :preset)
+
+  def maybe_custom_circles_or_users(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :to_circles)
+
+  def maybe_custom_feeds(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :to_feeds)
+
+  def maybe_from_opts(preset_and_custom_boundary, key, fallback \\ []) when is_list(preset_and_custom_boundary) do
+    preset_and_custom_boundary[key] || fallback
+  end
+  def maybe_from_opts(_preset_and_custom_boundary, _key, fallback), do: fallback
+
   def maybe_compose_ad_hoc_acl(base_acl, user) do
   end
 
