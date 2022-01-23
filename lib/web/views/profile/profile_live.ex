@@ -186,14 +186,14 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     current_user = current_user(socket)
 
-     # feed = if user, do: Bonfire.Social.Activities.by_user(user)
-     feed_id = e(socket.assigns, :user, :id, nil)
+     feed_id = if current_user && module_enabled?(Bonfire.Social.Feeds), do: Bonfire.Social.Feeds.feed_id(:outbox, current_user)
      feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, socket)
     #  IO.inspect(feed: feed)
 
     {:noreply,
      assign(socket,
      selected_tab: "timeline",
+     feed_id: feed_id,
      feed: e(feed, :edges, []),
      page_info: e(feed, :page_info, [])
      )}
