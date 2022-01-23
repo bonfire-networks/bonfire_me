@@ -2,9 +2,11 @@ defmodule Bonfire.Me.Acls do
 
   use Arrows
   use Bonfire.Common.Utils
-  alias Bonfire.Data.AccessControl.Acl
+  alias Pointers.ULID
+  alias Bonfire.Data.AccessControl.{Acl, Controlled}
   alias Bonfire.Data.Identity.User
   alias Bonfire.Boundaries.Acls
+  alias Bonfire.Boundaries.Verbs
   alias Bonfire.Me.Users
   import Bonfire.Boundaries.Queries
   import Bonfire.Me.Integration
@@ -12,18 +14,18 @@ defmodule Bonfire.Me.Acls do
   import EctoSparkles
   alias Ecto.Changeset
 
-  def cast(changeset, creator, preset) do
-    base = base_acls(creator, preset)
-    custom_grants = reply_to_grants(changeset, preset) ++ mentions_grants(changeset, preset)
-    acl = case custom_grants do
+  def cast(changeset, creator, preset_or_custom) do
+    acl = case acls(changeset, creator, preset_or_custom) do
       [] ->
         changeset
-        |> Changeset.cast(%{controlled: base}, [])
+        |> Changeset.cast(%{controlled: base_acls(creator, preset_or_custom)}, [])
         |> Changeset.cast_assoc(:controlled)
-      _ ->
-        # TODO: cast a new acl. this is slightly tricky because we
-        # need to insert the acl with cast_assoc(:acl) while taking the rest
-        # of the controlleds from the base maps
+      custom ->
+        Logger.warn("WUP: cast a new custom acl for #{inspect custom} ") # this is slightly tricky because we need to insert the acl with cast_assoc(:acl) while taking the rest of the controlleds from the base maps
+        changeset
+        |> Changeset.cast(%{controlled: custom}, [])
+        |> Changeset.cast_assoc(:controlled, with: &Controlled.changeset/2)
+        # |> Changeset.cast_assoc(:acl)
     end
   end
 
@@ -70,12 +72,37 @@ defmodule Bonfire.Me.Acls do
     end
   end
 
-  # defp acls(changeset, preset) do
-  #   case mentions_grants(changeset, preset) do
-  #     [] -> base_acls(preset)
-  #     grants -> [%{acl: %{grants: grants}} | base_acls(preset)]
-  #   end
-  # end
+  defp acls(changeset, creator, preset_or_custom) do
+    case custom_grants(changeset, preset_or_custom) do
+      [] -> []
+      custom_grants when is_list(custom_grants) ->
+        acl_id = ULID.generate()
+
+        [
+          %{acl: %{acl_id: acl_id, grants: Enum.flat_map(custom_grants, &grant_to(&1, acl_id))}}
+          | base_acls(creator, preset_or_custom)
+        ]
+    end
+  end
+
+  defp grant_to(user_etc, acl_id) do
+    [:see, :read]
+    |> Enum.map(&grant_to(user_etc, acl_id, &1))
+  end
+
+  defp grant_to(user_etc, acl_id, verb) do
+    %{
+      acl_id: acl_id,
+      subject_id: user_etc,
+      verb_id: Verbs.get_id!(verb),
+      value: true
+    }
+  end
+
+  defp custom_grants(changeset, preset_or_custom) do
+    if is_list(preset_or_custom), do: preset_or_custom,
+    else: reply_to_grants(changeset, preset_or_custom) ++ mentions_grants(changeset, preset_or_custom)
+  end
 
   defp reply_to_grants(changeset, preset) do
     reply_to_creator = Utils.e(changeset, :changes, :replied, :changes, :replying_to, :created, :creator, nil)
@@ -86,10 +113,11 @@ defmodule Bonfire.Me.Acls do
       case preset do
         "public" ->
           # TODO include all
-          []
+          [ulid(reply_to_creator)]
         "local" ->
           # TODO include only if local
-          []
+          if check_local(reply_to_creator), do: [Utils.e(reply_to_creator, :id, nil)],
+          else: []
         _ ->
         []
       end
@@ -106,14 +134,15 @@ defmodule Bonfire.Me.Acls do
 
       case preset do
         "public" ->
-          # TODO include all
-          []
+          ulid(mentions)
         "mentions" ->
-          # TODO include all
-          []
+          ulid(mentions)
         "local" ->
-          # TODO include only if local
-          []
+          ( # include only if local
+            mentions
+            |> Enum.filter(&check_local/1)
+            |> ulid()
+          )
         _ ->
         []
       end
