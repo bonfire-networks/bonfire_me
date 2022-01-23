@@ -87,7 +87,7 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
      ++
      Enum.map(selected_circles, &Bonfire.Boundaries.Circles.get_tuple/1)
     )
-    |> Enum.filter(& &1) |> Enum.uniq()
+    |> Utils.filter_empty() |> Enum.uniq()
     # |> IO.inspect()
   end
 
