@@ -122,8 +122,7 @@ defmodule Bonfire.Me.Acls do
           # TODO include only if local
           if check_local(reply_to_creator), do: [Utils.e(reply_to_creator, :id, nil)],
           else: []
-        _ ->
-        []
+        _ -> []
       end
     else
       []

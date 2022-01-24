@@ -3,6 +3,8 @@ defmodule Bonfire.Me.Users do
   A User is a logical identity within the system belonging to an Account.
   """
   use Arrows
+  import Bonfire.Me.Integration
+  import Ecto.Query, only: [from: 2, limit: 2]
   alias ActivityPub.Actor
   alias Bonfire.Data.Identity.{Account, Named, User}
   alias Bonfire.Data.AccessControl.{Acl, Controlled, Circle, Grant, InstanceAdmin}
@@ -13,8 +15,6 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   alias Pointers.ULID
-  import Bonfire.Me.Integration
-  import Ecto.Query, only: [from: 2, limit: 2]
 
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
