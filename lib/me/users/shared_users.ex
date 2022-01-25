@@ -8,10 +8,8 @@ defmodule Bonfire.Me.SharedUsers do
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
 
-  alias Bonfire.Common.Utils
+  use Bonfire.Common.Utils
   import Bonfire.Common.Config, only: [repo: 0]
-  require Bonfire.Web.Gettext
-  import Bonfire.Web.Gettext.Helpers
   alias Ecto.Changeset
   import Ecto.Query
 
