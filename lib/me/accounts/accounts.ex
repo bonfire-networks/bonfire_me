@@ -81,8 +81,9 @@ defmodule Bonfire.Me.Accounts do
     do: signup(changeset(:signup, params, opts), opts)
 
   def signup(%Changeset{data: %Account{}}=cs, opts) do
-    special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
-    opts = Keyword.put_new(opts, :must_confirm?, not (Keyword.get(opts, :invite, false) && special_invite && Keyword.get(opts, :invite, false) == special_invite))
+    # special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
+    # opts = Keyword.put_new(opts, :must_confirm?, not (Keyword.get(opts, :invite, false) && special_invite 
+    # && Keyword.get(opts, :invite, false) == special_invite))
     opts = Keyword.put_new(opts, :must_confirm?, !opts[:invite] || (opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")))
     if cs.valid? do
       repo().transact_with fn -> # revert if email send fails
