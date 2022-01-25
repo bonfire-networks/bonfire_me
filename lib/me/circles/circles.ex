@@ -35,15 +35,13 @@ defmodule Bonfire.Me.Users.Circles do
   @doc """
   Lists the circles that we are permitted to see.
   """
-  def list_visible(%User{}=user) do
-    repo().many(list_visible_q(user))
-  end
+  def list_visible(%User{}=user), do: repo().many(list_visible_q(user))
 
   @doc "query for `list_visible`"
   def list_visible_q(%User{id: _}=user) do
     from(circle in Circle, as: :circle)
     |> boundarise(circle.id, [current_user: user])
-    |> proload(:named)
+    |> proload([:named, :caretaker])
   end
 
   @doc """
@@ -56,7 +54,6 @@ defmodule Bonfire.Me.Users.Circles do
   @doc "query for `list_my`"
   def list_my_q(%User{id: user_id}=user) do
     list_visible_q(user)
-    |> join(:inner, [circle: circle], caretaker in assoc(circle, :caretaker), as: :caretaker)
     |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
   end
 
@@ -91,7 +88,7 @@ defmodule Bonfire.Me.Users.Circles do
 
   def changeset(:update, circle, params) do
 
-    # Ecto doesn't liked mixed keys so we convert them all to strings
+    # Ecto doesn't like mixed keys so we convert them all to strings
     params = for {k, v} <- params, do: {to_string(k), v}, into: %{}
     # IO.inspect(params)
 

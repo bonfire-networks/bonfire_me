@@ -175,17 +175,18 @@ defmodule Bonfire.Me.Acls do
   end
 
   @doc """
-  Lists the ACLs permitted to see.
+  Lists ACLs we are permitted to see.
   """
   def list(opts) do
     list_q(opts)
-    |> preload(:named)
     |> repo().many()
   end
 
-  def list_q(opts), do: list_q(Keyword.fetch!(opts, :current_user), opts)
-  defp list_q(:system, opts), do: from(acl in Acl, as: :acl)
-  defp list_q(%User{}, opts), do: boundarise(list_q(:system, opts), acl.id, opts)
+  def list_q(opts) do
+    from(acl in Acl, as: :acl)
+    |> boundarise(acl.id, opts)
+    |> proload([:caretaker, :named, :stereotype])
+  end
 
   @doc """
   Lists the ACLs we are the registered caretakers of that we are
@@ -197,7 +198,6 @@ defmodule Bonfire.Me.Acls do
   @doc "query for `list_my`"
   def list_my_q(%{id: user_id}=user) do
     list_q(user)
-    |> join(:inner, [acl: acl], caretaker in assoc(acl, :caretaker), as: :caretaker)
     |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
   end
 

@@ -62,15 +62,15 @@ defmodule Bonfire.Me.Accounts do
 
   defp signup_changeset(params, opts) do
     %Account{}
-      |> Account.changeset(params)
-      |> Changeset.cast_assoc(:email, required: true, with: &Email.changeset(&1, &2, opts))
-      |> Changeset.cast_assoc(:credential, required: true)
+    |> Account.changeset(params)
+    |> Changeset.cast_assoc(:email, required: true, with: &Email.changeset(&1, &2, opts))
+    |> Changeset.cast_assoc(:credential, required: true)
   end
 
   defp invite_error_changeset do
     %Account{}
-      |> Account.changeset(%{})
-      |> Changeset.add_error(:form, "invite_only")
+    |> Account.changeset(%{})
+    |> Changeset.add_error(:form, "invite_only")
   end
 
   ### signup
