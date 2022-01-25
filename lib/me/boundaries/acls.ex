@@ -17,6 +17,7 @@ defmodule Bonfire.Me.Acls do
   alias Ecto.Changeset
 
   def cast(changeset, creator, preset_or_custom) do
+    debug(creator, "creator")
     acl = case acls(changeset, creator, preset_or_custom) do
       [] ->
         changeset
@@ -57,9 +58,12 @@ defmodule Bonfire.Me.Acls do
   end
 
   defp custom_grants(changeset, preset_or_custom) do
-    reply_to_grants(changeset, preset_or_custom)
-    ++ mentions_grants(changeset, preset_or_custom)
-    ++ Boundaries.maybe_custom_circles_or_users(preset_or_custom)
+    (
+      reply_to_grants(changeset, preset_or_custom)
+      ++ mentions_grants(changeset, preset_or_custom)
+      ++ Boundaries.maybe_custom_circles_or_users(preset_or_custom)
+    )
+    |> filter_empty([])
   end
 
   defp reply_to_grants(changeset, preset_or_custom) do
