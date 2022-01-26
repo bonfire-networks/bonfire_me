@@ -17,14 +17,14 @@ defmodule Bonfire.Me.Acls do
   alias Ecto.Changeset
 
   def cast(changeset, creator, preset_or_custom) do
-    debug(creator, "creator")
+    # debug(creator, "creator")
     acl = case acls(changeset, creator, preset_or_custom) do
       [] ->
         changeset
         |> Changeset.cast(%{controlled: base_acls(creator, preset_or_custom)}, [])
         |> Changeset.cast_assoc(:controlled)
       custom ->
-        Logger.warn("WIP: cast a new custom acl for #{inspect custom} ") # this is slightly tricky because we need to insert the acl with cast_assoc(:acl) while taking the rest of the controlleds from the base maps
+        debug(custom, "cast a new custom acl for") # this is slightly tricky because we need to insert the acl with cast_assoc(:acl) while taking the rest of the controlleds from the base maps
         changeset
         |> Changeset.cast(%{controlled: custom}, [])
         |> Changeset.cast_assoc(:controlled, with: &Controlled.changeset/2)

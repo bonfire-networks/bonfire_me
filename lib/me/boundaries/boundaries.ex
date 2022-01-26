@@ -10,8 +10,6 @@ defmodule Bonfire.Me.Boundaries do
 
   def maybe_custom_circles_or_users(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :to_circles)
 
-  def maybe_custom_feeds(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :to_feeds)
-
   def maybe_from_opts(preset_and_custom_boundary, key, fallback \\ []) when is_list(preset_and_custom_boundary) do
     preset_and_custom_boundary[key] || fallback
   end
