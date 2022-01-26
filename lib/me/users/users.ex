@@ -2,7 +2,6 @@ defmodule Bonfire.Me.Users do
   @doc """
   A User is a logical identity within the system belonging to an Account.
   """
-  use Arrows
   import Bonfire.Me.Integration
   import Ecto.Query, only: [from: 2, limit: 2]
   alias ActivityPub.Actor
@@ -15,6 +14,8 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   alias Pointers.ULID
+  use Arrows
+  use Bonfire.Common.Utils
 
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
@@ -142,6 +143,28 @@ defmodule Bonfire.Me.Users do
     |> post_mutate()
   end
 
+  @typedoc "Names a predefined feed attached to a user"
+  @type feed_name :: :inbox | :outbox | :notifications
+
+  defp feed_key(:inbox),  do: :inbox_id
+  defp feed_key(:outbox), do: :outbox_id
+  defp feed_key(:notifications), do: :notifications_id
+  defp feed_key(other), do: raise RuntimeException, message: "Unknown user feed name: #{inspect(other)}"
+
+  @spec feed_id!(User.t, feed_name) :: nil | ULID.t
+  @spec feed_id!(User.t, [feed_name]) :: [ULID.t]
+  def feed_id!(user, feed_name) do
+    cond do
+      is_atom(feed_name) ->
+        feed_key(feed_name)
+        |> e(repo().preload(user, :character), :character, ..., nil)
+      is_list(feed_name) ->
+        Enum.map(feed_name, &feed_id!(user, &1))
+        |> Enum.reject(&is_nil/1)
+      true -> 
+        raise RuntimeException, message: "Expected feed name, got #{inspect(feed_name)}"
+    end
+  end
 
   ## Delete
 
@@ -343,8 +366,8 @@ defmodule Bonfire.Me.Users do
     repo().insert_all(Circle, Enum.map(circles, &Map.take(&1, [:id])))
     repo().insert_all(Grant,  grants)
     # Then the mixins
-    repo().insert_all(Named,  named)
-    repo().insert_all(Controlled,  controlleds)
+    repo().insert_all(Named, named)
+    repo().insert_all(Controlled, controlleds)
     repo().insert_all(Stereotype, stereotypes)
     Boundaries.take_care_of!([user] ++ acls ++ circles ++ grants, user)
   end

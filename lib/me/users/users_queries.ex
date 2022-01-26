@@ -2,10 +2,12 @@ defmodule Bonfire.Me.Users.Queries do
 
   import Ecto.Query
   import Bonfire.Me.Integration
-
   # alias Bonfire.Me.Users
   alias Bonfire.Data.Identity.User
   alias Bonfire.Common.Utils
+  import EctoSparkles
+
+  use Arrows
 
   def queries_module, do: User
 
@@ -14,92 +16,64 @@ defmodule Bonfire.Me.Users.Queries do
 
   defp query(), do: from(u in User, as: :user)
 
-  def by_id(id) when is_binary(id) do
-    from u in User,
-      join: p in assoc(u, :profile),
-      join: c in assoc(u, :character),
-      left_join: pe in assoc(c, :peered),
-      left_join: a in assoc(c, :actor),
-      left_join: ac in assoc(u, :accounted),
-      left_join: ia in assoc(u, :instance_admin),
-      left_join: fc in assoc(c, :follow_count),
-      left_join: ic in assoc(p, :icon),
-      where: c.id == ^id,
-      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [actor: a,follow_count: fc, peered: pe]}, accounted: ac]
-  end
+  def by_id(id) when is_binary(id), do: proloads(from(u in User, as: :user, where: u.id == ^id))
 
   def by_username_or_id(username_or_id) do # OR ID
-    if Utils.is_ulid?(username_or_id) do
-      by_id(username_or_id)
-    else
-      by_username_query(username_or_id)
-    end
+    if Utils.is_ulid?(username_or_id),
+      do: by_id(username_or_id),
+      else: by_username_query(username_or_id)
   end
 
   def by_username_query(username) do
-    from u in User,
-      join: p in assoc(u, :profile),
-      join: c in assoc(u, :character),
-      left_join: pe in assoc(c, :peered),
-      left_join: a in assoc(c, :actor),
-      left_join: ac in assoc(u, :accounted),
-      left_join: ia in assoc(u, :instance_admin),
-      left_join: fc in assoc(c, :follow_count),
-      left_join: ic in assoc(p, :icon),
-      where: c.username == ^username,
-      preload: [instance_admin: ia, profile: {p, [icon: ic]}, character: {c, [actor: a,follow_count: fc, peered: pe]}, actor: a, accounted: ac]
+    from(u in User, as: :user)
+    |> proloads()
+    |> where([character: c], c.username == ^username)
+  end
+
+  defp proloads(query) do
+    query
+    |> proload(character: [:peered, :actor])
+    |> proloads(:local)
+  end
+
+  defp proloads(query, :local) do
+    proload query, [
+      :accounted, :instance_admin,
+      character: [:follow_count],
+      profile: [:icon],
+    ]
+  end
+
+  defp proloads(query, :minimal) do
+    proload query, [:instance_admin, :character]
   end
 
   def by_account(account_id) do
-    from u in User,
-      join: a in assoc(u, :accounted),
-      join: c in assoc(u, :character),
-      join: p in assoc(u, :profile),
-      left_join: ia in assoc(u, :instance_admin),
-      left_join: fc in assoc(c, :follow_count),
-      where: a.account_id == ^Utils.ulid(account_id),
-      preload: [instance_admin: ia, character: {c, [follow_count: fc]}, profile: p]
+    account_id = Utils.ulid(account_id)
+    from(u in User, as: :user)
+    |> proloads(:local)
+    |> where([accounted: a], a.account_id == ^account_id)
   end
 
   def by_username_and_account(username, account_id) do
     if Utils.module_enabled?(Bonfire.Data.SharedUser) and Utils.module_enabled?(Bonfire.Me.SharedUsers) do
       Bonfire.Me.SharedUsers.by_username_and_account_query(username, account_id)
     else
-      from u in User,
-        join: p in assoc(u, :profile),
-        join: c in assoc(u, :character),
-        join: a in assoc(u, :accounted),
-        left_join: fc in assoc(c, :follow_count),
-        left_join: ic in assoc(p, :icon),
-        where: c.username == ^username,
-        where: a.account_id == ^Utils.ulid(account_id),
-        preload: [profile: {p, [icon: ic]}, character: {c, [follow_count: fc]}, accounted: a],
-        order_by: [asc: u.id]
+      from(u in User, as: :user)
+      |> proloads(:local)
+      |> where([accounted: a], a.account_id == ^account_id)
+      |> where([character: c], c.username == ^username)
     end
   end
 
-  def current(user_id) do
-    from u in User,
-      left_join: c in assoc(u, :character),
-      join: ac in assoc(u, :accounted),
-      join: a in assoc(ac, :account),
-      left_join: p in assoc(u, :profile),
-      left_join: ia in assoc(u, :instance_admin),
-      left_join: fc in assoc(c, :follow_count),
-      left_join: ic in assoc(p, :icon),
-      where: u.id == ^Utils.ulid(user_id),
-      preload: [instance_admin: ia, character: {c, [follow_count: fc]}, accounted: {ac, account: a}, profile: {p, [icon: ic]}]
-  end
+  def current(user_id), do: by_id(user_id)
 
-  def count() do
-    repo().one(from p in User, select: count(p.id))
-  end
+  def count(), do: repo().one(from p in User, select: count(p.id))
 
-  def admins() do
-    from a in User,
-      left_join: ia in assoc(a, :instance_admin),
-      where: ia.is_instance_admin == true,
-      preload: [instance_admin: ia]
+  def admins(proloads \\ :minimal) do
+    from(u in User, as: :user)
+    |> proloads(proloads)
+    |> where([instance_admin: ia], ia.is_instance_admin == true)
   end
 
   def list() do
