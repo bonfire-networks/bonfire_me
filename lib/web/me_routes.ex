@@ -13,6 +13,7 @@ defmodule Bonfire.Me.Web.Routes do
         live "/@:username", ProfileLive, as: Bonfire.Data.Identity.Character
         live "/profile/:id", ProfileLive, as: Bonfire.Data.Social.Profile
 
+        live "/", ProfileLive, as: Bonfire.Data.Identity.User
         live "/user/:username/:tab", ProfileLive
         live "/user/:username/posts", PostsLive
 

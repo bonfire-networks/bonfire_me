@@ -114,15 +114,18 @@ defmodule Bonfire.Me.Users do
   # this is where we are very careful to explicitly set all the things
   # a user should have but shouldn't have control over the input for.
   defp override(changeset, :create, %Account{}=account, params) do
-    %{accounted: %{account_id: account.id},
-      encircles: [%{circle_id: Circles.circles().local.id}]}
+    %{
+      accounted: %{account_id: account.id},
+      encircles: [%{circle_id: Circles.circles().local.id}]
+    }
     |> Changeset.cast(changeset, ..., [])
   end
   # TODO: does ap use the inbox?
   defp override(changeset, :create, :remote, _params) do
-    Changeset.cast changeset, %{
+    %{
       encircles: [%{circle_id: Circles.circles().activity_pub.id}]
-    }, []
+    }
+    |> Changeset.cast(changeset, ..., [])
   end
 
   def get_only_in_account(%Account{id: id}) do
@@ -238,7 +241,7 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:instance_admin)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
-    # |> IO.inspect(label: "Users.changeset(:create, ...")
+    # |> debug("create with account")
   end
 
   def changeset(:create, user, params, :remote) do
