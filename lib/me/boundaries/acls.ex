@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Acls do
         |> Changeset.cast(%{controlled: base_acls(creator, preset_or_custom)}, [])
         |> Changeset.cast_assoc(:controlled)
       custom ->
-        debug(custom, "cast a new custom acl for") # this is slightly tricky because we need to insert the acl with cast_assoc(:acl) while taking the rest of the controlleds from the base maps
+        # debug(custom, "cast a new custom acl for") # this is slightly tricky because we need to insert the acl with cast_assoc(:acl) while taking the rest of the controlleds from the base maps
         changeset
         |> Changeset.cast(%{controlled: custom}, [])
         |> Changeset.cast_assoc(:controlled, with: &Controlled.changeset/2)
@@ -37,7 +37,7 @@ defmodule Bonfire.Me.Acls do
       [] -> []
 
       custom_grants when is_list(custom_grants) ->
-        debug(custom_grants)
+        # debug(custom_grants)
         acl_id = ULID.generate()
 
         [

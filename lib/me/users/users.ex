@@ -143,28 +143,7 @@ defmodule Bonfire.Me.Users do
     |> post_mutate()
   end
 
-  @typedoc "Names a predefined feed attached to a user"
-  @type feed_name :: :inbox | :outbox | :notifications
 
-  defp feed_key(:inbox),  do: :inbox_id
-  defp feed_key(:outbox), do: :outbox_id
-  defp feed_key(:notifications), do: :notifications_id
-  defp feed_key(other), do: raise RuntimeException, message: "Unknown user feed name: #{inspect(other)}"
-
-  @spec feed_id!(User.t, feed_name) :: nil | ULID.t
-  @spec feed_id!(User.t, [feed_name]) :: [ULID.t]
-  def feed_id!(user, feed_name) do
-    cond do
-      is_atom(feed_name) ->
-        feed_key(feed_name)
-        |> e(repo().preload(user, :character), :character, ..., nil)
-      is_list(feed_name) ->
-        Enum.map(feed_name, &feed_id!(user, &1))
-        |> Enum.reject(&is_nil/1)
-      true -> 
-        raise RuntimeException, message: "Expected feed name, got #{inspect(feed_name)}"
-    end
-  end
 
   ## Delete
 
@@ -346,7 +325,7 @@ defmodule Bonfire.Me.Users do
           subject_id: default_subject_id(circles, user, circle),
         }, extra)
       end
-    controlleds = 
+    controlleds =
       for {:SELF, acls2}  <- Map.fetch!(config, :controlleds),
           acl <- acls2 do
         %{id: user.id, acl_id: default_acl_id(acls, acl)}
@@ -402,7 +381,7 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  def default_acl(name), do: default_acls()[:name] 
+  def default_acl(name), do: default_acls()[:name]
 
   def default_acls() do
     config()

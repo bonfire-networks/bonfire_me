@@ -13,6 +13,7 @@ defmodule Bonfire.Me.Characters do
   @username_regex ~r(^[a-z0-9_]{2,63}$)i
 
   def by_username(username) when is_binary(username), do: by_username_q(username) |> repo().single()
+  def get(ids) when is_list(ids), do: {:ok, q_by_id(ids) |> repo().many()}
   def get(id), do: q_by_id(id) |> repo().single()
 
   def by_username_q(username) do
@@ -21,6 +22,15 @@ defmodule Bonfire.Me.Characters do
       left_join: pe in assoc(c, :peered),
       left_join: a in assoc(c, :actor),
       where: c.username == ^username,
+      preload: [peered: pe, profile: p, actor: a]
+  end
+
+  def q_by_id(ids) when is_list(ids) do
+    from c in Character,
+      left_join: p in assoc(c, :profile),
+      left_join: pe in assoc(c, :peered),
+      left_join: a in assoc(c, :actor),
+      where: c.id in ^ids,
       preload: [peered: pe, profile: p, actor: a]
   end
 
