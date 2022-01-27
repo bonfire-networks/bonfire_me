@@ -5,6 +5,7 @@ defmodule Bonfire.Me.Characters do
   alias Bonfire.Common.Utils
   import Bonfire.Me.Integration
   import Ecto.Query
+  use Arrows
 
   def context_module, do: Character
 
@@ -55,23 +56,6 @@ defmodule Bonfire.Me.Characters do
     repo().delete_all(from c in Character, where: c.username_hash == ^hash)
   end
 
-  def changeset(char \\ %Character{}, params)
-
-  def changeset(char, %{"username" => username} = params) when is_binary(username) do
-    do_changeset(
-      char,
-      Map.put(params, "username", clean_username(username))
-    )
-  end
-
-  def changeset(char, %{username: username} = params) when is_binary(username) do
-    do_changeset(
-      char,
-      Map.put(params, :username, clean_username(username))
-    )
-  end
-
-  def changeset(char, params), do: do_changeset(char, params)
 
   def remote_changeset(char, params), do: do_remote_changeset(char, params)
 
@@ -81,39 +65,39 @@ defmodule Bonfire.Me.Characters do
     |> String.trim("_")
   end
 
-  defp do_changeset(char \\ %Character{}, params)
-
-  defp do_changeset(%Character{id: _} = char, params) do # update
-    char = repo().maybe_preload(char, [:actor, :outbox, :inbox, :notifications])
-
-    params =
-    if Utils.e(char, :actor, nil) do
-      params
-      |> Map.merge(%{"actor" => %{"id"=> Utils.e(char, :actor, :id, nil)}}, fn _, a, b -> Map.merge(a, b) end)
-    else
-      params
+  def changeset(char \\ %Character{}, params, profile \\ :local) do
+    case char.__meta__.state do
+      :built ->
+        char
+        |> Character.changeset(params, :hash)
+        |> Changeset.validate_format(:username, @username_regex)
+        |> changeset_common()
+      :loaded ->
+        char = repo().maybe_preload(char, [:actor, :outbox, :inbox, :notifications])
+        if Utils.e(char, :actor, nil) do
+          %{"actor" => %{"id"=> Utils.e(char, :actor, :id, nil)}}
+          |> Map.merge(params, ..., fn _, a, b -> Map.merge(a, b) end)
+        else
+          params
+        end
+        |> Utils.input_to_atoms()
+        |> Character.changeset(char, ..., :update)
+        |> changeset_common()
+      :deleted ->
+        raise RuntimeError, message: "deletion unimplemented"
     end
-    |> Utils.input_to_atoms()
+  end
 
-    char
-    |> Character.changeset(params, :update)
+  defp changeset_common(changeset) do
+    changeset
+    |> Changeset.update_change(:username, &clean_username/1)
     |> Changeset.validate_format(:username, @username_regex)
     |> Changeset.cast_assoc(:actor)
   end
 
-  defp do_changeset(%Character{} = char, params) do # create
-    # IO.inspect(username_regex: @username_regex)
+  defp do_changeset(char \\ %Character{}, params)
 
-    char
-    |> Character.changeset(params, :hash)
-    |> Changeset.validate_format(:username, @username_regex)
-    |> Changeset.cast(%{
-      # feed: %{},
-      follow_count: %{follower_count: 0, followed_count: 0},
-    }, [])
-    # |> Changeset.cast_assoc(:feed)
-    |> Changeset.cast_assoc(:follow_count)
-    |> Changeset.cast_assoc(:actor)
+  defp do_changeset(%Character{} = char, params) do
   end
 
   defp do_remote_changeset(%Character{id: _} = char, params) do # update
