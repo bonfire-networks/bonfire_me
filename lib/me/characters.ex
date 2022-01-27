@@ -84,7 +84,7 @@ defmodule Bonfire.Me.Characters do
   defp do_changeset(char \\ %Character{}, params)
 
   defp do_changeset(%Character{id: _} = char, params) do # update
-    char = repo().maybe_preload(char, [:actor])
+    char = repo().maybe_preload(char, [:actor, :outbox, :inbox, :notifications])
 
     params =
     if Utils.e(char, :actor, nil) do
@@ -96,7 +96,7 @@ defmodule Bonfire.Me.Characters do
     |> Utils.input_to_atoms()
 
     char
-    |> Character.changeset(params, :hash)
+    |> Character.changeset(params, :update)
     |> Changeset.validate_format(:username, @username_regex)
     |> Changeset.cast_assoc(:actor)
   end
