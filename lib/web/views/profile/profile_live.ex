@@ -56,7 +56,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
           selected_tab: "timeline",
           smart_input: true,
           has_private_tab: true,
-          search_placholder: search_placeholder,
           feed_title: l( "User timeline"),
           user: user, # the user to display
           feed: [],
@@ -64,6 +63,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
         )
       |> assign_global(
         # following: following || [],
+        search_placholder: search_placeholder,
         smart_input_placeholder: smart_input_placeholder,
         smart_input_text: smart_input_text,
         to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
@@ -80,7 +80,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def get_user(username) do
     with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
       user
-    else _ ->
+    else _ -> # handle other character types beyond User
        with {:ok, character} <- Bonfire.Me.Characters.by_username(username) do
         Bonfire.Common.Pointers.get!(character.id) # FIXME? this results in extra queries
       else _ ->
@@ -90,9 +90,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   def do_handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
-    current_user = current_user(socket)
+    user = e(socket, :assigns, :user, nil)
 
-    feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
+    feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(user, socket) #|> IO.inspect
 
     {:noreply,
      assign(socket,
@@ -103,9 +103,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   def do_handle_params(%{"tab" => "boosts" = tab} = _params, _url, socket) do
-    current_user = current_user(socket)
+    user = e(socket, :assigns, :user, nil)
 
-    feed = if module_enabled?(Bonfire.Social.Boosts), do: Bonfire.Social.Boosts.list_by(e(socket.assigns, :user, :id, nil), current_user) #|> IO.inspect
+    feed = if module_enabled?(Bonfire.Social.Boosts), do: Bonfire.Social.Boosts.list_by(user, socket) #|> debug("boosts")
 
     {:noreply,
       assign(socket,
@@ -115,9 +115,21 @@ defmodule Bonfire.Me.Web.ProfileLive do
       )}
   end
 
-  def do_handle_params(%{"tab" => "timeline" = _tab} = _params, _url, socket) do
+  def do_handle_params(%{"tab" => "timeline" = tab} = _params, _url, socket) do
 
-    do_handle_params(%{}, nil, socket)
+    user = e(socket, :assigns, :user, nil)
+
+    feed_id = if user && module_enabled?(Bonfire.Social.Feeds), do: Bonfire.Social.Feeds.feed_id(:outbox, user)
+    feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, socket)
+  #  IO.inspect(feed: feed)
+
+  {:noreply,
+    assign(socket,
+    selected_tab: tab,
+    feed_id: feed_id,
+    feed: e(feed, :edges, []),
+    page_info: e(feed, :page_info, [])
+    )}
   end
 
   def do_handle_params(%{"tab" => "private" =tab} = _params, _url, socket) do
@@ -141,14 +153,15 @@ defmodule Bonfire.Me.Web.ProfileLive do
       smart_input_placeholder: smart_input_placeholder,
       smart_input_text: smart_input_text,
       to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}],
-      create_activity_type: "message"
+      create_activity_type: :message
     )
     }
   end
 
 
   def do_handle_params(%{"tab" => "followers" =tab} = _params, _url, socket) do
-    followers = Bonfire.Social.Follows.list_followers(e(socket, :assigns, :user, nil), current_user(socket)) |> IO.inspect(label: tab)
+    user = e(socket, :assigns, :user, nil)
+    followers = Bonfire.Social.Follows.list_followers(user, socket) |> debug("followers")
 
     {:noreply,
     assign(socket,
@@ -160,7 +173,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
 
   def do_handle_params(%{"tab" => "followed" =tab} = _params, _url, socket) do
-    followed = Bonfire.Social.Follows.list_followed(e(socket, :assigns, :user, nil), current_user(socket)) |> IO.inspect(label: tab)
+    user = e(socket, :assigns, :user, nil)
+    followed = Bonfire.Social.Follows.list_followed(user, socket) |> debug("followed")
 
     {:noreply,
     assign(socket,
@@ -172,31 +186,16 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
 
   def do_handle_params(%{"tab" => tab} = _params, _url, socket) do
-
-    smart_input_placeholder = if e(socket, :assigns, :current_user, :character, :username, "") == e(socket, :assigns, :user, :character, :username, ""), do: l( "Write something public..."), else: l("Write something for ") <> e(socket, :assigns, :user, :profile, :name, l "this person")
-
+    # something that may be added by another extension?
     {:noreply,
      assign(socket,
        selected_tab: tab,
-       smart_input_placeholder: smart_input_placeholder
      )}
   end
 
   def do_handle_params(%{} = _params, _url, socket) do
-
-    current_user = current_user(socket)
-
-     feed_id = if current_user && module_enabled?(Bonfire.Social.Feeds), do: Bonfire.Social.Feeds.feed_id(:outbox, current_user)
-     feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, socket)
-    #  IO.inspect(feed: feed)
-
-    {:noreply,
-     assign(socket,
-     selected_tab: "timeline",
-     feed_id: feed_id,
-     feed: e(feed, :edges, []),
-     page_info: e(feed, :page_info, [])
-     )}
+    # default tab
+    do_handle_params(%{"tab" => "timeline"}, nil, socket)
   end
 
   def handle_params(params, uri, socket) do

@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
           user: user, # the user to display
         )
       |> assign_global(
-        create_activity_type: "message",
+        create_activity_type: :message,
         smart_input_placeholder: l("Note to self..."),
         smart_input_text: smart_input_text,
         to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
