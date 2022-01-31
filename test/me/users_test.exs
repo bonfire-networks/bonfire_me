@@ -39,13 +39,13 @@ defmodule Bonfire.Me.UsersTest do
     # # first user is always admin
     # assert {:ok, account} = Accounts.signup(Fake.signup_form())
     # assert {:ok, first_user} = Users.create(Fake.create_user_form(), account)
-    # assert Users.is_admin(first_user)
+    # assert Users.is_admin?(first_user)
 
     assert {:ok, account} = Accounts.signup(Fake.signup_form())
     assert {:ok, second_user} = Users.create(Fake.create_user_form(), account)
-    refute Users.is_admin(second_user)
+    refute Users.is_admin?(second_user)
     assert Users.make_admin(second_user).instance_admin.is_instance_admin
     assert {:ok, second_user} = Users.by_id(second_user.id)
-    assert Users.is_admin(second_user)
+    assert Users.is_admin?(second_user)
   end
 end

@@ -69,8 +69,8 @@ defmodule Bonfire.Me.Users do
     |> Map.merge(user, user.character)
   end
 
-  def is_admin(%User{} = user), do: Utils.e(user, :instance_admin, :is_instance_admin, false)
-  def is_admin(_), do: false
+  def is_admin?(%User{} = user), do: Utils.e(user, :instance_admin, :is_instance_admin, false)
+  def is_admin?(_), do: false
 
   ### Mutations
 
@@ -99,17 +99,26 @@ defmodule Bonfire.Me.Users do
 
   @doc "Grants a user superpowers."
   def make_admin(username) when is_binary(username) do
-    with {:ok, user} <- by_username(username) do
-      make_admin(user)
-    end
+    by_username(username)
+    ~> make_admin()
   end
-  def make_admin(%User{}=user) do
+  def make_admin(%User{}=user), do: update_is_admin(user, true)
+
+  @doc "Revokes a user's superpowers."
+  def revoke_admin(username) when is_binary(username) do
+    by_username(username)
+    ~> revoke_admin()
+  end
+  def revoke_admin(%User{}=user), do: update_is_admin(user, false)
+
+  defp update_is_admin(%User{}=user, make_admin?) do
     user
     |> repo().preload(:instance_admin)
-    |> Changeset.cast(%{instance_admin: %{is_instance_admin: true}}, [])
+    |> Changeset.cast(%{instance_admin: %{is_instance_admin: make_admin?}}, [])
     |> Changeset.cast_assoc(:instance_admin)
-    |> repo().update!()
+    |> repo().update()
   end
+
 
   # this is where we are very careful to explicitly set all the things
   # a user should have but shouldn't have control over the input for.

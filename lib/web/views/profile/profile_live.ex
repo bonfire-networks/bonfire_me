@@ -39,14 +39,14 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
       # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> IO.inspect(label: "following")
 
-      page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
+      page_title = if current_username == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
 
-      smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write something public..."), else: l("Write something for ") <> e(user, :profile, :name, l("this person"))
+      smart_input_placeholder = if current_username == e(user, :character, :username, ""), do: l( "Write something..."), else: l("Write something for ") <> e(user, :profile, :name, l("this person"))
 
-      smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do:
+      smart_input_text = if current_username == e(user, :character, :username, ""), do:
       "", else: "@"<>e(user, :character, :username, "")<>" "
 
-      search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: "Search my profile", else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
+      search_placeholder = if current_username == e(user, :character, :username, ""), do: "Search my profile", else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
 
       {:ok,
         socket
@@ -126,9 +126,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(user, :profile, :name, l "this person")
 
-    smart_input_text = if e(current_user, :character, :username, "") == e(user, :character, :username, ""),
-    do: "",
-    else: "@"<>e(user, :character, :username, "")<>" "
+    smart_input_text = if e(current_user, :character, :username, nil) != e(user, :character, :username, nil),
+    do: "@"<>e(user, :character, :username, "")<>" ",
+    else: ""
 
     feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> IO.inspect(label: "messages")
 
