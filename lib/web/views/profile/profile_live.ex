@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
       page_title = if current_username == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
 
-      smart_input_placeholder = if current_username == e(user, :character, :username, ""), do: l( "Write something..."), else: l("Write something for ") <> e(user, :profile, :name, l("this person"))
+      smart_input_prompt = if current_username == e(user, :character, :username, ""), do: l( "Write something..."), else: l("Write something for ") <> e(user, :profile, :name, l("this person"))
 
       smart_input_text = if current_username == e(user, :character, :username, ""), do:
       "", else: "@"<>e(user, :character, :username, "")<>" "
@@ -64,7 +64,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
       |> assign_global(
         # following: following || [],
         search_placholder: search_placeholder,
-        smart_input_placeholder: smart_input_placeholder,
+        smart_input_prompt: smart_input_prompt,
         smart_input_text: smart_input_text,
         to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
       )}
@@ -136,7 +136,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     current_user = current_user(socket)
     user = e(socket, :assigns, :user, nil)
 
-    smart_input_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(user, :profile, :name, l "this person")
+    smart_input_prompt = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(user, :profile, :name, l "this person")
 
     smart_input_text = if e(current_user, :character, :username, nil) != e(user, :character, :username, nil),
     do: "@"<>e(user, :character, :username, "")<>" ",
@@ -150,7 +150,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
        feed: e(feed, :edges, []),
      )
     |> assign_global(
-      smart_input_placeholder: smart_input_placeholder,
+      smart_input_prompt: smart_input_prompt,
       smart_input_text: smart_input_text,
       to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}],
       create_activity_type: :message
