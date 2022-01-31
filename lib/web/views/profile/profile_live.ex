@@ -66,7 +66,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
         search_placholder: search_placeholder,
         smart_input_prompt: smart_input_prompt,
         smart_input_text: smart_input_text,
-        to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
+        # to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
       )}
     else
       {:ok,

@@ -26,4 +26,6 @@ defmodule Bonfire.Me.Web.CreateUserLive do
 
   defp user_form(params \\ %{}, account), do: Users.changeset(:create, params, account)
 
+  def handle_event(action, attrs, socket), do: Bonfire.Common.LiveHandlers.handle_event(action, attrs, socket, __MODULE__)
+  def handle_info(info, socket), do: Bonfire.Common.LiveHandlers.handle_info(info, socket, __MODULE__)
 end
