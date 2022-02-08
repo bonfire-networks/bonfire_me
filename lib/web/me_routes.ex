@@ -26,7 +26,7 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :browser
         pipe_through :guest_only
         resources "/signup", SignupController, only: [:index, :create], as: :signup
-        resources "/signup/invitation/:invite", SignupController, only: [:index, :create]
+        resources "/signup/invitation/:invite", SignupController, only: [:index, :create], as: :invite
         resources "/signup/email/confirm", ConfirmEmailController, only: [:index, :create, :show]
         resources "/signup/email/confirm/:id", ConfirmEmailController, only: [:show]
         resources "/login", LoginController, only: [:index, :create], as: :login
