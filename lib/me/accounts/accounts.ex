@@ -14,6 +14,7 @@ defmodule Bonfire.Me.Accounts do
   alias Bonfire.Me.Users
   alias Ecto.Changeset
   import Bonfire.Me.Integration
+  alias Bonfire.Common.Utils
   require Logger
 
   def get_current(nil), do: nil
@@ -45,12 +46,7 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-
-    valid_invite = System.get_env("INVITE_KEY")
-    special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
-
-    if not instance_is_invite_only? || opts[:invite] == valid_invite || opts[:invite] == special_invite || is_first_account? do
-
+    if valid_invite_provided?(opts) do
       signup_changeset(
         params,
         opts
@@ -67,12 +63,6 @@ defmodule Bonfire.Me.Accounts do
     |> Changeset.cast_assoc(:credential, required: true)
   end
 
-  defp invite_error_changeset do
-    %Account{}
-    |> Account.changeset(%{})
-    |> Changeset.add_error(:form, "invite_only")
-  end
-
   ### signup
 
   def signup(params_or_changeset, opts \\ [])
@@ -82,12 +72,13 @@ defmodule Bonfire.Me.Accounts do
 
   def signup(%Changeset{data: %Account{}}=cs, opts) do
     # special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
-    # opts = Keyword.put_new(opts, :must_confirm?, not (Keyword.get(opts, :invite, false) && special_invite 
+    # opts = Keyword.put_new(opts, :must_confirm?, not (Keyword.get(opts, :invite, false) && special_invite
     # && Keyword.get(opts, :invite, false) == special_invite))
     opts = Keyword.put_new(opts, :must_confirm?, !opts[:invite] || (opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")))
     if cs.valid? do
       repo().transact_with fn -> # revert if email send fails
         repo().insert(cs)
+        ~> maybe_redeem_invite(opts)
         ~> maybe_send_confirm_email(opts)
       end
     else
@@ -291,6 +282,40 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
+  ### invites
+
+  def instance_is_invite_only? do
+    Config.get(:env) != :test
+    and
+    System.get_env("INVITE_ONLY", "true") in ["true", true]
+  end
+
+  def valid_invite_provided?(opts) do
+    valid_invite = System.get_env("INVITE_KEY")
+    special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
+
+    not instance_is_invite_only? || opts[:invite] in [valid_invite, special_invite] || redeemable_invite?(opts[:invite]) || is_first_account?
+  end
+
+  def redeemable_invite?(invite) do
+    if Utils.module_enabled?(Bonfire.Invite.Links) and Utils.module_enabled?(Bonfire.InviteLink) do
+      Bonfire.Invite.Links.redeemable?(invite)
+    end
+  end
+
+  def maybe_redeem_invite(data, opts) do
+    if Utils.module_enabled?(Bonfire.Invite.Links) and Utils.module_enabled?(Bonfire.InviteLink) do
+      Bonfire.Invite.Links.redeem(opts[:invite])
+    end
+    data
+  end
+
+  defp invite_error_changeset do
+    %Account{}
+    |> Account.changeset(%{})
+    |> Changeset.add_error(:form, "invite_only")
+  end
+
 
   ## misc
 
@@ -301,12 +326,5 @@ defmodule Bonfire.Me.Accounts do
   def is_first_account? do
     Queries.count() <1
   end
-
-  def instance_is_invite_only? do
-    Config.get(:env) != :test
-    and
-    System.get_env("INVITE_ONLY", "true") in ["true", true]
-  end
-
 
 end
