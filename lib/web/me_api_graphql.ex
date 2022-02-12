@@ -236,7 +236,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp all_flags(%User{} = user, args, info) do
-    Bonfire.Social.Flags.list_paginated(user)
+    Bonfire.Social.Flags.list_paginated([], current_user: user)
     |> feed()
   end
 
