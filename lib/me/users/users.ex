@@ -191,8 +191,13 @@ defmodule Bonfire.Me.Users do
 
   @doc "Creates a remote user"
   def create_remote(params) do
-    changeset(:create, %User{}, params, :remote)
-    |> repo().insert()
+    with {:ok, user} <- repo().insert(changeset(:create, %User{}, params, :remote)) do
+      user
+      |> repo().preload(:controlled)
+      |> User.changeset(%{})
+      |> Bonfire.Me.Acls.cast(user, "public")
+      |> repo().update()
+    end
   end
 
 
