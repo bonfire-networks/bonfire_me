@@ -13,6 +13,10 @@ defmodule Bonfire.Me.API.GraphQL do
     field(:profile, :profile)
     field(:character, :character)
 
+    field(:is_instance_admin, :boolean) do
+      resolve fn user, _, _ -> {:ok, Users.is_admin?(user)} end
+    end
+
     field :posts, list_of(:post) do
       arg :paginate, :paginate # TODO
 
@@ -190,7 +194,7 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve(&update_user/2)
     end
 
-    @desc "Share the current user identity with a team member. This will give them full access to the currently authenticated user identity. Warning: anyone you add will have admin-level access over this user identity, meaning they can post as this user, read private messages, etc."
+    @desc "Share the current user identity with a team member. This will give them full access to the currently authenticated user identity. Warning: anyone you add will have full access over this user identity, meaning they can post as this user, read private messages, etc."
     field :add_team_member, :string do
       @desc "Who to add (they need to be an existing user on this instance)"
       arg(:username_or_email, non_null(:string))

@@ -47,10 +47,11 @@ defmodule Bonfire.Me.Web.SettingsLive do
     if user && entry.done? do
       with {:ok, uploaded_media} <-
         consume_uploaded_entry(socket, entry, fn %{path: path} = meta ->
-          # IO.inspect(meta)
+          debug(meta, "icon consume_uploaded_entry meta")
           Bonfire.Files.IconUploader.upload(user, path)
+          |> debug("uploaded")
         end),
-        Bonfire.Me.Users.update(user, %{"profile"=> %{"icon"=> uploaded_media, "icon_id"=> uploaded_media.id}}) do
+        Bonfire.Me.Users.update(user, %{"profile"=> %{"icon"=> uploaded_media, "icon_id"=> uploaded_media.id}}) |> debug("updated") do
           # IO.inspect(uploaded_media)
           {:noreply, socket
           |> assign(current_user: deep_merge(user, %{profile: %{icon: uploaded_media}}))
@@ -69,8 +70,9 @@ defmodule Bonfire.Me.Web.SettingsLive do
     if user && entry.done? do
       with {:ok, uploaded_media} <-
         consume_uploaded_entry(socket, entry, fn %{path: path} = meta ->
-          # IO.inspect(meta)
+          debug(meta, "image consume_uploaded_entry meta")
           Bonfire.Files.ImageUploader.upload(user, path)
+          |> debug("uploaded")
         end),
         Bonfire.Me.Users.update(user, %{"profile"=> %{"image"=> uploaded_media, "image_id"=> uploaded_media.id}}) do
           # IO.inspect(uploaded_media)
