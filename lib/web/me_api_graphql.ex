@@ -122,10 +122,10 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve &get_user/3
     end
 
-    @desc "Get information about and for the current user"
+    @desc "Get information about and for the current account and/or user"
     field :me, :me do
 
-      resolve &get_user/2
+      resolve &get_me/3
     end
 
   end
@@ -221,15 +221,14 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp get_user(_parent, args, info) do
-    # IO.inspect(args: args)
     {:ok, GraphQL.current_user(info)}
   end
 
-  defp get_user(_args, info) do
-    {:ok, GraphQL.current_user(info)}
+  defp get_me(_parent, _args, info) do
+    {:ok, GraphQL.current_user(info) || GraphQL.current_account(info)}
   end
 
-  defp my_feed(%User{} = parent, args, info) do
+  defp my_feed(%{} = parent, args, _info) do
     Bonfire.Social.FeedActivities.my_feed(parent)
     |> feed()
   end
@@ -239,8 +238,8 @@ defmodule Bonfire.Me.API.GraphQL do
     |> feed()
   end
 
-  defp all_flags(%User{} = user, args, info) do
-    Bonfire.Social.Flags.list_paginated([], current_user: user)
+  defp all_flags(%{} = user_or_account, args, info) do
+    Bonfire.Social.Flags.list_paginated([], user_or_account)
     |> feed()
   end
 
@@ -250,6 +249,7 @@ defmodule Bonfire.Me.API.GraphQL do
       |> Enum.map(& Map.get(&1, :activity))
     }
   end
+  defp feed(_), do: {:ok, nil}
 
   defp account_id(%{accounted: %{account_id: account_id}}, _, _) do
     {:ok, account_id}
