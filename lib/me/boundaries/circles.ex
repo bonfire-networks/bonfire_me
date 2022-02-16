@@ -1,10 +1,11 @@
-defmodule Bonfire.Me.Users.Circles do
+defmodule Bonfire.Me.Boundaries.Circles do
+  use Bonfire.Common.Utils
 
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Data.AccessControl.Circle
+  alias Bonfire.Data.AccessControl.{Circle, Encircle}
   alias Bonfire.Boundaries.Circles
+  alias Bonfire.Boundaries.Stereotype
   alias Bonfire.Me.Users
-  alias Bonfire.Common.Utils
 
   import Bonfire.Me.Integration
   import Bonfire.Boundaries.Queries
@@ -35,13 +36,13 @@ defmodule Bonfire.Me.Users.Circles do
   @doc """
   Lists the circles that we are permitted to see.
   """
-  def list_visible(%User{}=user), do: repo().many(list_visible_q(user))
+  def list_visible(user, opts \\ []), do: repo().many(list_visible_q(user, opts))
 
   @doc "query for `list_visible`"
-  def list_visible_q(%User{id: _}=user) do
+  def list_visible_q(user, opts \\ []) do
     from(circle in Circle, as: :circle)
-    |> boundarise(circle.id, [current_user: user])
-    |> proload([:named, :caretaker])
+    |> boundarise(circle.id, opts ++ [current_user: user])
+    |> proload([:named, :caretaker, stereotype: {"stereotype_",  [:named]}])
   end
 
   @doc """
@@ -49,12 +50,12 @@ defmodule Bonfire.Me.Users.Circles do
   permitted to see. If any circles are created without permitting the
   user to see them, they will not be shown.
   """
-  def list_my(%User{}=user), do: repo().many(list_my_q(user))
+  def list_my(user, opts \\ []), do: repo().many(list_my_q(user, opts))
 
   @doc "query for `list_my`"
-  def list_my_q(%User{id: user_id}=user) do
-    list_visible_q(user)
-    |> where([caretaker: caretaker], caretaker.caretaker_id == ^user_id)
+  def list_my_q(user, opts \\ []) do
+    list_visible_q(user, opts)
+    |> where([caretaker: caretaker], caretaker.caretaker_id == ^ulid(user))
   end
 
   def list_my_defaults(_user \\ nil) do
@@ -66,11 +67,20 @@ defmodule Bonfire.Me.Users.Circles do
     repo().single(get_q(id, user))
   end
 
+  def get_stereotype_circle(subject, stereotype) when is_atom(stereotype) do
+    get_stereotype_circle(subject, Bonfire.Boundaries.Circles.get_id!(stereotype))
+  end
+  def get_stereotype_circle(subject, stereotype) do
+    list_my_q(subject, skip_boundary_check: true)
+    |> where([circle: circle, stereotype: stereotype], stereotype.stereotype_id == ^ulid(stereotype))
+    |> repo().single()
+  end
+
   @doc "query for `get`"
-  def get_q(id, %User{id: user_id}=user) do
+  def get_q(id, user) do
     list_visible_q(user)
     |> join(:inner, [circle: circle], caretaker in assoc(circle, :caretaker), as: :caretaker)
-    |> where([circle: circle, caretaker: caretaker], circle.id == ^id and caretaker.caretaker_id == ^user_id)
+    |> where([circle: circle, caretaker: caretaker], circle.id == ^id and caretaker.caretaker_id == ^ulid(user))
   end
 
   def update(id, %User{} = user, params) do
@@ -81,6 +91,9 @@ defmodule Bonfire.Me.Users.Circles do
     end
   end
 
+  def add_to_circle(subject, circle) do
+    repo().insert(Encircle.changeset(%{circle_id: ulid(circle), subject_id: ulid(subject)}))
+  end
 
   def changeset(:create, %User{}=_user, attrs) do
     Circles.changeset(:create, attrs)

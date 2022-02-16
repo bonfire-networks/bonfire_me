@@ -193,13 +193,17 @@ defmodule Bonfire.Me.Users do
   def create_remote(params) do
     with {:ok, user} <- repo().insert(changeset(:create, %User{}, params, :remote)) do
       user
-      |> repo().preload(:controlled)
-      |> User.changeset(%{})
-      |> Bonfire.Me.Acls.cast(user, "public")
-      |> repo().update()
+      # |> add_acl("public")
     end
   end
 
+  def add_acl(%{} = user, preset) do
+    user # FIXME: do this in main create changeset?
+      |> repo().maybe_preload(:controlled)
+      |> User.changeset(%{})
+      |> Bonfire.Me.Acls.cast(user, preset)
+      |> repo().update()
+  end
 
   @doc "Updates a remote user"
   def update_remote(user, params) do
@@ -255,6 +259,7 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:instance_admin)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
+    |> Bonfire.Me.Acls.cast(nil, "public") # TODO more privacy over user itself
     # |> debug("create with account")
   end
 
@@ -265,6 +270,7 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:encircles)
     |> Changeset.cast_assoc(:peered)
+    |> Bonfire.Me.Acls.cast(nil, "public")
   end
 
   def changeset(:create, _user, _params, _) do
@@ -358,13 +364,13 @@ defmodule Bonfire.Me.Users do
       |> Enum.filter(&(&1[:stereotype_id]))
       |> Enum.map(&Map.take(&1, [:id, :stereotype_id]))
     # First the pointables
-    repo().insert_all(Acl,    Enum.map(acls,    &Map.take(&1, [:id])))
-    repo().insert_all(Circle, Enum.map(circles, &Map.take(&1, [:id])))
-    repo().insert_all(Grant,  grants)
+    repo().insert_all_or_ignore(Acl,    Enum.map(acls,    &Map.take(&1, [:id])))
+    repo().insert_all_or_ignore(Circle, Enum.map(circles, &Map.take(&1, [:id])))
+    repo().insert_all_or_ignore(Grant,  grants)
     # Then the mixins
-    repo().insert_all(Named, named)
-    repo().insert_all(Controlled, controlleds)
-    repo().insert_all(Stereotype, stereotypes)
+    repo().insert_all_or_ignore(Named, named)
+    repo().insert_all_or_ignore(Controlled, controlleds)
+    repo().insert_all_or_ignore(Stereotype, stereotypes)
     Boundaries.take_care_of!([user] ++ acls ++ circles ++ grants, user)
   end
 

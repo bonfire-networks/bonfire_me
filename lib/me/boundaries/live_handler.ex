@@ -1,6 +1,14 @@
 defmodule Bonfire.Me.Boundaries.LiveHandler do
   use Bonfire.Web, :live_handler
 
+  def handle_event("block", %{"id" => id} = _attrs, socket) when is_binary(id) do
+
+    Bonfire.Me.Boundaries.block(id, socket)
+
+    {:noreply,
+        socket
+    }
+  end
 
   # def handle_event("input", %{"circles" => selected_circles} = _attrs, socket) when is_list(selected_circles) and length(selected_circles)>0 do
 
@@ -107,4 +115,35 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
       end)
   end
 
+    alias Bonfire.Me.Boundaries.Circles
+
+
+  def handle_event("create_circle", %{"name" => name}, socket) do
+  # params = input_to_atoms(params)
+
+    with {:ok, %{id: id} = _circle} <-
+      Circles.create(current_user(socket), name) do
+
+          {:noreply,
+          socket
+          |> put_flash(:info, "Circle create!")
+          |> push_redirect(to: "/settings/circle/"<>id)
+          }
+
+    end
+  end
+
+  def handle_event("member_update", %{"circle" => %{"id" => id} = params}, socket) do
+    # params = input_to_atoms(params)
+
+      with {:ok, _circle} <-
+        Circles.update(id, current_user(socket), %{encircles: e(params, "encircle", [])}) do
+
+            {:noreply,
+            socket
+            |> put_flash(:info, "OK")
+            }
+
+      end
+    end
 end

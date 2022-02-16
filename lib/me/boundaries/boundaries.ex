@@ -5,6 +5,11 @@ defmodule Bonfire.Me.Boundaries do
 
   @visibility_verbs [:see, :read]
 
+  def block(user, opts) do
+    current_user = Utils.current_user(opts)
+    with {:ok, current_user_block_circle} <- Bonfire.Me.Boundaries.Circles.get_stereotype_circle(current_user, :block), do: Bonfire.Me.Boundaries.Circles.add_to_circle(user, current_user_block_circle)
+  end
+
   def preset(preset) when is_binary(preset), do: preset
   def preset(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :preset)
 

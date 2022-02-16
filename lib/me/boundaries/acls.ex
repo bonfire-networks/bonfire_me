@@ -50,9 +50,9 @@ defmodule Bonfire.Me.Acls do
   # when the user picks a preset, this maps to a set of base acls
   defp base_acls(user, preset_or_custom) do
     acls = case Boundaries.preset(preset_or_custom) do
-      "public" -> [:guests_may_see, :locals_may_reply, :i_may_administer]
-      "local"  -> [:locals_may_reply, :i_may_administer]
-      _        -> [:i_may_administer]
+      "public" -> [:guests_may_see, :locals_may_reply, :i_may_administer, :negative]
+      "local"  -> [:locals_may_reply, :i_may_administer, :negative]
+      _        -> [:i_may_administer, :negative]
     end
     |> find_acls(user)
   end
@@ -110,7 +110,7 @@ defmodule Bonfire.Me.Acls do
     end
   end
 
-  defp find_acls(acls, user) do
+  defp find_acls(acls, %{id: user_id}) do
     acls =
       acls
       |> Enum.map(&identify/1)
@@ -125,11 +125,12 @@ defmodule Bonfire.Me.Acls do
         stereo ->
           stereo
           |> Enum.map(&elem(&1, 1))
-          |> Acls.find_caretaker_stereotypes(user.id, ...)
+          |> Acls.find_caretaker_stereotypes(user_id, ...)
           |> Enum.map(&(&1.id))
       end
     Enum.map(globals ++ stereo, &(%{acl_id: &1}))
   end
+  defp find_acls(_acls, _), do: []
 
   defp identify(name) do
     defaults = Users.default_acls()
