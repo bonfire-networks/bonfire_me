@@ -136,6 +136,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
     current_user = current_user(socket)
     user = e(socket, :assigns, :user, nil)
 
+    page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "My messages"), else: l("Messages with")<>" "<>e(user, :profile, :name, l "someone")
+
     smart_input_prompt = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(user, :profile, :name, l "this person")
 
     smart_input_text = if e(current_user, :character, :username, nil) != e(user, :character, :username, nil),
@@ -150,6 +152,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
        feed: e(feed, :edges, []),
      )
     |> assign_global(
+      page_title: page_title,
       smart_input_prompt: smart_input_prompt,
       smart_input_text: smart_input_text,
       to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}],
