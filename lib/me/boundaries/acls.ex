@@ -51,6 +51,7 @@ defmodule Bonfire.Me.Acls do
   defp base_acls(user, preset_or_custom) do
     acls = case Boundaries.preset(preset_or_custom) do
       "public" -> [:guests_may_see, :locals_may_reply, :i_may_administer, :negative]
+      "federated" -> [:locals_may_reply, :i_may_administer, :negative]
       "local"  -> [:locals_may_reply, :i_may_administer, :negative]
       _        -> [:i_may_administer, :negative]
     end

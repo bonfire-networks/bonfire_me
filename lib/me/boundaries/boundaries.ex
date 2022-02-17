@@ -17,7 +17,7 @@ defmodule Bonfire.Me.Boundaries do
   end
 
   def preset(preset) when is_binary(preset), do: preset
-  def preset(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :preset)
+  def preset(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :boundary)
 
   def maybe_custom_circles_or_users(preset_and_custom_boundary), do: maybe_from_opts(preset_and_custom_boundary, :to_circles)
 
