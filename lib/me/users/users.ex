@@ -80,18 +80,21 @@ defmodule Bonfire.Me.Users do
   def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
     with {:ok, user} <- repo().insert(changeset) do
-      create_default_boundaries(user)
       {:ok, post_mutate(user)}
     end
   end
   def create(params, extra) when not is_struct(params),
     do: create(changeset(:create, params, extra))
 
-  defp post_mutate({:ok, object}), do: {:ok, post_mutate(object)}
+  defp post_mutate({:ok, user}), do: {:ok, post_mutate(user)}
   defp post_mutate(%{} = user) do
+    user = user |> repo().maybe_preload([:character, :profile])
+
+    create_default_boundaries(user) #|> debug("created_default_boundaries")
+
+    maybe_index_user(user)
+
     user
-    |> repo().maybe_preload([:character, :profile])
-    |> maybe_index_user()
   end
   defp post_mutate(error), do: error
 
@@ -191,14 +194,14 @@ defmodule Bonfire.Me.Users do
 
   @doc "Creates a remote user"
   def create_remote(params) do
-    with {:ok, user} <- repo().insert(changeset(:create, %User{}, params, :remote)) do
-      user
-      # |> add_acl("public")
+    with {:ok, user} <- create(changeset(:create, %User{}, params, :remote)) do
+      # debug(user)
+      {:ok, user} #|> add_acl("public")
     end
   end
 
   def add_acl(%{} = user, preset) do
-    user # FIXME: do this in main create changeset?
+    user # FIXME: can we do this in main create changeset?
       |> repo().maybe_preload(:controlled)
       |> User.changeset(%{})
       |> Bonfire.Me.Acls.cast(user, preset)
@@ -259,7 +262,6 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:instance_admin)
     # |> Changeset.cast_assoc(:like_count)
     |> Changeset.cast_assoc(:encircles)
-    |> Bonfire.Me.Acls.cast(nil, "public") # TODO more privacy over user itself
     # |> debug("create with account")
   end
 
@@ -270,7 +272,6 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:encircles)
     |> Changeset.cast_assoc(:peered)
-    |> Bonfire.Me.Acls.cast(nil, "public")
   end
 
   def changeset(:create, _user, _params, _) do
@@ -311,15 +312,15 @@ defmodule Bonfire.Me.Users do
 
   # TODO: less boilerplate
   def maybe_index_user(object) when is_map(object) do
-    object |> indexing_object_format() |> maybe_index()
-    object
+    object |> indexing_object_format() |> maybe_index() #|> debug
   end
-  def maybe_index_user(other), do: other
+  def maybe_index_user(_other), do: nil
 
   defp config(), do: Application.get_env(:bonfire_me, Users)
 
   defp create_default_boundaries(user) do
     config = Keyword.fetch!(config(), :default_boundaries)
+            #  |> debug("create_default_boundaries")
     circles = for {k, v} <- Map.fetch!(config, :circles), into: %{} do
       {k, v
       |> Map.put(:id, ULID.generate())
