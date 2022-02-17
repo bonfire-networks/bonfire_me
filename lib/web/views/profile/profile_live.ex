@@ -33,7 +33,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
       username ->
         get_user(username)
     end
-    # IO.inspect(user: user)
+
+    # debug(user)
 
     if user do
 
