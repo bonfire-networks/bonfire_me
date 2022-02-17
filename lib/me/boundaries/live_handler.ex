@@ -1,10 +1,17 @@
 defmodule Bonfire.Me.Boundaries.LiveHandler do
   use Bonfire.Web, :live_handler
 
+  def handle_event("block", %{"id" => id, "scope" => "instance"} = _attrs, socket) when is_binary(id) do
+    if Bonfire.Me.Users.is_admin?(current_user(socket)), do: Bonfire.Me.Boundaries.block(id, :instance) |> debug, else: raise "Not admin"
+    # TODO: show feedback
+    {:noreply,
+        socket
+    }
+  end
+
   def handle_event("block", %{"id" => id} = _attrs, socket) when is_binary(id) do
-
-    Bonfire.Me.Boundaries.block(id, socket)
-
+    Bonfire.Me.Boundaries.block(id, socket) |> debug
+    # TODO: show feedback
     {:noreply,
         socket
     }

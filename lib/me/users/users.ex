@@ -50,8 +50,15 @@ defmodule Bonfire.Me.Users do
   defp do_by_account(account_id) when is_binary(account_id),
     do: repo().many(Queries.by_account(account_id))
 
+  @doc """
+  Used for switch-user functionality
+  """
   def by_username_and_account(username, account_id) do
-    repo().single(Queries.by_username_and_account(username, account_id))
+    with {:ok, user} <- repo().single(Queries.by_username_and_account(username, account_id)),
+    # check if user isn't blocked instance-wide
+    false <- Bonfire.Boundaries.is_blocked?(user) do
+      {:ok, user}
+    end
   end
 
   def search(search) do

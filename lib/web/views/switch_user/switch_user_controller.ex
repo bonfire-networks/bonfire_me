@@ -1,5 +1,4 @@
 defmodule Bonfire.Me.Web.SwitchUserController do
-
   use Bonfire.Web, :controller
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Users
@@ -34,7 +33,8 @@ defmodule Bonfire.Me.Web.SwitchUserController do
 
   @doc "Switch to a user, if permitted."
   def show(conn, %{"id" => username} = params) do
-    show(Users.by_username_and_account(username, e(conn.assigns, :current_account, nil).id), conn, params)
+    Users.by_username_and_account(username, e(current_account(conn), :id, nil))
+    |> show(conn, params)
   end
 
   defp show({:ok, user}, conn, params) do
@@ -44,10 +44,10 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     |> redirect(to: go_where?(conn, params, path(:home)))
   end
 
-  defp show({:error, _}, conn, params) do
-    Logger.error("Wrong user")
+  defp show(_, conn, params) do
+    Logger.error("Wrong user, or blocked instance-wide")
     conn
-    |> put_flash(:error, l "You can only identify as users in your account.")
+    |> put_flash(:error, l "You can only identify as valid users in your account.")
     |> redirect(to: path(:switch_user) <> copy_go(params))
   end
 
