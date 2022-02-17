@@ -1,12 +1,15 @@
 if Code.ensure_loaded?(Bonfire.GraphQL) do
 defmodule Bonfire.Me.API.GraphQL do
   use Absinthe.Schema.Notation
+  use Bonfire.Common.Utils
   import Absinthe.Resolution.Helpers
+  require Logger
   alias Bonfire.GraphQL
-  alias Bonfire.Common.Utils
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users
   alias Bonfire.Me.Accounts
+
+  import_types Absinthe.Plug.Types
 
   object :user do
     field(:id, :id)
@@ -93,10 +96,27 @@ defmodule Bonfire.Me.API.GraphQL do
   object :profile do
     field(:name, :string)
     field(:summary, :string)
+    field :website, :string
+    field :location, :string
+
+    field(:icon, :string) do
+      resolve &icon/3
+    end
+    field(:image, :string) do
+      resolve &image/3
+    end
   end
+
   input_object :profile_input do
     field(:name, :string)
     field(:summary, :string)
+    field :website, :string
+    field :location, :string
+  end
+
+  input_object :images_upload do
+    field :icon, :upload
+    field :image, :upload
   end
 
   object :character do
@@ -151,6 +171,7 @@ defmodule Bonfire.Me.API.GraphQL do
     field :create_user, :me do
       arg(:profile, non_null(:profile_input))
       arg(:character, non_null(:character_input))
+      arg(:images, :images_upload)
 
       resolve(&create_user/2)
     end
@@ -188,8 +209,9 @@ defmodule Bonfire.Me.API.GraphQL do
 
     @desc "Edit user profile"
     field :update_user, :me do
-      arg(:profile, non_null(:profile_input))
+      arg(:profile, :profile_input)
       # arg(:character, non_null(:character_input))
+      arg(:images, :images_upload)
 
       resolve(&update_user/2)
     end
@@ -254,7 +276,7 @@ defmodule Bonfire.Me.API.GraphQL do
   defp account_id(%{accounted: %{account_id: account_id}}, _, _) do
     {:ok, account_id}
   end
-    defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) do
+  defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) do
     {:ok, current_account_id}
   end
   defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) do
@@ -283,9 +305,12 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp create_user(args, info) do
-    account = GraphQL.current_account(info)
+    account = GraphQL.current_account(info) #|| Accounts.get_by_email("test@me.space")
     if account do
-      Users.create(args, account)
+      with {:ok, user} <- Users.create(args, account),
+           {:ok, uploaded} <- maybe_upload(user, args[:images], info) do
+            Bonfire.Me.Users.update(user, %{"profile"=> uploaded}) #|> debug("updated")
+      end
     else
       {:error, "Not authenticated"}
     end
@@ -321,10 +346,13 @@ defmodule Bonfire.Me.API.GraphQL do
     end
   end
 
-  def update_user(params, info) do
-    user = GraphQL.current_user(info)
+  def update_user(args, info) do
+    user = GraphQL.current_user(info) #|| (Users.by_username("test") |> ok_or)
     if user do
-      Users.update(user, params, GraphQL.current_account(info))
+      with {:ok, uploaded} <- maybe_upload(user, args[:images], info) do
+            args = args |> Map.put(:profile, Map.merge(Map.get(args, :profile, %{}), uploaded)) #|> debug("args") # TODO: clean up
+            Bonfire.Me.Users.update(user, args, GraphQL.current_account(info)) #|> debug("updated")
+      end
     else
       {:error, "Not authenticated"}
     end
@@ -345,6 +373,23 @@ defmodule Bonfire.Me.API.GraphQL do
     end
   end
 
+  def icon(thing, _, _info) do
+    {:ok, Bonfire.Common.Utils.avatar_url(thing)}
+  end
+
+  def image(thing, _, _info) do
+    {:ok, Bonfire.Common.Utils.image_url(thing)}
+  end
+
+  def maybe_upload(user, changes, info) do
+    if Utils.module_enabled?(Bonfire.Files.GraphQL) do
+      Logger.debug("API - attempt to upload")
+      Bonfire.Files.GraphQL.upload(user, changes, info)
+    else
+      Logger.error("API upload via GraphQL is not implemented")
+      {:ok, %{}}
+    end
+  end
 
 end
 end
