@@ -30,7 +30,7 @@ defmodule Bonfire.Me.ConnCase do
 
       alias Bonfire.Me.Fake
       import Bonfire.Me.Fake
-      # alias Bonfire.Me.Web.Router.Helpers, as: Routes
+      use Bonfire.Common.Utils
 
       # The default endpoint for testing
       @endpoint Bonfire.Common.Config.get!(:endpoint_module)

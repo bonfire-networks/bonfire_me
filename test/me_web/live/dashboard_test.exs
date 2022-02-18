@@ -3,6 +3,8 @@ defmodule Bonfire.Me.Dashboard.Test do
   use Bonfire.Me.ConnCase
   alias Bonfire.Me.Fake
 
+  # TODO
+
   # describe "show" do
 
   #   test "not logged in" do
