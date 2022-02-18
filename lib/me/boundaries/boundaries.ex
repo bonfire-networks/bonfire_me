@@ -1,19 +1,45 @@
 defmodule Bonfire.Me.Boundaries do
+  use Bonfire.Common.Utils
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Common.Utils
-  require Logger
+  alias Bonfire.Me.Boundaries.Circles
 
   @visibility_verbs [:see, :read]
 
   def block(user_to_block, :instance) do
-    Bonfire.Me.Boundaries.Circles.add_to_circle(user_to_block, Bonfire.Boundaries.Circles.get_id(:block))
+    Circles.add_to_circle(user_to_block, Bonfire.Boundaries.Circles.get_id(:block))
   end
 
   def block(user_to_block, opts) do
     with %{id: _} = current_user <- Utils.current_user(opts),
-         {:ok, current_user_block_circle} <- Bonfire.Me.Boundaries.Circles.get_stereotype_circle(current_user, :block) do
-           Bonfire.Me.Boundaries.Circles.add_to_circle(user_to_block, current_user_block_circle)
+         {:ok, current_user_block_circle} <- user_block_cirle(current_user) do
+           Circles.add_to_circle(user_to_block, current_user_block_circle)
     end
+  end
+
+  def is_blocked?(peered, opts \\ [])
+
+  def is_blocked?(user, opts) do
+    debug(opts, "TODO: check per-user")
+    Bonfire.Boundaries.Circles.is_encircled_by?(user, :block)
+      ||
+    is_blocked_by?(user, opts[:user_ids])
+  end
+
+  def is_blocked_by?(user, user_ids) when is_list(user_ids) and length(user_ids)>0 do
+    Enum.any?(user_ids, &( Bonfire.Boundaries.Circles.is_encircled_by?(user, user_block_cirle(&1)) ))
+  end
+  def is_blocked_by?(user, user_id) when is_binary(user_id) do
+    is_blocked_by?(user, [user_id])
+  end
+  def is_blocked_by?(user, %{} = user) do
+    is_blocked_by?(user, [user])
+  end
+  def is_blocked_by?(_user, _) do
+    nil
+  end
+
+  def user_block_cirle(user) do
+    Circles.get_stereotype_circle(user, :block)
   end
 
   def preset(preset) when is_binary(preset), do: preset
