@@ -1,6 +1,7 @@
 defmodule Bonfire.Me.Web.SettingsLive do
   use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   require Logger
+  import Where
   alias Bonfire.Web.LivePlugs
 
   def mount(params, session, socket) do
