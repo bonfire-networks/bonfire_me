@@ -13,9 +13,9 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
       {:error, "already_confirmed", _} ->
         already_confirmed(conn)
       {:error, :expired, _} ->
-        error(conn, :expired_link)
+        show_error(conn, :expired_link)
       _ ->
-        error(conn, :not_found)
+        show_error(conn, :not_found)
     end
   end
 
@@ -54,7 +54,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
     |> redirect(to: path(:login))
   end
 
-  defp error(conn, text) do
+  defp show_error(conn, text) do
     Logger.error(maybe_to_string(text))
     conn
       |> put_session(:error, text)

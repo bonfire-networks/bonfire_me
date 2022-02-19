@@ -56,7 +56,7 @@ defmodule Bonfire.Me.Users do
   def by_username_and_account(username, account_id) do
     with {:ok, user} <- repo().single(Queries.by_username_and_account(username, account_id)),
     # check if user isn't blocked instance-wide
-    false <- Bonfire.Me.Boundaries.is_blocked?(user) do
+    blocked? when blocked? in [nil, false] <- Bonfire.Me.Boundaries.is_blocked?(user) do
       {:ok, user}
     end
   end

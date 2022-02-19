@@ -44,8 +44,8 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     |> redirect(to: go_where?(conn, params, path(:home)))
   end
 
-  defp show(_, conn, params) do
-    Logger.error("Wrong user, or blocked instance-wide")
+  defp show(error, conn, params) do
+    error(error, "Wrong user, or blocked instance-wide")
     conn
     |> put_flash(:error, l "You can only identify as valid users in your account.")
     |> redirect(to: path(:switch_user) <> copy_go(params))
