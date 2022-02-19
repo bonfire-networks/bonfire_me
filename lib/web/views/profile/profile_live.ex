@@ -38,7 +38,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     if user do
 
-      # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> IO.inspect(label: "following")
+      # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> debug(label: "following")
 
       page_title = if current_username == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
 
@@ -122,7 +122,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     feed_id = if user && module_enabled?(Bonfire.Social.Feeds), do: Bonfire.Social.Feeds.feed_id(:outbox, user)
     feed = if feed_id && module_enabled?(Bonfire.Social.FeedActivities), do: Bonfire.Social.FeedActivities.feed(feed_id, socket)
-  #  IO.inspect(feed: feed)
+  #  debug(feed: feed)
 
   {:noreply,
     assign(socket,
@@ -145,7 +145,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     do: "@"<>e(user, :character, :username, "")<>" ",
     else: ""
 
-    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> IO.inspect(label: "messages")
+    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> debug(label: "messages")
 
     {:noreply,
      assign(socket,

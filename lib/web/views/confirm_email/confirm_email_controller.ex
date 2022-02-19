@@ -55,7 +55,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController do
   end
 
   defp show_error(conn, text) do
-    Logger.error(maybe_to_string(text))
+    error(maybe_to_string(text))
     conn
       |> put_session(:error, text)
       |> live_render(ConfirmEmailLive)

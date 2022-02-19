@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Users.LiveHandler do
 
     options = ( Users.search(search) || [] )
               |> Enum.map(&to_tuple/1)
-    # IO.inspect(matches)
+    # debug(matches)
 
     {:noreply, socket |> assign_global(users_autocomplete: options) }
   end

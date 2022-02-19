@@ -48,7 +48,7 @@ defmodule Bonfire.Me.UserCirclesTest do
 
   #   me = fake_user!()
   #   assert circles = Circles.list_my(me)
-  #   # IO.inspect(circles)
+  #   # debug(circles)
   #   assert length(circles) == length(Bonfire.Boundaries.Circles.list_builtins())
 
   # end
@@ -78,7 +78,7 @@ defmodule Bonfire.Me.UserCirclesTest do
   #   assert circles = Circles.list_visible(me)
   #   |> Repo.preload([:named, :caretaker])
 
-  #   #IO.inspect(circles)
+  #   #debug(circles)
   #   assert length(circles) == 0
   # end
 

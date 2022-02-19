@@ -19,14 +19,14 @@ defmodule Bonfire.Me.Web.CreateUserController do
       {:ok, %{id: id, character: %{username: username}} = _user} ->
         greet(conn, params, id, username)
       {:error, changeset} ->
-        IO.inspect(changeset_error: changeset)
+        debug(changeset_error: changeset)
         err = EctoSparkles.Changesets.Errors.changeset_errors_string(changeset, false) #|> IO.inspect
         conn
         |> assign(:error, err)
         |> put_flash(:error, l("Please double check your inputs... ")<>err)
         |> paint(changeset)
       r ->
-        IO.inspect(create_user: r)
+        debug(create_user: r)
         conn
         |> put_flash(:error, l "An unexpected error occured... ")
         |> paint(changeset)

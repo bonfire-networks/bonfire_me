@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Mails do
   alias Bonfire.Me.Web.EmailView
   import Bonfire.Me.Integration
   import Bonfire.Common.URIs
-  require Logger
+  import Where
   require Bonfire.Web.Gettext
   import Bonfire.Web.Gettext.Helpers
 
@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Mails do
     app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
     url = url(Bonfire.Me.Web.ConfirmEmailController, [:show, confirm_token])
 
-    if Bonfire.Common.Config.get(:env) != :test, do: Logger.warn("Email confirmation link: #{url}")
+    if Bonfire.Common.Config.get(:env) != :test, do: warn("Email confirmation link: #{url}")
 
     conf =
       Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])

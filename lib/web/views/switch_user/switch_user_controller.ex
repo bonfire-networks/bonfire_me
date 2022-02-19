@@ -27,7 +27,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     do: index(Users.by_account(account), account, conn, params)
 
   defp index(nil, _account, _conn, _params) do
-    Logger.error("[SwitchUserController.index] Missing :current_account")
+    error("[SwitchUserController.index] Missing :current_account")
     throw :missing_current_account
   end
 

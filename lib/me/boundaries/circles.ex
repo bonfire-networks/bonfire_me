@@ -103,7 +103,7 @@ defmodule Bonfire.Me.Boundaries.Circles do
 
     # Ecto doesn't like mixed keys so we convert them all to strings
     params = for {k, v} <- params, do: {to_string(k), v}, into: %{}
-    # IO.inspect(params)
+    # debug(params)
 
     circle
     |> Circles.changeset(params)

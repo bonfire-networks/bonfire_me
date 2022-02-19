@@ -195,7 +195,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def ap_receive_activity(_creator, _activity, object) do
-    IO.inspect(object, label: "Users.ap_receive_activity")
+    debug(object, label: "Users.ap_receive_activity")
     Bonfire.Federate.ActivityPub.Adapter.maybe_create_remote_actor(Utils.e(object, :data, object))
   end
 
@@ -304,7 +304,7 @@ defmodule Bonfire.Me.Users do
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    # |> IO.inspect(label: "users update changeset")
+    # |> debug(label: "users update changeset")
   end
 
   def indexing_object_format(u) do

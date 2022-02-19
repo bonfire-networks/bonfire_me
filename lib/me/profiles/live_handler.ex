@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Profiles.LiveHandler do
     with {:ok, _edit_profile} <-
       Users.update(current_user(socket), params, current_account(socket)) do
 
-      # IO.inspect(icon: Map.get(params, "icon"))
+      # debug(icon: Map.get(params, "icon"))
       cond do
       # handle controller-based upload
         strlen(Map.get(params, "icon")) > 0 or strlen(Map.get(params, "image")) > 0 ->
