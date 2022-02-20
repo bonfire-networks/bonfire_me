@@ -15,7 +15,7 @@ defmodule Bonfire.Me.Accounts do
   alias Ecto.Changeset
   import Bonfire.Me.Integration
   alias Bonfire.Common.Utils
-  require Logger
+  import Where
 
   def get_current(nil), do: nil
   def get_current(id) when is_binary(id),
@@ -232,7 +232,7 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp send_confirm_email(false, account, _opts) do
-    Logger.debug("Skip email confirmation")
+    debug("Skip email confirmation")
    {:ok, account}
   end
 

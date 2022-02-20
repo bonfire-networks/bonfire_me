@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Web.SwitchUserController.Test do
       assert redirected_to(conn) == "/create-user"
     end
 
-    test "shows users" do
+    test "shows account's users" do
       account = fake_account!()
       alice = fake_user!(account)
       bob = fake_user!(account)

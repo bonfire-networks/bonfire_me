@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
           nil
         end
     end
-    # IO.inspect(user: user)
+    # debug(user: user)
 
     if user do
 

@@ -102,7 +102,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     conn = post(conn, "/create-user", params)
     doc = floki_response(conn)
     assert [view] = Floki.find(doc, "#create_user")
-    assert Floki.text(view) =~ "username is taken"
+    assert Floki.text(view) =~ "already been taken"
     assert [form] = Floki.find(doc, "#create-form")
     assert_field_good(form, "create-form_profile_summary")
     assert_field_good(form, "create-form_profile_name")

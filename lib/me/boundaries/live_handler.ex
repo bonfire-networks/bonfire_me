@@ -68,16 +68,16 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
 
   def set_circles(selected_circles, previous_circles, add_to_previous \\ false) do
 
-    # IO.inspect(previous_circles: previous_circles)
+    # debug(previous_circles: previous_circles)
     # selected_circles = Enum.uniq(selected_circles)
 
-    # IO.inspect(selected_circles: selected_circles)
+    # debug(selected_circles: selected_circles)
 
     previous_ids = previous_circles |> Enum.map(fn
         {_name, id} -> id
         _ -> nil
       end)
-    # IO.inspect(previous_ids: previous_ids)
+    # debug(previous_ids: previous_ids)
 
     public = Bonfire.Boundaries.Circles.circles()[:guest]
 
@@ -91,7 +91,7 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
       selected_circles
     end
 
-    # IO.inspect(new_selected_circles: selected_circles)
+    # debug(new_selected_circles: selected_circles)
 
     existing = if add_to_previous, do: previous_circles, else: known_circle_tuples(selected_circles, previous_circles)
 
@@ -103,7 +103,7 @@ defmodule Bonfire.Me.Boundaries.LiveHandler do
      Enum.map(selected_circles, &Bonfire.Boundaries.Circles.get_tuple/1)
     )
     |> Utils.filter_empty() |> Enum.uniq()
-    # |> IO.inspect()
+    # |> debug()
   end
 
   def known_circle_tuples(selected_circles, previous_circles) do

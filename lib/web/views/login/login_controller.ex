@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Web.LoginController do
   alias Bonfire.Me.Users
   alias Bonfire.Me.Web.LoginLive
   alias Bonfire.Common.Utils
-  require Logger
+  import Where
 
   def index(conn, _) do # GET only supports 'go'
     conn = fetch_query_params(conn)
@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Web.LoginController do
       {:ok, account, user} -> logged_in(account, user, conn, form)
       {:error, changeset} -> paint(conn, changeset)
       _ ->
-        Logger.error("LoginController: unhandled error")
+        error("LoginController: unhandled error")
         paint(conn, form)
     end
   end

@@ -56,7 +56,7 @@ defmodule Bonfire.Me.Users do
   def by_username_and_account(username, account_id) do
     with {:ok, user} <- repo().single(Queries.by_username_and_account(username, account_id)),
     # check if user isn't blocked instance-wide
-    false <- Bonfire.Me.Boundaries.is_blocked?(user) do
+    blocked? when blocked? in [nil, false] <- Bonfire.Me.Boundaries.is_blocked?(user) do
       {:ok, user}
     end
   end
@@ -195,7 +195,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def ap_receive_activity(_creator, _activity, object) do
-    IO.inspect(object, label: "Users.ap_receive_activity")
+    debug(object, label: "Users.ap_receive_activity")
     Bonfire.Federate.ActivityPub.Adapter.maybe_create_remote_actor(Utils.e(object, :data, object))
   end
 
@@ -304,7 +304,7 @@ defmodule Bonfire.Me.Users do
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    # |> IO.inspect(label: "users update changeset")
+    # |> debug(label: "users update changeset")
   end
 
   def indexing_object_format(u) do

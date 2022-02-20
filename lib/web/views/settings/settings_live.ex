@@ -1,6 +1,5 @@
 defmodule Bonfire.Me.Web.SettingsLive do
   use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
-  require Logger
   import Where
   alias Bonfire.Web.LivePlugs
 
@@ -53,14 +52,14 @@ defmodule Bonfire.Me.Web.SettingsLive do
           # |> debug("uploaded")
         end),
         {:ok, user} <- Bonfire.Me.Users.update(user, %{"profile"=> %{"icon"=> uploaded_media, "icon_id"=> uploaded_media.id}}) do
-          # IO.inspect(uploaded_media)
+          # debug(uploaded_media)
           {:noreply, socket
           |> assign(current_user: deep_merge(user, %{profile: %{icon: uploaded_media}}))
           |> put_flash(:info, l "Avatar changed!")}
         end
 
     else
-      Logger.info("Skip uploading because we don't know current_user")
+      debug("Skip uploading because we don't know current_user")
       {:noreply, socket}
     end
   end
@@ -76,7 +75,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
           # |> debug("uploaded")
         end),
         {:ok, user} <- Bonfire.Me.Users.update(user, %{"profile"=> %{"image"=> uploaded_media, "image_id"=> uploaded_media.id}}) do
-          # IO.inspect(uploaded_media)
+          # debug(uploaded_media)
           {:noreply,
           socket
           |> assign(current_user: deep_merge(user, %{profile: %{image: uploaded_media}}))
@@ -84,18 +83,18 @@ defmodule Bonfire.Me.Web.SettingsLive do
         end
 
     else
-      Logger.info("Skip uploading because we don't know current_user")
+      debug("Skip uploading because we don't know current_user")
       {:noreply, socket}
     end
   end
 
   def handle_params(%{"tab" => tab, "id" => id}, _url, socket) do
-    # IO.inspect(id)
+    # debug(id)
     {:noreply, assign(socket, selected_tab: tab, tab_id: id)}
   end
 
   # def handle_params(%{"tab" => tab, "admin_tab" => admin_tab}, _url, socket) do
-  #   IO.inspect(admin_tab)
+  #   debug(admin_tab)
   #   {:noreply, assign(socket, selected_tab: tab, admin_tab: admin_tab)}
   # end
 

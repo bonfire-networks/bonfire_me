@@ -63,18 +63,18 @@ defmodule Bonfire.Me.Boundaries do
   def maybe_grant_access_to(%{id: current_user_id} = current_user, object_id, circle_ids, verbs) when is_list(circle_ids) and is_binary(object_id) do
 
     opts = [current_user: current_user]
-    grant_subjects = Utils.ulid(circle_ids ++ [current_user]) #|> IO.inspect(label: "maybe_grant_access_to")
+    grant_subjects = Utils.ulid(circle_ids ++ [current_user]) #|> debug(label: "maybe_grant_access_to")
 
-    Logger.error("TODO: Refactor needed to grant #{inspect verbs} on object #{inspect object_id} to #{inspect grant_subjects}")
+    error("TODO: Refactor needed to grant #{inspect verbs} on object #{inspect object_id} to #{inspect grant_subjects}")
 
-    # with {:ok, %{id: acl_id}} <- Bonfire.Me.Acls.create(opts),# |> IO.inspect(label: "acled"),
-    # {:ok, _controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}), #|> IO.inspect(label: "ctled"),
+    # with {:ok, %{id: acl_id}} <- Bonfire.Me.Acls.create(opts),# |> debug(label: "acled"),
+    # {:ok, _controlled} <- Bonfire.Boundaries.Controlleds.create(%{id: object_id, acl_id: acl_id}), #|> debug(label: "ctled"),
     # {:ok, grant} <- Bonfire.Me.Grants.grant(grant_subjects, acl_id, verbs, true, opts) do
-    #   # IO.inspect(one_grant: grant)
+    #   # debug(one_grant: grant)
     #   {:ok, :granted}
     # else
     #   grants when is_list(grants) -> # TODO: check for failures?
-    #     # IO.inspect(many_grants: grants)
+    #     # debug(many_grants: grants)
     #     {:ok, :granted}
 
     #   e -> {:error, e}
@@ -93,13 +93,13 @@ defmodule Bonfire.Me.Boundaries do
     with {:ok, user_or_account} <- Bonfire.Common.Pointers.get(user_or_account_id, skip_boundary_check: true) do
       maybe_grant_access_to(user_or_account, object, circles, verbs)
     else _ ->
-      Logger.warn("Boundaries.maybe_grant_access_to expected a user or account (or an ID of the same) as first param, got #{inspect user_or_account_id}")
+      warn("Boundaries.maybe_grant_access_to expected a user or account (or an ID of the same) as first param, got #{inspect user_or_account_id}")
       :skipped
     end
   end
 
   def maybe_grant_access_to(_, _, _, _) do
-    Logger.warn("Boundaries.maybe_grant_access_to didn't receive an expected pattern in params")
+    warn("Boundaries.maybe_grant_access_to didn't receive an expected pattern in params")
     :skipped
   end
 

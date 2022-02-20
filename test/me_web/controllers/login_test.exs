@@ -76,7 +76,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
                 %{"email_or_username" => account.email.email_address,
                   "password" => account.credential.password}}
     conn = post(conn, "/login", params)
-    # IO.inspect(conn: conn)
+    # debug(conn: conn)
     # assert redirected_to(conn) == "/switch-user"
     # conn = get(recycle(conn), "/switch-user", params)
     # assert redirected_to(conn) == "/create-user"

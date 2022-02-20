@@ -3,7 +3,7 @@ defmodule Bonfire.Me.API.GraphQL do
   use Absinthe.Schema.Notation
   use Bonfire.Common.Utils
   import Absinthe.Resolution.Helpers
-  require Logger
+  import Where
   alias Bonfire.GraphQL
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users
@@ -238,7 +238,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp get_user(%User{} = parent, args, info) do
-    # IO.inspect(parent: parent)
+    # debug(parent: parent)
     {:ok, parent}
   end
 
@@ -383,10 +383,10 @@ defmodule Bonfire.Me.API.GraphQL do
 
   def maybe_upload(user, changes, info) do
     if Utils.module_enabled?(Bonfire.Files.GraphQL) do
-      Logger.debug("API - attempt to upload")
+      debug("API - attempt to upload")
       Bonfire.Files.GraphQL.upload(user, changes, info)
     else
-      Logger.error("API upload via GraphQL is not implemented")
+      error("API upload via GraphQL is not implemented")
       {:ok, %{}}
     end
   end

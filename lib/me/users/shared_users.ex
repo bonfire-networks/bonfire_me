@@ -60,7 +60,7 @@ defmodule Bonfire.Me.SharedUsers do
   end
 
   defp do_add_account(%SharedUser{} = shared_user, %Account{} = account) do
-    #IO.inspect(account: account)
+    #debug(account: account)
     repo().update(changeset(:add_account, shared_user, account))
   end
 
@@ -99,13 +99,13 @@ defmodule Bonfire.Me.SharedUsers do
 
     shared_user
     |> Map.put(:caretaker_accounts, []) # only update the user<>account association in question
-    # |> IO.inspect()
+    # |> debug()
     |> SharedUser.changeset(%{})
     |> Changeset.put_assoc(:caretaker_accounts, [account])
   end
 
   def by_account(%Account{} = account) do
-    # IO.inspect("shared by")
+    # debug("shared by")
     account = repo().maybe_preload(account, [users: [:shared_user, :character, :profile], shared_users: [:shared_user, :character, :profile]], false)
 
     Map.get(account, :users, []) ++ Map.get(account, :shared_users, [])
