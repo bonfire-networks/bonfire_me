@@ -50,7 +50,7 @@ defmodule Bonfire.Me.Acls do
   # when the user picks a preset, this maps to a set of base acls
   defp base_acls(user, preset_or_custom) do
     acls = case Boundaries.preset(preset_or_custom) do
-      "public"    -> [:guests_may_see,  :locals_may_reply, :i_may_administer, :negative]
+      "public"    -> [:guests_may_read,  :locals_may_reply, :i_may_administer, :negative]
       "federated" -> [:locals_may_reply, :i_may_administer, :negative]
       "local"     -> [:locals_may_reply, :i_may_administer, :negative]
       _           -> [:i_may_administer, :negative]
