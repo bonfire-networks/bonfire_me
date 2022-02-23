@@ -64,6 +64,7 @@ defmodule Bonfire.Me.Acls do
       ++ mentions_grants(changeset, preset_or_custom)
       ++ Boundaries.maybe_custom_circles_or_users(preset_or_custom)
     )
+    |> Enum.uniq()
     |> filter_empty([])
   end
 

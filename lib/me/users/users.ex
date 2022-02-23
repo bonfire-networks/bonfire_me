@@ -195,7 +195,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def ap_receive_activity(_creator, _activity, object) do
-    debug(object, label: "Users.ap_receive_activity")
+    debug(object, "Users.ap_receive_activity")
     Bonfire.Federate.ActivityPub.Adapter.maybe_create_remote_actor(Utils.e(object, :data, object))
   end
 
