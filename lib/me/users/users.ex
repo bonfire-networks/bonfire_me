@@ -56,7 +56,7 @@ defmodule Bonfire.Me.Users do
   def by_username_and_account(username, account_id) do
     with {:ok, user} <- repo().single(Queries.by_username_and_account(username, account_id)),
     # check if user isn't blocked instance-wide
-    blocked? when blocked? in [nil, false] <- Bonfire.Me.Boundaries.is_blocked?(user) do
+    blocked? when blocked? !=true <- Bonfire.Boundaries.is_blocked?(user, :ghost, :instance_wide) do
       {:ok, user}
     end
   end
@@ -211,7 +211,7 @@ defmodule Bonfire.Me.Users do
     user # FIXME: can we do this in main create changeset?
       |> repo().maybe_preload(:controlled)
       |> User.changeset(%{})
-      |> Bonfire.Me.Acls.cast(user, preset)
+      |> Bonfire.Boundaries.Acls.cast(user, preset)
       |> repo().update()
   end
 
@@ -326,7 +326,7 @@ defmodule Bonfire.Me.Users do
   defp config(), do: Application.get_env(:bonfire_me, Users)
 
   defp create_default_boundaries(user) do
-    config = Keyword.fetch!(config(), :default_boundaries)
+    config = Boundaries.user_default_boundaries()
             #  |> debug("create_default_boundaries")
     circles = for {k, v} <- Map.fetch!(config, :circles), into: %{} do
       {k, v
@@ -412,12 +412,6 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  def default_acl(name), do: default_acls()[:name]
 
-  def default_acls() do
-    config()
-    |> Keyword.fetch!(:default_boundaries)
-    |> Map.fetch!(:acls)
-  end
 
 end

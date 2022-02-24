@@ -1,7 +1,7 @@
 defmodule Bonfire.Web.LivePlugs.LoadCurrentUserCircles do
 
   use Bonfire.Web, :live_plug
-  alias Bonfire.Me.Boundaries.Circles
+  alias Bonfire.Boundaries.Circles
   alias Bonfire.Data.Identity.User
 
   def mount(_, _, %{assigns: %{current_user: %User{} = user}} = socket) do

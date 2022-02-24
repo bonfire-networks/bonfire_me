@@ -28,7 +28,7 @@ defmodule Bonfire.Me.Fake do
   #   user
   # end
   def fake_user!(name, user_attrs) when is_binary(name) do
-    fake_account!() |> fake_user!(Map.merge(user_attrs, %{profile: %{name: name}}))
+    fake_account!() |> fake_user!(Map.merge(user_attrs, %{profile: %{name: name}, character: %{username: name}}))
   end
 
   def fake_user!(account_attrs, user_attrs) do

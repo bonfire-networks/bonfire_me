@@ -4,7 +4,7 @@ defmodule Bonfire.Me.UserCirclesTest do
   alias Bonfire.Data.AccessControl.Circle
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Users
-  alias Bonfire.Me.Boundaries.Circles
+  alias Bonfire.Boundaries.Circles
   alias Bonfire.Repo
 
   # test "listing instance-wide circles (which I am permitted to see) works" do
