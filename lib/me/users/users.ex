@@ -9,7 +9,7 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Data.AccessControl.{Acl, Controlled, Circle, Grant, InstanceAdmin}
   alias Bonfire.Me.{Characters, Profiles, Users, Users.Queries}
   alias Bonfire.Boundaries
-  alias Bonfire.Boundaries.{Acls, Circles, Stereotype, Verbs}
+  alias Bonfire.Boundaries.{Acls, Circles, Stereotyped, Verbs}
   alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
@@ -87,23 +87,26 @@ defmodule Bonfire.Me.Users do
   def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
     with {:ok, user} <- repo().insert(changeset) do
-      {:ok, post_mutate(user)}
+      {:ok, post_create(user)}
     end
   end
   def create(params, extra) when not is_struct(params),
     do: create(changeset(:create, params, extra))
 
-  defp post_mutate({:ok, user}), do: {:ok, post_mutate(user)}
-  defp post_mutate(%{} = user) do
-    user = user |> repo().maybe_preload([:character, :profile])
+  defp post_create(%{} = user) do
 
     create_default_boundaries(user) #|> debug("created_default_boundaries")
+
+    post_mutate(user)
+  end
+
+  defp post_mutate(%{} = user) do
+    user = user |> repo().maybe_preload([:character, :profile])
 
     maybe_index_user(user)
 
     user
   end
-  defp post_mutate(error), do: error
 
   ## instance admin
 
@@ -162,9 +165,8 @@ defmodule Bonfire.Me.Users do
   # TODO: check who is doing the update (except if extra==:remote)
     repo().update(changeset(:update, user, params, extra))
     # |> IO.inspect
-    |> post_mutate()
+    ~> post_mutate()
   end
-
 
 
   ## Delete
@@ -326,30 +328,32 @@ defmodule Bonfire.Me.Users do
   defp config(), do: Application.get_env(:bonfire_me, Users)
 
   defp create_default_boundaries(user) do
-    config = Boundaries.user_default_boundaries()
+    user_default_boundaries = Boundaries.user_default_boundaries()
             #  |> debug("create_default_boundaries")
-    circles = for {k, v} <- Map.fetch!(config, :circles), into: %{} do
+    circles = for {k, v} <- Map.fetch!(user_default_boundaries, :circles), into: %{} do
       {k, v
       |> Map.put(:id, ULID.generate())
       |> stereotype(Circles)}
     end
-    acls = for {k, v} <- Map.fetch!(config, :acls), into: %{} do
+    acls = for {k, v} <- Map.fetch!(user_default_boundaries, :acls), into: %{} do
       {k, v
       |> Map.put(:id, ULID.generate())
       |> stereotype(Acls)}
     end
     grants =
-      for {acl, entries}  <- Map.fetch!(config, :grants),
+      for {acl, entries}  <- Map.fetch!(user_default_boundaries, :grants),
           {circle, verbs} <- entries,
           verb            <- verbs do
         extra = case verb do
-          _ when is_atom(verb)   -> %{verb_id: Verbs.get_id!(verb), value: true}
-          _ when is_binary(verb) -> %{verb_id: verb, value: true}
+          _ when is_atom(verb)   ->
+            %{verb_id: Verbs.get_id!(verb), value: true}
+          _ when is_binary(verb) ->
+            %{verb_id: verb, value: true}
           {verb, v} when is_atom(verb) and is_boolean(v) ->
             %{verb_id: Verbs.get_id!(verb), value: v}
           {verb, v} when is_binary(verb) and is_boolean(v) ->
             %{verb_id: verb, value: v}
-        end
+        end |> dump("extra grants")
         Map.merge(%{
           id:         ULID.generate(),
           acl_id:     default_acl_id(acls, acl),
@@ -357,12 +361,12 @@ defmodule Bonfire.Me.Users do
         }, extra)
       end
     controlleds =
-      for {:SELF, acls2}  <- Map.fetch!(config, :controlleds),
+      for {:SELF, acls2}  <- Map.fetch!(user_default_boundaries, :controlleds),
           acl <- acls2 do
         %{id: user.id, acl_id: default_acl_id(acls, acl)}
       end
-    circles = Map.values(circles)
-    acls = Map.values(acls)
+    circles = circles |> dump("circles for #{e(user, :character, :username, nil)}") |> Map.values()
+    acls = acls |> dump("acls for #{e(user, :character, :username, nil)}") |> Map.values()
     named =
       (acls ++ circles)
       |> Enum.filter(&(&1[:name]))
@@ -378,7 +382,7 @@ defmodule Bonfire.Me.Users do
     # Then the mixins
     repo().insert_all_or_ignore(Named, named)
     repo().insert_all_or_ignore(Controlled, controlleds)
-    repo().insert_all_or_ignore(Stereotype, stereotypes)
+    repo().insert_all_or_ignore(Stereotyped, stereotypes)
     Boundaries.take_care_of!([user] ++ acls ++ circles ++ grants, user)
   end
 
