@@ -316,6 +316,10 @@ defmodule Bonfire.Me.Accounts do
     |> Changeset.add_error(:form, "invite_only")
   end
 
+  defp delete_deps(account) do
+    users = Users.by_account(account)
+    Users.delete(users)
+  end
 
   ## misc
 

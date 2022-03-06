@@ -141,13 +141,24 @@ defmodule Bonfire.Me.Users do
       encircles: [%{circle_id: Circles.circles().local.id}]
     }
     |> Changeset.cast(changeset, ..., [])
+    |> override_character(params)
   end
   # TODO: does ap use the inbox?
-  defp override(changeset, :create, :remote, _params) do
+  defp override(changeset, :create, :remote, params) do
     %{
       encircles: [%{circle_id: Circles.circles().activity_pub.id}]
     }
     |> Changeset.cast(changeset, ..., [])
+    |> override_character(params)
+  end
+
+  defp override_character(changeset, params) do
+    user_id = Changeset.get_field(changeset, :id)
+    case params[:character] do
+      %{}=char -> Map.put(char, :id, user_id)
+      _        -> Map.put(Map.get(params, "character", %{}), "id", user_id)
+    end
+    |> Changeset.cast(changeset, %{character: ...}, [])
   end
 
   def get_only_in_account(%Account{id: id}) do
@@ -295,8 +306,8 @@ defmodule Bonfire.Me.Users do
 
     # add the ID for update
     params = params
-      |> Map.merge(%{"profile" => %{"id"=> user.profile.id}}, fn _, a, b -> Map.merge(a, b) end)
-      |> Map.merge(%{"character" => %{"id"=> user.character.id}}, fn _, a, b -> Map.merge(a, b) end)
+      |> Map.merge(%{"profile" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
+      |> Map.merge(%{"character" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
 
     loc = params["profile"]["location"]
     if loc && loc !="" && Utils.module_enabled?(Bonfire.Geolocate.Geolocations) do
@@ -318,7 +329,7 @@ defmodule Bonfire.Me.Users do
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character),
     } #|> IO.inspect
   end
-
+ 
   # TODO: less boilerplate
   def maybe_index_user(object) when is_map(object) do
     object |> indexing_object_format() |> maybe_index() #|> debug
@@ -327,9 +338,10 @@ defmodule Bonfire.Me.Users do
 
   defp config(), do: Application.get_env(:bonfire_me, Users)
 
+  # Reads fixtures in configuration and creates a default boundaries setup for a user
   defp create_default_boundaries(user) do
     user_default_boundaries = Boundaries.user_default_boundaries()
-            #  |> debug("create_default_boundaries")
+    #  |> debug("create_default_boundaries")
     circles = for {k, v} <- Map.fetch!(user_default_boundaries, :circles), into: %{} do
       {k, v
       |> Map.put(:id, ULID.generate())
@@ -365,13 +377,19 @@ defmodule Bonfire.Me.Users do
           acl <- acls2 do
         %{id: user.id, acl_id: default_acl_id(acls, acl)}
       end
-    circles = circles |> dump("circles for #{e(user, :character, :username, nil)}") |> Map.values()
-    acls = acls |> dump("acls for #{e(user, :character, :username, nil)}") |> Map.values()
+    circles =
+      circles
+      # |> dump("circles for #{e(user, :character, :username, nil)}")
+      |> Map.values()
+    acls =
+      acls
+      # |> dump("acls for #{e(user, :character, :username, nil)}")
+      |> Map.values()
     named =
       (acls ++ circles)
       |> Enum.filter(&(&1[:name]))
       |> Enum.map(&Map.take(&1, [:id, :name]))
-    stereotyping =
+    stereotypes =
       (acls ++ circles)
       |> Enum.filter(&(&1[:stereotype_id]))
       |> Enum.map(&Map.take(&1, [:id, :stereotype_id]))
@@ -382,8 +400,10 @@ defmodule Bonfire.Me.Users do
     # Then the mixins
     repo().insert_all_or_ignore(Named, named)
     repo().insert_all_or_ignore(Controlled, controlleds)
-    repo().insert_all_or_ignore(Stereotyped, stereotyping)
-    Boundaries.take_care_of!([user] ++ acls ++ circles ++ grants, user)
+    repo().insert_all_or_ignore(Stereotyped, stereotypes)
+    # * The ACLs and Circles must be deleted when the user is deleted.
+    # * Grants will take care of themselves because they have a strong pointer acl_id.
+    Boundaries.take_care_of!(acls ++ circles, user)
   end
 
   # support for create_default_boundaries/1
@@ -416,6 +436,8 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-
+  def delete(users) when is_list(users) do
+    
+  end
 
 end
