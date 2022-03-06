@@ -344,7 +344,7 @@ defmodule Bonfire.Me.Users do
       for {acl, entries}  <- Map.fetch!(user_default_boundaries, :grants),
           {circle, verbs} <- entries,
           verb            <- verbs do
-        extra = case verb do
+        case verb do
           _ when is_atom(verb)   ->
             %{verb_id: Verbs.get_id!(verb), value: true}
           _ when is_binary(verb) ->
@@ -353,12 +353,12 @@ defmodule Bonfire.Me.Users do
             %{verb_id: Verbs.get_id!(verb), value: v}
           {verb, v} when is_binary(verb) and is_boolean(v) ->
             %{verb_id: verb, value: v}
-        end |> dump("extra grants")
-        Map.merge(%{
+        end
+        |> Map.merge(%{
           id:         ULID.generate(),
           acl_id:     default_acl_id(acls, acl),
           subject_id: default_subject_id(circles, user, circle),
-        }, extra)
+        })
       end
     controlleds =
       for {:SELF, acls2}  <- Map.fetch!(user_default_boundaries, :controlleds),
@@ -371,7 +371,7 @@ defmodule Bonfire.Me.Users do
       (acls ++ circles)
       |> Enum.filter(&(&1[:name]))
       |> Enum.map(&Map.take(&1, [:id, :name]))
-    stereotypes =
+    stereotyping =
       (acls ++ circles)
       |> Enum.filter(&(&1[:stereotype_id]))
       |> Enum.map(&Map.take(&1, [:id, :stereotype_id]))
@@ -382,7 +382,7 @@ defmodule Bonfire.Me.Users do
     # Then the mixins
     repo().insert_all_or_ignore(Named, named)
     repo().insert_all_or_ignore(Controlled, controlleds)
-    repo().insert_all_or_ignore(Stereotyped, stereotypes)
+    repo().insert_all_or_ignore(Stereotyped, stereotyping)
     Boundaries.take_care_of!([user] ++ acls ++ circles ++ grants, user)
   end
 
