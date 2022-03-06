@@ -1,4 +1,4 @@
-if Code.ensure_loaded?(Bonfire.GraphQL) do
+if Bonfire.Common.Utils.module_enabled?(Absinthe.Schema.Notation) do
 defmodule Bonfire.Me.API.GraphQL do
   use Absinthe.Schema.Notation
   use Bonfire.Common.Utils
