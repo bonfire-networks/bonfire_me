@@ -87,7 +87,7 @@ defmodule Bonfire.Me.Users do
   def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
     with {:ok, user} <- repo().insert(changeset) do
-      {:ok, post_create(user)}
+      post_create(user)
     end
   end
   def create(params, extra) when not is_struct(params),
@@ -105,7 +105,7 @@ defmodule Bonfire.Me.Users do
 
     maybe_index_user(user)
 
-    user
+    {:ok, user}
   end
 
   ## instance admin
@@ -329,7 +329,7 @@ defmodule Bonfire.Me.Users do
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character),
     } #|> IO.inspect
   end
- 
+
   # TODO: less boilerplate
   def maybe_index_user(object) when is_map(object) do
     object |> indexing_object_format() |> maybe_index() #|> debug
@@ -437,7 +437,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def delete(users) when is_list(users) do
-    
+
   end
 
 end
