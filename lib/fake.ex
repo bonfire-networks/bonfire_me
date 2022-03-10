@@ -83,6 +83,7 @@ defmodule Bonfire.Me.Fake do
     base
     |> Map.put_new_lazy(:name,    &name/0)
     |> Map.put_new_lazy(:summary, &summary/0)
+    |> Map.put_new_lazy(:website, &website/0)
   end
 
   def signup_form(base \\ %{}) do
