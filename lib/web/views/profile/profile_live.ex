@@ -94,7 +94,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def do_handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
     user = e(socket, :assigns, :user, nil)
 
-    feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(user, socket) #|> IO.inspect
+    feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(user, socket) |> debug("posts")
 
     {:noreply,
      assign(socket,
@@ -107,7 +107,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def do_handle_params(%{"tab" => "boosts" = tab} = _params, _url, socket) do
     user = e(socket, :assigns, :user, nil)
 
-    feed = if module_enabled?(Bonfire.Social.Boosts), do: Bonfire.Social.Boosts.list_by(user, socket) #|> debug("boosts")
+    feed = if module_enabled?(Bonfire.Social.Likes), do: Bonfire.Social.Likes.list_by(user, socket) |> debug("likes")
 
     {:noreply,
       assign(socket,
