@@ -3,6 +3,7 @@ defmodule Bonfire.Me.Characters do
   alias Bonfire.Data.Identity.Character
   alias Ecto.Changeset
   alias Bonfire.Common.Utils
+  alias Bonfire.Common.URIs
   import Bonfire.Me.Integration
   import Ecto.Query
   use Arrows
@@ -117,23 +118,28 @@ defmodule Bonfire.Me.Characters do
     |> Changeset.cast_assoc(:follow_count)
   end
 
-  def display_username("@"<>username) do
-    username
+  def display_username(user, is_local? \\ nil)
+
+  def display_username("@"<>username, is_local?) do
+    display_username(username, is_local?)
   end
-  def display_username(username) when is_binary(username) do
-    username
+  def display_username(username, true) when is_binary(username) do
+    "@#{username}@#{URIs.instance_domain()}"
   end
-  def display_username(%{username: username}) when not is_nil(username) do
-    display_username(username)
+  def display_username(username, false) when is_binary(username) do
+    "@"<>username
   end
-  def display_username(%{display_username: username}) when not is_nil(username) do
-    display_username(username)
+  def display_username(%{username: username} = character, _) when not is_nil(username) do
+    display_username(username, check_local(character))
   end
-  def display_username(%{character: _} = thing) do
-    repo().maybe_preload(thing, :character)
-    display_username(Map.get(thing, :character))
+  def display_username(%{display_username: username}, is_local?) when not is_nil(username) do
+    display_username(username, is_local?)
   end
-  def display_username(_) do
+  def display_username(%{character: _} = thing, _) do
+    repo().maybe_preload(thing, [character: :peered])
+    display_username(Map.get(thing, :character), check_local(thing))
+  end
+  def display_username(_, _) do
     nil
   end
 

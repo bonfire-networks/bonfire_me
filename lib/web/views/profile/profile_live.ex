@@ -17,7 +17,12 @@ defmodule Bonfire.Me.Web.ProfileLive do
     ]
   end
 
+  defp mounted(%{"remote_follow"=> _, "username"=> username} = params, _session, socket) do
+
+  end
+
   defp mounted(params, _session, socket) do
+    # dump(params)
 
     current_user = current_user(socket)
     current_username = e(current_user, :character, :username, nil)
@@ -37,7 +42,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     # debug(user)
 
-    if user do
+    if user && ( current_username || check_local(user) ) do # show remote users only to logged in users
 
       # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> debug(label: "following")
 
@@ -71,11 +76,26 @@ defmodule Bonfire.Me.Web.ProfileLive do
         # to_circles: [{e(user, :profile, :name, e(user, :character, :username, l "someone")), e(user, :id, nil)}]
       )}
     else
-      {:ok,
-        socket
-        |> put_flash(:error, l "Profile not found")
-        |> push_redirect(to: "/error")
-      }
+      if user do
+        if Map.get(params, "remote_interaction") do # redir to login and then come back to this page
+          {:ok,
+            socket
+            |> put_flash(:info, l("Please login first, and then: ")<>" "<>e(socket, :assigns, :flash, :info, ""))
+            |> push_redirect(to: path(:login) <> go_query(path(user)))
+          }
+        else # redir to remote profile
+          {:ok,
+            socket
+            |> redirect(external: canonical_url(user))
+          }
+        end
+      else
+        {:ok,
+          socket
+          |> put_flash(:error, l "Profile not found")
+          |> push_redirect(to: "/error")
+        }
+      end
     end
   end
 
