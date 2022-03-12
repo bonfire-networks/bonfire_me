@@ -49,7 +49,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
       page_title = if current_username == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
 
       # smart_input_prompt = if current_username == e(user, :character, :username, ""), do: l( "Write something..."), else: l("Write something for ") <> e(user, :profile, :name, l("this person"))
-      smart_input_prompt = ""
+      smart_input_prompt = nil
       smart_input_text = if current_username == e(user, :character, :username, ""), do:
       "", else: "@"<>e(user, :character, :username, "")<>" "
 
@@ -160,8 +160,9 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     page_title = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "My messages"), else: l("Messages with")<>" "<>e(user, :profile, :name, l "someone")
 
-    # smart_input_prompt = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Write a private message for ") <> e(user, :profile, :name, l "this person")
-    smart_input_prompt = ""
+    # smart_input_prompt = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l( "Write a private note to self..."), else: l("Send a private message") <> e(user, :profile, :name, l "this person")
+    smart_input_prompt = l("Send a private message")
+
     smart_input_text = if e(current_user, :character, :username, nil) != e(user, :character, :username, nil),
     do: "@"<>e(user, :character, :username, "")<>" ",
     else: ""

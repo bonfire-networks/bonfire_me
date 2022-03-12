@@ -1,7 +1,6 @@
 defmodule Bonfire.Me.Web.LogoutController do
 
   use Bonfire.Web, :controller
-  alias Bonfire.Web.HomeLive
 
   def index(conn, _) do
     conn

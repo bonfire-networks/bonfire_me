@@ -2,7 +2,6 @@ defmodule Bonfire.Web.Plugs.AdminRequired do
 
   use Bonfire.Web, :plug
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Web.HomeLive
 
   def init(opts), do: opts
 
