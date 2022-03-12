@@ -11,8 +11,10 @@ defmodule Bonfire.Me.Users.Queries do
 
   def queries_module, do: User
 
-  def query({:id, id}), do: by_id(id)
-  def query({:username, username}), do: by_username_or_id(username)
+  def query(filters, _opts \\ [])
+  def query({:id, id}, _opts), do: by_id(id)
+  def query({:username, username}, _opts), do: by_username_or_id(username)
+  def query([filter], _opts), do: query(filter)
 
   defp query(), do: from(u in User, as: :user)
 

@@ -42,7 +42,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     # debug(user)
 
-    if user && ( current_username || check_local(user) ) do # show remote users only to logged in users
+    if user && ( current_username || is_local?(user) ) do # show remote users only to logged in users
 
       # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> debug(label: "following")
 

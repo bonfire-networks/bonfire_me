@@ -130,14 +130,14 @@ defmodule Bonfire.Me.Characters do
     "@"<>username
   end
   def display_username(%{username: username} = character, _) when not is_nil(username) do
-    display_username(username, check_local(character))
+    display_username(username, is_local?(character))
   end
   def display_username(%{display_username: username}, is_local?) when not is_nil(username) do
     display_username(username, is_local?)
   end
   def display_username(%{character: _} = thing, _) do
     repo().maybe_preload(thing, [character: :peered])
-    display_username(Map.get(thing, :character), check_local(thing))
+    display_username(Map.get(thing, :character), is_local?(thing))
   end
   def display_username(_, _) do
     nil
