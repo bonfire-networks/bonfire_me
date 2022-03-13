@@ -7,15 +7,17 @@ defmodule Bonfire.Me.Web.Routes do
       scope "/", Bonfire.Me.Web do
         pipe_through :browser
 
-        live "/user/:username", ProfileLive
         live "/user/@:username", ProfileLive
+        live "/user/:username", ProfileLive
+
         live "/@:username", ProfileLive, as: Bonfire.Data.Identity.User
         live "/@:username", ProfileLive, as: Bonfire.Data.Identity.Character
+        live "/@:username/:tab", ProfileLive
+
         live "/profile/:id", ProfileLive, as: Bonfire.Data.Social.Profile
 
         live "/user/", ProfileLive, as: Bonfire.Data.Identity.User
         live "/user/:username/:tab", ProfileLive
-        live "/user/:username/posts", PostsLive
 
         resources "/login/forgot-password", ForgotPasswordController, only: [:index, :create], as: :forgot_password
 

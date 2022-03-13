@@ -6,7 +6,7 @@ defmodule Bonfire.Social.Boundaries.InstanceWideGhostActorTest do
   test "instance-wide ghosted local user cannot switch to that identity" do
     bob = fake_account!()
     bob_user = fake_user!(bob)
-    Bonfire.Boundaries.block(bob_user, :ghost, :instance_wide)
+    Bonfire.Boundaries.Blocks.block(bob_user, :ghost, :instance_wide)
 
     conn = conn(account: bob)
     conn = get(conn, "/switch-user/#{bob_user.character.username}")

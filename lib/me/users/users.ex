@@ -32,6 +32,8 @@ defmodule Bonfire.Me.Users do
 
   def fetch_current(id), do: repo().single(Queries.current(id))
 
+  def query([id: id], _opts \\ []) when is_binary(id), do: by_id(id)
+
   def by_id(id) when is_binary(id), do: repo().single(Queries.by_id(id))
   def by_id([id]), do: by_id(id)
 
@@ -56,7 +58,7 @@ defmodule Bonfire.Me.Users do
   def by_username_and_account(username, account_id) do
     with {:ok, user} <- repo().single(Queries.by_username_and_account(username, account_id)),
     # check if user isn't blocked instance-wide
-    blocked? when blocked? !=true <- Bonfire.Boundaries.is_blocked?(user, :ghost, :instance_wide) do
+    blocked? when blocked? !=true <- Bonfire.Boundaries.Blocks.is_blocked?(user, :ghost, :instance_wide) do
       {:ok, user}
     end
   end

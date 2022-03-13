@@ -12,15 +12,15 @@ defmodule Bonfire.Me.Web.LoginController do
     paint(conn, form_cs(Map.take(conn.query_params, [:go, "go"])))
   end
 
-  def create(conn, params) do
-    params = Map.get(params, "login_fields", %{})
-    form = Accounts.changeset(:login, params)
-    case Accounts.login(form) do
+  def create(conn, form) do
+    params = Map.get(form, "login_fields", form)
+    cs = Accounts.changeset(:login, params)
+    case Accounts.login(cs) do
       {:ok, account, user} -> logged_in(account, user, conn, form)
       {:error, changeset} -> paint(conn, changeset)
       _ ->
         error("LoginController: unhandled error")
-        paint(conn, form)
+        paint(conn, cs)
     end
   end
 
