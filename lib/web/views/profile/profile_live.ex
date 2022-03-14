@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
 
     if user && ( current_username || is_local?(user) ) do # show remote users only to logged in users
 
-      # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> debug(label: "following")
+      # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> debug("following")
 
       page_title = if current_username == e(user, :character, :username, ""), do: l( "Your profile"), else: e(user, :profile, :name, l "Someone") <> "'s profile"
 
@@ -167,7 +167,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
     do: "@"<>e(user, :character, :username, "")<>" ",
     else: ""
 
-    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> debug(label: "messages")
+    feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, user) #|> debug("messages")
 
     {:noreply,
      assign(socket,

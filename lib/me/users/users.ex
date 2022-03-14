@@ -319,7 +319,7 @@ defmodule Bonfire.Me.Users do
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    # |> debug(label: "users update changeset")
+    # |> debug("users update changeset")
   end
 
   def indexing_object_format(u) do

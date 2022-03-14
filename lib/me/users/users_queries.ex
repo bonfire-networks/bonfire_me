@@ -63,7 +63,7 @@ defmodule Bonfire.Me.Users.Queries do
     else
       from(u in User, as: :user)
       |> proloads(:local)
-      |> where([accounted: a], a.account_id == ^account_id)
+      |> where([accounted: a], a.account_id == ^Utils.ulid(account_id))
       |> where([character: c], c.username == ^username)
     end
   end
