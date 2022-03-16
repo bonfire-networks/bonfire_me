@@ -41,11 +41,7 @@ defmodule Bonfire.Me.ConnCase do
 
     import Bonfire.Me.Integration
 
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(repo())
-
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(repo(), {:shared, self()})
-    end
+    Bonfire.Common.Test.Interactive.setup_test_repo(tags)
 
     {:ok, []}
   end
