@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Users do
 
   def by_username!(username) when is_binary(username), do: repo().one(Queries.by_username_or_id(username))
   def by_account(account) do
-    if Utils.module_enabled?(Bonfire.Data.SharedUser) and Utils.module_enabled?(Bonfire.Me.SharedUsers) do
+    if module_enabled?(Bonfire.Data.SharedUser) and module_enabled?(Bonfire.Me.SharedUsers) do
       Bonfire.Me.SharedUsers.by_account(account)
     else
       do_by_account(account)
@@ -312,7 +312,7 @@ defmodule Bonfire.Me.Users do
       |> Map.merge(%{"character" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
 
     loc = params["profile"]["location"]
-    if loc && loc !="" && Utils.module_enabled?(Bonfire.Geolocate.Geolocations) do
+    if loc && loc !="" && module_enabled?(Bonfire.Geolocate.Geolocations) do
       Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
     end
     user
