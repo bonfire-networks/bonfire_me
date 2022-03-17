@@ -8,14 +8,14 @@ defmodule Bonfire.Me.Integration do
   def mailer, do: Config.get!(:mailer_module)
 
   def is_local?(thing) do
-    if Bonfire.Common.Utils.module_enabled?(Bonfire.Federate.ActivityPub.Utils) do
+    if Bonfire.Common.Extend.module_enabled?(Bonfire.Federate.ActivityPub.Utils) do
       Bonfire.Federate.ActivityPub.Utils.is_local?(thing)
     end
   end
 
   def maybe_index({:ok, object}), do: {:ok, maybe_index(object)}
   def maybe_index(object) do
-    if Config.module_enabled?(Bonfire.Search.Indexer) do
+    if Bonfire.Common.Extend.module_enabled?(Bonfire.Search.Indexer) do
       debug("search: index #{inspect object}")
       Bonfire.Search.Indexer.maybe_index_object(object)
       object

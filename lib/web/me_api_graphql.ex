@@ -1,10 +1,10 @@
-if Bonfire.Common.Utils.module_enabled?(Bonfire.API.GraphQL) do
+if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) do
 defmodule Bonfire.Me.API.GraphQL do
   use Absinthe.Schema.Notation
   use Bonfire.Common.Utils
   import Absinthe.Resolution.Helpers
   import Where
-  alias Bonfire.GraphQL
+  alias Bonfire.API.GraphQL
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users
   alias Bonfire.Me.Accounts
@@ -188,7 +188,7 @@ defmodule Bonfire.Me.API.GraphQL do
       arg(:token, non_null(:string))
 
       resolve(&confirm_email/2)
-      middleware(&Bonfire.GraphQL.Auth.set_context_from_resolution/2) # FIXME: this should auto-login
+      middleware(&Bonfire.API.GraphQL.Auth.set_context_from_resolution/2) # FIXME: this should auto-login
     end
 
     @desc "Request an email to be sent to reset a forgotten password"
@@ -359,7 +359,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp add_team_member(%{username_or_email: username_or_email} = args, info) do
-    if Utils.module_enabled?(Bonfire.Data.SharedUser) and Utils.module_enabled?(Bonfire.Me.SharedUsers) do
+    if module_enabled?(Bonfire.Data.SharedUser) and module_enabled?(Bonfire.Me.SharedUsers) do
       user = GraphQL.current_user(info)
       if user do
         with %{} = _shared_user <- Bonfire.Me.SharedUsers.add_account(user, username_or_email, Utils.stringify_keys(args)) do
@@ -382,7 +382,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   def maybe_upload(user, changes, info) do
-    if Utils.module_enabled?(Bonfire.Files.GraphQL) do
+    if module_enabled?(Bonfire.Files.GraphQL) do
       debug("API - attempt to upload")
       Bonfire.Files.GraphQL.upload(user, changes, info)
     else

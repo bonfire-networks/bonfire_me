@@ -5,6 +5,7 @@ defmodule Bonfire.Me.Users.Queries do
   # alias Bonfire.Me.Users
   alias Bonfire.Data.Identity.User
   alias Bonfire.Common.Utils
+  import Bonfire.Common.Extend
   import EctoSparkles
 
   use Arrows
@@ -58,12 +59,12 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   def by_username_and_account(username, account_id) do
-    if Utils.module_enabled?(Bonfire.Data.SharedUser) and Utils.module_enabled?(Bonfire.Me.SharedUsers) do
+    if module_enabled?(Bonfire.Data.SharedUser) and module_enabled?(Bonfire.Me.SharedUsers) do
       Bonfire.Me.SharedUsers.by_username_and_account_query(username, account_id)
     else
       from(u in User, as: :user)
       |> proloads(:local)
-      |> where([accounted: a], a.account_id == ^account_id)
+      |> where([accounted: a], a.account_id == ^Utils.ulid(account_id))
       |> where([character: c], c.username == ^username)
     end
   end
