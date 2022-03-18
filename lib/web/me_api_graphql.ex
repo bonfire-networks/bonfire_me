@@ -392,4 +392,6 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
 end
+else
+  IO.inspect("Me.API.GraphQL Skip")
 end
