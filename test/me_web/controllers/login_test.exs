@@ -8,6 +8,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
     conn = get(conn, "/login")
     doc = floki_response(conn)
     assert [form] = Floki.find(doc, "#login-form")
+    IO.inspect(form)
     assert [_] = Floki.find(form, "input[type='text']")
     assert [_] = Floki.find(form, "input[type='password']")
     assert [_] = Floki.find(form, "button[type='submit']")

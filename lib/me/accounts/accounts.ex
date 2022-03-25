@@ -18,14 +18,12 @@ defmodule Bonfire.Me.Accounts do
   import Where
 
   def get_current(nil), do: nil
-  def get_current(id) when is_binary(id),
-    do: repo().one(Queries.current(id))
+  def get_current(id) when is_binary(id), do: repo().one(Queries.current(id))
 
-  def fetch_current(id) when is_binary(id),
-    do: repo().single(Queries.current(id))
+  def fetch_current(nil), do: {:error, :not_found}
+  def fetch_current(id) when is_binary(id), do: repo().single(Queries.current(id))
 
-  def get_by_email(email) when is_binary(email),
-    do: repo().one(Queries.by_email(email))
+  def get_by_email(email) when is_binary(email), do: repo().one(Queries.by_email(email))
 
   @type changeset_name :: :change_password | :confirm_email | :login | :signup
 
@@ -47,10 +45,7 @@ defmodule Bonfire.Me.Accounts do
 
   def changeset(:signup, params, opts) do
     if valid_invite_provided?(opts) do
-      signup_changeset(
-        params,
-        opts
-      )
+      signup_changeset(params, opts)
     else
       invite_error_changeset()
     end
@@ -111,14 +106,12 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  defp login_query(%{email: email}) when is_binary(email),
-    do: Queries.login_by_email(email)
+  defp login_query(%{email: email}) when is_binary(email), do: Queries.login_by_email(email)
 
-  defp login_query(%{username: username}) when is_binary(username),
-    do: Queries.login_by_username(username)
+  defp login_query(%{username: username}) when is_binary(username), do: Queries.login_by_username(username)
 
   defp login_check_password(nil, _form, changeset) do
-    Credential.dummy_check()
+    Credential.dummy_check() # don't leak whether the user exists
     {:error, Changeset.add_error(changeset, :form, "no_match")}
   end
 
@@ -196,11 +189,16 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp refresh_confirm_email(%Account{email: %Email{}=email}=account, opts) do
-    with {:ok, email} <- repo().update(Email.put_token(email)),
-         account = %{ account | email: email },
-         {:ok, _} <- send_confirm_email(true, account, opts),
+    repo().update(Email.put_token(email))       # put a new token
+    ~> do_refresh_confirm_email(account, opts) # if that succeeds, send an email
+  end
+
+  defp do_refresh_confirm_email(email, account, opts) do
+    account = %{ account | email: email }
+    with {:ok, _} <- send_confirm_email(account, Keyword.put(opts, :must_confirm?, true)),
       do: {:ok, :refreshed, account}
   end
+    
 
   ### confirm_email
 
@@ -228,26 +226,30 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp maybe_send_confirm_email(%Account{}=account, opts) do
-    send_confirm_email(Email.must_confirm?(opts), account, opts)
+    if Email.must_confirm?(opts) do
+      send_confirm_email(account, opts)
+    else
+      debug("Skipping email confirmation")
+      {:ok, account}
+    end      
   end
 
-  defp send_confirm_email(false, account, _opts) do
-    debug("Skip email confirmation")
-   {:ok, account}
+  defp send_confirm_email(account, opts) do
+    case account do
+      %{email: %{email_address: email}} ->
+        mail = Mails.confirm_email(account, opts)
+        mailer().send_now(mail, email)
+        |> mailer_response(account)
+      _ ->
+        case repo().preload(account, :email) do
+          %{email: %{email_address: email}} ->
+            mail = Mails.confirm_email(account, opts)
+            mailer().send_now(mail, email)
+            |> mailer_response(account)
+          _ -> {:error, :email_missing}
+        end
+    end
   end
-
-  defp send_confirm_email(true, %Account{email: %{email_address: email_address}}=account, opts) do
-    mail = Mails.confirm_email(account, opts)
-    mailer().send_now(mail, email_address)
-    |> mailer_response(account)
-  end
-
-  defp send_confirm_email(true, %Account{email: %{email_address: email_address}}=account, opts) do
-    send_confirm_email(true, repo().preload(account, :email), opts)
-  end
-
-  defp send_confirm_email(_, _account, _opts),
-   do: {:error, :email_missing}
 
   ### forgot/change password
 
@@ -257,7 +259,6 @@ defmodule Bonfire.Me.Accounts do
 
 
   def change_password(current_account, params_or_changeset, opts \\ [])
-
   def change_password(current_account, params, opts) when not is_struct(params),
     do: change_password(current_account, changeset(:change_password, params, opts), params, opts)
 
@@ -278,7 +279,7 @@ defmodule Bonfire.Me.Accounts do
       |> Changeset.cast_assoc(:credential, required: true)
       |> repo().update()
     else
-      {:error, cs} # avoid checking out txn
+      {:error, cs} # avoid checking out tx
     end
   end
 

@@ -1,11 +1,12 @@
 defmodule Bonfire.Me.Characters do
 
   alias Bonfire.Data.Identity.Character
+  alias Bonfire.Common.{URIs, Utils}
   alias Ecto.Changeset
-  alias Bonfire.Common.Utils
-  alias Bonfire.Common.URIs
+  alias Pointers.Changesets
   import Bonfire.Me.Integration
   import Ecto.Query
+  import EctoSparkles
   use Arrows
 
   def context_module, do: Character
@@ -19,34 +20,18 @@ defmodule Bonfire.Me.Characters do
   def get(id), do: q_by_id(id) |> repo().single()
 
   def by_username_q(username) do
-    from c in Character,
-      left_join: p in assoc(c, :profile),
-      left_join: pe in assoc(c, :peered),
-      left_join: a in assoc(c, :actor),
-      where: c.username == ^username,
-      preload: [peered: pe, profile: p, actor: a]
+    from(c in Character, where: c.username == ^username)
+    |> proload([:profile, :peered, :actor])
   end
 
-  def q_by_id(ids) when is_list(ids) do
-    from c in Character,
-      left_join: p in assoc(c, :profile),
-      left_join: pe in assoc(c, :peered),
-      left_join: a in assoc(c, :actor),
-      where: c.id in ^ids,
-      preload: [peered: pe, profile: p, actor: a]
-  end
-
-  def q_by_id(id) do
-    from c in Character,
-      left_join: p in assoc(c, :profile),
-      left_join: pe in assoc(c, :peered),
-      left_join: a in assoc(c, :actor),
-      where: c.id == ^id,
-      preload: [peered: pe, profile: p, actor: a]
+  def q_by_id(ids) do
+    from(c in Character, where: c.id in ^List.wrap(ids))
+    |> proload([:peered, :profile, :actor])
   end
 
   def username_available?(username) do
-    not repo().exists?(from c in Character, where: c.username == ^username) and hash_available?(Character.hash(username))
+    not repo().exists?(from c in Character, where: c.username == ^username)
+    and hash_available?(Character.hash(username))
   end
 
   def hash_available?(hash) do
@@ -57,7 +42,6 @@ defmodule Bonfire.Me.Characters do
     repo().delete_all(from c in Character, where: c.username_hash == ^hash)
   end
 
-
   def remote_changeset(char, params), do: do_remote_changeset(char, params)
 
   def clean_username(username) do
@@ -67,11 +51,10 @@ defmodule Bonfire.Me.Characters do
   end
 
   def changeset(char \\ %Character{}, params, profile \\ :local) do
-    case char.__meta__.state do
+    case Changeset.cast(char, %{}, []).data.__meta__.state do
       :built ->
         char
         |> Character.changeset(params, :hash)
-        |> Changeset.validate_format(:username, @username_regex)
         |> changeset_common()
       :loaded ->
         char = repo().maybe_preload(char, [:actor, :outbox, :inbox, :notifications])
@@ -96,26 +79,19 @@ defmodule Bonfire.Me.Characters do
     |> Changeset.cast_assoc(:actor)
   end
 
-  defp do_changeset(char \\ %Character{}, params)
-
-  defp do_changeset(%Character{} = char, params) do
-  end
-
-  defp do_remote_changeset(%Character{id: _} = char, params) do # update
-    char
-    |> Character.changeset(params, :hash)
-    |> Changeset.cast_assoc(:actor)
-  end
-
-  defp do_remote_changeset(%Character{} = char, params) do # create
-    char
-    |> Character.changeset(params, :hash)
-    |> Changeset.cast(%{
-      # feed: %{},
-      follow_count: %{follower_count: 0, followed_count: 0},
-    }, [])
-    # |> Changeset.cast_assoc(:feed)
-    |> Changeset.cast_assoc(:follow_count)
+  defp do_remote_changeset(changeset, params) do
+    # If it's a character, turn it into a changeset
+    changeset = Changesets.cast(changeset, %{}, [])
+    if is_binary(changeset.data.id) do
+      changeset # update
+      |> Character.changeset(params, :hash)
+      |> Changeset.cast_assoc(:feed)
+      |> Changeset.cast_assoc(:follow_count)
+    else
+      changeset # insert
+      |> Character.changeset(params, :hash)
+      |> Changeset.cast_assoc(:actor)
+    end
   end
 
   def display_username(user, is_local? \\ nil)

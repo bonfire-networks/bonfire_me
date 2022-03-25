@@ -13,7 +13,7 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
-  alias Pointers.ULID
+  alias Pointers.{Changesets, ULID}
   use Arrows
   use Bonfire.Common.Utils
 
@@ -37,6 +37,7 @@ defmodule Bonfire.Me.Users do
   def by_id(id) when is_binary(id), do: repo().single(Queries.by_id(id))
   def by_id([id]), do: by_id(id)
 
+  # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
   def by_username(username) when is_binary(username), do: repo().single(Queries.by_username_or_id(username))
 
   def by_username!(username) when is_binary(username), do: repo().one(Queries.by_username_or_id(username))
@@ -88,6 +89,7 @@ defmodule Bonfire.Me.Users do
   # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
   def create(params_or_changeset, extra \\ nil)
   def create(%Changeset{data: %User{}}=changeset, _extra) do
+    debug(changeset, "changeset")
     with {:ok, user} <- repo().insert(changeset) do
       post_create(user)
     end
@@ -132,35 +134,6 @@ defmodule Bonfire.Me.Users do
     |> Changeset.cast(%{instance_admin: %{is_instance_admin: make_admin?}}, [])
     |> Changeset.cast_assoc(:instance_admin)
     |> repo().update()
-  end
-
-
-  # this is where we are very careful to explicitly set all the things
-  # a user should have but shouldn't have control over the input for.
-  defp override(changeset, :create, %Account{}=account, params) do
-    %{
-      accounted: %{account_id: account.id},
-      encircles: [%{circle_id: Circles.circles().local.id}]
-    }
-    |> Changeset.cast(changeset, ..., [])
-    |> override_character(params)
-  end
-  # TODO: does ap use the inbox?
-  defp override(changeset, :create, :remote, params) do
-    %{
-      encircles: [%{circle_id: Circles.circles().activity_pub.id}]
-    }
-    |> Changeset.cast(changeset, ..., [])
-    |> override_character(params)
-  end
-
-  defp override_character(changeset, params) do
-    user_id = Changeset.get_field(changeset, :id)
-    case params[:character] do
-      %{}=char -> Map.put(char, :id, user_id)
-      _        -> Map.put(Map.get(params, "character", %{}), "id", user_id)
-    end
-    |> Changeset.cast(changeset, %{character: ...}, [])
   end
 
   def get_only_in_account(%Account{id: id}) do
@@ -222,13 +195,14 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  def add_acl(%{} = user, preset) do
-    user # FIXME: can we do this in main create changeset?
-      |> repo().maybe_preload(:controlled)
-      |> User.changeset(%{})
-      |> Bonfire.Boundaries.Acls.cast(user, preset)
-      |> repo().update()
-  end
+  # what is this? it is only referenced by the commented out call in the above function.
+  # def add_acl(%{} = user, preset) do
+  #   user # FIXME: can we do this in main create changeset?
+  #     |> repo().maybe_preload(:controlled)
+  #     |> User.changeset(%{})
+  #     |> Bonfire.Boundaries.Acls.cast(user, preset)
+  #     |> repo().update()
+  # end
 
   @doc "Updates a remote user"
   def update_remote(user, params) do
@@ -273,26 +247,22 @@ defmodule Bonfire.Me.Users do
 
   def changeset(name , user \\ %User{}, params, extra)
 
-  # TODO: we need to make sure that only user input that we want is given
   def changeset(:create, user, params, %Account{}=account) do
     params
     |> User.changeset(user, ...)
-    |> override(:create, account, params)
-    |> Changeset.cast_assoc(:character, required: true, with: &Characters.changeset/2)
+    |> Changesets.put_assoc(:accounted, %{account_id: account.id})
+    |> Changesets.put_assoc(:encircles, [%{circle_id: Circles.circles().local.id}])
+    |> Changesets.put_assoc(:character, %{})
+    |> Changesets.cast_assoc(:character, required: true, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, required: true, with: &Profiles.changeset/2)
-    |> Changeset.cast_assoc(:accounted)
-    |> Changeset.cast_assoc(:instance_admin)
-    # |> Changeset.cast_assoc(:like_count)
-    |> Changeset.cast_assoc(:encircles)
-    # |> debug("create with account")
   end
 
   def changeset(:create, user, params, :remote) do
     User.changeset(user, params)
-    |> override(:create, :remote, params)
-    |> Changeset.cast_assoc(:character, required: true, with: &Characters.remote_changeset/2)
+    |> Changesets.put_assoc(:encircles, [%{circle_id: Circles.circles().local.id}])
+    |> Changesets.put_assoc(:character, %{})
+    |> Changesets.cast_assoc(:character, required: true, with: &Characters.remote_changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    |> Changeset.cast_assoc(:encircles)
     |> Changeset.cast_assoc(:peered)
   end
 
@@ -305,7 +275,7 @@ defmodule Bonfire.Me.Users do
 
     # Ecto doesn't liked mixed keys so we convert them all to strings
     params = Utils.stringify_keys(params)
-
+    
     # add the ID for update
     params = params
       |> Map.merge(%{"profile" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
@@ -313,13 +283,18 @@ defmodule Bonfire.Me.Users do
 
     loc = params["profile"]["location"]
     if loc && loc !="" && module_enabled?(Bonfire.Geolocate.Geolocations) do
-      Bonfire.Geolocate.Geolocations.thing_add_location(user, user, params["profile"]["location"])
+      Bonfire.Geolocate.Geolocations.thing_add_location(user, user, loc)
     end
     user
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    # |> debug("users update changeset")
+    |> debug("users update changeset")
+  end
+
+  defp put_character(changeset) do
+    user_id = Changeset.get_field(changeset, :id)
+    Changeset.put_assoc(changeset, :character, %{id: user_id})
   end
 
   def indexing_object_format(u) do

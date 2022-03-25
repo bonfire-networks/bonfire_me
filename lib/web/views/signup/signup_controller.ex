@@ -10,7 +10,8 @@ defmodule Bonfire.Me.Web.SignupController do
 
   def create(conn, params) do
     {account_attrs, params} = Map.pop(params, "account", %{})
-    case Accounts.signup(account_attrs, invite: params["invite"]) do
+    ret = Accounts.signup(account_attrs, invite: params["invite"])
+    case ret do
       {:ok, _account} ->
         conn
         |> assign(:registered, true)
