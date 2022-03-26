@@ -9,7 +9,7 @@ defmodule Bonfire.Me.Fake do
   def fake_account!(attrs \\ %{}, opts \\ []) do
     opts = Keyword.put_new(opts, :must_confirm?, false)
     {:ok, account} = signup_form(attrs)
-    |> dump
+    # |> dump
     |> Accounts.signup(..., opts)
     account
   end
