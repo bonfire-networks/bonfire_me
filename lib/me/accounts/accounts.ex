@@ -198,7 +198,7 @@ defmodule Bonfire.Me.Accounts do
     with {:ok, _} <- send_confirm_email(account, Keyword.put(opts, :must_confirm?, true)),
       do: {:ok, :refreshed, account}
   end
-    
+
 
   ### confirm_email
 
@@ -231,7 +231,7 @@ defmodule Bonfire.Me.Accounts do
     else
       debug("Skipping email confirmation")
       {:ok, account}
-    end      
+    end
   end
 
   defp send_confirm_email(account, opts) do
@@ -299,7 +299,7 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def redeemable_invite?(invite) do
-    if module_enabled?(Bonfire.Invite.Links) and module_enabled?(Bonfire.InviteLink) do
+    if module_enabled?(Bonfire.Invite.Links) and module_enabled?(Bonfire.InviteLink) and not is_nil(invite) do
       Bonfire.Invite.Links.redeemable?(invite)
     end
   end
