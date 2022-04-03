@@ -13,7 +13,8 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
     ]
   end
 
-  defp mounted(_, _, socket), do: {:ok, assign(socket, current_user: nil) |> assign(:go, Map.get(socket.assigns, :go, ""))
-}
+  defp mounted(_, _, socket), do: {:ok,
+    assign(socket, current_user: nil, go: Map.get(socket.assigns, :go, ""))
+  }
 
 end
