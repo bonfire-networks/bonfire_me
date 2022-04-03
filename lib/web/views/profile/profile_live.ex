@@ -100,6 +100,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   def get_user(username) do
+    username = String.trim_trailing(username, "@"<>Bonfire.Common.URIs.instance_domain())
+
     with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
       user
     else _ -> # handle other character types beyond User

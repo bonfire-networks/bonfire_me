@@ -5,6 +5,7 @@ defmodule Bonfire.Me.API.GraphQL do
   use Bonfire.Common.Utils
   import Absinthe.Resolution.Helpers
   import Where
+
   alias Bonfire.API.GraphQL
   alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users
