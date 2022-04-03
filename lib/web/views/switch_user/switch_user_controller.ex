@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
   use Bonfire.Web, :controller
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Users
-  alias Bonfire.Me.Web.{LoggedDashboardLive, SwitchUserLive}
+  alias Bonfire.Me.Web.SwitchUserLive
 
   @doc "A listing of users in the account."
   def index(%{assigns: the}=conn, params) do

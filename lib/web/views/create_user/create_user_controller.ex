@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
 
   use Bonfire.Web, :controller
   alias Bonfire.Me.Users
-  alias Bonfire.Me.Web.{CreateUserLive, LoggedDashboardLive}
+  alias Bonfire.Me.Web.CreateUserLive
 
   def index(conn, _) do # GET only supports 'go'
     conn = fetch_query_params(conn)

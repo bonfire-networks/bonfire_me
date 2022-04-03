@@ -1,4 +1,5 @@
 defmodule Bonfire.Me.Web.LoggedDashboardLive do
+  @deprecated
   use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   alias Bonfire.Web.LivePlugs
 
@@ -16,10 +17,6 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
 
     defp mounted(_params, _session, socket) do
 
-      feed_module = if module_enabled?(Bonfire.Social.Web.Feeds.BrowseLive), do: Bonfire.UI.Social.BrowseViewLive,
-      else: Bonfire.UI.Social.FeedViewLive
-
-
       {:ok, socket
       |> assign(
         page: "dashboard",
@@ -27,7 +24,6 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         has_private_tab: false,
         page_title: l("Bonfire Dashboard"),
         feed_title: l("My Feed"),
-        feed_module: feed_module,
         selected_tab: "feed",
         go: ""
         )
