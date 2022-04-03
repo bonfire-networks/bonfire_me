@@ -116,7 +116,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def do_handle_params(%{"tab" => "posts" = tab} = _params, _url, socket) do
     user = e(socket, :assigns, :user, nil)
 
-    feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(user, socket) |> debug("posts")
+    feed = if module_enabled?(Bonfire.Social.Posts), do: Bonfire.Social.Posts.list_by(user, socket)
+    #|> debug("posts")
 
     {:noreply,
      assign(socket,
