@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.ProfileLive do
   use Bonfire.Web, :surface_view
-  import Bonfire.Me.Integration
+  alias Bonfire.Me.Integration
   import Where
 
   alias Bonfire.Me.Fake
@@ -18,7 +18,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   defp mounted(%{"remote_follow"=> _, "username"=> username} = params, _session, socket) do
-
+    # TODO?
   end
 
   defp mounted(params, _session, socket) do
@@ -39,10 +39,11 @@ defmodule Bonfire.Me.Web.ProfileLive do
       username ->
         get_user(username)
     end
+    |> repo().maybe_preload(:shared_user)
 
     # debug(user)
 
-    if user && ( current_username || is_local?(user) ) do # show remote users only to logged in users
+    if user && ( current_username || Integration.is_local?(user) ) do # show remote users only to logged in users
 
       # following = if current_user && current_user.id != user.id && module_enabled?(Bonfire.Social.Follows) && Bonfire.Social.Follows.following?(current_user, user), do: [user.id] |> debug("following")
 
@@ -130,7 +131,8 @@ defmodule Bonfire.Me.Web.ProfileLive do
   def do_handle_params(%{"tab" => "boosts" = tab} = _params, _url, socket) do
     user = e(socket, :assigns, :user, nil)
 
-    feed = if module_enabled?(Bonfire.Social.Likes), do: Bonfire.Social.Likes.list_by(user, socket) |> debug("likes")
+    feed = if module_enabled?(Bonfire.Social.Boosts), do: Bonfire.Social.Boosts.list_by(user, current_user: current_user(socket))
+    |> debug("boosts")
 
     {:noreply,
       assign(socket,
