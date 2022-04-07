@@ -105,7 +105,7 @@ defmodule Bonfire.Me.Users do
   end
 
   defp post_mutate(%{} = user) do
-    user = user |> repo().maybe_preload([:character, :profile])
+    user = repo().maybe_preload(user, [:character, :profile])
 
     maybe_index_user(user)
 
@@ -152,6 +152,7 @@ defmodule Bonfire.Me.Users do
     repo().update(changeset(:update, user, params, extra))
     # |> IO.inspect
     ~> post_mutate()
+    ~> Bonfire.Federate.ActivityPub.Adapter.update_local_actor_cache()
   end
 
 
@@ -275,7 +276,7 @@ defmodule Bonfire.Me.Users do
 
     # Ecto doesn't liked mixed keys so we convert them all to strings
     params = Utils.stringify_keys(params)
-    
+
     # add the ID for update
     params = params
       |> Map.merge(%{"profile" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
