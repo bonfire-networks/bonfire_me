@@ -49,7 +49,6 @@ defmodule Bonfire.Me.Web.PrivateLive do
         |> assign(
           page: "private",
           feed: e(feed, :edges, []),
-          page_title: l("Direct Messages"),
           smart_input: true,
           has_private_tab: true,
           search_placholder: search_placeholder,
@@ -66,13 +65,13 @@ defmodule Bonfire.Me.Web.PrivateLive do
     else
       {:ok,
         socket
-        |> put_flash(:error, l "Profile not found")
+        |> put_flash(:error, l "User not found")
         |> push_redirect(to: "/error")
       }
     end
   end
 
-
+  def handle_params(params, url, socket), do: Bonfire.Common.LiveHandlers.handle_params(params, url, socket, __MODULE__)
   def handle_event(action, attrs, socket), do: Bonfire.Common.LiveHandlers.handle_event(action, attrs, socket, __MODULE__)
   def handle_info(info, socket), do: Bonfire.Common.LiveHandlers.handle_info(info, socket, __MODULE__)
 

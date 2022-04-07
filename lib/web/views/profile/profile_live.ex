@@ -224,7 +224,18 @@ defmodule Bonfire.Me.Web.ProfileLive do
      )}
   end
 
-  def do_handle_params(%{} = _params, _url, socket) do
+  def do_handle_params(%{"username" => username} = _params, url, socket) do
+    # dump(url, "profile url")
+
+    if String.contains?(url, "%40"<>username) do
+      debug("rewrite encoded @ in URL")
+      {:noreply, push_patch(socket, to: "/@"<>username, replace: true)}
+    else
+      do_handle_params(%{"tab" => "timeline"}, nil, socket)
+    end
+  end
+
+  def do_handle_params(_params, url, socket) do
     # default tab
     do_handle_params(%{"tab" => "timeline"}, nil, socket)
   end
