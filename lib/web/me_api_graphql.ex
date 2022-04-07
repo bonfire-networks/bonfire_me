@@ -307,14 +307,15 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   defp create_user(args, info) do
-    account = GraphQL.current_account(info) #|| Accounts.get_by_email("test@me.space")
+    account = GraphQL.current_account(info)
+              # || Accounts.get_by_email("test@me.space") # only for testing
     if account do
       with {:ok, user} <- Users.create(args, account),
            {:ok, uploaded} <- maybe_upload(user, args[:images], info) do
             Bonfire.Me.Users.update(user, %{"profile"=> uploaded}) #|> debug("updated")
       end
     else
-      {:error, "Not authenticated"}
+      {:error, "Account not authenticated"}
     end
   end
 
