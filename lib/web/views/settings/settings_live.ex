@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
+      LivePlugs.UserRequired,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf, LivePlugs.Locale,
       &mounted/3,

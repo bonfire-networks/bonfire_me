@@ -5,6 +5,7 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
   def mount(params, session, socket) do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
+      LivePlugs.AccountRequired,
       LivePlugs.LoadCurrentUser,
       LivePlugs.LoadCurrentAccountUsers,
       LivePlugs.StaticChanged,
