@@ -55,7 +55,11 @@ defmodule Bonfire.Me.Accounts do
     %Account{}
     |> Account.changeset(params)
     |> Changeset.cast_assoc(:email, required: true, with: &Email.changeset(&1, &2, opts))
-    |> Changeset.cast_assoc(:credential, required: true)
+    |> Changeset.cast_assoc(
+      :credential,
+      required: true,
+      with: &Credential.confirmation_changeset(&1, &2)
+    )
   end
 
   ### signup
