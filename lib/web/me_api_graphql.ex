@@ -34,11 +34,11 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve dataloader(Pointers.Pointer)
     end
 
-    # field :boost_activities, list_of(:activity) do
-    #   arg :paginate, :paginate # TODO
+    field :boost_activities, list_of(:activity) do
+      arg :paginate, :paginate # TODO
 
-    #   resolve dataloader(Pointers.Pointer)
-    # end
+      resolve dataloader(Pointers.Pointer)
+    end
 
   end
 
@@ -80,16 +80,16 @@ defmodule Bonfire.Me.API.GraphQL do
       resolve dataloader(Pointers.Pointer)
     end
 
-    field :followers, list_of(:follow) do
+    field :followers, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer, args: %{my: :followers})
+      resolve dataloader(Pointers.Pointer)
     end
 
-    field :followed, list_of(:follow) do
+    field :followed, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer, args: %{my: :followed})
+      resolve dataloader(Pointers.Pointer)
     end
 
   end

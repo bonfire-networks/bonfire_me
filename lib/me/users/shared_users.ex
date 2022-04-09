@@ -115,18 +115,18 @@ defmodule Bonfire.Me.SharedUsers do
     do: by_account(Bonfire.Me.Accounts.fetch_current(account_id))
 
 
-  def by_username_and_account_query(username, account_id) do
-      from u in User,
-        join: p in assoc(u, :profile),
-        left_join: ic in assoc(p, :icon),
-        join: c in assoc(u, :character),
-        join: a in assoc(u, :accounted),
-        left_join: su in assoc(u, :shared_user),
-        left_join: ca in assoc(u, :caretaker_accounts),
-        where: c.username == ^username,
-        where: a.account_id == ^account_id or ca.id == ^account_id ,
-        preload: [profile: {p, [icon: ic]}, character: c, accounted: a],
-        order_by: [asc: u.id]
+  def by_username_and_account_query(username, account) do
+    from u in User,
+      join: p in assoc(u, :profile),
+      left_join: ic in assoc(p, :icon),
+      join: c in assoc(u, :character),
+      join: a in assoc(u, :accounted),
+      left_join: su in assoc(u, :shared_user),
+      left_join: ca in assoc(u, :caretaker_accounts),
+      where: c.username == ^username,
+      where: a.account_id == ^ulid(account) or ca.id == ^ulid(account),
+      preload: [profile: {p, [icon: ic]}, character: c, accounted: a],
+      order_by: [asc: u.id]
   end
 
 end

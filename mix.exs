@@ -32,12 +32,7 @@ defmodule Bonfire.Me.MixProject do
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
-  @bonfire_deps [
-    "pointers",
-    "bonfire_data_access_control",
-    "bonfire_data_identity",
-    "bonfire_data_social",
-  ] |> Enum.join(" ")
+
 
   defp aliases do
     [
