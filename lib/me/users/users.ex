@@ -32,10 +32,10 @@ defmodule Bonfire.Me.Users do
 
   def fetch_current(id), do: repo().single(Queries.current(id))
 
-  def query([id: id], _opts \\ []) when is_binary(id), do: by_id(id)
+  def query([id: id], opts \\ []) when is_binary(id), do: by_id(id, opts)
 
-  def by_id(id) when is_binary(id), do: repo().single(Queries.by_id(id))
-  def by_id([id]), do: by_id(id)
+  def by_id(id, opts) when is_binary(id), do: repo().single(Queries.by_id(id, opts))
+  def by_id([id], opts), do: by_id(id, opts)
 
   # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
   def by_username(username) when is_binary(username), do: repo().single(Queries.by_username_or_id(username))

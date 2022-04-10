@@ -6,7 +6,9 @@ defmodule Bonfire.Me.Accounts.Queries do
 
   def current(id) when is_binary(id) do
     from a in Account,
-      where: a.id == ^id
+      left_join: s in assoc(a, :settings),
+      where: a.id == ^id,
+      preload: [settings: s]
   end
 
   def by_email(email) when is_binary(email) do

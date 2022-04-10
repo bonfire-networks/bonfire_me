@@ -18,7 +18,7 @@ defmodule Bonfire.Me.Accounts do
   import Where
 
   def get_current(nil), do: nil
-  def get_current(id) when is_binary(id), do: repo().one(Queries.current(id))
+  def get_current(id) when is_binary(id), do: repo().one(Queries.current(id)) |> debug
 
   def fetch_current(nil), do: {:error, :not_found}
   def fetch_current(id) when is_binary(id), do: repo().single(Queries.current(id))

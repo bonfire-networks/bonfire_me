@@ -3,10 +3,10 @@ defmodule Bonfire.Me.Settings.LiveHandler do
   import Bonfire.Boundaries.Integration
 
   def handle_event("set", attrs, socket) when is_map(attrs) do
-    with {:ok, status} <- attrs |> Map.drop(["_target"]) |> Bonfire.Me.Settings.set(socket) do
+    with {:ok, _settings} <- attrs |> Map.drop(["_target"]) |> Bonfire.Me.Settings.set(socket) do
       {:noreply,
           socket
-          |> put_flash(:info, status)
+          |> put_flash(:info, "Settings saved :-)")
       }
     end
   end
