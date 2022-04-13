@@ -34,6 +34,7 @@ defmodule Bonfire.Me.Users do
 
   def query([id: id], opts \\ []) when is_binary(id), do: by_id(id, opts)
 
+  def by_id(id, opts \\ [])
   def by_id(id, opts) when is_binary(id), do: repo().single(Queries.by_id(id, opts))
   def by_id([id], opts), do: by_id(id, opts)
 
