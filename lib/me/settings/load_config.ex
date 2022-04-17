@@ -23,7 +23,7 @@ defmodule Bonfire.Me.Settings.LoadConfig do
 
   def load_config() do
     settings = Bonfire.Me.Settings.load_instance_settings()
-    {Bonfire.Common.Config.put(settings), Map.new(settings)}
+    {Bonfire.Common.Config.put(settings), Map.new(settings || [skip: "No settings loaded"])}
   end
 
 end
