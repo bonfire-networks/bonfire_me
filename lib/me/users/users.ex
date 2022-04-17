@@ -358,11 +358,11 @@ defmodule Bonfire.Me.Users do
       end
     circles =
       circles
-      # |> dump("circles for #{e(user, :character, :username, nil)}")
+      # |> info("circles for #{e(user, :character, :username, nil)}")
       |> Map.values()
     acls =
       acls
-      # |> dump("acls for #{e(user, :character, :username, nil)}")
+      # |> info("acls for #{e(user, :character, :username, nil)}")
       |> Map.values()
     named =
       (acls ++ circles)

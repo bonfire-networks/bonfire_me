@@ -117,7 +117,7 @@ defmodule Bonfire.Me.Settings do
     parent =
       []
       |> put_in(keys, value)
-      |> dump("Set with attrs")
+      |> info("Set with attrs")
       |> set(opts)
 
     # Config.put(keys, value, otp_app) # if scope==instance
