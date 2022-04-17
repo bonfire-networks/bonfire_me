@@ -27,7 +27,7 @@ defmodule Bonfire.Me.Mails do
     if Bonfire.Common.Config.get(:env) != :test or System.get_env("START_SERVER", "false")=="true", do: warn("Email confirmation link: #{url}")
 
     conf =
-      Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])
+      Bonfire.Common.Config.get(__MODULE__, [])
       |> Keyword.get(:confirm_email, [])
 
     new_email()
@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Mails do
 
   def forgot_password(%Account{email: %{confirm_token: confirm_token}}=account) when is_binary(confirm_token) do
     conf =
-      Bonfire.Common.Config.get_ext(:bonfire_me, __MODULE__, [])
+      Bonfire.Common.Config.get(__MODULE__, [])
       |> Keyword.get(:forgot_password_email, [])
 
     app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
