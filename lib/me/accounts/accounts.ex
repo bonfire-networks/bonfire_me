@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
-    if valid_invite_provided?(opts) do
+    if allow_signup?(opts) do
       signup_changeset(params, opts)
     else
       invite_error_changeset()
@@ -296,11 +296,11 @@ defmodule Bonfire.Me.Accounts do
     # System.get_env("INVITE_ONLY", "true") in ["true", true]
   end
 
-  def valid_invite_provided?(opts) do
+  def allow_signup?(opts) do
     valid_invite = System.get_env("INVITE_KEY")
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
 
-    not instance_is_invite_only? || opts[:invite] in [valid_invite, special_invite] || redeemable_invite?(opts[:invite]) || is_first_account?
+    !instance_is_invite_only?() or ( not is_nil(opts[:invite]) and opts[:invite] in [valid_invite, special_invite] ) or redeemable_invite?(opts[:invite]) or is_first_account?()
   end
 
   def redeemable_invite?(invite) do
