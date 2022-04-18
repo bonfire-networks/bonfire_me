@@ -55,9 +55,9 @@ defmodule Bonfire.Me.Settings do
 
     # TODO get and merge dominoes based on current_user > current_account > instance > Config
     fetch_all_scopes(otp_app, opts)
-    |> debug("list of different configs and settings for #{inspect otp_app}")
+    # |> debug("list of different configs and settings for #{inspect otp_app}")
     |> deep_merge_reduce()
-    |> debug("domino-merged settings")
+    # |> debug("domino-merged settings")
   end
 
   def get_all_ext!(module_or_otp_app, opts \\ []) do
@@ -76,8 +76,8 @@ defmodule Bonfire.Me.Settings do
   def fetch_all_scopes(otp_app, opts) do
     (
       [Config.get_ext(otp_app)]
-      ++
-      [load_instance_settings() |> e(otp_app, nil) ]
+      # ++
+      # [load_instance_settings() |> e(otp_app, nil) ] # should already be loaded in Config
       ++
       [fetch({:current_account, current_account(opts)}) |> e(:data, otp_app, nil)]
       ++
@@ -95,7 +95,7 @@ defmodule Bonfire.Me.Settings do
     case scoped_object(scope_tuple) do
       %{settings: %Ecto.Association.NotLoaded{}} -> fetch(scoped)
       %{settings: settings} -> settings
-      nil -> fetch(scoped)
+      _ -> fetch(scoped)
     end
   end
 
@@ -109,20 +109,21 @@ defmodule Bonfire.Me.Settings do
   @doc """
   Put a setting using a key like `:key` or list of nested keys like `[:top_key, :sub_key]`
   """
-  def put(key, value, opts \\ [])
   def put(keys, value, opts) when is_list(keys) do
     # keys = Config.keys_tree(keys) # Note: doing this in set/2 instead
     # |> debug("Putting settings for")
-
-    parent =
-      []
-      |> put_in(keys, value)
-      |> info("Set with attrs")
-      |> set(opts)
-
-    # Config.put(keys, value, otp_app) # if scope==instance
+    map_put_in(keys, value)
+    |> maybe_to_keyword_list()
+    |> set(opts)
   end
   def put(key, value, opts), do: set([key], value, opts)
+
+  def map_put_in(root \\ %{}, keys, value) do
+    # root = %{} or non empty map
+    # keys = [:a, :b, :c]
+    # value = 3
+    put_in(root, Enum.map(keys, &Access.key(&1, %{})), value)
+  end
 
   @doc """
   Set several settings at once.
@@ -258,13 +259,12 @@ defmodule Bonfire.Me.Settings do
     # |> debug
   end
 
-  # def scoped_object({:instance, scoped}, opts) do
-  #   scoped
-  #   |> debug("! TODO cache instance settings !")
-  # end
+  def scoped_object({_, scoped}, _opts) do
+    scoped
+  end
 
-  def scoped_object(_, _opts) do
-    nil
+  def scoped_object(scoped, _opts) do
+    scoped
   end
 
   defp instance_scope, do: Bonfire.Boundaries.Circles.get_id(:local) || "3SERSFR0MY0VR10CA11NSTANCE"
