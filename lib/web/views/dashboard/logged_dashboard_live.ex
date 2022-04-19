@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       LivePlugs.live_plug params, session, socket, [
         LivePlugs.LoadCurrentAccount,
         LivePlugs.LoadCurrentUser,
+        LivePlugs.AccountRequired,
         LivePlugs.LoadCurrentAccountUsers,
         LivePlugs.LoadCurrentUserCircles,
         LivePlugs.StaticChanged,

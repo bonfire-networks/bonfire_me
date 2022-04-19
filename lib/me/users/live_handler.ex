@@ -42,6 +42,6 @@ defmodule Bonfire.Me.Users.LiveHandler do
   end
 
   def to_tuple(u) do
-    {e(u, :profile, :name, "Someone"), u.id}
+    {e(u, :profile, :name, "Someone"), ulid(u)}
   end
 end

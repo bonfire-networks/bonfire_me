@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
     LivePlugs.live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
+      LivePlugs.UserRequired,
       LivePlugs.LoadCurrentUserCircles,
       LivePlugs.StaticChanged,
       LivePlugs.Csrf, LivePlugs.Locale,

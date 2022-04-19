@@ -22,7 +22,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   defp mounted(params, _session, socket) do
-    # dump(params)
+    # info(params)
 
     current_user = current_user(socket)
     current_username = e(current_user, :character, :username, nil)
@@ -225,7 +225,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
   end
 
   def do_handle_params(%{"username" => username} = _params, url, socket) do
-    # dump(url, "profile url")
+    # info(url, "profile url")
 
     if String.contains?(url, "%40"<>username) do
       debug("rewrite encoded @ in URL")

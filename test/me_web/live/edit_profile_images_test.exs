@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Dashboard.Test do
+defmodule Bonfire.Me.Dashboard.EditProfileImagesTest do
   use Bonfire.Me.ConnCase
   alias Bonfire.Me.Fake
 

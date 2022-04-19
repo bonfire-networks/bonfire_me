@@ -20,6 +20,7 @@ defmodule Bonfire.Me.Web.My.SettingsUpload do
   def upload(%{assigns: %{current_user: current_user}} = conn, params) do
     attrs = input_to_atoms(params)
 
+    # TODO:
     # maybe_upload(params["profile"]["icon"], "icon")
     # maybe_upload(params["profile"]["image"], "image")
 
