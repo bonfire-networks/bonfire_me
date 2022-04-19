@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.PrivateLive do
-  use Bonfire.Web, :surface_view
+  use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   alias Bonfire.Me.Fake
   alias Bonfire.Web.LivePlugs
 
@@ -50,6 +50,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
           page: "private",
           feed: e(feed, :edges, []),
           smart_input: true,
+          tab_id: nil,
           has_private_tab: true,
           search_placholder: search_placeholder,
           feed_title: l("Messages"),
