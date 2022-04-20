@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Web.PrivateLive do
 
       search_placeholder = if e(current_user, :character, :username, "") == e(user, :character, :username, ""), do: l ("Search my profile"), else: "Search " <> e(user, :profile, :name, "this person") <> "'s profile"
 
-      feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, e(socket.assigns, :user, :id, nil)) #|> IO.inspect
+      feed = if current_user, do: if module_enabled?(Bonfire.Social.Messages), do: Bonfire.Social.Messages.list(current_user, ulid(e(socket.assigns, :user, nil))) #|> debug()
 
       {:ok,
         socket

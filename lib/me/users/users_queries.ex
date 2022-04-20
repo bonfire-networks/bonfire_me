@@ -61,7 +61,8 @@ defmodule Bonfire.Me.Users.Queries do
   defp proloads(query, :minimal) do
     proload query, [
       :instance_admin,
-      character: [:peered]
+      character: [:peered],
+      profile: [:icon],
     ]
   end
 

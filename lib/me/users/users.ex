@@ -98,9 +98,8 @@ defmodule Bonfire.Me.Users do
   def create(params, extra) when not is_struct(params) do
     maybe_make_admin = extra !=:remote && is_first_user?()
     params
-    |> Map.merge(%{instance_admin: %{is_instance_admin: maybe_make_admin}})
     |> changeset(:create, ..., extra)
-    |> Changesets.put_assoc(:instance_admin)  # FIXME
+    |> Changesets.put_assoc(:instance_admin, %{is_instance_admin: maybe_make_admin})  # FIXME
     |> create()
   end
 
