@@ -1,7 +1,0 @@
-<Bonfire.UI.Social.PrivateViewLive
-  page_title={l("Direct Messages")}
-  page={@page}
-  smart_input={@smart_input}
-  feed={@feed}
-  tab_id={@tab_id}
-/>

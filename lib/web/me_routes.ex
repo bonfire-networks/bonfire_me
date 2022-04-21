@@ -71,7 +71,6 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :user_required
 
         live "/user", ProfileLive, as: :user_profile
-        live "/private", PrivateLive, as: :user_private
         live "/settings", SettingsLive, as: :settings
 
         live "/user/circles", CirclesLive
