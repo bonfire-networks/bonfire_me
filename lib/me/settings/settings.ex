@@ -21,8 +21,8 @@ defmodule Bonfire.Me.Settings do
     {[otp_app], keys_tree} = Config.keys_tree(keys) |> Enum.split(1)
 
     debug(keys_tree, "Get settings in #{inspect otp_app} for")
-    case get_all_ext(otp_app, opts)
-         |> get_in(keys_tree) do
+
+    case get_all_ext(otp_app, opts) |> get_in(keys_tree) do
       nil ->
         # Config.get_ext(otp_app, keys, default)
         nil
@@ -55,9 +55,9 @@ defmodule Bonfire.Me.Settings do
 
     # TODO get and merge dominoes based on current_user > current_account > instance > Config
     fetch_all_scopes(otp_app, opts)
-    # |> debug("list of different configs and settings for #{inspect otp_app}")
+    |> debug("list of different configs and settings for #{inspect otp_app}")
     |> deep_merge_reduce()
-    # |> debug("domino-merged settings")
+    |> debug("domino-merged settings")
   end
 
   def get_all_ext!(module_or_otp_app, opts \\ []) do

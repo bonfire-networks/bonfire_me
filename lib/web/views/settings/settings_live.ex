@@ -14,8 +14,9 @@ defmodule Bonfire.Me.Web.SettingsLive do
     ]
   end
 
-  defp mounted(_params, _session, socket),
-    do: {:ok,
+  defp mounted(_params, _session, socket) do
+    allowed = ~w(.jpg .jpeg .png .gif .svg .tiff .webp) # make configurable
+    {:ok,
       socket
       |> assign(
         page_title: l( "Settings"),
@@ -26,21 +27,21 @@ defmodule Bonfire.Me.Web.SettingsLive do
         uploaded_files: []
       )
       |> allow_upload(:icon,
-        accept: ~w(.jpg .jpeg .png .gif),
+        accept: allowed,
         max_file_size: 5_000_000, # make configurable, expecially once we have resizing
         max_entries: 1,
         auto_upload: true,
         progress: &handle_progress/3
       )
       |> allow_upload(:image,
-        accept: ~w(.jpg .jpeg .png .gif .svg .tiff),
+        accept: allowed,
         max_file_size: 10_000_000, # make configurable, expecially once we have resizing
         max_entries: 1,
         auto_upload: true,
         progress: &handle_progress/3
       )
     } # |> IO.inspect
-
+  end
   defp handle_progress(:icon = type, entry, socket) do
 
     user = current_user(socket)
