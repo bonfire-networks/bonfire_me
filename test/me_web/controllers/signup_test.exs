@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Web.SignupController.Test do
     doc = floki_response(conn)
     assert [form] = Floki.find(doc, "#signup-form")
     assert [_] = Floki.find(form, "input[type='email']")
-    assert [_] = Floki.find(form, "input[type='password']")
+    assert [_, _] = Floki.find(form, "input[type='password']")
     assert [_] = Floki.find(form, "button[type='submit']")
   end
 
@@ -22,7 +22,7 @@ defmodule Bonfire.Me.Web.SignupController.Test do
       assert Floki.text(signup) =~ "error occurred"
       assert [form] = Floki.find(signup, "#signup-form")
       assert [_] = Floki.find(form, "input[type='email']")
-      assert [_] = Floki.find(form, "input[type='password']")
+      assert [_, _] = Floki.find(form, "input[type='password']")
       assert [_] = Floki.find(form, "button[type='submit']")
     end
 
@@ -34,7 +34,7 @@ defmodule Bonfire.Me.Web.SignupController.Test do
       assert [signup] = Floki.find(doc, "#signup")
       assert Floki.text(signup) =~ "error occurred"
       assert [form] = Floki.find(signup, "#signup-form")
-      assert [_] = Floki.find(form, "input[type='password']")
+      assert [_, _] = Floki.find(form, "input[type='password']")
       # assert [password_error] = Floki.find(form, "span.invalid-feedback[phx-feedback-for='signup-form_password']")
       assert [_] = Floki.find(form, "button[type='submit']")
     end
