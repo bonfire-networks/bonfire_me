@@ -34,7 +34,7 @@ defmodule Bonfire.Me.Test.ConnHelpers do
     do: put_session(conn, :user_id, user_id)
 
   def find_flash(doc) do
-    messages = Floki.find(doc, "#flash-messages p")
+    messages = Floki.find(doc, "#flash-messages .alert")
     case messages do
       [_, _ | _] -> throw :too_many_flashes
       short -> short

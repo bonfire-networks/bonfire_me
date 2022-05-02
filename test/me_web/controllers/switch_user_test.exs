@@ -80,7 +80,7 @@ defmodule Bonfire.Me.Web.SwitchUserController.Test do
       assert get_session(conn, :user_id) == user.id
       doc = floki_response(conn)
       assert [err] = find_flash(doc)
-      assert_flash(err, :info, "Welcome back, #{user.profile.name}!")
+      assert_flash(err, :info, "Welcome back, #{user.profile.name}!\n")
     end
 
   end
