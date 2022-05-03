@@ -96,7 +96,7 @@ defmodule Bonfire.Me.Users.Queries do
     end
   end
 
-  def current(user_id), do: by_id(user_id, :local)
+  def current(user_id), do: by_username_or_id(user_id, :local)
 
   def count(), do: repo().one(from p in User, select: count(p.id))
 

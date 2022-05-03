@@ -33,7 +33,7 @@ defmodule Bonfire.Me.Web.LoginController do
       |> put_session(:account_id, account.id)
       |> put_session(:user_id, nil)
       |> put_flash(:info, l "Welcome back!")
-      |> redirect(to: go_where?(conn, form, path(:switch_user)))
+      |> redirect(to: path(:switch_user) <> copy_go(form))
   end
 
   # the user logged in via username, or they logged in via email and
@@ -45,7 +45,7 @@ defmodule Bonfire.Me.Web.LoginController do
     |> put_session(:account_id, account.id)
     |> put_session(:user_id, user.id)
     |> put_flash(:info, l("Welcome back, %{name}", name: e(user, :profile, :name, e(user, :character, :username, "anonymous"))))
-    |> redirect(to: go_where?(conn, form, path(:home)))
+    |> redirect(go_where?(conn, form, path(:home)))
   end
 
   defp paint(conn, changeset) do

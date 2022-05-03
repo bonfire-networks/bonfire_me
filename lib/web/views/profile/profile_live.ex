@@ -79,10 +79,12 @@ defmodule Bonfire.Me.Web.ProfileLive do
     else
       if user do
         if Map.get(params, "remote_interaction") do # redir to login and then come back to this page
+          path = path(user)
           {:ok,
             socket
-            |> put_flash(:info, l("Please login first, and then: ")<>" "<>e(socket, :assigns, :flash, :info, ""))
-            |> push_redirect(to: path(:login) <> go_query(path(user)))
+            |> set_go_after(path)
+            |> put_flash(:info, l("Please login first, and then... ")<>" "<>e(socket, :assigns, :flash, :info, ""))
+            |> push_redirect(to: path(:login) <> go_query(path))
           }
         else # redir to remote profile
           {:ok,

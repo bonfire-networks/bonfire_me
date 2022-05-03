@@ -14,7 +14,8 @@ defmodule Bonfire.Web.Plugs.UserRequired do
   defp check(_user, %Account{}, conn) do
     conn
     |> put_flash(:info, l "You need to choose a user to see that page.")
-    |> redirect(to: path(:switch_user) <> go_query(conn))
+    |> set_go_after()
+    |> redirect(to: path(:switch_user))
     |> halt()
   end
 
@@ -22,7 +23,8 @@ defmodule Bonfire.Web.Plugs.UserRequired do
     conn
     |> clear_session()
     |> put_flash(:info, l "You need to log in to see that page.")
-    |> redirect(to: path(:login) <> go_query(conn))
+    |> set_go_after()
+    |> redirect(to: path(:login))
     |> halt()
   end
 
