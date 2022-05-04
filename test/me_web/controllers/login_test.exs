@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.LoginController.Test do
 
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
   alias Bonfire.Me.Accounts
 
   test "form renders" do
@@ -31,7 +31,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
 
     test "missing password" do
       conn = conn()
-      email = Fake.email()
+      email = email()
       conn = post(conn, "/login", %{"login_fields" => %{"email_or_username" => email}})
       doc = floki_response(conn)
       assert [form] = Floki.find(doc, "#login-form")
@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
 
     test "missing email" do
       conn = conn()
-      password = Fake.password()
+      password = password()
       conn = post(conn, "/login", %{"login_fields" => %{"password" => password}})
       doc = floki_response(conn)
       assert [form] = Floki.find(doc, "#login-form")
@@ -57,8 +57,8 @@ defmodule Bonfire.Me.Web.LoginController.Test do
 
   test "not found" do
     conn = conn()
-    email = Fake.email()
-    password = Fake.password()
+    email = email()
+    password = password()
     params = %{"login_fields" => %{"email_or_username" => email, "password" => password}}
     conn = post(conn, "/login", params)
     doc = floki_response(conn)

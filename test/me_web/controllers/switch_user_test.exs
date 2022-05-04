@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.SwitchUserController.Test do
 
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
   alias Bonfire.Me.Fake
   alias Bonfire.Common.Repo
 
@@ -37,7 +37,7 @@ defmodule Bonfire.Me.Web.SwitchUserController.Test do
 
     test "not logged in" do
       conn = conn()
-      conn = get(conn, "/switch-user/#{Fake.username()}")
+      conn = get(conn, "/switch-user/#{username()}")
       assert redirected_to(conn) =~ "/login"
     end
 
@@ -45,7 +45,7 @@ defmodule Bonfire.Me.Web.SwitchUserController.Test do
       account = fake_account!()
       _user = fake_user!(account)
       conn = conn(account: account)
-      conn = get(conn, "/switch-user/#{Fake.username()}")
+      conn = get(conn, "/switch-user/#{username()}")
       assert redirected_to(conn) == "/switch-user"
       conn = get(recycle(conn), "/switch-user")
       doc = floki_response(conn)

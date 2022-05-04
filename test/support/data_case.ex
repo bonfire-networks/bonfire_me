@@ -23,9 +23,9 @@ defmodule Bonfire.Me.DataCase do
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Bonfire.Me.DataCase
+      # import Bonfire.Me.DataCase
 
-      import Bonfire.Me.Fake
+      import Bonfire.Me.Fake.Helpers
 
     end
   end

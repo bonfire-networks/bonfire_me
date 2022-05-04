@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.UserCirclesTest do
 
-  use Bonfire.DataCase, async: true
+  use Bonfire.Me.DataCase, async: true
   alias Bonfire.Data.AccessControl.Circle
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Users

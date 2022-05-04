@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Dashboard.Test do
 
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
   alias Bonfire.Me.Fake
 
   # TODO

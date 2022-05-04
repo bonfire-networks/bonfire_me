@@ -26,13 +26,13 @@ defmodule Bonfire.Me.ConnCase do
       import Bonfire.UI.Common.Testing.Helpers
 
       import Phoenix.LiveViewTest
-      import Bonfire.Me.ConnCase
+      # import Bonfire.Me.ConnCase
 
       import Bonfire.Me.Test.ConnHelpers
       import Bonfire.Me.Test.FakeHelpers
 
-      alias Bonfire.Me.Fake
-      import Bonfire.Me.Fake
+      import Bonfire.Me.Fake.Helpers
+      # import Bonfire.Me.Fake
       use Bonfire.Common.Utils
 
       # The default endpoint for testing

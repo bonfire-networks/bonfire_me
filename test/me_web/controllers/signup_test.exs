@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.SignupController.Test do
 
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
 
   test "form renders" do
     conn = conn()
@@ -28,7 +28,7 @@ defmodule Bonfire.Me.Web.SignupController.Test do
 
     test "missing password" do
       conn = conn()
-      email = Fake.email()
+      email = email()
       conn = post(conn, "/signup", %{"account" => %{"email" => %{"email_address" => email}}})
       doc = floki_response(conn)
       assert [signup] = Floki.find(doc, "#signup")
@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Web.SignupController.Test do
 
     test "missing email" do
       conn = conn()
-      password = Fake.password()
+      password = password()
       conn = post(conn, "/signup", %{"account" => %{"credential" => %{"password" => password}}})
       doc = floki_response(conn)
       assert [signup] = Floki.find(doc, "#signup")
@@ -55,8 +55,8 @@ defmodule Bonfire.Me.Web.SignupController.Test do
 
   test "success" do
     conn = conn()
-    email = Fake.email()
-    password = Fake.password()
+    email = email()
+    password = password()
     conn = post(conn, "/signup", %{
       "account" => %{
         "email" =>

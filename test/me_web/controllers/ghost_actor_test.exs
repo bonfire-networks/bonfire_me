@@ -1,5 +1,5 @@
 defmodule Bonfire.Social.Boundaries.InstanceWideGhostActorTest do
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
   # import Bonfire.Boundaries.Debug
   alias ActivityPub.Config
 

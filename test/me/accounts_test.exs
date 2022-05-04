@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.AccountsTest do
-  use Bonfire.DataCase, async: true
+  use Bonfire.Me.DataCase, async: true
   import Bonfire.Me.Integration
   alias Bonfire.Data.Identity.Credential
   alias Bonfire.Me.Fake
@@ -8,7 +8,7 @@ defmodule Bonfire.Me.AccountsTest do
   describe "signup" do
 
     test "email: :valid" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       assert Credential.check_password(attrs.credential.password, account.credential.password_hash)
       assert account.email.email_address == attrs.email.email_address
@@ -18,7 +18,7 @@ defmodule Bonfire.Me.AccountsTest do
     end
 
     test "email: :valid, must_confirm?: false" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs, must_confirm?: false)
       assert account.email.email_address == attrs.email.email_address
       assert account.email.confirmed_at
@@ -28,7 +28,7 @@ defmodule Bonfire.Me.AccountsTest do
     end
 
     test "email: :exists" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       assert account.email.email_address == attrs.email.email_address
       assert Credential.check_password(attrs.credential.password, account.credential.password_hash)
@@ -41,7 +41,7 @@ defmodule Bonfire.Me.AccountsTest do
   describe "request_confirm_email" do
 
     test "refreshing" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       assert {:ok, :refreshed, account} = Accounts.request_confirm_email(%{email: attrs.email.email_address})
       assert account.email.confirm_token
@@ -49,7 +49,7 @@ defmodule Bonfire.Me.AccountsTest do
     end
 
     test "fails for already confirmed emails" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       assert {:ok, account} = Accounts.confirm_email(account)
       assert {:error, changeset} = Accounts.request_confirm_email(%{email: attrs.email.email_address})
@@ -61,7 +61,7 @@ defmodule Bonfire.Me.AccountsTest do
   describe "confirm_email" do
 
     test "with: :account" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       assert {:ok, account} = Accounts.confirm_email(account)
       assert account.email.confirmed_at
@@ -70,7 +70,7 @@ defmodule Bonfire.Me.AccountsTest do
     end
 
     test "with: :token" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       assert account.email.confirm_token
       assert {:ok, account} = Accounts.confirm_email(account.email.confirm_token)
@@ -85,7 +85,7 @@ defmodule Bonfire.Me.AccountsTest do
     # TODO: by username
 
     test "by: :email, confirmed: false" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, _account} = Accounts.signup(attrs)
       assert {:error, changeset} = Accounts.login %{
         email_or_username: attrs.email.email_address,
@@ -95,7 +95,7 @@ defmodule Bonfire.Me.AccountsTest do
     end
 
     test "by: :email, confirmed: true" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       {:ok, _} = Accounts.confirm_email(account)
       assert {:ok, account, _user} = Accounts.login %{
@@ -106,7 +106,7 @@ defmodule Bonfire.Me.AccountsTest do
     end
 
     test "by: :email, confirmed: :auto" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, _account} = Accounts.signup(attrs, must_confirm?: false)
       assert {:ok, _account, _user} = Accounts.login %{
         email_or_username: attrs.email.email_address,
@@ -115,7 +115,7 @@ defmodule Bonfire.Me.AccountsTest do
     end
 
     test "by: :email, must_confirm?: false" do
-      attrs = Fake.signup_form()
+      attrs = signup_form()
       assert {:ok, _account} = Accounts.signup(attrs)
       assert {:ok, _account, _user} = Accounts.login %{
         email_or_username: attrs.email.email_address,

@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
   alias Bonfire.Me.Fake
 
   describe "request" do
@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "not found" do
       conn = conn()
-      conn = post(conn, "/signup/email/confirm", %{"confirm_email_fields" => %{"email" => Fake.email()}})
+      conn = post(conn, "/signup/email/confirm", %{"confirm_email_fields" => %{"email" => email()}})
       doc = floki_response(conn)
       assert [form] = Floki.find(doc, "#confirm-email-form")
       assert [_] = Floki.find(form, "input[type='email']")
@@ -82,7 +82,7 @@ defmodule Bonfire.Me.Web.ConfirmEmailController.Test do
 
     test "not found" do
       conn = conn()
-      conn = get(conn, "/signup/email/confirm/#{Fake.confirm_token()}")
+      conn = get(conn, "/signup/email/confirm/#{confirm_token()}")
       doc = floki_response(conn)
       assert [form] = Floki.find(doc, "#confirm-email-form")
       assert [_] = Floki.find(form, "input[type='email']")

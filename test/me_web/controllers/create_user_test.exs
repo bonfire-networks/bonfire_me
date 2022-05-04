@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.CreateUserController.Test do
 
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
 
   test "form renders" do
     alice = fake_account!()
@@ -37,7 +37,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     test "with name" do
       alice = fake_account!()
       conn = conn(account: alice)
-      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"name" => Fake.name()}}})
+      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"name" => name()}}})
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#create_user")
       assert Floki.text(view) =~ "error occurred"
@@ -52,7 +52,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     test "with summary" do
       alice = fake_account!()
       conn = conn(account: alice)
-      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"summary" => Fake.summary()}}})
+      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"summary" => summary()}}})
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#create_user")
       assert Floki.text(view) =~ "error occurred"
@@ -66,7 +66,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     test "missing username" do
       alice = fake_account!()
       conn = conn(account: alice)
-      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"summary" => Fake.summary(), "name" => Fake.name()}}})
+      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"summary" => summary(), "name" => name()}}})
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#create_user")
       assert Floki.text(view) =~ "error occurred"
@@ -80,7 +80,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     test "missing name" do
       alice = fake_account!()
       conn = conn(account: alice)
-      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"summary" => Fake.summary()}, "character" => %{"username" => Fake.username()}}})
+      conn = post(conn, "/create-user", %{"user" => %{"profile" => %{"summary" => summary()}, "character" => %{"username" => username()}}})
       doc = floki_response(conn)
       assert [view] = Floki.find(doc, "#create_user")
       assert Floki.text(view) =~ "error occurred"
@@ -98,7 +98,7 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
     alice = fake_account!()
     user = fake_user!(alice)
     conn = conn(account: alice)
-    params = %{"user" => %{"profile" => %{"summary" => Fake.summary(), "name" => Fake.name()}, "character" => %{"username" => user.character.username}}}
+    params = %{"user" => %{"profile" => %{"summary" => summary(), "name" => name()}, "character" => %{"username" => user.character.username}}}
     conn = post(conn, "/create-user", params)
     doc = floki_response(conn)
     assert [view] = Floki.find(doc, "#create_user")
@@ -113,8 +113,8 @@ defmodule Bonfire.Me.Web.CreateUserController.Test do
   test "successfully create first user" do
     alice = fake_account!()
     conn = conn(account: alice)
-    username = Fake.username()
-    params = %{"user" => %{"profile" => %{"summary" => Fake.summary(), "name" => Fake.name()}, "character" => %{"username" => username}}}
+    username = username()
+    params = %{"user" => %{"profile" => %{"summary" => summary(), "name" => name()}, "character" => %{"username" => username}}}
     conn = post(conn, "/create-user", params)
     assert redirected_to(conn) == "/home"
     conn = get(recycle(conn), "/home")

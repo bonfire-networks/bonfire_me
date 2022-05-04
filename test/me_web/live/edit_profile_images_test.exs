@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Dashboard.EditProfileImagesTest do
-  use Bonfire.Me.ConnCase
+  use Bonfire.Me.ConnCase, async: true
   alias Bonfire.Me.Fake
 
   test "upload avatar" do

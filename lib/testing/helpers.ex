@@ -1,54 +1,8 @@
-defmodule Bonfire.Me.Fake do
+defmodule Bonfire.Me.Fake.Helpers do
   use Arrows
   import Where
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.{Accounts, Users}
-
-  # import Bonfire.Me.Integration
-
-  def fake_account!(attrs \\ %{}, opts \\ []) do
-    opts = Keyword.put_new(opts, :must_confirm?, false)
-    {:ok, account} = signup_form(attrs)
-    # |> dump
-    |> Accounts.signup(..., opts)
-    account
-  end
-
-  # def fake_account!(attrs \\ %{}) do
-  #   cs = Accounts.signup_changeset(Fake.account(attrs))
-  #   assert {:ok, account} = repo().insert(cs)
-  #   account
-  # end
-
-  def fake_user!(account \\ %{}, attrs \\ %{})
-
-  def fake_user!(%Account{}=account, attrs) do
-    custom_username = attrs[:character][:username]
-
-    with {:ok, user} <- Users.create(create_user_form(attrs), account) do
-      user
-    else
-      {:error, %Ecto.Changeset{}} when is_binary(custom_username) ->
-        Users.by_username!(custom_username)
-    end
-  end
-  # def fake_user!(%Account{}=account \\ %{}, attrs \\ %{}) do
-  #   assert {:ok, user} = Users.create(Fake.user(attrs), account)
-  #   user
-  # end
-  def fake_user!(name, user_attrs) when is_binary(name) do
-    fake_account!() |> fake_user!(Map.merge(user_attrs, %{profile: %{name: name}, character: %{username: name}}))
-  end
-
-  def fake_user!(account_attrs, user_attrs) do
-    fake_account!(account_attrs) |> fake_user!(user_attrs)
-  end
-
-  def fake_remote_user!() do
-      {:ok, user} = Bonfire.Federate.ActivityPub.Simulate.fake_remote_user()
-      user
-  end
-
 
   def email, do: Faker.Internet.email()
   def confirm_token, do: Base.encode32(Faker.random_bytes(10), pad: false)
