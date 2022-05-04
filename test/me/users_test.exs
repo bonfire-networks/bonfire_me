@@ -3,7 +3,7 @@ defmodule Bonfire.Me.UsersTest do
   use Bonfire.DataCase, async: true
   alias Bonfire.Me.Fake
   alias Bonfire.Me.{Accounts, Users}
-  alias Bonfire.Repo
+  alias Bonfire.Common.Repo
 
   test "creation works" do
     assert {:ok, account} = Accounts.signup(Fake.signup_form())

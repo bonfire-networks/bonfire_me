@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.LoginController do
 
-  use Bonfire.Web, :controller
+  use Bonfire.UI.Common.Web, :controller
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
   alias Bonfire.Me.Web.LoginLive

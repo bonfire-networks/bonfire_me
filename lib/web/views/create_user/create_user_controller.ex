@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.CreateUserController do
 
-  use Bonfire.Web, :controller
+  use Bonfire.UI.Common.Web, :controller
   alias Bonfire.Me.Users
   alias Bonfire.Me.Web.CreateUserLive
 

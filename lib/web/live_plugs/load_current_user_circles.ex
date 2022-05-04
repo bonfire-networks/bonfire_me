@@ -1,6 +1,6 @@
-defmodule Bonfire.Web.LivePlugs.LoadCurrentUserCircles do
+defmodule Bonfire.Me.Web.LivePlugs.LoadCurrentUserCircles do
 
-  use Bonfire.Web, :live_plug
+  use Bonfire.UI.Common.Web, :live_plug
   alias Bonfire.Boundaries.Circles
   alias Bonfire.Data.Identity.User
 

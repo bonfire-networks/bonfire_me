@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Web.SwitchUserController.Test do
 
   use Bonfire.Me.ConnCase
   alias Bonfire.Me.Fake
-  alias Bonfire.Repo
+  alias Bonfire.Common.Repo
 
   describe "index" do
 

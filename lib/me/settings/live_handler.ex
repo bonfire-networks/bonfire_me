@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Settings.LiveHandler do
-  use Bonfire.Web, :live_handler
+  use Bonfire.UI.Common.Web, :live_handler
   import Bonfire.Boundaries.Integration
 
   def handle_event("set", attrs, socket) when is_map(attrs) do

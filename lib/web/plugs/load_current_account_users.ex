@@ -1,6 +1,6 @@
-defmodule Bonfire.Web.Plugs.LoadCurrentAccountUsers do
+defmodule Bonfire.Me.Web.Plugs.LoadCurrentAccountUsers do
 
-  use Bonfire.Web, :plug
+  use Bonfire.UI.Common.Web, :plug
   alias Bonfire.Me.Users
   alias Bonfire.Data.Identity.Account
 

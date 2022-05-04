@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.SwitchUserController do
-  use Bonfire.Web, :controller
+  use Bonfire.UI.Common.Web, :controller
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Users
   alias Bonfire.Me.Web.SwitchUserLive

@@ -3,9 +3,9 @@ defmodule Bonfire.Me.DeleteWorker do
   use Oban.Worker,
     queue: :deletion,
     max_attempts: 1
-  
+
   alias Pointers.Pointer
-  alias Bonfire.Repo
+  alias Bonfire.Common.Repo
   alias Bonfire.Data.Identity.CareClosure
   import EctoSparkles
   import Ecto.Query

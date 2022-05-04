@@ -6,8 +6,8 @@ defmodule Bonfire.Me.Mails do
   import Bonfire.Me.Integration
   import Bonfire.Common.URIs
   import Where
-  require Bonfire.Web.Gettext
-  import Bonfire.Web.Gettext.Helpers
+  require Bonfire.Common.Localise.Gettext
+  import Bonfire.Common.Localise.Gettext.Helpers
 
   def confirm_email(account, opts \\ []) do
 

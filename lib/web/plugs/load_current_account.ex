@@ -1,6 +1,6 @@
-defmodule Bonfire.Web.Plugs.LoadCurrentAccount do
+defmodule Bonfire.Me.Web.Plugs.LoadCurrentAccount do
 
-  use Bonfire.Web, :plug
+  use Bonfire.UI.Common.Web, :plug
   alias Bonfire.Me.Accounts
 
   def init(opts), do: opts

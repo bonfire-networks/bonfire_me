@@ -1,5 +1,5 @@
-defmodule Bonfire.Web.Plugs.LoadCurrentUser do
-  use Bonfire.Web, :plug
+defmodule Bonfire.Me.Web.Plugs.LoadCurrentUser do
+  use Bonfire.UI.Common.Web, :plug
 
   alias Bonfire.Me.Users
   # alias Bonfire.Data.Identity.User

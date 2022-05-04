@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.SignupLive do
-  use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   alias Bonfire.Me.Accounts
 
   # because this isn't a live link and it will always be accessed by a

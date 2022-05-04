@@ -1,6 +1,6 @@
-defmodule Bonfire.Web.LivePlugs.LoadCurrentUser do
+defmodule Bonfire.Me.Web.LivePlugs.LoadCurrentUser do
 
-  use Bonfire.Web, :live_plug
+  use Bonfire.UI.Common.Web, :live_plug
   alias Bonfire.Me.Users
   # alias Bonfire.Me.Web.SwitchUserLive
   alias Bonfire.Data.Identity.User

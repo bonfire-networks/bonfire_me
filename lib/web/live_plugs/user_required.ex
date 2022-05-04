@@ -1,6 +1,6 @@
-defmodule Bonfire.Web.LivePlugs.UserRequired do
+defmodule Bonfire.Me.Web.LivePlugs.UserRequired do
 
-  use Bonfire.Web, :live_plug
+  use Bonfire.UI.Common.Web, :live_plug
   alias Bonfire.Data.Identity.{Account, User}
   # alias Plug.Conn.Query
 

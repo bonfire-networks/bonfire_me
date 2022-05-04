@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Users.LiveHandler do
-  use Bonfire.Web, :live_handler
+  use Bonfire.UI.Common.Web, :live_handler
 
   alias Bonfire.Me.Users
   def handle_event("autocomplete", %{"value"=>search}, socket), do: handle_event("autocomplete", search, socket)

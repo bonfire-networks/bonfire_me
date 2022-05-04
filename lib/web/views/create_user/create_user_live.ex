@@ -1,17 +1,18 @@
 defmodule Bonfire.Me.Web.CreateUserLive do
-  use Bonfire.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
   # alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users
-  alias Bonfire.Web.LivePlugs
+  alias Bonfire.Me.Web.LivePlugs
   # alias Bonfire.Me.Web.CreateUserLive
 
   def mount(params, session, socket) do
-    LivePlugs.live_plug params, session, socket, [
+    live_plug params, session, socket, [
       LivePlugs.LoadCurrentAccount,
       LivePlugs.LoadCurrentUser,
       LivePlugs.AccountRequired,
-      LivePlugs.StaticChanged,
-      LivePlugs.Csrf, LivePlugs.Locale,
+      Bonfire.UI.Common.LivePlugs.StaticChanged,
+      Bonfire.UI.Common.LivePlugs.Csrf,
+      Bonfire.UI.Common.LivePlugs.Locale,
       &mounted/3,
     ]
   end
@@ -26,6 +27,6 @@ defmodule Bonfire.Me.Web.CreateUserLive do
 
   defp user_form(params \\ %{}, account), do: Users.changeset(:create, params, account)
 
-  def handle_event(action, attrs, socket), do: Bonfire.Common.LiveHandlers.handle_event(action, attrs, socket, __MODULE__)
-  def handle_info(info, socket), do: Bonfire.Common.LiveHandlers.handle_info(info, socket, __MODULE__)
+  def handle_event(action, attrs, socket), do: Bonfire.UI.Common.LiveHandlers.handle_event(action, attrs, socket, __MODULE__)
+  def handle_info(info, socket), do: Bonfire.UI.Common.LiveHandlers.handle_info(info, socket, __MODULE__)
 end

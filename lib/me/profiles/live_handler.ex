@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Profiles.LiveHandler do
-  use Bonfire.Web, :live_handler
+  use Bonfire.UI.Common.Web, :live_handler
 
   alias Bonfire.Me.Users # TODO: use Profiles context instead?
 

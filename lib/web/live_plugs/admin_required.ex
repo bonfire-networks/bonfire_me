@@ -1,6 +1,6 @@
-defmodule Bonfire.Web.LivePlugs.AdminRequired do
+defmodule Bonfire.Me.Web.LivePlugs.AdminRequired do
 
-  use Bonfire.Web, :live_plug
+  use Bonfire.UI.Common.Web, :live_plug
   alias Bonfire.Data.Identity.User
 
   def mount(_params, _session, socket), do: check(current_user(socket), socket)

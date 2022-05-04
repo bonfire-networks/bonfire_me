@@ -16,7 +16,7 @@ import_config "bonfire_me.exs"
 # You probably won't want to touch these. You might override some in
 # other config files.
 
-config :bonfire, :repo_module, Bonfire.Repo
+config :bonfire, :repo_module, Bonfire.Common.Repo
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

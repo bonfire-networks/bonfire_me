@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Settings do
   use Bonfire.Common.Utils
-  use Bonfire.Repo
+  use Bonfire.Common.Repo
   # import Bonfire.Me.Integration
   alias Bonfire.Common.Extend
   alias Bonfire.Common.Config

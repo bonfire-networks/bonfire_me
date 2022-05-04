@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.My.SettingsUpload do
-  use Bonfire.Web, :controller
+  use Bonfire.UI.Common.Web, :controller
 
   # params we receive:
   # %{
