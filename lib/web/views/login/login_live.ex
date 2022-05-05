@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.LoginLive do
-  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, :surface_view
   alias Bonfire.Me.Accounts
 
   # because this isn't a live link and it will always be accessed by a
@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Web.LoginLive do
   def mount(params, session, socket) do
     {:ok,
      socket
+      |> assign_new(:without_sidebar, fn -> true end)
       |> assign_new(:current_account, fn -> nil end)
       |> assign_new(:current_user, fn -> nil end)
       |> assign_new(:error, fn -> nil end)

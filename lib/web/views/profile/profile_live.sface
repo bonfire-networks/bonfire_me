@@ -3,7 +3,6 @@
   page={@page}
   selected_tab={@selected_tab}
   smart_input={@smart_input}
-  has_private_tab={@has_private_tab}
   smart_input_prompt={@smart_input_prompt}
   smart_input_text={@smart_input_text}
   search_placholder={@search_placholder}

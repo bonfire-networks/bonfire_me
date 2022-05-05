@@ -64,7 +64,6 @@ defmodule Bonfire.Me.Web.ProfileLive do
           page_title: page_title,
           selected_tab: "timeline",
           smart_input: true,
-          has_private_tab: true,
           feed_title: l( "User timeline"),
           user: user, # the user to display
           feed: [],

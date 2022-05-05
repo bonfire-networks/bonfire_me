@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.SettingsLive do
-  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, :surface_view
   import Where
   alias Bonfire.Me.Web.LivePlugs
 
@@ -19,6 +19,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
     allowed = ~w(.jpg .jpeg .png .gif .svg .tiff .webp) # make configurable
     {:ok,
       socket
+      |> assign(:without_sidebar,  true)
       |> assign(
         page_title: l( "Settings"),
         selected_tab: "user",

@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.ChangePasswordLive do
-  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, :surface_view
   alias Bonfire.Me.Web.LivePlugs
   alias Bonfire.Me.Accounts
 
@@ -17,6 +17,7 @@ defmodule Bonfire.Me.Web.ChangePasswordLive do
   def mounted(_params, session, socket) do
     {:ok,
      socket
+     |> assign(:without_sidebar,  true)
      |> assign(:form,  session["form"])
      |> assign(:error,  session["error"])
      |> assign(:resetting_password,  session["resetting_password"])

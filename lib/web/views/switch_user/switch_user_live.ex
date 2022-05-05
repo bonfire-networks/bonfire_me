@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.SwitchUserLive do
-  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, :surface_view
   alias Bonfire.Me.Web.LivePlugs
 
   def mount(params, session, socket) do
@@ -16,7 +16,7 @@ defmodule Bonfire.Me.Web.SwitchUserLive do
   end
 
   defp mounted(_, _, socket), do: {:ok,
-    assign(socket, current_user: nil, go: Map.get(socket.assigns, :go, ""))
+    assign(socket, current_user: nil, go: Map.get(socket.assigns, :go, ""), without_sidebar: true)
   }
 
 end

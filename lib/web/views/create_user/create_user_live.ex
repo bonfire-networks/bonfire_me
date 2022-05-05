@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Web.CreateUserLive do
-  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, :surface_view
   # alias Bonfire.Data.Identity.User
   alias Bonfire.Me.Users
   alias Bonfire.Me.Web.LivePlugs
@@ -22,6 +22,7 @@ defmodule Bonfire.Me.Web.CreateUserLive do
      socket
      |> assign_new(:form, fn -> user_form(current_account(socket)) end )
      |> assign_new(:error, fn -> nil end)
+     |> assign(:without_sidebar,  true)
     }
   end
 

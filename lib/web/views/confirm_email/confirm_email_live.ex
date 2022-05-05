@@ -1,11 +1,12 @@
 defmodule Bonfire.Me.Web.ConfirmEmailLive do
-  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, :surface_view
   alias Bonfire.Me.Accounts
 
   def mount(_params, session, socket) do
     # debug(session)
     {:ok,
      socket
+     |> assign(:without_sidebar,  true)
      |> assign(:error,  session["error"])
      |> assign(:requested, session["requested"])
      |> assign_new(:current_account, fn -> nil end)

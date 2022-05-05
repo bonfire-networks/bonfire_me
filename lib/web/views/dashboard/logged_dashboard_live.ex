@@ -23,7 +23,6 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
       |> assign(
         page: "dashboard",
         smart_input: true,
-        has_private_tab: false,
         page_title: l("Bonfire Dashboard"),
         feed_title: l("My Feed"),
         selected_tab: "feed",
