@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Web.LoggedDashboardLive do
   @deprecated
-  use Bonfire.UI.Common.Web, {:surface_view, [layout: {Bonfire.UI.Social.Web.LayoutView, "without_sidebar.html"}]}
+  use Bonfire.UI.Common.Web, :surface_view
   alias Bonfire.Me.Web.LivePlugs
 
     def mount(params, session, socket) do
@@ -26,7 +26,8 @@ defmodule Bonfire.Me.Web.LoggedDashboardLive do
         page_title: l("Bonfire Dashboard"),
         feed_title: l("My Feed"),
         selected_tab: "feed",
-        go: ""
+        go: "",
+        without_sidebar: true
         )
         # |> assign_global(to_circles: Bonfire.Boundaries.Circles.list_my_defaults(socket))
       }
