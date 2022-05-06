@@ -10,12 +10,16 @@ defmodule Bonfire.Me.Web.SignupController do
 
   def create(conn, params) do
     {account_attrs, params} = Map.pop(params, "account", %{})
-    ret = Accounts.signup(account_attrs, invite: params["invite"])
+    ret = Accounts.signup(account_attrs, invite: params["invite"]) |> debug()
     case ret do
+      {:ok, %{email: %{confirmed_at: confirmed_at}}} when not is_nil(confirmed_at) ->
+        conn
+        |> assign(:registered, :confirmed)
+        |> render_view(Map.put(params, "registered", :confirmed))
       {:ok, _account} ->
         conn
-        |> assign(:registered, true)
-        |> render_view(params)
+        |> assign(:registered, :check_email)
+        |> render_view(Map.put(params, "registered", :check_email))
       {:error, :taken} ->
         conn
         |> assign(:error, :taken)

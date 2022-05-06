@@ -8,11 +8,11 @@ defmodule Bonfire.Me.Web.SignupLive do
     debug(session: session)
     {:ok,
      socket
-      |> assign_new(:without_sidebar, fn -> true end)
       |> assign(:invite, e(session, "invite", nil))
+      |> assign(:registered, e(session, "registered", nil))
+      |> assign_new(:without_sidebar, fn -> true end)
       |> assign_new(:current_account, fn -> nil end)
       |> assign_new(:current_user, fn -> nil end)
-      |> assign_new(:registered, fn -> false end)
       |> assign_new(:error, fn -> nil end)
       |> assign_new(:form, fn -> form_cs(session) end)
     }

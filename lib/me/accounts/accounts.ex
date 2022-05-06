@@ -66,14 +66,24 @@ defmodule Bonfire.Me.Accounts do
 
   def signup(params_or_changeset, opts \\ [])
 
-  def signup(params, opts) when not is_struct(params),
-    do: signup(changeset(:signup, params, opts), opts)
+  def signup(params, opts) when not is_struct(params) do
+    is_first_account = is_first_account?()
+
+    opts = opts
+    |> Keyword.put_new(
+      :is_first_account,
+      is_first_account
+    )
+    |> Keyword.put_new(
+      :must_confirm?,
+      !is_first_account && (!opts[:invite] || opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
+    )
+    |> debug("opts")
+
+    signup(changeset(:signup, params, opts), opts)
+  end
 
   def signup(%Changeset{data: %Account{}}=cs, opts) do
-    # special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
-    # opts = Keyword.put_new(opts, :must_confirm?, not (Keyword.get(opts, :invite, false) && special_invite
-    # && Keyword.get(opts, :invite, false) == special_invite))
-    opts = Keyword.put_new(opts, :must_confirm?, !opts[:invite] || (opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")))
     if cs.valid? do
       repo().transact_with fn -> # revert if email send fails
         repo().insert(cs)
@@ -170,9 +180,9 @@ defmodule Bonfire.Me.Accounts do
     do: {:error, Changeset.add_error(changeset, :form, "not_found")}
 
   defp rce_check_account(%Account{}=account, _form, changeset, opts),
-    do: rec_check_what_to_do(account, changeset, opts)
+    do: rce_check_what_to_do(account, changeset, opts)
 
-  defp rec_check_what_to_do(account, changeset, opts) do
+  defp rce_check_what_to_do(account, changeset, opts) do
 
     what_to_do = if opts[:confirm_action] do
       Email.should_request_or_refresh?(account.email, opts)
@@ -300,7 +310,10 @@ defmodule Bonfire.Me.Accounts do
     valid_invite = System.get_env("INVITE_KEY")
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
 
-    !instance_is_invite_only?() or ( not is_nil(opts[:invite]) and opts[:invite] in [valid_invite, special_invite] ) or redeemable_invite?(opts[:invite]) or is_first_account?()
+    opts[:is_first_account]==true
+    or !instance_is_invite_only?()
+    or ( not is_nil(opts[:invite]) and opts[:invite] in [valid_invite, special_invite] )
+    or redeemable_invite?(opts[:invite])
   end
 
   def redeemable_invite?(invite) do

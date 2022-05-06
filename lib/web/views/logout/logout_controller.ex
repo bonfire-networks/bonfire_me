@@ -8,7 +8,7 @@ defmodule Bonfire.Me.Web.LogoutController do
     |> clear_session()
     |> put_flash(:info, l "Logged out successfully. Until next time!")
     |> redirect(to: path(:home))
-    |> redirect(go_where?(conn, conn.query_params, path(:login)))
+    |> redirect_to_previous_go(conn.query_params, path(:login))
   end
 
 end

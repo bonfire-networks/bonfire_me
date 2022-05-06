@@ -89,17 +89,20 @@ defmodule Bonfire.Me.Users do
 
   # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
   def create(params_or_changeset, extra \\ nil)
-  def create(%Changeset{data: %User{}}=changeset, _extra) do
-    debug(changeset, "changeset")
-    with {:ok, user} <- repo().insert(changeset) do
+  def create(%Changeset{data: %User{}}=changeset, extra) do
+    maybe_make_admin = (extra !=:remote && is_first_user?())
+    |> debug("maybe_make_admin?")
+
+    with {:ok, user} <- changeset
+                        |> Changesets.put_assoc(:instance_admin, %{is_instance_admin: maybe_make_admin})
+                        |> debug("changeset")
+                        |> repo().insert() do
       post_create(user)
     end
   end
   def create(params, extra) when not is_struct(params) do
-    maybe_make_admin = extra !=:remote && is_first_user?()
     params
     |> changeset(:create, ..., extra)
-    |> Changesets.put_assoc(:instance_admin, %{is_instance_admin: maybe_make_admin})  # FIXME
     |> create()
   end
 
@@ -255,7 +258,6 @@ defmodule Bonfire.Me.Users do
   def changeset(name , user \\ %User{}, params, extra)
 
   def changeset(:create, user, params, %Account{}=account) do
-
     params
     |> User.changeset(user, ...)
     |> Changesets.put_assoc(:accounted, %{account_id: account.id})
