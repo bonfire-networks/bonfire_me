@@ -29,7 +29,7 @@ defmodule Bonfire.Me.Integration do
   end
 
   def indexing_format_creator(profile, character) do
-    %{
+    %{  
         "profile" => Bonfire.Me.Profiles.indexing_object_format(profile),
         "character" => Bonfire.Me.Characters.indexing_object_format(character),
     }

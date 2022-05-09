@@ -2,7 +2,8 @@ defmodule Bonfire.Me.Profiles do
 
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
-
+  import Where
+  
   def context_module, do: Profile
 
   def changeset(profile \\ %Profile{}, params) do
@@ -23,11 +24,12 @@ defmodule Bonfire.Me.Profiles do
 
     icon = Bonfire.Files.IconUploader.remote_url(obj.icon)
     image = Bonfire.Files.ImageUploader.remote_url(obj.image)
-
+    info(obj.id)
     %{
 
       "index_type" => "Bonfire.Data.Social.Profile",
       "name" => obj.name,
+      "id" => obj.id,
       "summary" => obj.summary,
       "icon" => %{"url"=> icon},
       "image" => %{"url"=> image},
