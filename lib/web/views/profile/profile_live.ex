@@ -96,7 +96,7 @@ defmodule Bonfire.Me.Web.ProfileLive do
         {:ok,
           socket
           |> put_flash(:error, l "Profile not found")
-          |> push_redirect(to: "/error")
+          |> push_redirect(to: path(:error))
         }
       end
     end

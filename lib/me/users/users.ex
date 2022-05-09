@@ -299,7 +299,7 @@ defmodule Bonfire.Me.Users do
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
-    |> debug("users update changeset")
+    # |> debug("users update changeset")
   end
 
   defp put_character(changeset) do

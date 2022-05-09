@@ -100,7 +100,7 @@ defmodule Bonfire.Me.Settings do
   end
 
   def fetch(scope) when not is_nil(scope) do
-    warn("fallback to querying since Settings aren't already preloaded in scoped object")
+    if is_map(scope), do: warn(scope, "fallback to querying since Settings aren't already preloaded in scoped object")
     query_filter(Bonfire.Data.Identity.Settings, %{id: ulid(scope)})
     |> repo().one()
   end
@@ -187,10 +187,10 @@ defmodule Bonfire.Me.Settings do
 
   def set({:instance, scoped} = scope_tuple, settings, opts) do
     fetch_or_empty(scope_tuple)
-    |> debug
+    # |> debug
     |> upsert(settings, ulid(scoped))
 
-    # also put in put_env in elixir's Config
+    # also put_env to cache it in Elixir's Config
     Config.put(settings)
   end
 

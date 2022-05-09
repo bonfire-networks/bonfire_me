@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Settings.LoadConfig do
   While this module is a GenServer, it is only responsible for querying the settings, putting them in Config, and then exits with :ignore having done so.
   """
   use GenServer, restart: :transient
-  import Where
+  require Logger
 
   @spec start_link(ignored :: term) :: GenServer.on_start()
   @doc "Populates the global cache with table data via introspection."
@@ -23,7 +23,13 @@ defmodule Bonfire.Me.Settings.LoadConfig do
 
   def load_config() do
     settings = Bonfire.Me.Settings.load_instance_settings()
-    {Bonfire.Common.Config.put(settings), Map.new(settings || [skip: "No settings loaded"])}
+    if settings do
+      Logger.info("Instance settings were loaded into config")
+      {Bonfire.Common.Config.put(settings), Map.new(settings)}
+    else
+      Logger.info("No instance settings to load into config")
+      {:ok, %{skip: "No settings loaded"}}
+    end
   end
 
 end
