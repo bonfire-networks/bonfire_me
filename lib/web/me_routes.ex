@@ -40,7 +40,7 @@ defmodule Bonfire.Me.Web.Routes do
         pipe_through :browser
         pipe_through :account_required
 
-        live "/settings/extensions/diff", Common.Web.ExtensionDiffLive
+        live "/settings/extensions/diff", UI.Common.ExtensionDiffLive
 
       end
 
