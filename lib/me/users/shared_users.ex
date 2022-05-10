@@ -91,8 +91,7 @@ defmodule Bonfire.Me.SharedUsers do
 
     user
     |> repo().preload(:shared_user)
-    |> User.changeset(%{"shared_user"=> params}
-    # |> IO.inspect)
+    |> User.changeset(%{"shared_user"=> params})
     |> Changeset.cast_assoc(:shared_user, with: &Bonfire.Data.SharedUser.changeset/2)
   end
 
