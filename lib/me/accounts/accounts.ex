@@ -76,7 +76,7 @@ defmodule Bonfire.Me.Accounts do
     )
     |> Keyword.put_new(
       :must_confirm?,
-      !is_first_account && (!opts[:invite] || opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
+      Config.get(:env)==:test or !is_first_account && (!opts[:invite] || opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
     )
     |> debug("opts")
 
