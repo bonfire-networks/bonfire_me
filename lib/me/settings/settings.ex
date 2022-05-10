@@ -186,12 +186,14 @@ defmodule Bonfire.Me.Settings do
   end
 
   def set({:instance, scoped} = scope_tuple, settings, opts) do
-    fetch_or_empty(scope_tuple)
+    with {:ok, set} <- fetch_or_empty(scope_tuple)
     # |> debug
-    |> upsert(settings, ulid(scoped))
+    |> upsert(settings, ulid(scoped)) do
+      # also put_env to cache it in Elixir's Config
+      Config.put(settings)
 
-    # also put_env to cache it in Elixir's Config
-    Config.put(settings)
+      {:ok, set}
+    end
   end
 
   def set({_, scope}, settings, opts) do
