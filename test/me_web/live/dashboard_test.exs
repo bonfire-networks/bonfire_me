@@ -10,7 +10,7 @@ defmodule Bonfire.Me.Dashboard.Test do
   #   test "not logged in" do
   #     page =
   #       conn()
-  #       |> get("/home")
+  #       |> get("/feed")
   #       |> floki_response()
   #     # todo: assert looks homepagey
   #   end
@@ -19,7 +19,7 @@ defmodule Bonfire.Me.Dashboard.Test do
   #     account = fake_account!()
   #     user = fake_user!(account)
   #     conn = conn(account: account)
-  #     next = "/home"
+  #     next = "/feed"
   #     {view, doc} = floki_live(conn, next) #|> IO.inspect
   #     assert [_] = Floki.find(doc, "#account_dashboard")
   #   end
@@ -28,7 +28,7 @@ defmodule Bonfire.Me.Dashboard.Test do
   #     account = fake_account!()
   #     user = fake_user!(account)
   #     conn = conn(user: user, account: account)
-  #     next = "/home"
+  #     next = "/feed"
   #     {view, doc} = floki_live(conn, next) #|> IO.inspect
   #     assert [_] = Floki.find(doc, "#user_dashboard")
   #   end

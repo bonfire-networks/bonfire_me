@@ -37,7 +37,7 @@ defmodule Bonfire.Me.Web.CreateUserController do
     conn
     |> put_session(:user_id, id)
     |> put_flash(:info, l("Hey %{name}, nice to meet you!", name: name))
-    |> redirect_to_previous_go(params, path(:home))
+    |> redirect_to_previous_go(params, path(:feed))
   end
 
   defp paint(conn, changeset) do

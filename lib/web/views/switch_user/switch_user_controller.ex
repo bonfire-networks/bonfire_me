@@ -41,7 +41,7 @@ defmodule Bonfire.Me.Web.SwitchUserController do
     conn
     |> put_session(:user_id, user.id)
     |> put_flash(:info, l("Welcome back, %{name}!", name: greet(user)))
-    |> redirect_to_previous_go(params, path(:home))
+    |> redirect_to_previous_go(params, path(:feed))
   end
 
   defp show(error, conn, params) do

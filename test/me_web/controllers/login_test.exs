@@ -100,7 +100,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
                   %{"email_or_username" => account.email.email_address,
                     "password" => account.credential.password}}
       conn = post(conn, "/login", params)
-      assert redirected_to(conn) == "/home"
+      assert redirected_to(conn) == "/feed"
     end
 
     test "with email for an account with multiple user identities" do
@@ -125,7 +125,7 @@ defmodule Bonfire.Me.Web.LoginController.Test do
                   %{"email_or_username" => user.character.username,
                     "password" => account.credential.password}}
       conn = post(conn, "/login", params)
-      assert redirected_to(conn) == "/home"
+      assert redirected_to(conn) == "/feed"
     end
 
   end

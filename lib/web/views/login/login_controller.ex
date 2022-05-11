@@ -45,7 +45,7 @@ defmodule Bonfire.Me.Web.LoginController do
     |> put_session(:account_id, account.id)
     |> put_session(:user_id, user.id)
     |> put_flash(:info, l("Welcome back, %{name}", name: e(user, :profile, :name, e(user, :character, :username, "anonymous"))))
-    |> redirect_to_previous_go(form, path(:home))
+    |> redirect_to_previous_go(form, path(:feed))
   end
 
   defp paint(conn, changeset) do
