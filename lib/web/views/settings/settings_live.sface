@@ -2,6 +2,7 @@
     page_title={@page_title}
     page={@page}
     selected_tab={@selected_tab}
+    hide_smart_input={@hide_smart_input}
     uploads={@uploads}
     tab_id={@tab_id}
     current_user={current_user(assigns)}

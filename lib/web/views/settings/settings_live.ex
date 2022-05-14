@@ -19,11 +19,28 @@ defmodule Bonfire.Me.Web.SettingsLive do
     allowed = ~w(.jpg .jpeg .png .gif .svg .tiff .webp) # make configurable
     {:ok,
       socket
-      |> assign(:without_sidebar,  true)
+      # |> assign(:without_sidebar,  true)
+      |> assign(sidebar_widgets: [
+        users: [
+          main: [
+            {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive, 
+            [
+              selected_tab: "user",
+              admin_tab: "",
+              current_user: current_user(socket)  
+            ]}
+          ],
+          secondary: [
+            # {Bonfire.UI.Social.WidgetTagsLive , []},
+            {Bonfire.UI.Social.HomeBannerLive, []}
+          ]
+        ]
+      ])
       |> assign(
         page_title: l( "Settings"),
         selected_tab: "user",
         tab_id: "",
+        hide_smart_input: true,
         page: "Settings",
         trigger_submit: false,
         uploaded_files: []
