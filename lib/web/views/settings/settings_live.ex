@@ -144,7 +144,26 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
   def handle_params(%{"tab" => tab, "id" => id}, _url, socket) do
     # debug(id)
-    {:noreply, assign(socket, selected_tab: tab, tab_id: id)}
+    {:noreply, assign(socket, 
+      selected_tab: tab, 
+      tab_id: id,
+      sidebar_widgets: [
+        users: [
+          main: [
+            {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive, 
+            [
+              selected_tab: tab,
+              admin_tab: id,
+              current_user: current_user(socket)  
+            ]}
+          ],
+          secondary: [
+            # {Bonfire.UI.Social.WidgetTagsLive , []},
+            {Bonfire.UI.Social.HomeBannerLive, []}
+          ]
+        ]
+      ]
+      )}
   end
 
   # def handle_params(%{"tab" => tab, "admin_tab" => admin_tab}, _url, socket) do
@@ -153,7 +172,26 @@ defmodule Bonfire.Me.Web.SettingsLive do
   # end
 
   def handle_params(%{"tab" => tab}, _url, socket) do
-    {:noreply, assign(socket, selected_tab: tab)}
+    {:noreply, assign(
+        socket, 
+        selected_tab: tab,
+        sidebar_widgets: [
+          users: [
+            main: [
+              {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive, 
+              [
+                selected_tab: tab,
+                admin_tab: "",
+                current_user: current_user(socket)  
+              ]}
+            ],
+            secondary: [
+              # {Bonfire.UI.Social.WidgetTagsLive , []},
+              {Bonfire.UI.Social.HomeBannerLive, []}
+            ]
+          ]
+        ]
+        )}
   end
 
   def handle_params(_, _url, socket) do
