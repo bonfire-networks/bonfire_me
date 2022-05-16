@@ -23,11 +23,11 @@ defmodule Bonfire.Me.Web.SettingsLive do
       |> assign(sidebar_widgets: [
         users: [
           main: [
-            {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive, 
+            {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive,
             [
               selected_tab: "user",
               admin_tab: "",
-              current_user: current_user(socket)  
+              current_user: current_user(socket)
             ]}
           ],
           secondary: [
@@ -68,9 +68,9 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
     if user && entry.done? do
       with %{} = uploaded_media <-
-        consume_uploaded_entry(socket, entry, fn %{path: path} = meta ->
-          # debug(meta, "icon consume_uploaded_entry meta")
-          Bonfire.Files.IconUploader.upload(user, path)
+        consume_uploaded_entry(socket, entry, fn %{path: path} = metadata ->
+          # debug(metadata, "icon consume_uploaded_entry meta")
+          Bonfire.Files.IconUploader.upload(user, path, %{client_name: entry.client_name, metadata: metadata[entry.ref]})
           # |> debug("uploaded")
         end) do
           # debug(uploaded_media)
@@ -88,9 +88,9 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
     if user && entry.done? do
       with %{} = uploaded_media <-
-        consume_uploaded_entry(socket, entry, fn %{path: path} = meta ->
-          # debug(meta, "image consume_uploaded_entry meta")
-          Bonfire.Files.ImageUploader.upload(user, path)
+        consume_uploaded_entry(socket, entry, fn %{path: path} = metadata ->
+          # debug(metadata, "image consume_uploaded_entry meta")
+          Bonfire.Files.ImageUploader.upload(user, path, %{client_name: entry.client_name, metadata: metadata[entry.ref]})
           # |> debug("uploaded")
         end) do
           # debug(uploaded_media)
@@ -144,17 +144,17 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
   def handle_params(%{"tab" => tab, "id" => id}, _url, socket) do
     # debug(id)
-    {:noreply, assign(socket, 
-      selected_tab: tab, 
+    {:noreply, assign(socket,
+      selected_tab: tab,
       tab_id: id,
       sidebar_widgets: [
         users: [
           main: [
-            {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive, 
+            {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive,
             [
               selected_tab: tab,
               admin_tab: id,
-              current_user: current_user(socket)  
+              current_user: current_user(socket)
             ]}
           ],
           secondary: [
@@ -173,16 +173,16 @@ defmodule Bonfire.Me.Web.SettingsLive do
 
   def handle_params(%{"tab" => tab}, _url, socket) do
     {:noreply, assign(
-        socket, 
+        socket,
         selected_tab: tab,
         sidebar_widgets: [
           users: [
             main: [
-              {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive, 
+              {Bonfire.UI.Social.SettingsViewLive.SidebarSettingsLive,
               [
                 selected_tab: tab,
                 admin_tab: "",
-                current_user: current_user(socket)  
+                current_user: current_user(socket)
               ]}
             ],
             secondary: [
