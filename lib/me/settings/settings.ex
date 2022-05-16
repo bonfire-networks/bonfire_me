@@ -132,8 +132,8 @@ defmodule Bonfire.Me.Settings do
   """
   def set(attrs, opts) when is_map(attrs) do
     attrs
-    |> debug("input attrs")
     |> input_to_atoms(false, true)
+    |> debug("input as atoms")
     |> maybe_to_keyword_list()
     |> set(opts)
   end
@@ -156,13 +156,12 @@ defmodule Bonfire.Me.Settings do
           end
         end
     end
-    |> debug("scope")
 
     if scope do
       settings
       |> Keyword.drop([:scope])
       |> Enum.map(&Config.keys_tree/1)
-      |> debug("keyword list to set")
+      |> debug("keyword list to set for #{inspect scope}")
       |> set(scope, ..., opts)
 
     else
@@ -175,14 +174,16 @@ defmodule Bonfire.Me.Settings do
     fetch_or_empty(scope_tuple)
     # |> debug
     |> upsert(settings, ulid(scoped))
-    # TODO: put in assigns
+    ~> {:ok, %{assign_context: [current_user: map_put_settings(current_user(opts), ...)]}}
+    # TODO: put into assigns
   end
 
   def set({:current_account, scoped} = scope_tuple, settings, opts) do
     fetch_or_empty(scope_tuple)
     # |> debug
     |> upsert(settings, ulid(scoped))
-    # TODO: put in assigns
+    # ~> {:assign, current_account(opts)}
+    # TODO: put into assigns
   end
 
   def set({:instance, scoped} = scope_tuple, settings, opts) do
@@ -204,6 +205,9 @@ defmodule Bonfire.Me.Settings do
     fetch_or_empty(scoped)
     |> upsert(settings, ulid(scoped))
   end
+
+  defp map_put_settings(object, {:ok, settings}), do: map_put_settings(object, settings)
+  defp map_put_settings(object, settings), do: object |> Map.put(:settings, settings)
 
   defp fetch_or_empty(scoped) do
     fetch(scoped)
