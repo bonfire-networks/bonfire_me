@@ -381,7 +381,7 @@ defmodule Bonfire.Me.API.GraphQL do
   end
 
   def image(thing, _, _info) do
-    {:ok, Bonfire.Common.Utils.image_url(thing)}
+    {:ok, Bonfire.Common.Utils.banner_url(thing)}
   end
 
   def maybe_upload(user, changes, info) do

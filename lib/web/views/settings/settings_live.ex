@@ -90,7 +90,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
       with %{} = uploaded_media <-
         consume_uploaded_entry(socket, entry, fn %{path: path} = metadata ->
           # debug(metadata, "image consume_uploaded_entry meta")
-          Bonfire.Files.ImageUploader.upload(user, path, %{client_name: entry.client_name, metadata: metadata[entry.ref]})
+          Bonfire.Files.BannerUploader.upload(user, path, %{client_name: entry.client_name, metadata: metadata[entry.ref]})
           # |> debug("uploaded")
         end) do
           # debug(uploaded_media)
@@ -113,7 +113,7 @@ defmodule Bonfire.Me.Web.SettingsLive do
   end
 
   def save(:image, :instance, uploaded_media, socket) do
-    with :ok <- Bonfire.Me.Settings.put([:bonfire, :ui, :theme, :instance_image], Bonfire.Files.ImageUploader.remote_url(uploaded_media), scope: :instance, socket: socket) do
+    with :ok <- Bonfire.Me.Settings.put([:bonfire, :ui, :theme, :instance_image], Bonfire.Files.BannerUploader.remote_url(uploaded_media), scope: :instance, socket: socket) do
       {:noreply,
       socket
         |> put_flash(:info, l "Image changed!")
