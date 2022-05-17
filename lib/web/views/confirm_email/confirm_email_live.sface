@@ -1,8 +1,0 @@
-<div id="confirm_email">
-<Bonfire.UI.Social.ConfirmEmailViewLive
-    form={@form}
-    error={@error}
-    requested={@requested}
-    flash={@flash}
- />
-</div>

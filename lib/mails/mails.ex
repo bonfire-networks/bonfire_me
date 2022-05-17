@@ -1,8 +1,8 @@
 defmodule Bonfire.Me.Mails do
-  use Bamboo.Template, view: Bonfire.Me.Web.EmailView
+  use Bamboo.Template, view: Bonfire.Me.Mails.EmailView
 
   alias Bonfire.Data.Identity.Account
-  alias Bonfire.Me.Web.EmailView
+  alias Bonfire.Me.Mails.EmailView
   import Bonfire.Me.Integration
   import Bonfire.Common.URIs
   import Where
@@ -22,7 +22,7 @@ defmodule Bonfire.Me.Mails do
   def signup_confirm_email(%Account{email: %{confirm_token: confirm_token}}=account) when is_binary(confirm_token) do
 
     app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
-    url = url(Bonfire.Me.Web.ConfirmEmailController, [:show, confirm_token])
+    url = url(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
 
     if Bonfire.Common.Config.get(:env) != :test or System.get_env("START_SERVER", "false")=="true", do: warn("Email confirmation link: #{url}")
 
@@ -47,7 +47,7 @@ defmodule Bonfire.Me.Mails do
       |> Keyword.get(:forgot_password_email, [])
 
     app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
-    url = url(Bonfire.Me.Web.ForgotPasswordController, confirm_token)
+    url = url(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
 
     new_email()
     |> assign(:current_account, account)

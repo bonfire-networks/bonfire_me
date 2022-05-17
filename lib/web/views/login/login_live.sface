@@ -1,6 +1,0 @@
-<div class="w-full" id="login">
-  <Bonfire.UI.Social.LoginLive
-    form={@form}
-    error={@error}
-   />
-</div>

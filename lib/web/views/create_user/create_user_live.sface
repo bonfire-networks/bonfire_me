@@ -1,6 +1,0 @@
-<div class="w-full" id="create_user">
-  <Bonfire.UI.Social.CreateUserViewLive
-    form={@form}
-    error={@error}
-  />
-</div>
