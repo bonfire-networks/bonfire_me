@@ -1,16 +1,11 @@
 faker = "~> 0.14" # fake data generation
-gettext = "~> 0.11"
-jason = "~> 1.0"
-recase = "~> 0.5" # string recasing
+telemetry = "~> 1.1"
 telemetry_metrics = "~> 0.4"
 telemetry_poller = "~> 0.4"
-git_diff = "~> 0.6.3" # diffing for extensions
-makeup = "1.0.5" # code syntax highlighting
-makeup_elixir = "~> 0.15.1"
-# makeup_html5 = "~> 0.2.0"
 # ex_spirit = "~> 0.4"
 # plugins
 # bonfire_data_access_control = "~> 0.1"
 # bonfire_data_activity_pub = "~> 0.1"
 # bonfire_data_identity = "~> 0.1"
 # bonfire_data_social = "~> 0.1"
+floki = ">= 0.0.0"

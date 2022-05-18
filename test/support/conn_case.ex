@@ -42,7 +42,7 @@ defmodule Bonfire.Me.ConnCase do
 
   setup tags do
 
-    import Bonfire.Me.Integration
+    # import Bonfire.Me.Integration
 
     Bonfire.Common.Test.Interactive.setup_test_repo(tags)
 

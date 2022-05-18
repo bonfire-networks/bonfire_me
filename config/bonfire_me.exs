@@ -1,7 +1,8 @@
 import Config
 
 config :bonfire_me,
-  templates_path: "lib"
+  templates_path: "lib",
+  localisation_path: "priv/localisation"
 
 alias Bonfire.Me.Accounts
 

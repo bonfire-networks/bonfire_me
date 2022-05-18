@@ -15,8 +15,8 @@ defmodule Bonfire.Me.MixProject do
       deps: Mess.deps [
         {:phoenix_live_reload, "~> 1.2", only: :dev},
         {:dbg, "~> 1.0", only: [:dev, :test]},
-        {:floki, ">= 0.0.0", only: [:dev, :test]},
-        {:bonfire_data_shared_user, git: "https://github.com/bonfire-networks/bonfire_data_shared_user#main", optional: true},
+        # {:floki, ">= 0.0.0", only: [:dev, :test]},
+        {:bonfire_data_shared_user, git: "https://github.com/bonfire-networks/bonfire_data_shared_user", branch: "main", optional: true},
         {:bonfire_api_graphql, git: "https://github.com/bonfire-networks/bonfire_api_graphql", branch: "main", optional: true},
       ]
     ]
