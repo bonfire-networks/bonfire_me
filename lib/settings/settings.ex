@@ -178,7 +178,7 @@ defmodule Bonfire.Me.Settings do
     # TODO: put into assigns
   end
 
-  def set({:current_account, scoped} = scope_tuple, settings, opts) do
+  def set({:current_account, scoped} = scope_tuple, settings, _opts) do
     fetch_or_empty(scope_tuple)
     # |> debug
     |> upsert(settings, ulid(scoped))
@@ -186,7 +186,7 @@ defmodule Bonfire.Me.Settings do
     # TODO: put into assigns
   end
 
-  def set({:instance, scoped} = scope_tuple, settings, opts) do
+  def set({:instance, scoped} = scope_tuple, settings, _opts) do
     with {:ok, set} <- fetch_or_empty(scope_tuple)
     # |> debug
     |> upsert(settings, ulid(scoped)) do
@@ -201,7 +201,7 @@ defmodule Bonfire.Me.Settings do
     set(scope, settings, opts)
   end
 
-  def set(scoped, settings, opts) do
+  def set(scoped, settings, _opts) do
     fetch_or_empty(scoped)
     |> upsert(settings, ulid(scoped))
   end

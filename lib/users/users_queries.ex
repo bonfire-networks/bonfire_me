@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Users.Queries do
     {:error, "Could not query"}
   end
 
-  defp query(), do: from(u in User, as: :user)
+  # defp query(), do: from(u in User, as: :user)
 
   def by_id(id, opts \\ []) when is_binary(id), do: from(u in User, as: :user, where: u.id == ^id) |> proloads(opts)
 

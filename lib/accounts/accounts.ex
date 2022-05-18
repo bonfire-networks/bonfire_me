@@ -1,6 +1,10 @@
 defmodule Bonfire.Me.Accounts do
 
   use Arrows
+  use Bonfire.Common.Utils
+  import Bonfire.Me.Integration
+  import Where
+
   alias Bonfire.Data.Identity.{Account, Credential, Email, User}
   alias Bonfire.Common.Config
   alias Bonfire.Me.Mails
@@ -13,9 +17,6 @@ defmodule Bonfire.Me.Accounts do
   }
   alias Bonfire.Me.Users
   alias Ecto.Changeset
-  import Bonfire.Me.Integration
-  use Bonfire.Common.Utils
-  import Where
 
   def get_current(nil), do: nil
   def get_current(id) when is_binary(id), do: repo().one(Queries.current(id)) |> debug
@@ -130,13 +131,13 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp login_check_password(%Account{}=account, form, changeset) do
-    if Credential.check_password(form.password, account.credential.password_hash),
+    if Credential.check_password(form.password, e(account, :credential, :password_hash, nil)),
       do: {:ok, account},
       else: {:error, Changeset.add_error(changeset, :form, "no_match")}
   end
 
   defp login_check_confirmed(%Account{}=account, opts, cs) do
-    if is_nil(account.email.confirmed_at) and Email.must_confirm?(opts),
+    if is_nil(e(account, :email, :confirmed_at, nil)) and Email.must_confirm?(opts),
       do: {:error, Changeset.add_error(cs, :form, "email_not_confirmed")},
       else: {:ok, account}
   end
@@ -197,13 +198,16 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  defp resend_confirm_email(%Account{email: %{}=email}=account, opts) do
-    with {:ok, _} <- mailer().send_now(Mails.confirm_email(account, opts), email.email_address),
+  defp resend_confirm_email(%Account{}=account, opts) do
+    with email_address when is_binary(email_address) <- e(account, :email, :email_address, nil),
+    {:ok, _} <- mailer().send_now(Mails.confirm_email(account, opts), email_address),
       do: {:ok, :resent, account}
   end
 
-  defp refresh_confirm_email(%Account{email: %Email{}=email}=account, opts) do
-    repo().update(Email.put_token(email))       # put a new token
+  defp refresh_confirm_email(%Account{}=account, opts) do
+    email = e(account, :email, nil)
+
+    if email, do: repo().update(Email.put_token(email))       # put a new token
     ~> do_refresh_confirm_email(account, opts) # if that succeeds, send an email
   end
 
@@ -219,7 +223,7 @@ defmodule Bonfire.Me.Accounts do
   def confirm_email(account_or_token, opts \\ [])
 
   def confirm_email(%Account{}=account, _opts) do
-    with {:ok, email} <- repo().update(Email.confirm(account.email)),
+    with {:ok, email} <- repo().update(Email.confirm(e(account, :email, nil))),
       do: {:ok, %{ account | email: email } }
   end
 
@@ -276,7 +280,7 @@ defmodule Bonfire.Me.Accounts do
   def change_password(current_account, params, opts) when not is_struct(params),
     do: change_password(current_account, changeset(:change_password, params, opts), params, opts)
 
-  def change_password(%{id: id} = current_account, %Changeset{}=cs, %{"old_password"=> old_password, "password"=> new_password} = params, opts) do
+  def change_password(%{id: _id} = current_account, %Changeset{}=cs, %{"old_password"=> old_password, "password"=> new_password} = _params, _opts) do
     current_account = current_account
     |> repo().preload(:credential)
 
@@ -335,10 +339,10 @@ defmodule Bonfire.Me.Accounts do
     |> Changeset.add_error(:form, "invite_only")
   end
 
-  defp delete_deps(account) do
-    users = Users.by_account(account)
-    Users.delete(users)
-  end
+  # defp delete_deps(account) do
+  #   users = Users.by_account(account)
+  #   Users.delete(users)
+  # end
 
   ## misc
 

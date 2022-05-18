@@ -231,20 +231,20 @@ defmodule Bonfire.Me.API.GraphQL do
 
   end
 
-  defp get_user(_parent, %{filter: %{username: username}}, info) do
+  defp get_user(_parent, %{filter: %{username: username}}, _info) do
     Users.by_username(username)
   end
 
-  defp get_user(_parent, %{filter: %{id: id}}, info) do
+  defp get_user(_parent, %{filter: %{id: id}}, _info) do
     Users.by_id(id)
   end
 
-  defp get_user(%User{} = parent, args, info) do
+  defp get_user(%User{} = parent, _args, _info) do
     # debug(parent: parent)
     {:ok, parent}
   end
 
-  defp get_user(_parent, args, info) do
+  defp get_user(_parent, _args, info) do
     {:ok, GraphQL.current_user(info)}
   end
 
@@ -252,17 +252,17 @@ defmodule Bonfire.Me.API.GraphQL do
     {:ok, GraphQL.current_user(info) || GraphQL.current_account(info)}
   end
 
-  defp my_feed(%{} = parent, args, _info) do
+  defp my_feed(%{} = parent, _args, _info) do
     Bonfire.Social.FeedActivities.my_feed(parent)
     |> feed()
   end
 
-  defp my_notifications(%User{} = user, args, info) do
+  defp my_notifications(%User{} = user, _args, _info) do
     Bonfire.Social.FeedActivities.feed(:notifications, user)
     |> feed()
   end
 
-  defp all_flags(%{} = user_or_account, args, info) do
+  defp all_flags(%{} = user_or_account, _args, _info) do
     Bonfire.Social.Flags.list_paginated([], user_or_account)
     |> feed()
   end
@@ -278,10 +278,10 @@ defmodule Bonfire.Me.API.GraphQL do
   defp account_id(%{accounted: %{account_id: account_id}}, _, _) do
     {:ok, account_id}
   end
-  defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) do
+  defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) when is_binary(current_account_id) do
     {:ok, current_account_id}
   end
-  defp account_id(_, _, %{context: %{current_account_id: current_account_id} = _context}) do
+  defp account_id(_, _, _context) do
     {:ok, nil}
   end
 

@@ -7,6 +7,9 @@ import Config
 config :bonfire_common,
   otp_app: :bonfire_me
 
+config :bonfire_me,
+  otp_app: :bonfire_me
+
 # Choose password hashing backend
 # Note that this corresponds with our dependencies in mix.exs
 hasher = if config_env() in [:dev, :test], do: Pbkdf2, else: Argon2

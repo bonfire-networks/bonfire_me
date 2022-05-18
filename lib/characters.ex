@@ -50,7 +50,7 @@ defmodule Bonfire.Me.Characters do
     |> String.trim("_")
   end
 
-  def changeset(char \\ %Character{}, params, profile \\ :local) do
+  def changeset(char \\ %Character{}, params, _profile \\ :local) do
     case Changeset.cast(char, %{}, []).data.__meta__.state do
       :built ->
         char

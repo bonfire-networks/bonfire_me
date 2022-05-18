@@ -3,11 +3,11 @@ defmodule Bonfire.Me.Users do
   A User is a logical identity within the system belonging to an Account.
   """
   import Bonfire.Me.Integration
-  import Ecto.Query, only: [from: 2, limit: 2]
-  alias ActivityPub.Actor
+  import Ecto.Query, only: [limit: 2]
+  # alias ActivityPub.Actor
   alias Bonfire.Data.Identity.{Account, Named, User}
-  alias Bonfire.Data.AccessControl.{Acl, Controlled, Circle, Grant, InstanceAdmin}
-  alias Bonfire.Me.{Characters, Profiles, Users, Users.Queries}
+  alias Bonfire.Data.AccessControl.{Acl, Controlled, Circle, Grant}
+  alias Bonfire.Me.{Characters, Profiles, Users.Queries}
   alias Bonfire.Boundaries
   alias Bonfire.Boundaries.{Acls, Circles, Stereotyped, Verbs}
   alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
@@ -302,10 +302,10 @@ defmodule Bonfire.Me.Users do
     # |> debug("users update changeset")
   end
 
-  defp put_character(changeset) do
-    user_id = Changeset.get_field(changeset, :id)
-    Changeset.put_assoc(changeset, :character, %{id: user_id})
-  end
+  # defp put_character(changeset) do
+  #   user_id = Changeset.get_field(changeset, :id)
+  #   Changeset.put_assoc(changeset, :character, %{id: user_id})
+  # end
 
   def indexing_object_format(u) do
     %{
@@ -323,7 +323,7 @@ defmodule Bonfire.Me.Users do
   end
   def maybe_index_user(_other), do: nil
 
-  defp config(), do: Application.get_env(:bonfire_me, Users)
+  # defp config(), do: Application.get_env(:bonfire_me, Users)
 
   # Reads fixtures in configuration and creates a default boundaries setup for a user
   defp create_default_boundaries(user) do
