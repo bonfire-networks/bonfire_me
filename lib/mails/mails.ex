@@ -37,7 +37,7 @@ defmodule Bonfire.Me.Mails do
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
-      |> subject(Keyword.get(conf, :subject, app_name <> l " - Confirm your email"))
+      |> subject(Keyword.get(conf, :subject, "#{app_name} - " <> l "Confirm your email"))
       |> render(:confirm_email)
       # |> put_html_layout({EmailView, "confirm_email.html"})
       # |> put_text_layout({EmailView, "confirm_email.text"})
