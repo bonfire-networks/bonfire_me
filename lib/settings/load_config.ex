@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.Settings.LoadConfig do
+defmodule Bonfire.Me.Settings.LoadInstanceConfig do
   @moduledoc """
   Loads instance Settings from DB into Elixir's Config
 
