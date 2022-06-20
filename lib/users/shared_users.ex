@@ -1,7 +1,7 @@
-if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
 defmodule Bonfire.Me.SharedUsers do
-  alias Bonfire.Data.SharedUser
+if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
 
+  alias Bonfire.Data.SharedUser
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Data.Identity.User
 
@@ -15,20 +15,34 @@ defmodule Bonfire.Me.SharedUsers do
 
   def federation_module, do: ["Organization", "Service", "Application"] # temporary until these are implemented elsewhere
 
+  def add_accounts(shared_user_or_username, emails_or_usernames, params \\ %{})
+  def add_accounts(shared_user_or_username, emails_or_usernames, params) when is_binary(emails_or_usernames) do
+    String.split(emails_or_usernames, ",")
+    |> add_accounts(shared_user_or_username, ..., params)
+  end
+  def add_accounts(shared_user_or_username, emails_or_usernames, params) when is_list(emails_or_usernames) do
+    shared_user_or_username = if is_struct(shared_user_or_username), do: repo().maybe_preload(shared_user_or_username, :shared_user), else: shared_user_or_username
+    Enum.map(emails_or_usernames, &add_account(shared_user_or_username, &1, params))
+    |> List.first() # FIXME
+  end
+
   def add_account(shared_user_or_username, email_or_username, params \\ %{})
 
-  def add_account(username, email, params) when is_binary(username) do
-    with {:ok, shared_user} <- Users.by_username(username) do
-      add_account(shared_user, email, params)
+  def add_account(username_to_share, email, params) when is_binary(username_to_share) do
+    with {:ok, shared_user} <- Users.by_username(username_to_share) do
+      repo().maybe_preload(shared_user, :shared_user)
+      |> add_account(email, params)
     end
   end
 
-  def add_account(%User{} = shared_user, email_or_username, params) when is_binary(email_or_username) do
+  def add_account(%User{} = user_to_share, email_or_username, params) when is_binary(email_or_username) do
     # TODO: check that the authenticated account has permission to share this user
 
-    case init_shared_user(shared_user, params) do
+    case init_shared_user(user_to_share, params) do
 
       %SharedUser{} = shared_user ->
+
+        email_or_username = String.trim(email_or_username)
 
         case Accounts.get_by_email(email_or_username) do
 
@@ -62,15 +76,19 @@ defmodule Bonfire.Me.SharedUsers do
   defp do_add_account(%SharedUser{} = shared_user, %Account{} = account) do
     #debug(account: account)
     repo().update(changeset(:add_account, shared_user, account))
+
+  rescue e in Ecto.ConstraintError -> # FIXME
+    warn(e)
+    :ok
   end
 
   def init_shared_user(%User{} = user, params \\ %{}) do
 
-    user = repo().preload(user, :shared_user)
-    share_user = Map.get(user, :shared_user)
+    user = repo().maybe_preload(user, :shared_user)
+    shared_user = e(user, :shared_user, nil)
 
-    if share_user do
-      share_user
+    if shared_user do
+      shared_user
     else
       with {:ok, user} <- make_shared_user(user, params) |> repo().maybe_preload(:shared_user) do
 

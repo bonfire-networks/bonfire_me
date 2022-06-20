@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Users do
 
   def by_username!(username) when is_binary(username), do: repo().one(Queries.by_username_or_id(username))
   def by_account(account) do
-    if module_enabled?(Bonfire.Data.SharedUser) and module_enabled?(Bonfire.Me.SharedUsers) do
+    if module_enabled?(Bonfire.Data.SharedUser) do
       Bonfire.Me.SharedUsers.by_account(account)
     else
       do_by_account(account)
