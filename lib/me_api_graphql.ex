@@ -1,10 +1,7 @@
-# SPDX-License-Identifier: AGPL-3.0-only
+if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and Code.ensure_loaded?(Absinthe.Schema.Notation) do
 defmodule Bonfire.Me.API.GraphQL do
   import Where
-  import Bonfire.Common.Extend
-
-if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and Code.ensure_loaded?(Absinthe.Schema.Notation) do
-  use_if_enabled Absinthe.Schema.Notation
+  use Absinthe.Schema.Notation
   use Bonfire.Common.Utils
   alias Absinthe.Resolution.Helpers
 
@@ -395,8 +392,5 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and Code.ensure_lo
       {:ok, %{}}
     end
   end
-
-else
-  IO.inspect("Me.API.GraphQL Skip")
 end
 end
