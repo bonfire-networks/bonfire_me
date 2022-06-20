@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) do
 defmodule Bonfire.Me.API.GraphQL do
+  import Where
+
+if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) do
   use Absinthe.Schema.Notation
   use Bonfire.Common.Utils
-  import Absinthe.Resolution.Helpers
-  import Where
+  alias Absinthe.Resolution.Helpers
 
   alias Bonfire.API.GraphQL
   alias Bonfire.Data.Identity.User
@@ -25,19 +26,19 @@ defmodule Bonfire.Me.API.GraphQL do
     field :posts, list_of(:post) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer)
+      resolve Absinthe.Resolution.Helpers.dataloader(Pointers.Pointer)
     end
 
     field :user_activities, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer)
+      resolve Absinthe.Resolution.Helpers.dataloader(Pointers.Pointer)
     end
 
     field :boost_activities, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer)
+      resolve Absinthe.Resolution.Helpers.dataloader(Pointers.Pointer)
     end
 
   end
@@ -77,19 +78,19 @@ defmodule Bonfire.Me.API.GraphQL do
     field :like_activities, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer)
+      resolve Absinthe.Resolution.Helpers.dataloader(Pointers.Pointer)
     end
 
     field :followers, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer)
+      resolve Absinthe.Resolution.Helpers.dataloader(Pointers.Pointer)
     end
 
     field :followed, list_of(:activity) do
       arg :paginate, :paginate # TODO
 
-      resolve dataloader(Pointers.Pointer)
+      resolve Absinthe.Resolution.Helpers.dataloader(Pointers.Pointer)
     end
 
   end
@@ -394,7 +395,7 @@ defmodule Bonfire.Me.API.GraphQL do
     end
   end
 
-end
 else
   IO.inspect("Me.API.GraphQL Skip")
+end
 end
