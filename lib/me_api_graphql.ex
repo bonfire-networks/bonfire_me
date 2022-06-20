@@ -2,7 +2,7 @@
 defmodule Bonfire.Me.API.GraphQL do
   import Where
 
-if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) do
+if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and Code.ensure_loaded?(Absinthe.Schema.Notation) do
   use Absinthe.Schema.Notation
   use Bonfire.Common.Utils
   alias Absinthe.Resolution.Helpers
