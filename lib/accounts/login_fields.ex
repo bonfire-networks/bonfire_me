@@ -13,6 +13,7 @@ defmodule Bonfire.Me.Accounts.LoginFields do
     # outputs
     field :email, :string
     field :username, :string
+    embeds_one :auth_second_factor, Bonfire.Data.Identity.AuthSecondFactor
   end
 
   @required [:email_or_username, :password]
@@ -22,6 +23,7 @@ defmodule Bonfire.Me.Accounts.LoginFields do
   def changeset(form \\ %LoginFields{}, attrs) do
     form
     |> Changeset.cast(attrs, @cast)
+    # |> Changeset.cast_embed(:auth_second_factor)
     |> Changeset.validate_required(@required)
     |> validate_username_or_email
   end

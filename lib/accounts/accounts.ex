@@ -45,6 +45,7 @@ defmodule Bonfire.Me.Accounts do
     do: LoginFields.changeset(params)
 
   def changeset(:signup, params, opts) do
+    # debug(opts)
     if allow_signup?(opts) do
       signup_changeset(params, opts)
     else
@@ -61,13 +62,20 @@ defmodule Bonfire.Me.Accounts do
       required: true,
       with: &Credential.confirmation_changeset(&1, &2)
     )
+    |> Bonfire.Me.Accounts.SecondFactors.maybe_cast_totp_changeset(params, opts)
   end
+
+
 
   ### signup
 
   def signup(params_or_changeset, opts \\ [])
 
   def signup(params, opts) when not is_struct(params) do
+    signup(changeset(:signup, params, opts), opts)
+  end
+
+  def signup(%Changeset{data: %Account{}}=cs, opts) do
     is_first_account = is_first_account?()
 
     opts = opts
@@ -81,10 +89,6 @@ defmodule Bonfire.Me.Accounts do
     )
     |> debug("opts")
 
-    signup(changeset(:signup, params, opts), opts)
-  end
-
-  def signup(%Changeset{data: %Account{}}=cs, opts) do
     if cs.valid? do
       repo().transact_with fn -> # revert if email send fails
         repo().insert(cs)
@@ -110,13 +114,14 @@ defmodule Bonfire.Me.Accounts do
   def login(params_or_changeset, opts \\ [])
 
   def login(params, opts) when not is_struct(params),
-    do: login(changeset(:login, params, opts), opts)
+    do: login(changeset(:login, params, opts), opts ++ [params: params])
 
   def login(%Changeset{data: %LoginFields{}}=cs, opts) do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
       repo().find(login_query(form), cs)
       ~> login_check_password(form, cs)
-      ~> login_check_confirmed(opts, cs)
+      ~> login_maybe_check_second_factor(cs, opts)
+      ~> login_check_confirmed(cs, opts)
       ~> login_response()
     end
   end
@@ -136,7 +141,15 @@ defmodule Bonfire.Me.Accounts do
       else: {:error, Changeset.add_error(changeset, :form, "no_match")}
   end
 
-  defp login_check_confirmed(%Account{}=account, opts, cs) do
+  defp login_maybe_check_second_factor(%Account{}=account, changeset, opts) do
+    with {:ok, _} <- Bonfire.Me.Accounts.SecondFactors.maybe_authenticate(account, opts[:params]) do
+      {:ok, account}
+    else {:error, e} ->
+      {:error, Changeset.add_error(changeset, :form, e)}
+    end
+  end
+
+  defp login_check_confirmed(%Account{}=account, cs, opts) do
     if is_nil(e(account, :email, :confirmed_at, nil)) and Email.must_confirm?(opts),
       do: {:error, Changeset.add_error(cs, :form, "email_not_confirmed")},
       else: {:ok, account}

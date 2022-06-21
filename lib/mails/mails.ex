@@ -9,6 +9,7 @@ defmodule Bonfire.Me.Mails do
   import Where
   require Bonfire.Common.Localise.Gettext
   import Bonfire.Common.Localise.Gettext.Helpers
+  alias Bonfire.Common.Config
 
   def confirm_email(account, opts \\ []) do
 
@@ -24,13 +25,13 @@ defmodule Bonfire.Me.Mails do
     confirm_token = Utils.e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
-      app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
+      app_name = Bonfire.Application.name()
       url = url(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
 
-      if Bonfire.Common.Config.get(:env) != :test or System.get_env("START_SERVER", "false")=="true", do: warn("Email confirmation link: #{url}")
+      if Config.get(:env) != :test or System.get_env("START_SERVER", "false")=="true", do: warn("Email confirmation link: #{url}")
 
       conf =
-        Bonfire.Common.Config.get(__MODULE__, [])
+        Config.get(__MODULE__, [])
         |> Keyword.get(:confirm_email, [])
 
       new_email()
@@ -52,10 +53,10 @@ defmodule Bonfire.Me.Mails do
 
     if is_binary(confirm_token) do
       conf =
-        Bonfire.Common.Config.get(__MODULE__, [])
+        Config.get(__MODULE__, [])
         |> Keyword.get(:forgot_password_email, [])
 
-      app_name = Application.get_env(:bonfire, :app_name, "Bonfire")
+      app_name = Bonfire.Application.name()
       url = url(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
 
       new_email()

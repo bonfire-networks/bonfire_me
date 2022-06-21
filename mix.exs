@@ -18,7 +18,9 @@ defmodule Bonfire.Me.MixProject do
         # {:floki, ">= 0.0.0", only: [:dev, :test]},
         {:bonfire_data_shared_user, git: "https://github.com/bonfire-networks/bonfire_data_shared_user", branch: "main", optional: true},
         {:bonfire_api_graphql, git: "https://github.com/bonfire-networks/bonfire_api_graphql", branch: "main", optional: true},
-        {:absinthe, "~> 1.7", optional: true}
+        {:absinthe, "~> 1.7", optional: true},
+        {:nimble_totp, "~> 0.2.0", optional: true},
+        {:eqrcode, "~> 0.1.10", optional: true}
       ]
     ]
   end
