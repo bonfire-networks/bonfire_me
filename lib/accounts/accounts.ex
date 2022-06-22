@@ -66,7 +66,6 @@ defmodule Bonfire.Me.Accounts do
   end
 
 
-
   ### signup
 
   def signup(params_or_changeset, opts \\ [])
@@ -85,7 +84,7 @@ defmodule Bonfire.Me.Accounts do
     )
     |> Keyword.put_new(
       :must_confirm?,
-      Config.get(:env)==:test or !is_first_account && (!opts[:invite] || opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
+      Config.get(:env) !=:test #or !is_first_account || (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
     )
     |> debug("opts")
 
@@ -120,8 +119,8 @@ defmodule Bonfire.Me.Accounts do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
       repo().find(login_query(form), cs)
       ~> login_check_password(form, cs)
-      ~> login_maybe_check_second_factor(cs, opts)
       ~> login_check_confirmed(cs, opts)
+      ~> login_maybe_check_second_factor(cs, opts)
       ~> login_response()
     end
   end
@@ -352,10 +351,29 @@ defmodule Bonfire.Me.Accounts do
     |> Changeset.add_error(:form, "invite_only")
   end
 
-  # defp delete_deps(account) do
-  #   users = Users.by_account(account)
-  #   Users.delete(users)
-  # end
+  def delete(%Account{}=account) do
+    delete_users(account)
+
+    assocs = [:credential, :email, :accounted, :users, :shared_users, :auth_second_factor, :settings]
+    # account = repo().maybe_preload(account, assocs)
+
+    Bonfire.Social.Objects.maybe_generic_delete(Account, account, current_account: account, delete_associations: assocs)
+
+    # repo().delete(account) # handled by Epic
+  end
+  def delete(account) do
+    with {:ok, account} <- fetch_current(account) do
+      delete(account)
+    else _ -> # re-delete already deleted pointable (eg. to catch any missing assocs)
+        Bonfire.Common.Pointers.get(account, deleted: true, skip_boundary_check: true)
+        ~> delete()
+    end
+  end
+
+  defp delete_users(account) do
+    Users.by_account(account)
+    |> Users.delete()
+  end
 
   ## misc
 

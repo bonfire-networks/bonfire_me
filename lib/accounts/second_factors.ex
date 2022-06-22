@@ -55,32 +55,32 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
     end
   end
 
-  def new_struct(secret \\ nil) do
-    %AuthSecondFactor{}
-    |> Map.put(:secret, secret || new())
-    # |> debug()
-  end
-
   def maybe_cast_totp_changeset(changeset, params, opts) do
     if Bonfire.Me.Accounts.SecondFactors.enabled? do
-      # debug("enabled")
+      debug("enabled")
       code = e(params, :auth_second_factor, :code, nil)
       if not is_nil(code) and code !="" do
-        # debug(code, "code")
+        debug(code, "code")
         changeset
         |> Changeset.cast_assoc(
           :auth_second_factor,
           required: false,
-          with: &Bonfire.Me.Accounts.SecondFactors.changeset(&1, &2, opts)
+          with: &changeset(&1, &2, opts)
         )
       else
-        # debug("generate")
-        changeset
-        |> Changeset.put_assoc(
-          :auth_second_factor,
-          Bonfire.Me.Accounts.SecondFactors.new_struct(opts[:auth_two_factor_secret])
-        )
-        # |> debug
+        # case opts[:auth_second_factor_secret] do
+        #   secret when is_binary(secret) ->
+        #     debug("generate")
+        #     changeset
+        #     |> Changeset.put_assoc(
+        #       :auth_second_factor,
+        #       new_struct(secret)
+        #     )
+        #     # |> debug
+        #   _ ->
+            debug("no secret or code provided")
+            changeset
+        # end
       end
     else
       changeset
@@ -97,14 +97,22 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
       %Ecto.Changeset{data: %AuthSecondFactor{}}
   """
   def changeset(%AuthSecondFactor{} = totp \\ %AuthSecondFactor{}, attrs, opts \\ []) do
-    secret = (totp.secret || opts[:auth_two_factor_secret] || e(attrs, :secret, nil))
+    secret = (totp.secret || opts[:auth_second_factor_secret] || e(attrs, :secret, nil))
     # |> debug("secret")
     totp
     |> Map.put(:secret, secret)
+    |> debug()
     |> AuthSecondFactor.changeset(attrs)
+    |> debug()
     # |> AuthSecondFactor.ensure_backup_codes() # TODO
     # let's make sure the secret propagates to the changeset.
     # |> Ecto.Changeset.force_change(:secret, secret)
+  end
+
+  def new_struct(secret \\ nil) do
+    %AuthSecondFactor{}
+    |> Map.put(:secret, secret || new())
+    |> debug()
   end
 
   @doc """
@@ -170,7 +178,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   def maybe_authenticate(account, params) do
-    # debug(params)
+    debug(params)
     if Bonfire.Me.Accounts.SecondFactors.enabled? do
       case validate_account_totp(account, e(params, "auth_second_factor", "code", nil)) do
         :valid_totp ->

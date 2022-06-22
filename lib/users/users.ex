@@ -167,16 +167,18 @@ defmodule Bonfire.Me.Users do
 
   ## Delete
 
-  # def delete(%User{}=user) do
-  #   preloads =
-  #     [:actor, :character, :follow_count, :like_count, :profile, :self] ++
-  #     [accounted: [:account]]
-  #   user = repo().preload(user, preloads)
-  #   with :ok         <- delete_caretaken(user),
-  #        {:ok, user} <- delete_mixins(user) do
-  #     {:ok, user}
-  #   end
-  # end
+  def delete(users) when is_list(users) do
+    Enum.map(users, &delete/1)
+    |> List.first()
+  end
+  def delete(%User{}=user) do
+    assocs = [:actor, :character, :follow_count, :like_count, :profile, :settings, :self, :accounted]
+    # user = repo().maybe_preload(user, assocs)
+
+    # with :ok <- delete_caretaken(user) do # TODO: delete user's content do
+      Bonfire.Social.Objects.maybe_generic_delete(User, user, current_user: user, delete_associations: assocs)
+    # end
+  end
 
   ### ActivityPub
 
