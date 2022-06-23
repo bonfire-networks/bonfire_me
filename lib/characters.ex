@@ -94,28 +94,28 @@ defmodule Bonfire.Me.Characters do
     end
   end
 
-  def display_username(user, is_local? \\ nil)
+  def display_username(user, always_include_domain \\ false, is_local? \\ nil)
 
-  def display_username("@"<>username, is_local?) do
-    display_username(username, is_local?)
+  def display_username("@"<>username, always_include_domain, is_local?) do
+    display_username(username, always_include_domain, is_local?)
   end
-  def display_username(username, true) when is_binary(username) do
+  def display_username(username, true, true) when is_binary(username) do
     "@#{username}@#{URIs.instance_domain()}"
   end
-  def display_username(username, false) when is_binary(username) do
+  def display_username(username, _, _) when is_binary(username) do
     "@"<>username
   end
-  def display_username(%{username: username} = character, _) when not is_nil(username) do
-    display_username(username, is_local?(character))
+  def display_username(%{username: username} = character, always_include_domain, _) when not is_nil(username) do
+    display_username(username, always_include_domain, (if always_include_domain, do: is_local?(character)))
   end
-  def display_username(%{display_username: username}, is_local?) when not is_nil(username) do
-    display_username(username, is_local?)
+  def display_username(%{display_username: username}, always_include_domain, is_local?) when not is_nil(username) do
+    display_username(username, always_include_domain, (if always_include_domain, do: is_local?))
   end
-  def display_username(%{character: _} = thing, _) do
+  def display_username(%{character: _} = thing, always_include_domain, _) do
     repo().maybe_preload(thing, [character: :peered])
-    display_username(Map.get(thing, :character), is_local?(thing))
+    display_username(Map.get(thing, :character), always_include_domain, (if always_include_domain, do: is_local?(thing)))
   end
-  def display_username(_, _) do
+  def display_username(_, _, _) do
     nil
   end
 
