@@ -425,8 +425,10 @@ defmodule Bonfire.Me.Users do
     end
   end
 
+  def count(), do: repo().one(Queries.count())
+
   def is_first_user? do
-    Queries.count() <1
+    count() <1
   end
 
   def delete(users) when is_list(users) do

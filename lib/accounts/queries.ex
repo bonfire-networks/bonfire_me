@@ -55,7 +55,7 @@ defmodule Bonfire.Me.Accounts.Queries do
       ]
   end
 
-  def count() do
-    repo().one(from p in Account, select: count(p.id))
+  def count(q \\ Account) do
+    select(q, [u], count(u.id))
   end
 end

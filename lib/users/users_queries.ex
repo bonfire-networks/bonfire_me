@@ -98,7 +98,9 @@ defmodule Bonfire.Me.Users.Queries do
 
   def current(user_id), do: by_username_or_id(user_id, :local)
 
-  def count(), do: repo().one(from p in User, select: count(p.id))
+  def count(q \\ User) do
+    select(q, [u], count(u.id))
+  end
 
   def admins(opts \\ []) do
     from(u in User, as: :user)

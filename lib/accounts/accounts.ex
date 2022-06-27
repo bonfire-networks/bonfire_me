@@ -381,8 +381,10 @@ defmodule Bonfire.Me.Accounts do
   defp mailer_response({:error, error}, _) when is_atom(error), do: {:error, error}
   defp mailer_response(_, _), do: {:error, :email}
 
+  def count(), do: repo().one(Queries.count())
+
   def is_first_account? do
-    Queries.count() <1
+    count() <1
   end
 
 end
