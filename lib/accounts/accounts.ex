@@ -127,6 +127,7 @@ defmodule Bonfire.Me.Accounts do
 
   defp login_query(%{email: email}) when is_binary(email), do: Queries.login_by_email(email)
 
+  defp login_query(%{username: "@"<>username}), do: login_query(%{username: username})
   defp login_query(%{username: username}) when is_binary(username), do: Queries.login_by_username(username)
 
   defp login_check_password(nil, _form, changeset) do
