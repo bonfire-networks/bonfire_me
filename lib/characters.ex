@@ -42,8 +42,6 @@ defmodule Bonfire.Me.Characters do
     repo().delete_all(from c in Character, where: c.username_hash == ^hash)
   end
 
-  def remote_changeset(char, params), do: do_remote_changeset(char, params)
-
   def clean_username(username) do
     Regex.replace(@username_forbidden, username, "_")
     |> String.slice(0..(@username_max_length-1))
@@ -78,6 +76,8 @@ defmodule Bonfire.Me.Characters do
     |> Changeset.validate_format(:username, @username_regex)
     |> Changeset.cast_assoc(:actor)
   end
+
+  def remote_changeset(char, params), do: do_remote_changeset(char, params)
 
   defp do_remote_changeset(changeset, params) do
     # If it's a character, turn it into a changeset
