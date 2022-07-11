@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Users do
   import Bonfire.Me.Integration
   import Ecto.Query, only: [limit: 2]
   # alias ActivityPub.Actor
-  alias Bonfire.Data.Identity.{Account, Named, User}
+  alias Bonfire.Data.Identity.{Account, User}
   alias Bonfire.Me.{Characters, Profiles, Users.Queries}
   alias Bonfire.Boundaries.Circles
   alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
