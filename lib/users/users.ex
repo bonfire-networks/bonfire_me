@@ -291,10 +291,12 @@ defmodule Bonfire.Me.Users do
       |> Map.merge(%{"profile" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
       |> Map.merge(%{"character" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
 
-    loc = params["profile"]["location"]
-    if loc && loc !="" && module_enabled?(Bonfire.Geolocate.Geolocations) do
-      Bonfire.Geolocate.Geolocations.thing_add_location(user, user, loc)
-    end
+    # FIXME: Tag with Geolocation
+    # loc = params["profile"]["location"]
+    # if loc && loc !="" do
+    #   maybe_apply(Bonfire.Geolocate.Geolocations, :thing_add_location, [user, user, loc])
+    # end
+
     user
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
