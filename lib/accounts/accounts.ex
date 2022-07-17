@@ -352,7 +352,8 @@ defmodule Bonfire.Me.Accounts do
     |> Changeset.add_error(:form, "invite_only")
   end
 
-  def delete(%Account{}=account) do
+  def delete(account, _opts \\ [])
+  def delete(%Account{}=account, _opts) do
     delete_users(account)
 
     assocs = [:credential, :email, :accounted, :users, :shared_users, :auth_second_factor, :settings]
@@ -362,7 +363,7 @@ defmodule Bonfire.Me.Accounts do
 
     # repo().delete(account) # handled by Epic
   end
-  def delete(account) do
+  def delete(account, _opts) do
     with {:ok, account} <- fetch_current(account) do
       delete(account)
     else _ -> # re-delete already deleted pointable (eg. to catch any missing assocs)

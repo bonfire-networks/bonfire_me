@@ -165,11 +165,12 @@ defmodule Bonfire.Me.Users do
 
   ## Delete
 
-  def delete(users) when is_list(users) do
+  def delete(user, _opts \\ [])
+  def delete(users, _) when is_list(users) do
     Enum.map(users, &delete/1)
     |> List.first()
   end
-  def delete(%User{}=user) do
+  def delete(%User{}=user, _) do
     assocs = [:actor, :character, :follow_count, :like_count, :profile, :settings, :self, :accounted]
     # user = repo().maybe_preload(user, assocs)
 
@@ -177,6 +178,10 @@ defmodule Bonfire.Me.Users do
       Bonfire.Social.Objects.maybe_generic_delete(User, user, current_user: user, delete_associations: assocs)
     # end
   end
+
+  # def delete(users) when is_list(users) do
+  # end
+
 
   ### ActivityPub
 
@@ -333,8 +338,5 @@ defmodule Bonfire.Me.Users do
     count() <1
   end
 
-  def delete(users) when is_list(users) do
-
-  end
 
 end
