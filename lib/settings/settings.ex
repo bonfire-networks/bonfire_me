@@ -134,11 +134,36 @@ defmodule Bonfire.Me.Settings do
     attrs
     |> input_to_atoms(false, true)
     |> debug("input as atoms")
-    |> maybe_to_keyword_list()
-    |> set(opts)
+    |> set_with_hooks(opts)
+  end
+  def set(settings, opts) when is_list(settings) do
+    Enum.into(settings, %{}) # FIXME: optimise (do not convert to map and then back)
+    |> set_with_hooks(opts)
   end
 
-  def set(settings, opts) when is_list(settings) do
+  defp set_with_hooks(%{Bonfire.Me.Users => %{discoverable: false}, scope: :user} = attrs, opts) do
+    # TODO: find a better, more pluggable way to add hooks to settings
+    do_set(attrs, opts)
+    Bonfire.Boundaries.Controlleds.remove_acls(current_user(opts), :guests_may_see_read)
+    Bonfire.Boundaries.Controlleds.add_acls(current_user(opts), :guests_may_read)
+  end
+  defp set_with_hooks(%{Bonfire.Me.Users => %{discoverable: true}, scope: :user} = attrs, opts) do
+    # TODO: find a better, more pluggable way to add hooks to settings
+    do_set(attrs, opts)
+    Bonfire.Boundaries.Controlleds.remove_acls(current_user(opts), :guests_may_read)
+    Bonfire.Boundaries.Controlleds.add_acls(current_user(opts), :guests_may_see_read)
+  end
+  defp set_with_hooks(attrs, opts) do
+    do_set(attrs, opts)
+  end
+
+  def do_set(attrs, opts) when is_map(attrs) do
+    attrs
+    |> maybe_to_keyword_list()
+    |> do_set(opts)
+  end
+
+  def do_set(settings, opts) when is_list(settings) do
     current_user = current_user(opts)
     current_account = current_account(opts)
     is_admin = Bonfire.Me.Users.is_admin?(current_user || current_account)
