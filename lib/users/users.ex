@@ -2,8 +2,11 @@ defmodule Bonfire.Me.Users do
   @doc """
   A User is a logical identity within the system belonging to an Account.
   """
+  use Arrows
+  use Bonfire.Common.Utils
   import Bonfire.Me.Integration
   import Ecto.Query, only: [limit: 2]
+  import Bonfire.Boundaries.Queries
   # alias ActivityPub.Actor
   alias Bonfire.Data.Identity.{Account, User}
   alias Bonfire.Me.{Characters, Profiles, Users.Queries}
@@ -12,8 +15,6 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   alias Pointers.{Changesets, ULID}
-  use Arrows
-  use Bonfire.Common.Utils
 
   @type changeset_name :: :create
   @type changeset_extra :: Account.t | :remote
@@ -69,8 +70,16 @@ defmodule Bonfire.Me.Users do
   defp none(_, _), do: nil
 
   def search_db(search), do: repo().many(Queries.search(search))
-  def list, do: repo().many(Queries.list())
+
+  def list_all, do: repo().many(Queries.list())
   def list_admins(), do: repo().many(Queries.admins())
+
+  def list(opts) do
+    # Note: users who said they don't want to be publicly discoverable in settings will be filtered based on boundaries (i.e. not shown to guests)
+    Queries.list()
+    |> boundarise(id, to_options(opts) ++ [verbs: [:see]])
+    |> repo().many()
+  end
 
   def flatten(user) do
     user
