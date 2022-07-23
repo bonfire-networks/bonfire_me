@@ -141,14 +141,13 @@ defmodule Bonfire.Me.Settings do
     |> set_with_hooks(opts)
   end
 
+  # TODO: find a better, more pluggable way to add hooks to settings
   defp set_with_hooks(%{Bonfire.Me.Users => %{discoverable: false}, scope: :user} = attrs, opts) do
-    # TODO: find a better, more pluggable way to add hooks to settings
     do_set(attrs, opts)
     Bonfire.Boundaries.Controlleds.remove_acls(current_user(opts), :guests_may_see_read)
     Bonfire.Boundaries.Controlleds.add_acls(current_user(opts), :guests_may_read)
   end
   defp set_with_hooks(%{Bonfire.Me.Users => %{discoverable: true}, scope: :user} = attrs, opts) do
-    # TODO: find a better, more pluggable way to add hooks to settings
     do_set(attrs, opts)
     Bonfire.Boundaries.Controlleds.remove_acls(current_user(opts), :guests_may_read)
     Bonfire.Boundaries.Controlleds.add_acls(current_user(opts), :guests_may_see_read)
