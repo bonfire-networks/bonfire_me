@@ -343,6 +343,10 @@ defmodule Bonfire.Me.Users do
 
   def count(), do: repo().one(Queries.count())
 
+  def maybe_count() do
+    if Settings.get([__MODULE__, :public_count], true, :instance), do: count()
+  end
+
   def is_first_user? do
     count() <1
   end
