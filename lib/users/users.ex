@@ -104,6 +104,7 @@ defmodule Bonfire.Me.Users do
                         |> Changesets.put_assoc(:instance_admin, %{is_instance_admin: maybe_make_admin})
                         |> debug("changeset")
                         |> repo().insert() do
+      if maybe_make_admin, do: add_to_admin_circle(user)
       post_create(user)
     end
   end
@@ -135,14 +136,28 @@ defmodule Bonfire.Me.Users do
     by_username(username)
     ~> make_admin()
   end
-  def make_admin(%User{}=user), do: update_is_admin(user, true)
+  def make_admin(%User{}=user) do
+    update_is_admin(user, true)
+    add_to_admin_circle(user)
+  end
+
+  defp add_to_admin_circle(user) do
+    Bonfire.Boundaries.Circles.add_to_circles(user, Bonfire.Boundaries.Fixtures.admin_circle)
+  end
 
   @doc "Revokes a user's superpowers."
   def revoke_admin(username) when is_binary(username) do
     by_username(username)
     ~> revoke_admin()
   end
-  def revoke_admin(%User{}=user), do: update_is_admin(user, false)
+  def revoke_admin(%User{}=user) do
+    update_is_admin(user, false)
+    remove_from_admin_circle(user)
+  end
+
+  defp remove_from_admin_circle(user) do
+    Bonfire.Boundaries.Circles.remove_from_circles(user, Bonfire.Boundaries.Fixtures.admin_circle)
+  end
 
   defp update_is_admin(%User{}=user, make_admin_or_revoke) do
     user
