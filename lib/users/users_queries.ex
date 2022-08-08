@@ -98,8 +98,24 @@ defmodule Bonfire.Me.Users.Queries do
 
   def current(user_id), do: by_username_or_id(user_id, :local)
 
-  def count(q \\ User) do
-    select(q, [u], count(u.id))
+  def count(:local) do
+    count(:join_peered)
+    |> where([peered: p], is_nil(p.id))
+  end
+
+  def count(:remote) do
+    count(:join_peered)
+    |> where([peered: p], not is_nil(p.id))
+  end
+
+  def count(:join_peered) do
+    count(nil)
+    |> join(:left, [u], character in assoc(u, :character), as: :character)
+    |> join(:left, [character: c], peered in assoc(c, :peered), as: :peered)
+  end
+
+  def count(_) do
+    select(User, [u], count(u.id))
   end
 
   def admins(opts \\ []) do

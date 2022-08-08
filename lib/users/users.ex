@@ -356,10 +356,10 @@ defmodule Bonfire.Me.Users do
 
   # defp config(), do: Application.get_env(:bonfire_me, Users)
 
-  def count(), do: repo().one(Queries.count())
+  def count(show \\ :local), do: repo().one(Queries.count(show))
 
-  def maybe_count() do
-    if Settings.get([__MODULE__, :public_count], true, :instance), do: count()
+  def maybe_count(show \\ :local) do
+    if Settings.get([__MODULE__, :public_count], true, :instance), do: count(show)
   end
 
   def is_first_user? do
