@@ -99,19 +99,15 @@ defmodule Bonfire.Me.Users.Queries do
   def current(user_id), do: by_username_or_id(user_id, :local)
 
   def count(:local) do
-    count(:join_peered)
+    count(nil)
+    |> join_peered()
     |> where([peered: p], is_nil(p.id))
   end
 
   def count(:remote) do
-    count(:join_peered)
-    |> where([peered: p], not is_nil(p.id))
-  end
-
-  def count(:join_peered) do
     count(nil)
-    |> join(:left, [u], character in assoc(u, :character), as: :character)
-    |> join(:left, [character: c], peered in assoc(c, :peered), as: :peered)
+    |> join_peered()
+    |> where([peered: p], not is_nil(p.id))
   end
 
   def count(_) do
@@ -124,15 +120,33 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([instance_admin: ia], ia.is_instance_admin == true)
   end
 
-  def list() do
+  def list(:local) do
+    list(nil)
+    |> join_peered()
+    |> where([peered: p], is_nil(p.id))
+  end
+
+  def list(:remote) do
+    list(nil)
+    |> join_peered()
+    |> where([peered: p], not is_nil(p.id))
+  end
+
+  def list(_) do
     from(u in User, as: :user,
       # join: a in assoc(u, :accounted),
-      join: c in assoc(u, :character),
+      join: c in assoc(u, :character), as: :character,
       join: p in assoc(u, :profile),
       left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
       preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}]
     )
+  end
+
+  def join_peered(q) do
+    q
+    |> reusable_join(:left, [u], character in assoc(u, :character), as: :character)
+    |> reusable_join(:left, [character: c], peered in assoc(c, :peered), as: :peered)
   end
 
   def search(text) do

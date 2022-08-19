@@ -71,13 +71,15 @@ defmodule Bonfire.Me.Users do
 
   def search_db(search), do: repo().many(Queries.search(search))
 
-  def list_all, do: repo().many(Queries.list())
+  def list_all(show \\ :local), do: repo().many(Queries.list(show))
   def list_admins(), do: repo().many(Queries.admins())
 
   def list(opts) do
+    opts = to_options(opts)
+
     # Note: users who said they don't want to be publicly discoverable in settings will be filtered based on boundaries (i.e. not shown to guests)
-    Queries.list()
-    |> boundarise(id, to_options(opts) ++ [verbs: [:see]])
+    Queries.list(Keyword.get(opts, :show, :local))
+    |> boundarise(id, opts ++ [verbs: [:see]])
     |> repo().many()
   end
 
