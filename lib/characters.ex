@@ -7,6 +7,7 @@ defmodule Bonfire.Me.Characters do
   import Bonfire.Me.Integration
   import Ecto.Query
   import EctoSparkles
+  import Where
   use Arrows
 
   def context_module, do: Character
@@ -143,7 +144,8 @@ defmodule Bonfire.Me.Characters do
     character_url(Map.get(thing, :character))
   end
 
-  def character_url(_) do
+  def character_url(other) do
+    warn(other, "Dunno how to handle")
     nil
   end
 
