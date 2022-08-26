@@ -139,8 +139,8 @@ defmodule Bonfire.Me.Users do
     ~> make_admin()
   end
   def make_admin(%User{}=user) do
-    update_is_admin(user, true)
     add_to_admin_circle(user)
+    update_is_admin(user, true)
   end
 
   defp add_to_admin_circle(user) do
