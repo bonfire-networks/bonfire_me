@@ -20,7 +20,7 @@ defmodule Bonfire.Me.Settings do
   def get(keys, default, opts) when is_list(keys) do
     {[otp_app], keys_tree} = Config.keys_tree(keys) |> Enum.split(1)
 
-    debug(keys_tree, "Get settings in #{inspect otp_app} for")
+    if is_nil(opts) or (not is_struct(opts) and ( is_list(opts) or is_map(opts) ) and Enum.empty?(opts) ), do: warn(keys, "You should pass a current_user and/or current_account in opts depending on what scope of Settings you want for"), else: debug(keys_tree, "Get settings in #{inspect otp_app} for")
 
     case get_all_ext(otp_app, opts) |> get_in(keys_tree) do
       nil ->
@@ -48,8 +48,6 @@ defmodule Bonfire.Me.Settings do
   Get all config keys/values for a Bonfire extension or OTP app
   """
   def get_all_ext(module_or_otp_app, opts \\ []) do
-
-    if opts == [], do: warn(module_or_otp_app, "You should pass a current_user or current_account in opts to Settings.get_ext/2 if you want user or account settings for")
 
     otp_app = Extend.maybe_extension_loaded!(module_or_otp_app) || Config.top_level_otp_app()
 
