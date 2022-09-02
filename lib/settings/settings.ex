@@ -79,7 +79,7 @@ defmodule Bonfire.Me.Settings do
       ++
       [fetch({:current_account, current_account(opts)}) |> e(:data, otp_app, nil)]
       ++
-      [fetch({:current_user, current_user(opts)})|> e(:data, otp_app, nil)]
+      [fetch({:current_user, current_user(opts)}) |> e(:data, otp_app, nil)]
     )
     |> filter_empty([])
   end
@@ -98,9 +98,15 @@ defmodule Bonfire.Me.Settings do
   end
 
   def fetch(scope) when not is_nil(scope) do
-    if is_map(scope), do: warn(scope, "fallback to querying since Settings aren't already preloaded in scoped object")
-    query_filter(Bonfire.Data.Identity.Settings, %{id: ulid(scope)})
-    |> repo().one()
+    case ulid(scope) do
+      nil ->
+        []
+
+      id ->
+        warn(scope, "fallback to querying since Settings aren't already preloaded in scoped object")
+        query_filter(Bonfire.Data.Identity.Settings, %{id: id})
+        |> repo().one()
+    end
   end
   def fetch(_), do: []
 
