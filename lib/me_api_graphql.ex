@@ -1,6 +1,6 @@
 if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and Code.ensure_loaded?(Absinthe.Schema.Notation) do
 defmodule Bonfire.Me.API.GraphQL do
-  import Where
+  import Untangle
   use Absinthe.Schema.Notation
   use Bonfire.Common.Utils
   alias Absinthe.Resolution.Helpers

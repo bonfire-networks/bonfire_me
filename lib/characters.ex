@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Characters do
   import Bonfire.Me.Integration
   import Ecto.Query
   import EctoSparkles
-  import Where
+  import Untangle
   use Arrows
 
   def context_module, do: Character

@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Fake.Helpers do
   use Arrows
-  # import Where
+  # import Untangle
 
   def email, do: Faker.Internet.email()
   def confirm_token, do: Base.encode32(Faker.random_bytes(10), pad: false)

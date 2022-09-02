@@ -6,7 +6,7 @@ defmodule Bonfire.Me.Mails do
   alias Bonfire.Common.Utils
   # import Bonfire.Me.Integration
   import Bonfire.Common.URIs
-  import Where
+  import Untangle
   require Bonfire.Common.Localise.Gettext
   import Bonfire.Common.Localise.Gettext.Helpers
   alias Bonfire.Common.Config

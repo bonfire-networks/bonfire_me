@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Users.Queries do
-  import Where
+  import Untangle
   import Ecto.Query
   import Bonfire.Me.Integration
   # alias Bonfire.Me.Users

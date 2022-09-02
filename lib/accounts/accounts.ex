@@ -3,7 +3,7 @@ defmodule Bonfire.Me.Accounts do
   use Arrows
   use Bonfire.Common.Utils
   import Bonfire.Me.Integration
-  import Where
+  import Untangle
 
   alias Bonfire.Data.Identity.{Account, Credential, Email, User}
   alias Bonfire.Common.Config
