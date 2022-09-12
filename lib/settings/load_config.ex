@@ -18,11 +18,13 @@ defmodule Bonfire.Me.Settings.LoadInstanceConfig do
     if Code.ensure_loaded?(:telemetry),
       do: :telemetry.span([:settings, :load_config], %{}, &load_config/0),
       else: load_config()
+
     :ignore
   end
 
   def load_config() do
     settings = Bonfire.Me.Settings.load_instance_settings()
+
     if settings do
       Logger.info("Instance settings were loaded into config")
       {Bonfire.Common.Config.put(settings), Map.new(settings)}
@@ -31,5 +33,4 @@ defmodule Bonfire.Me.Settings.LoadInstanceConfig do
       {:ok, %{skip: "No settings loaded"}}
     end
   end
-
 end

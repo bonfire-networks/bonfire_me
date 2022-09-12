@@ -12,23 +12,23 @@ defmodule Bonfire.Me.Mails do
   alias Bonfire.Common.Config
 
   def confirm_email(account, opts \\ []) do
-
     case opts[:confirm_action] do
-     :forgot_password -> forgot_password(account)
-     :login -> forgot_password(account)
+      :forgot_password -> forgot_password(account)
+      :login -> forgot_password(account)
       _ -> signup_confirm_email(account)
     end
-
   end
 
-  def signup_confirm_email(%Account{}=account) do
+  def signup_confirm_email(%Account{} = account) do
     confirm_token = Utils.e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
       app_name = Bonfire.Application.name()
       url = url(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
 
-      if Config.get(:env) != :test or System.get_env("START_SERVER", "false")=="true", do: warn("Email confirmation link: #{url}")
+      if Config.get(:env) != :test or
+           System.get_env("START_SERVER", "false") == "true",
+         do: warn("Email confirmation link: #{url}")
 
       conf =
         Config.get(__MODULE__, [])
@@ -38,8 +38,9 @@ defmodule Bonfire.Me.Mails do
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
-      |> subject(Keyword.get(conf, :subject, "#{app_name} - " <> l "Confirm your email"))
+      |> subject(Keyword.get(conf, :subject, "#{app_name} - " <> l("Confirm your email")))
       |> render(:confirm_email)
+
       # |> put_html_layout({EmailView, "confirm_email.html"})
       # |> put_text_layout({EmailView, "confirm_email.text"})
       # |> IO.inspect
@@ -48,7 +49,7 @@ defmodule Bonfire.Me.Mails do
     end
   end
 
-  def forgot_password(%Account{}=account) do
+  def forgot_password(%Account{} = account) do
     confirm_token = Utils.e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
@@ -69,5 +70,4 @@ defmodule Bonfire.Me.Mails do
       error("No confirmation token")
     end
   end
-
 end

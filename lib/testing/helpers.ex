@@ -1,5 +1,6 @@
 defmodule Bonfire.Me.Fake.Helpers do
   use Arrows
+
   # import Untangle
 
   def email, do: Faker.Internet.email()
@@ -15,8 +16,8 @@ defmodule Bonfire.Me.Fake.Helpers do
 
   def icon_url(slug \\ nil), do: Faker.Internet.image_url()
   def image_url(slug \\ nil), do: Faker.Internet.image_url()
-  def avatar_url(slug), do: Faker.Avatar.image_url(slug, 140,140)
-  def avatar_url(), do: Faker.Avatar.image_url(140,140)
+  def avatar_url(slug), do: Faker.Avatar.image_url(slug, 140, 140)
+  def avatar_url(), do: Faker.Avatar.image_url(140, 140)
 
   def image(%{shared_user: %{id: id, label: _}}), do: image_url(id)
   def image(%{id: id, profile: _}), do: avatar_url(id)
@@ -25,47 +26,45 @@ defmodule Bonfire.Me.Fake.Helpers do
   def image(_), do: image_url()
 
   defp put_form_lazy(base, key, fun) do
-    Map.put_new_lazy base, key, fn ->
+    Map.put_new_lazy(base, key, fn ->
       fun.(Map.get(base, key, %{}))
-    end
+    end)
   end
 
   def character_subform(base \\ %{}) do
-    base
-    |> Map.put_new_lazy(:username, &username/0)
+    Map.put_new_lazy(base, :username, &username/0)
   end
 
   def credential_subform(base \\ %{}) do
-    base
-    |> Map.put_new_lazy(:password, &password/0)
+    Map.put_new_lazy(base, :password, &password/0)
   end
 
   def email_subform(base \\ %{}) do
-    base
-    |> Map.put_new_lazy(:email_address, &email/0)
+    Map.put_new_lazy(base, :email_address, &email/0)
   end
 
   def profile_subform(base \\ %{}) do
     base
-    |> Map.put_new_lazy(:name,    &name/0)
+    |> Map.put_new_lazy(:name, &name/0)
     |> Map.put_new_lazy(:summary, &summary/0)
     |> Map.put_new_lazy(:website, &website/0)
   end
 
   def signup_form(base \\ %{}) do
     base
-    |> put_form_lazy(:email,      &email_subform/1)
+    |> put_form_lazy(:email, &email_subform/1)
     |> put_form_lazy(:credential, &credential_subform/1)
   end
 
   def create_user_form(base \\ %{}) do
     base
     |> put_form_lazy(:character, &character_subform/1)
-    |> put_form_lazy(:profile,   &profile_subform/1)
+    |> put_form_lazy(:profile, &profile_subform/1)
   end
 
   def user_live(base \\ %{}) do
     base
+
     # |> user()
     # |> Map.put_new_lazy(:location,  &location/0)
     # |> Map.put_new_lazy(:id,        &username/0)

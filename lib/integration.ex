@@ -14,9 +14,10 @@ defmodule Bonfire.Me.Integration do
   end
 
   def maybe_index({:ok, object}), do: {:ok, maybe_index(object)}
+
   def maybe_index(object) do
     if Bonfire.Common.Extend.module_enabled?(Bonfire.Search.Indexer) do
-      debug("search: index #{inspect object}")
+      debug("search: index #{inspect(object)}")
       Bonfire.Search.Indexer.maybe_index_object(object)
       object
     else
@@ -25,14 +26,13 @@ defmodule Bonfire.Me.Integration do
   end
 
   def indexing_format_created(profile, character) do
-    %{"creator"=> indexing_format_creator(profile, character)}
+    %{"creator" => indexing_format_creator(profile, character)}
   end
 
   def indexing_format_creator(profile, character) do
     %{
-        "profile" => Bonfire.Me.Profiles.indexing_object_format(profile),
-        "character" => Bonfire.Me.Characters.indexing_object_format(character),
+      "profile" => Bonfire.Me.Profiles.indexing_object_format(profile),
+      "character" => Bonfire.Me.Characters.indexing_object_format(character)
     }
   end
-
 end

@@ -1,11 +1,10 @@
 defmodule Bonfire.Me.Accounts.ConfirmEmailFields do
-
   use Ecto.Schema
   alias Ecto.Changeset
   alias Bonfire.Me.Accounts.ConfirmEmailFields
 
   embedded_schema do
-    field :email, :string
+    field(:email, :string)
   end
 
   @cast [:email]
@@ -17,5 +16,4 @@ defmodule Bonfire.Me.Accounts.ConfirmEmailFields do
     |> Changeset.validate_required(@required)
     |> Changeset.validate_format(:email, ~r(^[^@]{1,128}@[^@\.]+\.[^@]{2,128}$))
   end
-
 end

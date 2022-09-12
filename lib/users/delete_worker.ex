@@ -1,5 +1,4 @@
 defmodule Bonfire.Me.DeleteWorker do
-
   use Oban.Worker,
     queue: :deletion,
     max_attempts: 1
@@ -30,5 +29,4 @@ defmodule Bonfire.Me.DeleteWorker do
   # end
 
   def closure(ids), do: Repo.all(CareClosure.by_branch(ids))
-
 end

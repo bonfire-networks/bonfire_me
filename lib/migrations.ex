@@ -25,7 +25,9 @@ defmodule Bonfire.Me.Migrations do
       Bonfire.Data.Identity.User.Migration.migrate_user()
       Bonfire.Data.Identity.Caretaker.Migration.migrate_caretaker()
       Bonfire.Data.Identity.Self.Migration.migrate_self()
+
       Bonfire.Data.Identity.AuthSecondFactor.Migration.migrate_auth_second_factor()
+
       Bonfire.Data.Identity.ExtraInfo.Migration.migrate_extra_info()
     end
   end
@@ -45,7 +47,9 @@ defmodule Bonfire.Me.Migrations do
       require Bonfire.Data.Identity.AuthSecondFactor.Migration
 
       Bonfire.Data.Identity.ExtraInfo.Migration.migrate_extra_info()
+
       Bonfire.Data.Identity.AuthSecondFactor.Migration.migrate_auth_second_factor()
+
       Bonfire.Data.Identity.Self.Migration.migrate_self()
       Bonfire.Data.Identity.Caretaker.Migration.migrate_caretaker()
       Bonfire.Data.Identity.User.Migration.migrate_user()
@@ -65,6 +69,6 @@ defmodule Bonfire.Me.Migrations do
         else: unquote(mm(:down))
     end
   end
-  defmacro migrate_me(dir), do: mm(dir)
 
+  defmacro migrate_me(dir), do: mm(dir)
 end

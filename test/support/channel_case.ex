@@ -31,7 +31,6 @@ defmodule Bonfire.Me.ChannelCase do
   end
 
   setup tags do
-
     Bonfire.Common.Test.Interactive.setup_test_repo(tags)
 
     :ok

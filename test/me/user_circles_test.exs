@@ -1,5 +1,4 @@
 defmodule Bonfire.Me.UserCirclesTest do
-
   use Bonfire.Me.DataCase, async: true
   alias Bonfire.Data.AccessControl.Circle
   alias Bonfire.Me.Fake
@@ -81,5 +80,4 @@ defmodule Bonfire.Me.UserCirclesTest do
   #   #debug(circles)
   #   assert length(circles) == 0
   # end
-
 end

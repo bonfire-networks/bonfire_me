@@ -16,6 +16,7 @@ defmodule Bonfire.Me.Users.Queries do
   def query({:id, id}, opts), do: by_id(id, opts)
   def query({:username, username}, opts), do: by_username_or_id(username, opts)
   def query([filter], opts), do: query(filter, opts)
+
   def query(filter, _opts) do
     error(filter, "No such filter defined")
     {:error, "Could not query"}
@@ -23,9 +24,11 @@ defmodule Bonfire.Me.Users.Queries do
 
   # defp query(), do: from(u in User, as: :user)
 
-  def by_id(id, opts \\ []) when is_binary(id), do: from(u in User, as: :user, where: u.id == ^id) |> proloads(opts)
+  def by_id(id, opts \\ []) when is_binary(id),
+    do: from(u in User, as: :user, where: u.id == ^id) |> proloads(opts)
 
-  def by_username_or_id(username_or_id, opts \\ []) do # OR ID
+  # OR ID
+  def by_username_or_id(username_or_id, opts \\ []) do
     if Utils.is_ulid?(username_or_id),
       do: by_id(username_or_id, opts),
       else: by_username_query(username_or_id)
@@ -38,32 +41,34 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   defp proloads(query) do
-    query
-    |> proloads(:default)
+    proloads(
+      query,
+      :default
+    )
   end
 
   defp proloads(query, :local) do
-    proload query, [
+    proload(query, [
       :accounted,
       :instance_admin,
       :settings,
       character: [:follow_count],
-      profile: [:icon],
-    ]
+      profile: [:icon]
+    ])
   end
 
   defp proloads(query, :admins) do
-    proload query, [
-      :instance_admin,
-    ]
+    proload(query, [
+      :instance_admin
+    ])
   end
 
   defp proloads(query, :minimal) do
-    proload query, [
+    proload(query, [
       :instance_admin,
       character: [:peered],
-      profile: [:icon],
-    ]
+      profile: [:icon]
+    ])
   end
 
   defp proloads(query, opts) when is_list(opts) do
@@ -71,15 +76,16 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   defp proloads(query, _default) do
-    proload query, [
+    proload(query, [
       :instance_admin,
       profile: [:icon],
       character: [:peered]
-    ]
+    ])
   end
 
   def by_account(account_id) do
     account_id = Utils.ulid(account_id)
+
     from(u in User, as: :user)
     |> proloads(:local)
     |> where([accounted: a], a.account_id == ^account_id)
@@ -133,9 +139,11 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   def list(_) do
-    from(u in User, as: :user,
+    from(u in User,
+      as: :user,
       # join: a in assoc(u, :accounted),
-      join: c in assoc(u, :character), as: :character,
+      join: c in assoc(u, :character),
+      as: :character,
       join: p in assoc(u, :profile),
       left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
@@ -150,18 +158,19 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   def search(text) do
-    from(u in User, as: :user,
+    from(u in User,
+      as: :user,
       # join: a in assoc(u, :accounted),
       join: c in assoc(u, :character),
       join: p in assoc(u, :profile),
       left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
       preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}],
-      where: ilike(p.name, ^"#{text}%")
-      or ilike(p.name, ^"% #{text}%")
-      or ilike(c.username, ^"#{text}%")
-      or ilike(c.username, ^"% #{text}%")
+      where:
+        ilike(p.name, ^"#{text}%") or
+          ilike(p.name, ^"% #{text}%") or
+          ilike(c.username, ^"#{text}%") or
+          ilike(c.username, ^"% #{text}%")
     )
   end
-
 end

@@ -1,8 +1,9 @@
 defmodule Bonfire.Me.UsersTest do
-
   use Bonfire.Me.DataCase, async: true
   alias Bonfire.Me.Fake
-  alias Bonfire.Me.{Accounts, Users}
+  alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Users
+
   alias Bonfire.Common.Repo
 
   test "creation works" do
@@ -22,7 +23,7 @@ defmodule Bonfire.Me.UsersTest do
     assert {:error, changeset} = Users.create(attrs, account)
     assert %{character: character, profile: profile} = changeset.changes
     assert profile.valid?
-    assert([username: {_,_}] = character.errors)
+    assert([username: {_, _}] = character.errors)
   end
 
   test "fetching by username" do
@@ -37,7 +38,8 @@ defmodule Bonfire.Me.UsersTest do
 
   test "can make a user an admin" do
     assert {:ok, account} = Accounts.signup(signup_form())
-    assert {:ok, fist_user} = Users.create(create_user_form(), account) # first user is automatically admin
+    # first user is automatically admin
+    assert {:ok, fist_user} = Users.create(create_user_form(), account)
     assert Users.is_admin?(fist_user)
     assert {:ok, second_user} = Users.create(create_user_form(), account)
     refute Users.is_admin?(second_user)

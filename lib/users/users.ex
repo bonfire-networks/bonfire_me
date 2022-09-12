@@ -8,16 +8,22 @@ defmodule Bonfire.Me.Users do
   import Ecto.Query, only: [limit: 2]
   import Bonfire.Boundaries.Queries
   # alias ActivityPub.Actor
-  alias Bonfire.Data.Identity.{Account, User}
-  alias Bonfire.Me.{Characters, Profiles, Users.Queries}
+  alias Bonfire.Data.Identity.Account
+  alias Bonfire.Data.Identity.User
+
+  alias Bonfire.Me.Characters
+  alias Bonfire.Me.Profiles
+  alias Bonfire.Me.Users.Queries
+
   alias Bonfire.Boundaries.Circles
   alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
-  alias Pointers.{Changesets, ULID}
+  alias Pointers.Changesets
+  alias Pointers.ULID
 
   @type changeset_name :: :create
-  @type changeset_extra :: Account.t | :remote
+  @type changeset_extra :: Account.t() | :remote
 
   @search_type "Bonfire.Data.Identity.User"
 
@@ -34,13 +40,19 @@ defmodule Bonfire.Me.Users do
   def query([id: id], opts \\ []) when is_binary(id), do: by_id(id, opts)
 
   def by_id(id, opts \\ [])
-  def by_id(id, opts) when is_binary(id), do: repo().single(Queries.by_id(id, opts))
+
+  def by_id(id, opts) when is_binary(id),
+    do: repo().single(Queries.by_id(id, opts))
+
   def by_id([id], opts), do: by_id(id, opts)
 
   # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
-  def by_username(username) when is_binary(username), do: repo().single(Queries.by_username_or_id(username))
+  def by_username(username) when is_binary(username),
+    do: repo().single(Queries.by_username_or_id(username))
 
-  def by_username!(username) when is_binary(username), do: repo().one(Queries.by_username_or_id(username))
+  def by_username!(username) when is_binary(username),
+    do: repo().one(Queries.by_username_or_id(username))
+
   def by_account(account) do
     if module_enabled?(Bonfire.Data.SharedUser) do
       Bonfire.Me.SharedUsers.by_account(account)
@@ -50,6 +62,7 @@ defmodule Bonfire.Me.Users do
   end
 
   defp do_by_account(%Account{id: id}), do: by_account(id)
+
   defp do_by_account(account_id) when is_binary(account_id),
     do: repo().many(Queries.by_account(account_id))
 
@@ -57,16 +70,24 @@ defmodule Bonfire.Me.Users do
   Used for switch-user functionality
   """
   def by_username_and_account(username, account_id) do
-    with {:ok, user} <- repo().single(Queries.by_username_and_account(username, account_id)),
-    # check if user isn't blocked instance-wide
-    blocked? when blocked? !=true <- Bonfire.Boundaries.Blocks.is_blocked?(user, :ghost, :instance_wide) do
+    with {:ok, user} <-
+           repo().single(Queries.by_username_and_account(username, account_id)),
+         # check if user isn't blocked instance-wide
+         blocked? when blocked? != true <-
+           Bonfire.Boundaries.Blocks.is_blocked?(user, :ghost, :instance_wide) do
       {:ok, user}
     end
   end
 
   def search(search) do
-    Utils.maybe_apply(Bonfire.Search, :search_by_type, [search, @search_type], &none/2) || search_db(search)
+    Utils.maybe_apply(
+      Bonfire.Search,
+      :search_by_type,
+      [search, @search_type],
+      &none/2
+    ) || search_db(search)
   end
+
   defp none(_, _), do: nil
 
   def search_db(search), do: repo().many(Queries.search(search))
@@ -89,27 +110,34 @@ defmodule Bonfire.Me.Users do
     |> Map.merge(user, user.character)
   end
 
-  def is_admin?(%User{} = user), do: Utils.e(user, :instance_admin, :is_instance_admin, false)
+  def is_admin?(%User{} = user),
+    do: Utils.e(user, :instance_admin, :is_instance_admin, false)
+
   def is_admin?(_), do: false
 
   ### Mutations
-
   ## Create
 
   # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
   def create(params_or_changeset, extra \\ nil)
-  def create(%Changeset{data: %User{}}=changeset, extra) do
-    maybe_make_admin = (extra !=:remote && is_first_user?())
-    |> debug("maybe_make_admin?")
 
-    with {:ok, user} <- changeset
-                        |> Changesets.put_assoc(:instance_admin, %{is_instance_admin: maybe_make_admin})
-                        |> debug("changeset")
-                        |> repo().insert() do
+  def create(%Changeset{data: %User{}} = changeset, extra) do
+    maybe_make_admin =
+      (extra != :remote && is_first_user?())
+      |> debug("maybe_make_admin?")
+
+    with {:ok, user} <-
+           changeset
+           |> Changesets.put_assoc(:instance_admin, %{
+             is_instance_admin: maybe_make_admin
+           })
+           |> debug("changeset")
+           |> repo().insert() do
       if maybe_make_admin, do: add_to_admin_circle(user)
       post_create(user)
     end
   end
+
   def create(params, extra) when not is_struct(params) do
     params
     |> changeset(:create, ..., extra)
@@ -117,8 +145,9 @@ defmodule Bonfire.Me.Users do
   end
 
   defp post_create(%{} = user) do
-
-    if module_enabled?(Bonfire.Boundaries), do: Bonfire.Boundaries.Users.create_default_boundaries(user) #|> debug("created_default_boundaries")
+    # |> debug("created_default_boundaries")
+    if module_enabled?(Bonfire.Boundaries),
+      do: Bonfire.Boundaries.Users.create_default_boundaries(user)
 
     post_mutate(user)
   end
@@ -138,13 +167,17 @@ defmodule Bonfire.Me.Users do
     by_username(username)
     ~> make_admin()
   end
-  def make_admin(%User{}=user) do
+
+  def make_admin(%User{} = user) do
     add_to_admin_circle(user)
     update_is_admin(user, true)
   end
 
   defp add_to_admin_circle(user) do
-    Bonfire.Boundaries.Circles.add_to_circles(user, Bonfire.Boundaries.Fixtures.admin_circle)
+    Bonfire.Boundaries.Circles.add_to_circles(
+      user,
+      Bonfire.Boundaries.Fixtures.admin_circle()
+    )
   end
 
   @doc "Revokes a user's superpowers."
@@ -152,63 +185,84 @@ defmodule Bonfire.Me.Users do
     by_username(username)
     ~> revoke_admin()
   end
-  def revoke_admin(%User{}=user) do
+
+  def revoke_admin(%User{} = user) do
     update_is_admin(user, false)
     remove_from_admin_circle(user)
   end
 
   defp remove_from_admin_circle(user) do
-    Bonfire.Boundaries.Circles.remove_from_circles(user, Bonfire.Boundaries.Fixtures.admin_circle)
+    Bonfire.Boundaries.Circles.remove_from_circles(
+      user,
+      Bonfire.Boundaries.Fixtures.admin_circle()
+    )
   end
 
-  defp update_is_admin(%User{}=user, make_admin_or_revoke) do
+  defp update_is_admin(%User{} = user, make_admin_or_revoke) do
     user
     |> repo().preload(:instance_admin)
-    |> Changeset.cast(%{instance_admin: %{is_instance_admin: make_admin_or_revoke}}, [])
+    |> Changeset.cast(
+      %{instance_admin: %{is_instance_admin: make_admin_or_revoke}},
+      []
+    )
     |> Changeset.cast_assoc(:instance_admin)
     |> repo().update()
   end
 
   def get_only_in_account(%Account{id: id}) do
     q = limit(Queries.by_account(id), 2)
+
     repo().all(q)
     |> case do
-         [solo] -> {:ok, solo}
-         _ -> :error
-       end
+      [solo] -> {:ok, solo}
+      _ -> :error
+    end
   end
 
   ## Update
 
   def update(%User{} = user, params, extra \\ nil) do
-  # TODO: check who is doing the update (except if extra==:remote)
+    # TODO: check who is doing the update (except if extra==:remote)
     repo().update(changeset(:update, user, params, extra))
     # |> IO.inspect
     ~> post_mutate()
     ~> Bonfire.Federate.ActivityPub.Adapter.update_local_actor_cache()
   end
 
-
   ## Delete
 
   def delete(user, _opts \\ [])
+
   def delete(users, _) when is_list(users) do
     Enum.map(users, &delete/1)
     |> List.first()
   end
-  def delete(%User{}=user, _) do
-    assocs = [:actor, :character, :follow_count, :like_count, :profile, :settings, :self, :accounted]
+
+  def delete(%User{} = user, _) do
+    assocs = [
+      :actor,
+      :character,
+      :follow_count,
+      :like_count,
+      :profile,
+      :settings,
+      :self,
+      :accounted
+    ]
+
     # user = repo().maybe_preload(user, assocs)
 
     # with :ok <- delete_caretaken(user) do # TODO: delete user's content do
-      Bonfire.Social.Objects.maybe_generic_delete(User, user, current_user: user, delete_associations: assocs)
+    Bonfire.Social.Objects.maybe_generic_delete(User, user,
+      current_user: user,
+      delete_associations: assocs
+    )
+
     # end
   end
 
   # def delete(users) when is_list(users) do
   # end
-
-
   ### ActivityPub
 
   def by_ap_id(ap_id) do
@@ -225,6 +279,7 @@ defmodule Bonfire.Me.Users do
 
   def ap_receive_activity(_creator, _activity, object) do
     debug(object, "Users.ap_receive_activity")
+
     Bonfire.Federate.ActivityPub.Adapter.maybe_create_remote_actor(Utils.e(object, :data, object))
   end
 
@@ -232,7 +287,8 @@ defmodule Bonfire.Me.Users do
   def create_remote(params) do
     with {:ok, user} <- create(changeset(:create, %User{}, params, :remote)) do
       # debug(user)
-      {:ok, user} #|> add_acl("public")
+      # |> add_acl("public")
+      {:ok, user}
     end
   end
 
@@ -254,7 +310,6 @@ defmodule Bonfire.Me.Users do
     APUtils.format_actor(user, "Person")
   end
 
-
   ## Adapter callbacks
 
   def update_local_actor(%User{} = user, params) do
@@ -270,39 +325,51 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-
   ## Changesets ############
 
   @spec changeset(
-    name :: changeset_name,
-    params :: map,
-    extra :: Account.t | :remote
-  ) :: Changeset.t
+          name :: changeset_name,
+          params :: map,
+          extra :: Account.t() | :remote
+        ) :: Changeset.t()
 
   @spec changeset(
-    name :: changeset_name,
-    user :: User.t,
-    params :: map,
-    extra :: Account.t | :remote
-  ) :: Changeset.t
+          name :: changeset_name,
+          user :: User.t(),
+          params :: map,
+          extra :: Account.t() | :remote
+        ) :: Changeset.t()
 
-  def changeset(name , user \\ %User{}, params, extra)
+  def changeset(name, user \\ %User{}, params, extra)
 
-  def changeset(:create, user, params, %Account{}=account) do
+  def changeset(:create, user, params, %Account{} = account) do
     params
     |> User.changeset(user, ...)
     |> Changesets.put_assoc(:accounted, %{account_id: account.id})
-    |> Changesets.put_assoc(:encircles, [%{circle_id: Circles.circles().local.id}])
+    |> Changesets.put_assoc(:encircles, [
+      %{circle_id: Circles.circles().local.id}
+    ])
     |> Changesets.put_assoc(:character, %{})
-    |> Changesets.cast_assoc(:character, required: true, with: &Characters.changeset/2)
-    |> Changeset.cast_assoc(:profile, required: true, with: &Profiles.changeset/2)
+    |> Changesets.cast_assoc(:character,
+      required: true,
+      with: &Characters.changeset/2
+    )
+    |> Changeset.cast_assoc(:profile,
+      required: true,
+      with: &Profiles.changeset/2
+    )
   end
 
   def changeset(:create, user, params, :remote) do
     User.changeset(user, params)
-    |> Changesets.put_assoc(:encircles, [%{circle_id: Circles.circles().local.id}])
+    |> Changesets.put_assoc(:encircles, [
+      %{circle_id: Circles.circles().local.id}
+    ])
     |> Changesets.put_assoc(:character, %{})
-    |> Changesets.cast_assoc(:character, required: true, with: &Characters.remote_changeset/2)
+    |> Changesets.cast_assoc(:character,
+      required: true,
+      with: &Characters.remote_changeset/2
+    )
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
     |> Changeset.cast_assoc(:peered)
   end
@@ -318,9 +385,14 @@ defmodule Bonfire.Me.Users do
     params = Utils.stringify_keys(params)
 
     # add the ID for update
-    params = params
-      |> Map.merge(%{"profile" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
-      |> Map.merge(%{"character" => %{"id"=> user.id}}, fn _, a, b -> Map.merge(a, b) end)
+    params =
+      params
+      |> Map.merge(%{"profile" => %{"id" => user.id}}, fn _, a, b ->
+        Map.merge(a, b)
+      end)
+      |> Map.merge(%{"character" => %{"id" => user.id}}, fn _, a, b ->
+        Map.merge(a, b)
+      end)
 
     # FIXME: Tag with Geolocation
     # loc = params["profile"]["location"]
@@ -332,6 +404,7 @@ defmodule Bonfire.Me.Users do
     |> User.changeset(params)
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+
     # |> debug("users update changeset")
   end
 
@@ -346,27 +419,30 @@ defmodule Bonfire.Me.Users do
       "index_type" => @search_type,
       # "url" => path(obj),
       "profile" => Bonfire.Me.Profiles.indexing_object_format(u.profile),
-      "character" => Bonfire.Me.Characters.indexing_object_format(u.character),
-    } #|> IO.inspect
+      "character" => Bonfire.Me.Characters.indexing_object_format(u.character)
+    }
+
+    # |> IO.inspect
   end
 
   # TODO: less boilerplate
   def maybe_index_user(object) when is_map(object) do
-    object |> indexing_object_format() |> maybe_index() #|> debug
-  end
-  def maybe_index_user(_other), do: nil
+    # |> debug
+    # defp config(), do: Application.get_env(:bonfire_me, Users)
 
-  # defp config(), do: Application.get_env(:bonfire_me, Users)
+    object |> indexing_object_format() |> maybe_index()
+  end
+
+  def maybe_index_user(_other), do: nil
 
   def count(show \\ :local), do: repo().one(Queries.count(show))
 
   def maybe_count(show \\ :local) do
-    if Settings.get([__MODULE__, :public_count], true, :instance), do: count(show)
+    if Settings.get([__MODULE__, :public_count], true, :instance),
+      do: count(show)
   end
 
   def is_first_user? do
-    count() <1
+    count() < 1
   end
-
-
 end

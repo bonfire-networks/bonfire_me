@@ -1,5 +1,4 @@
 defmodule Bonfire.Me.Accounts.SecondFactors do
-
   use Arrows
   use Bonfire.Common.Utils
   import Bonfire.Me.Integration
@@ -10,7 +9,8 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   alias Ecto.Changeset
 
   def enabled? do
-    module_enabled?(Bonfire.Data.Identity.AuthSecondFactor) and module_enabled?(NimbleTOTP)
+    module_enabled?(Bonfire.Data.Identity.AuthSecondFactor) and
+      module_enabled?(NimbleTOTP)
   end
 
   def new() do
@@ -26,9 +26,11 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   def new_qrcode(opts \\ []) do
-    if enabled?, do: (opts[:uri] || new_uri(opts[:secret]))
-    |> EQRCode.encode()
-    |> EQRCode.svg(width: 264)
+    if enabled?,
+      do:
+        (opts[:uri] || new_uri(opts[:secret]))
+        |> EQRCode.encode()
+        |> EQRCode.svg(width: 264)
   end
 
   def format_secret(secret) do
@@ -46,23 +48,27 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   def get_account_totp(%{auth_second_factor: %AuthSecondFactor{} = totp}) do
     totp
   end
+
   def get_account_totp(account) do
     case ulid(account) do
       id when is_binary(id) ->
         repo().get_by(AuthSecondFactor, id: id)
 
-      _ -> nil
+      _ ->
+        nil
     end
   end
 
   def maybe_cast_totp_changeset(changeset, params, opts) do
-    if Bonfire.Me.Accounts.SecondFactors.enabled? do
+    if Bonfire.Me.Accounts.SecondFactors.enabled?() do
       debug("enabled")
       code = e(params, :auth_second_factor, :code, nil)
-      if not is_nil(code) and code !="" do
+
+      if not is_nil(code) and code != "" do
         debug(code, "code")
-        changeset
-        |> Changeset.cast_assoc(
+
+        Changeset.cast_assoc(
+          changeset,
           :auth_second_factor,
           required: false,
           with: &changeset(&1, &2, opts)
@@ -78,8 +84,9 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
         #     )
         #     # |> debug
         #   _ ->
-            debug("no secret or code provided")
-            changeset
+        debug("no secret or code provided")
+        changeset
+
         # end
       end
     else
@@ -96,14 +103,20 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
       iex> changeset(%AuthSecondFactor{secret: <<...>>}, code: "123456")
       %Ecto.Changeset{data: %AuthSecondFactor{}}
   """
-  def changeset(%AuthSecondFactor{} = totp \\ %AuthSecondFactor{}, attrs, opts \\ []) do
-    secret = (totp.secret || opts[:auth_second_factor_secret] || e(attrs, :secret, nil))
+  def changeset(
+        %AuthSecondFactor{} = totp \\ %AuthSecondFactor{},
+        attrs,
+        opts \\ []
+      ) do
+    secret = totp.secret || opts[:auth_second_factor_secret] || e(attrs, :secret, nil)
+
     # |> debug("secret")
     totp
     |> Map.put(:secret, secret)
     |> debug()
     |> AuthSecondFactor.changeset(attrs)
     |> debug()
+
     # |> AuthSecondFactor.ensure_backup_codes() # TODO
     # let's make sure the secret propagates to the changeset.
     # |> Ecto.Changeset.force_change(:secret, secret)
@@ -121,6 +134,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
       iex> regenerate_account_totp_backup_codes(%AuthSecondFactor{})
       %AuthSecondFactor{backup_codes: [...]}
   """
+
   # def regenerate_account_totp_backup_codes(totp) do
   #   {:ok, updated_totp} =
   #     Repo.transaction(fn ->
@@ -143,6 +157,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
 
     :ok
   end
+
   def delete_account_totp(account) do
     get_account_totp(account)
     |> delete_account_totp()
@@ -161,26 +176,31 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
       #     Repo.transaction(fn ->
       #       Repo.update!(changeset)
       #     end)
-
       #   {:valid_backup_code, Enum.count(totp.backup_codes, &is_nil(&1.used_at))}
 
       true ->
         :invalid
     end
   end
+
   def validate_account_totp(account, code) do
     case get_account_totp(account) do
       %AuthSecondFactor{} = totp ->
         validate_account_totp(totp, code)
 
-      _ -> :no_totp
+      _ ->
+        :no_totp
     end
   end
 
   def maybe_authenticate(account, params) do
     debug(params)
-    if Bonfire.Me.Accounts.SecondFactors.enabled? do
-      case validate_account_totp(account, e(params, "auth_second_factor", "code", nil)) do
+
+    if Bonfire.Me.Accounts.SecondFactors.enabled?() do
+      case validate_account_totp(
+             account,
+             e(params, "auth_second_factor", "code", nil)
+           ) do
         :valid_totp ->
           {:ok, :valid_totp}
 
