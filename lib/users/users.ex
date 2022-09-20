@@ -382,7 +382,8 @@ defmodule Bonfire.Me.Users do
     user = repo().preload(user, [:profile, character: [:actor]])
 
     # Ecto doesn't liked mixed keys so we convert them all to strings
-    params = Utils.stringify_keys(params)
+    # TODO: use atoms instead?
+    params = Utils.stringify_keys(params, true)
 
     # add the ID for update
     params =

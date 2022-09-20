@@ -356,7 +356,7 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
       account = GraphQL.current_account(info)
 
       if account do
-        Accounts.change_password(account, Utils.stringify_keys(args))
+        Accounts.change_password(account, Utils.stringify_keys(args, true))
       else
         {:error, "Not authenticated"}
       end
@@ -393,7 +393,7 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
                  Bonfire.Me.SharedUsers.add_account(
                    user,
                    username_or_email,
-                   Utils.stringify_keys(args)
+                   Utils.stringify_keys(args, true)
                  ) do
             :ok
           end
