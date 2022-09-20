@@ -21,23 +21,21 @@ defmodule Bonfire.Me.Settings do
   def get(keys, default, opts) when is_list(keys) do
     {[otp_app], keys_tree} = Config.keys_tree(keys) |> Enum.split(1)
 
-    if is_nil(opts) or
-         (not is_struct(opts) and (is_list(opts) or is_map(opts)) and
-            Enum.empty?(opts)),
-       do:
-         warn(
-           keys,
-           "You should pass a current_user and/or current_account in opts depending on what scope of Settings you want for"
-         ),
-       else: debug(keys_tree, "Get settings in #{inspect(otp_app)} for")
+    debug(keys_tree, "Get settings in #{inspect(otp_app)} for")
 
-    case get_all_ext(otp_app, opts) |> get_in(keys_tree) do
-      nil ->
-        # Config.get_ext(otp_app, keys, default)
+    case get_all_ext(otp_app, opts) do
+      [] ->
         default
 
-      any ->
-        any
+      nil ->
+        default
+
+      result ->
+        if keys_tree != [] do
+          get_in(result, keys_tree) || default
+        else
+          result || default
+        end
     end
   end
 
@@ -86,14 +84,26 @@ defmodule Bonfire.Me.Settings do
   Fetch all config & settings, both from Mix.Config and DB. Order matters!
   """
   def fetch_all_scopes(otp_app, opts) do
-    # ++
+    # debug(opts, "opts")
+    current_user = current_user(opts)
+    current_account = current_account(opts)
+    # debug(current_user, "current_user")
+    # debug(current_account, "current_account")
+
+    if is_nil(current_user) and is_nil(current_account) and e(opts, :scope, nil) != :instance do
+      warn(
+        otp_app,
+        "You should pass a current_user and/or current_account in opts depending on what scope of Settings you want for"
+      )
+    end
+
     # [load_instance_settings() |> e(otp_app, nil) ] # should already be loaded in Config
     ([Config.get_ext(otp_app)] ++
        [
-         fetch({:current_account, current_account(opts)})
+         fetch({:current_account, current_account})
          |> e(:data, otp_app, nil)
        ] ++
-       [fetch({:current_user, current_user(opts)}) |> e(:data, otp_app, nil)])
+       [fetch({:current_user, current_user}) |> e(:data, otp_app, nil)])
     |> filter_empty([])
   end
 
@@ -102,7 +112,7 @@ defmodule Bonfire.Me.Settings do
     |> e(:data, nil)
   end
 
-  def fetch({_, scoped} = scope_tuple) do
+  def fetch({scope, scoped} = scope_tuple) do
     case scoped_object(scope_tuple) do
       %{settings: %Ecto.Association.NotLoaded{}} -> fetch(scoped)
       %{settings: settings} -> settings
@@ -113,6 +123,11 @@ defmodule Bonfire.Me.Settings do
   def fetch(scope) when not is_nil(scope) do
     case ulid(scope) do
       nil ->
+        debug(
+          scope,
+          "no ID for scope"
+        )
+
         []
 
       id ->
@@ -122,7 +137,10 @@ defmodule Bonfire.Me.Settings do
         )
 
         query_filter(Bonfire.Data.Identity.Settings, %{id: id})
+        # |> join_preload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
         |> repo().one()
+
+        # |> debug()
     end
   end
 
@@ -135,11 +153,15 @@ defmodule Bonfire.Me.Settings do
     # keys = Config.keys_tree(keys) # Note: doing this in set/2 instead
     # |> debug("Putting settings for")
     map_put_in(keys, value)
-    |> maybe_to_keyword_list()
+    # |> debug()
+    |> input_to_atoms()
+    # |> debug()
+    |> maybe_to_keyword_list(true)
+    # |> debug()
     |> set(opts)
   end
 
-  def put(key, value, opts), do: set([key], value, opts)
+  def put(key, value, opts), do: put([key], value, opts)
 
   def map_put_in(root \\ %{}, keys, value) do
     # root = %{} or non empty map
@@ -205,19 +227,21 @@ defmodule Bonfire.Me.Settings do
     do_set(attrs, opts)
   end
 
-  def do_set(attrs, opts) when is_map(attrs) do
+  defp do_set(attrs, opts) when is_map(attrs) do
     attrs
-    |> maybe_to_keyword_list()
+    |> maybe_to_keyword_list(true)
     |> do_set(opts)
   end
 
-  def do_set(settings, opts) when is_list(settings) do
+  defp do_set(settings, opts) when is_list(settings) do
     current_user = current_user(opts)
     current_account = current_account(opts)
-    is_admin = Bonfire.Me.Users.is_admin?(current_user || current_account)
+    # FIXME: use instance boundaries
+    is_admin =
+      opts[:skip_boundary_check] || Bonfire.Me.Users.is_admin?(current_user || current_account)
 
     scope =
-      case maybe_to_atom(e(settings, :scope, nil)) || e(opts, :scope, nil) do
+      case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil)) do
         :instance when is_admin == true ->
           {:instance, instance_scope()}
 
@@ -237,18 +261,20 @@ defmodule Bonfire.Me.Settings do
           end
       end
 
+    debug(scope, "computed scope")
+
     if scope do
       settings
       |> Keyword.drop([:scope])
       |> Enum.map(&Config.keys_tree/1)
       |> debug("keyword list to set for #{inspect(scope)}")
-      |> set(scope, ..., opts)
+      |> set_for(scope, ..., opts)
     else
       {:error, l("You need to be authenticated to change settings.")}
     end
   end
 
-  def set({:current_user, scoped} = scope_tuple, settings, opts) do
+  defp set_for({:current_user, scoped} = scope_tuple, settings, opts) do
     fetch_or_empty(scope_tuple)
     # |> debug
     |> upsert(settings, ulid(scoped))
@@ -260,7 +286,7 @@ defmodule Bonfire.Me.Settings do
     # TODO: put into assigns
   end
 
-  def set({:current_account, scoped} = scope_tuple, settings, _opts) do
+  defp set_for({:current_account, scoped} = scope_tuple, settings, _opts) do
     fetch_or_empty(scope_tuple)
     # |> debug
     |> upsert(settings, ulid(scoped))
@@ -269,7 +295,7 @@ defmodule Bonfire.Me.Settings do
     # TODO: put into assigns
   end
 
-  def set({:instance, scoped} = scope_tuple, settings, _opts) do
+  defp set_for({:instance, scoped} = scope_tuple, settings, _opts) do
     with {:ok, set} <-
            fetch_or_empty(scope_tuple)
            # |> debug
@@ -281,11 +307,11 @@ defmodule Bonfire.Me.Settings do
     end
   end
 
-  def set({_, scope}, settings, opts) do
-    set(scope, settings, opts)
+  defp set_for({_, scope}, settings, opts) do
+    set_for(scope, settings, opts)
   end
 
-  def set(scoped, settings, _opts) do
+  defp set_for(scoped, settings, _opts) do
     fetch_or_empty(scoped)
     |> upsert(settings, ulid(scoped))
   end
@@ -315,7 +341,7 @@ defmodule Bonfire.Me.Settings do
          data,
          _
        )
-       when is_list(existing_data) do
+       when is_list(existing_data) or is_map(existing_data) do
     deep_merge(existing_data, data)
     |> debug("merged settings to set")
     |> Bonfire.Data.Identity.Settings.changeset(settings, %{data: ...})
@@ -324,7 +350,9 @@ defmodule Bonfire.Me.Settings do
 
   defp upsert(%Bonfire.Data.Identity.Settings{} = settings, data, scope_id) do
     settings
+    # |> debug()
     |> Bonfire.Data.Identity.Settings.changeset(%{id: scope_id, data: data})
+    # |> debug()
     |> repo().insert()
   end
 
