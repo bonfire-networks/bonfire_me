@@ -97,33 +97,37 @@ defmodule Bonfire.Me.Settings do
       )
     end
 
-    # [load_instance_settings() |> e(otp_app, nil) ] # should already be loaded in Config
     ([Config.get_ext(otp_app)] ++
        [
-         fetch({:current_account, current_account})
+         maybe_fetch({:current_account, current_account}, opts)
          |> e(:data, otp_app, nil)
        ] ++
-       [fetch({:current_user, current_user}) |> e(:data, otp_app, nil)])
+       [maybe_fetch({:current_user, current_user}, opts) |> e(:data, otp_app, nil)])
     |> filter_empty([])
   end
 
+  # not including this line in fetch_all_scopes because load_instance_settings preloads it into Config
+  # [load_instance_settings() |> e(otp_app, nil) ] # should already be loaded in Config
+
   def load_instance_settings() do
-    fetch({:instance, instance_scope()})
+    maybe_fetch({:instance, instance_scope()}, preload: true)
     |> e(:data, nil)
   end
 
-  def fetch({scope, scoped} = scope_tuple) do
+  def maybe_fetch(scope, opts \\ [])
+
+  def maybe_fetch({scope, scoped} = scope_tuple, opts) do
     case scoped_object(scope_tuple) do
-      %{settings: %Ecto.Association.NotLoaded{}} -> fetch(scoped)
+      %{settings: %Ecto.Association.NotLoaded{}} -> maybe_fetch(scoped, opts)
       %{settings: settings} -> settings
-      _ -> fetch(scoped)
+      _ -> maybe_fetch(scoped, opts)
     end
   end
 
-  def fetch(scope) when not is_nil(scope) do
+  def maybe_fetch(scope, opts) when not is_nil(scope) do
     case ulid(scope) do
       nil ->
-        debug(
+        error(
           scope,
           "no ID for scope"
         )
@@ -131,10 +135,12 @@ defmodule Bonfire.Me.Settings do
         []
 
       id ->
-        warn(
-          scope,
-          "fallback to querying since Settings aren't already preloaded in scoped object"
-        )
+        if !opts[:preload],
+          do:
+            warn(
+              scope,
+              "fallback to querying since Settings aren't already preloaded in scoped object:"
+            )
 
         query_filter(Bonfire.Data.Identity.Settings, %{id: id})
         # |> join_preload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
@@ -144,7 +150,10 @@ defmodule Bonfire.Me.Settings do
     end
   end
 
-  def fetch(_), do: []
+  def maybe_fetch(scope, _opts) do
+    error(scope, "invalid scope")
+    []
+  end
 
   @doc """
   Put a setting using a key like `:key` or list of nested keys like `[:top_key, :sub_key]`
@@ -275,7 +284,7 @@ defmodule Bonfire.Me.Settings do
   end
 
   defp set_for({:current_user, scoped} = scope_tuple, settings, opts) do
-    fetch_or_empty(scope_tuple)
+    fetch_or_empty(scope_tuple, opts)
     # |> debug
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
@@ -286,8 +295,8 @@ defmodule Bonfire.Me.Settings do
     # TODO: put into assigns
   end
 
-  defp set_for({:current_account, scoped} = scope_tuple, settings, _opts) do
-    fetch_or_empty(scope_tuple)
+  defp set_for({:current_account, scoped} = scope_tuple, settings, opts) do
+    fetch_or_empty(scope_tuple, opts)
     # |> debug
     |> upsert(settings, ulid(scoped))
 
@@ -295,9 +304,9 @@ defmodule Bonfire.Me.Settings do
     # TODO: put into assigns
   end
 
-  defp set_for({:instance, scoped} = scope_tuple, settings, _opts) do
+  defp set_for({:instance, scoped} = scope_tuple, settings, opts) do
     with {:ok, set} <-
-           fetch_or_empty(scope_tuple)
+           fetch_or_empty(scope_tuple, opts)
            # |> debug
            |> upsert(settings, ulid(scoped)) do
       # also put_env to cache it in Elixir's Config
@@ -311,8 +320,8 @@ defmodule Bonfire.Me.Settings do
     set_for(scope, settings, opts)
   end
 
-  defp set_for(scoped, settings, _opts) do
-    fetch_or_empty(scoped)
+  defp set_for(scoped, settings, opts) do
+    fetch_or_empty(scoped, opts)
     |> upsert(settings, ulid(scoped))
   end
 
@@ -322,8 +331,8 @@ defmodule Bonfire.Me.Settings do
   defp map_put_settings(object, settings),
     do: Map.put(object, :settings, settings)
 
-  defp fetch_or_empty(scoped) do
-    fetch(scoped) ||
+  defp fetch_or_empty(scoped, opts) do
+    maybe_fetch(scoped, opts) ||
       %Bonfire.Data.Identity.Settings{}
   end
 
