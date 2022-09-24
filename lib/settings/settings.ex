@@ -247,7 +247,8 @@ defmodule Bonfire.Me.Settings do
     current_account = current_account(opts)
     # FIXME: use instance boundaries (so need to associate each setting to a verb?)
     is_admin =
-      e(opts, :skip_boundary_check, nil) || Bonfire.Me.Users.is_admin?(current_user || current_account)
+      e(opts, :skip_boundary_check, nil) ||
+        Bonfire.Me.Users.is_admin?(current_user || current_account)
 
     scope =
       case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil)) do
