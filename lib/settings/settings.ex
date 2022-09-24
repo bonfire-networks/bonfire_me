@@ -245,9 +245,9 @@ defmodule Bonfire.Me.Settings do
   defp do_set(settings, opts) when is_list(settings) do
     current_user = current_user(opts)
     current_account = current_account(opts)
-    # FIXME: use instance boundaries
+    # FIXME: use instance boundaries (so need to associate each setting to a verb?)
     is_admin =
-      opts[:skip_boundary_check] || Bonfire.Me.Users.is_admin?(current_user || current_account)
+      e(opts, :skip_boundary_check, nil) || Bonfire.Me.Users.is_admin?(current_user || current_account)
 
     scope =
       case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil)) do
