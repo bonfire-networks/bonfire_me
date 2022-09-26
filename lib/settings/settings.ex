@@ -135,7 +135,7 @@ defmodule Bonfire.Me.Settings do
         []
 
       id ->
-        if !opts[:preload],
+        if !e(opts, :preload, nil),
           do:
             warn(
               scope,
