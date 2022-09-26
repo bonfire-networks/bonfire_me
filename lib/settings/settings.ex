@@ -359,9 +359,9 @@ defmodule Bonfire.Me.Settings do
   end
 
   defp upsert(%Bonfire.Data.Identity.Settings{} = settings, data, scope_id) do
-    settings
-    # |> debug()
-    |> Bonfire.Data.Identity.Settings.changeset(%{id: scope_id, data: data})
+    %{id: ulid!(scope_id), data: data}
+    |> debug()
+    |> Bonfire.Data.Identity.Settings.changeset(settings, ...)
     # |> debug()
     |> repo().insert()
   end
