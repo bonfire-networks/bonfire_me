@@ -202,15 +202,17 @@ defmodule Bonfire.Me.Settings do
          %{Bonfire.Me.Users => %{discoverable: false}, scope: :user} = attrs,
          opts
        ) do
+    current_user = current_user_required(opts)
+
     do_set(attrs, opts)
 
     Bonfire.Boundaries.Controlleds.remove_acls(
-      current_user(opts),
+      current_user,
       :guests_may_see_read
     )
 
     Bonfire.Boundaries.Controlleds.add_acls(
-      current_user(opts),
+      current_user,
       :guests_may_read
     )
   end
@@ -219,15 +221,17 @@ defmodule Bonfire.Me.Settings do
          %{Bonfire.Me.Users => %{discoverable: true}, scope: :user} = attrs,
          opts
        ) do
+    current_user = current_user_required(opts)
+
     do_set(attrs, opts)
 
     Bonfire.Boundaries.Controlleds.remove_acls(
-      current_user(opts),
+      current_user,
       :guests_may_read
     )
 
     Bonfire.Boundaries.Controlleds.add_acls(
-      current_user(opts),
+      current_user,
       :guests_may_see_read
     )
   end
@@ -290,7 +294,7 @@ defmodule Bonfire.Me.Settings do
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
      %{
-       assign_context: [current_user: map_put_settings(current_user(opts), ...)]
+       assign_context: [current_user: map_put_settings(current_user_required(opts), ...)]
      }}
 
     # TODO: put into assigns
