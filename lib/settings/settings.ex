@@ -143,7 +143,7 @@ defmodule Bonfire.Me.Settings do
             )
 
         query_filter(Bonfire.Data.Identity.Settings, %{id: id})
-        # |> join_preload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
+        # |> proload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
         |> repo().one()
 
         # |> debug()
