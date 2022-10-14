@@ -102,7 +102,10 @@ defmodule Bonfire.Me.Settings do
          maybe_fetch({:current_account, current_account}, opts)
          |> e(:data, otp_app, nil)
        ] ++
-       [maybe_fetch({:current_user, current_user}, opts) |> e(:data, otp_app, nil)])
+       [
+         maybe_fetch({:current_user, current_user}, opts)
+         |> e(:data, otp_app, nil)
+       ])
     |> filter_empty([])
   end
 
@@ -132,7 +135,7 @@ defmodule Bonfire.Me.Settings do
           "no ID for scope"
         )
 
-        []
+        nil
 
       id ->
         if !e(opts, :preload, nil),
@@ -151,8 +154,8 @@ defmodule Bonfire.Me.Settings do
   end
 
   def maybe_fetch(scope, _opts) do
-    error(scope, "invalid scope")
-    []
+    debug(scope, "invalid scope")
+    nil
   end
 
   @doc """

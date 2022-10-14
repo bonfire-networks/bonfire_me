@@ -16,7 +16,11 @@ defmodule Bonfire.Me.Integration do
   def maybe_index({:ok, object}), do: {:ok, maybe_index(object)}
 
   def maybe_index(object) do
-    if Bonfire.Common.Extend.module_enabled?(Bonfire.Search.Indexer) do
+    if Bonfire.Common.Extend.module_enabled?(
+         Bonfire.Search.Indexer,
+         Utils.e(object, :creator, :id, nil) ||
+           Utils.e(object, :created, :creator_id, nil) || object
+       ) do
       debug("search: index #{inspect(object)}")
       Bonfire.Search.Indexer.maybe_index_object(object)
       object
