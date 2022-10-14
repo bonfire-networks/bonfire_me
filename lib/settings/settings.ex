@@ -197,6 +197,15 @@ defmodule Bonfire.Me.Settings do
     |> set_with_hooks(opts)
   end
 
+  def reset_instance() do
+    with {:ok, set} <- do_update(%Bonfire.Data.Identity.Settings{id: ulid!(instance_scope())}, []) do
+      # also put_env to cache it in Elixir's Config
+      Config.put([])
+
+      {:ok, set}
+    end
+  end
+
   # TODO: find a better, more pluggable way to add hooks to settings
   defp set_with_hooks(
          %{Bonfire.Me.Users => %{discoverable: false}, scope: :user} = attrs,
@@ -327,7 +336,7 @@ defmodule Bonfire.Me.Settings do
 
   defp set_for(scoped, settings, opts) do
     fetch_or_empty(scoped, opts)
-    |> upsert(settings, ulid(scoped))
+    |> upsert(settings, ulid!(scoped))
   end
 
   defp map_put_settings(object, {:ok, settings}),
@@ -343,13 +352,6 @@ defmodule Bonfire.Me.Settings do
 
   defp upsert(parent_or_settings, data, scope_id \\ nil)
 
-  defp upsert(%{settings: _} = parent, data, _) do
-    parent
-    |> repo().maybe_preload(:settings)
-    |> e(:settings, %Bonfire.Data.Identity.Settings{})
-    |> upsert(data, ulid(parent))
-  end
-
   defp upsert(
          %Bonfire.Data.Identity.Settings{data: existing_data} = settings,
          data,
@@ -358,16 +360,30 @@ defmodule Bonfire.Me.Settings do
        when is_list(existing_data) or is_map(existing_data) do
     deep_merge(existing_data, data)
     |> debug("merged settings to set")
-    |> Bonfire.Data.Identity.Settings.changeset(settings, %{data: ...})
-    |> repo().update()
+    |> do_update(settings, ...)
+  end
+
+  defp upsert(%{settings: _} = parent, data, _) do
+    parent
+    |> repo().maybe_preload(:settings)
+    |> e(:settings, %Bonfire.Data.Identity.Settings{})
+    |> upsert(data, ulid(parent))
   end
 
   defp upsert(%Bonfire.Data.Identity.Settings{} = settings, data, scope_id) do
     %{id: ulid!(scope_id), data: data}
-    |> debug()
+    # |> debug()
     |> Bonfire.Data.Identity.Settings.changeset(settings, ...)
     # |> debug()
     |> repo().insert()
+  end
+
+  defp do_update(
+         %Bonfire.Data.Identity.Settings{} = settings,
+         data
+       ) do
+    Bonfire.Data.Identity.Settings.changeset(settings, %{data: data})
+    |> repo().update()
   end
 
   # def delete(key, opts \\ [])
