@@ -26,10 +26,10 @@ defmodule Bonfire.Me.Settings.LoadInstanceConfig do
     settings = Bonfire.Me.Settings.load_instance_settings()
 
     if settings do
-      Logger.info("Instance settings were loaded into the app's Config")
+      Logger.info("Loaded instance Settings were loaded into the app's Config")
       {Bonfire.Common.Config.put(settings), Map.new(settings)}
     else
-      Logger.info("No instance settings to load into Config")
+      Logger.info("No instance Settings to load into Config")
       {:ok, %{skip: "No settings loaded"}}
     end
   end

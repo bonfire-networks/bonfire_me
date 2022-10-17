@@ -267,9 +267,16 @@ defmodule Bonfire.Me.Settings do
         Bonfire.Me.Users.is_admin?(current_user || current_account)
 
     scope =
-      case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil)) do
+      case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil)) |> debug do
         :instance when is_admin == true ->
           {:instance, instance_scope()}
+
+        :instance ->
+          raise raise(
+                  Bonfire.Fail,
+                  {:unauthorized,
+                   l("change instance settings.") <> " " <> l("Please contact an admin.")}
+                )
 
         :account ->
           {:current_account, ulid(current_account)}
@@ -295,6 +302,8 @@ defmodule Bonfire.Me.Settings do
       |> Enum.map(&Config.keys_tree/1)
       |> debug("keyword list to set for #{inspect(scope)}")
       |> set_for(scope, ..., opts)
+
+      # TODO: if setting a key to `nil` we could remove it instead
     else
       {:error, l("You need to be authenticated to change settings.")}
     end
