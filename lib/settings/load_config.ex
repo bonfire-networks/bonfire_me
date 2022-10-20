@@ -27,7 +27,13 @@ defmodule Bonfire.Me.Settings.LoadInstanceConfig do
 
     if settings do
       Logger.info("Loaded instance Settings were loaded into the app's Config")
-      {Bonfire.Common.Config.put(settings), Map.new(settings)}
+
+      put = Bonfire.Common.Config.put(settings)
+
+      # generate an updated reverse router based on extensions that are enabled/disabled
+      Bonfire.Common.Extend.generate_reverse_router!()
+
+      {put, Map.new(settings)}
     else
       Logger.info("No instance Settings to load into Config")
       {:ok, %{skip: "No settings loaded"}}
