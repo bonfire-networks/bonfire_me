@@ -12,7 +12,9 @@ defmodule Bonfire.Me.Characters do
   import Untangle
   use Arrows
 
-  def context_module, do: Character
+  @behaviour Bonfire.Common.ContextModule
+  @behaviour Bonfire.Common.QueryModule
+  def schema_module, do: Character
 
   @username_max_length 62
   @username_forbidden ~r/[^a-z0-9_]+/i

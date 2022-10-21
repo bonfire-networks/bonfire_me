@@ -10,7 +10,8 @@ defmodule Bonfire.Me.Users.Queries do
 
   use Arrows
 
-  def queries_module, do: User
+  @behaviour Bonfire.Common.QueryModule
+  def schema_module, do: User
 
   def query(filters, _opts \\ [])
   def query({:id, id}, opts), do: by_id(id, opts)

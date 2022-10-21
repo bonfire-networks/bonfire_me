@@ -3,7 +3,9 @@ defmodule Bonfire.Me.Profiles do
   alias Ecto.Changeset
   import Untangle
 
-  def context_module, do: Profile
+  @behaviour Bonfire.Common.ContextModule
+  @behaviour Bonfire.Common.QueryModule
+  def schema_module, do: Profile
 
   def changeset(profile \\ %Profile{}, params) do
     profile

@@ -27,7 +27,8 @@ defmodule Bonfire.Me.Users do
 
   @search_type "Bonfire.Data.Identity.User"
 
-  def context_module, do: User
+  @behaviour Bonfire.Common.ContextModule
+  def schema_module, do: User
   def federation_module, do: ["Person"]
 
   ### Queries

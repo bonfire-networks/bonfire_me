@@ -1,4 +1,5 @@
 defmodule Bonfire.Me.RuntimeConfig do
+  @behaviour Bonfire.Common.ConfigModule
   def config_module, do: true
 
   def config do
