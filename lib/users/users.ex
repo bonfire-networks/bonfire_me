@@ -48,8 +48,11 @@ defmodule Bonfire.Me.Users do
   def by_id([id], opts), do: by_id(id, opts)
 
   # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
-  def by_username(username) when is_binary(username),
-    do: repo().single(Queries.by_username_or_id(username))
+  def by_username(username) when is_binary(username) do
+    info(self(), username)
+    info(repo())
+    repo().single(Queries.by_username_or_id(username))
+  end
 
   def by_username!(username) when is_binary(username),
     do: repo().one(Queries.by_username_or_id(username))
@@ -273,7 +276,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def by_ap_id!(ap_id) do
-    with %ActivityPub.Actor{} = actor <- ActivityPub.Actor.get_by_ap_id!(ap_id) do
+    with %ActivityPub.Actor{} = actor <- ActivityPub.Actor.get_by_ap_id(ap_id) do
       by_username!(actor.username)
     end
   end
@@ -348,7 +351,7 @@ defmodule Bonfire.Me.Users do
     |> User.changeset(user, ...)
     |> Changesets.put_assoc(:accounted, %{account_id: account.id})
     |> Changesets.put_assoc(:encircles, [
-      %{circle_id: Circles.circles().local.id}
+      %{circle_id: Circles.get_id!(:local)}
     ])
     |> Changesets.put_assoc(:character, %{})
     |> Changesets.cast_assoc(:character,
@@ -364,7 +367,7 @@ defmodule Bonfire.Me.Users do
   def changeset(:create, user, params, :remote) do
     User.changeset(user, params)
     |> Changesets.put_assoc(:encircles, [
-      %{circle_id: Circles.circles().local.id}
+      %{circle_id: Circles.get_id!(:activity_pub)}
     ])
     |> Changesets.put_assoc(:character, %{})
     |> Changesets.cast_assoc(:character,

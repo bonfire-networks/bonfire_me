@@ -3,7 +3,7 @@ defmodule Bonfire.Me.Integration do
   alias Bonfire.Common.Utils
   import Untangle
 
-  def repo, do: Config.get!(:repo_module)
+  def repo, do: Config.repo()
 
   def mailer, do: Config.get!(:mailer_module)
 

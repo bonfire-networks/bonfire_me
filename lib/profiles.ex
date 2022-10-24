@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Profiles do
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
   import Untangle
+  import Bonfire.Me.Integration
 
   @behaviour Bonfire.Common.ContextModule
   @behaviour Bonfire.Common.QueryModule
@@ -24,7 +25,7 @@ defmodule Bonfire.Me.Profiles do
   def indexing_object_format(%{profile: obj}), do: indexing_object_format(obj)
 
   def indexing_object_format(%Profile{id: _} = obj) do
-    obj = Bonfire.Common.Repo.maybe_preload(obj, [:icon, :image])
+    obj = repo().maybe_preload(obj, [:icon, :image])
 
     icon = Bonfire.Files.IconUploader.remote_url(obj.icon)
     image = Bonfire.Files.ImageUploader.remote_url(obj.image)

@@ -19,13 +19,17 @@ defmodule Bonfire.Me.Fake.Helpers do
   def image(_), do: image_url()
 
   defp put_form_lazy(base, key, fun) do
-    Map.put_new_lazy(base, key, fn ->
+    base
+    |> Map.put(
+      key,
       fun.(Map.get(base, key, %{}))
-    end)
+    )
   end
 
   def character_subform(base \\ %{}) do
-    Map.put_new_lazy(base, :username, &username/0)
+    base
+    # NOTE: we let the username be based off of the name (from profile) instead
+    |> Map.put_new_lazy(:username, &username/0)
   end
 
   def credential_subform(base \\ %{}) do
@@ -50,9 +54,12 @@ defmodule Bonfire.Me.Fake.Helpers do
   end
 
   def create_user_form(base \\ %{}) do
-    base
-    |> put_form_lazy(:character, &character_subform/1)
+    name = name()
+    # we want the username to match the name for test readability
+    %{profile: %{name: name}, character: %{username: name}}
+    |> Map.merge(base)
     |> put_form_lazy(:profile, &profile_subform/1)
+    |> put_form_lazy(:character, &character_subform/1)
   end
 
   def user_live(base \\ %{}) do

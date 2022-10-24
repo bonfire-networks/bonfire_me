@@ -138,7 +138,7 @@ defmodule Bonfire.Me.Settings do
         nil
 
       id ->
-        if !e(opts, :preload, nil),
+        if !e(opts, :preload, nil) and Config.get(:env) != :test,
           do:
             warn(
               scope,

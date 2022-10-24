@@ -3,8 +3,8 @@ defmodule Bonfire.Me.DeleteWorker do
     queue: :deletion,
     max_attempts: 1
 
+  import Bonfire.Me.Integration
   # alias Pointers.Pointer
-  alias Bonfire.Common.Repo
   alias Bonfire.Data.Identity.CareClosure
   # import EctoSparkles
   # import Ecto.Query
@@ -25,8 +25,8 @@ defmodule Bonfire.Me.DeleteWorker do
   # def perform(%{args: %{"ids" => ids}}) do
   #   #
   #   # First of all, we must collate a list of everything we wish to delete and retrieve their pointers entries
-  #   # closure = Repo.all(get_closure(ids))
+  #   # closure = repo().all(get_closure(ids))
   # end
 
-  def closure(ids), do: Repo.all(CareClosure.by_branch(ids))
+  def closure(ids), do: repo().all(CareClosure.by_branch(ids))
 end

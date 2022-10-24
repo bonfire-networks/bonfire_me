@@ -4,7 +4,6 @@ defmodule Bonfire.Me.UserCirclesTest do
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Users
   alias Bonfire.Boundaries.Circles
-  alias Bonfire.Common.Repo
 
   # test "listing instance-wide circles (which I am permitted to see) works" do
   #   user = fake_user!()
@@ -32,7 +31,7 @@ defmodule Bonfire.Me.UserCirclesTest do
   #   assert is_list(circles) and length(circles) > length(Bonfire.Boundaries.Circles.list_builtins())
 
   #   my_circle = List.first(circles)
-  #   my_circle = Repo.maybe_preload(my_circle, [:named, :caretaker])
+  #   my_circle = repo().maybe_preload(my_circle, [:named, :caretaker])
 
   #   assert name == my_circle.named.name
   #   assert user.id == my_circle.caretaker.caretaker_id

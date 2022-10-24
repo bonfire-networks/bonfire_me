@@ -4,13 +4,11 @@ defmodule Bonfire.Me.UsersTest do
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
 
-  alias Bonfire.Common.Repo
-
   test "creation works" do
     assert {:ok, account} = Accounts.signup(signup_form())
     attrs = create_user_form()
     assert {:ok, user} = Users.create(attrs, account)
-    user = Repo.preload(user, [:profile, :character])
+    user = repo().preload(user, [:profile, :character])
     assert attrs.character.username == user.character.username
     assert attrs.profile.name == user.profile.name
     assert attrs.profile.summary == user.profile.summary
