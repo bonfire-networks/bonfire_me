@@ -24,6 +24,7 @@ defmodule Bonfire.Me.ChannelCase do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
       import Bonfire.Me.ChannelCase
+      import Bonfire.Me.Integration
 
       # The default endpoint for testing
       @endpoint Application.compile_env!(:bonfire, :endpoint_module)

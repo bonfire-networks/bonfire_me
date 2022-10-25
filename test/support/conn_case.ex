@@ -34,6 +34,7 @@ defmodule Bonfire.Me.ConnCase do
       import Bonfire.Me.Fake.Helpers
       # import Bonfire.Me.Fake
       use Bonfire.Common.Utils
+      import Bonfire.Me.Integration
 
       # The default endpoint for testing
       @endpoint Application.compile_env!(:bonfire, :endpoint_module)

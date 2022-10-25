@@ -25,6 +25,7 @@ defmodule Bonfire.Me.DataCase do
       # import Bonfire.Me.DataCase
 
       import Bonfire.Me.Fake.Helpers
+      import Bonfire.Me.Integration
     end
   end
 
