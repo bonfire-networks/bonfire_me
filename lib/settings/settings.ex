@@ -214,7 +214,7 @@ defmodule Bonfire.Me.Settings do
          %{Bonfire.Me.Users => %{discoverable: false}, scope: :user} = attrs,
          opts
        ) do
-    current_user = current_user_required(opts)
+    current_user = current_user_required!(opts)
 
     do_set(attrs, opts)
 
@@ -233,7 +233,7 @@ defmodule Bonfire.Me.Settings do
          %{Bonfire.Me.Users => %{discoverable: true}, scope: :user} = attrs,
          opts
        ) do
-    current_user = current_user_required(opts)
+    current_user = current_user_required!(opts)
 
     do_set(attrs, opts)
 
@@ -315,7 +315,7 @@ defmodule Bonfire.Me.Settings do
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
      %{
-       assign_context: [current_user: map_put_settings(current_user_required(opts), ...)]
+       assign_context: [current_user: map_put_settings(current_user_required!(opts), ...)]
      }}
 
     # TODO: put into assigns

@@ -363,7 +363,7 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
     end
 
     def update_user(args, info) do
-      # || (Users.by_username("test") |> ok_or)
+      # || (Users.by_username("test") |> ok_unwrap)
       user = GraphQL.current_user(info)
 
       if user do
