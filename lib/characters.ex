@@ -108,7 +108,8 @@ defmodule Bonfire.Me.Characters do
       |> Character.changeset(params, :hash)
       |> Changeset.cast_assoc(:actor)
     end
-    |> info()
+
+    # |> info()
   end
 
   def display_username(
