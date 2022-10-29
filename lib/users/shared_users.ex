@@ -60,26 +60,33 @@ defmodule Bonfire.Me.SharedUsers do
         %SharedUser{} = shared_user ->
           email_or_username = String.trim(email_or_username)
 
-          case Accounts.get_by_email(email_or_username) do
-            %Account{} = account ->
-              do_add_account(shared_user, account)
+          if email_or_username != "" do
+            case Accounts.get_by_email(email_or_username) do
+              %Account{} = account ->
+                do_add_account(shared_user, account)
 
-            _ ->
-              case Users.by_username(email_or_username)
-                   |> repo().maybe_preload(accounted: :account) do
-                {:ok, %{accounted: %{account: %Account{} = account}}} ->
-                  do_add_account(shared_user, account)
+              _ ->
+                case Users.by_username(email_or_username)
+                     |> repo().maybe_preload(accounted: :account) do
+                  {:ok, %{accounted: %{account: %Account{} = account}}} ->
+                    do_add_account(shared_user, account)
 
-                _ ->
-                  {:error,
-                   l(
-                     "Could not find an existing account on this instance with that email or username."
-                   )}
-              end
+                  _e ->
+                    error(
+                      email_or_username,
+                      l(
+                        "Could not find an existing account on this instance with that email or username."
+                      )
+                    )
+                end
+            end
+          else
+            info("No accounts to add were specified")
+            {:ok, shared_user}
           end
 
         other ->
-          {:error, "Could not turn this user identity into a shared user (got #{inspect(other)})"}
+          error(other, "Could not turn this user identity into a shared user")
       end
     end
 
@@ -97,7 +104,7 @@ defmodule Bonfire.Me.SharedUsers do
     rescue
       e in Ecto.ConstraintError ->
         warn(e)
-        :ok
+        {:ok, shared_user}
     end
 
     def init_shared_user(%User{} = user, params \\ %{}) do
@@ -105,6 +112,7 @@ defmodule Bonfire.Me.SharedUsers do
       shared_user = e(user, :shared_user, nil)
 
       if shared_user do
+        # TODO: update label if a different one was supplied
         shared_user
       else
         with {:ok, user} <-

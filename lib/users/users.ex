@@ -16,7 +16,7 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Me.Users.Queries
 
   alias Bonfire.Boundaries.Circles
-  alias Bonfire.Federate.ActivityPub.Utils, as: APUtils
+  alias Bonfire.Federate.ActivityPub.AdapterUtils
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   alias Pointers.Changesets
@@ -49,9 +49,16 @@ defmodule Bonfire.Me.Users do
 
   # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
   def by_username(username) when is_binary(username) do
-    info(self(), username)
-    info(repo())
+    # info(self(), username)
+    # info(repo())
     repo().single(Queries.by_username_or_id(username))
+  end
+
+  def by_canonical_uri(uri) when is_binary(uri) do
+    Queries.by_canonical_uri(uri)
+    |> info(repo())
+    |> repo().single()
+    |> info(uri)
   end
 
   def by_username!(username) when is_binary(username),
@@ -270,13 +277,13 @@ defmodule Bonfire.Me.Users do
   ### ActivityPub
 
   def by_ap_id(ap_id) do
-    with {:ok, %{username: username}} = ActivityPub.Actor.get_cached_by_ap_id(ap_id) do
+    with {:ok, %{username: username}} = ActivityPub.Actor.get_cached(ap_id: ap_id) do
       by_username(username)
     end
   end
 
   def by_ap_id!(ap_id) do
-    with %ActivityPub.Actor{} = actor <- ActivityPub.Actor.get_by_ap_id(ap_id) do
+    with %ActivityPub.Actor{} = actor <- ActivityPub.Actor.get_cached!(ap_id: ap_id) do
       by_username!(actor.username)
     end
   end
@@ -307,17 +314,21 @@ defmodule Bonfire.Me.Users do
 
   @doc "Updates a remote user"
   def update_remote(user, params) do
-    update(user, params, :remote)
+    user
+    # |> repo().reload() # to avoid stale struct errors
+    |> update(params, :remote)
   end
 
   def format_actor(user) do
-    APUtils.format_actor(user, "Person")
+    AdapterUtils.format_actor(user, "Person")
   end
 
   ## Adapter callbacks
 
   def update_local_actor(%User{} = user, params) do
-    with {:ok, user} <- update(user, params),
+    info(params)
+
+    with {:ok, user} <- update(repo().reload(user), params),
          actor <- format_actor(user) do
       {:ok, actor}
     end

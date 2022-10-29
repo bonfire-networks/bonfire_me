@@ -8,8 +8,8 @@ defmodule Bonfire.Me.Integration do
   def mailer, do: Config.get!(:mailer_module)
 
   def is_local?(thing) do
-    if Bonfire.Common.Extend.module_enabled?(Bonfire.Federate.ActivityPub.Utils) do
-      Bonfire.Federate.ActivityPub.Utils.is_local?(thing)
+    if Bonfire.Common.Extend.module_enabled?(Bonfire.Federate.ActivityPub.AdapterUtils) do
+      Bonfire.Federate.ActivityPub.AdapterUtils.is_local?(thing)
     end
   end
 

@@ -41,6 +41,12 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([character: c], c.username == ^username)
   end
 
+  def by_canonical_uri(canonical_uri, opts \\ []) do
+    from(u in User, as: :user)
+    |> proloads(opts)
+    |> where([peered: p], p.canonical_uri == ^canonical_uri)
+  end
+
   defp proloads(query) do
     proloads(
       query,
