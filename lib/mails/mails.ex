@@ -64,10 +64,10 @@ defmodule Bonfire.Me.Mails do
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
-      |> subject(Keyword.get(conf, :subject, app_name <> " - Reset your password"))
+      |> subject(Keyword.get(conf, :subject, "#{app_name} - #{l("Reset your password")}"))
       |> render(:forgot_password)
     else
-      error("No confirmation token")
+      error(l("No confirmation token"))
     end
   end
 end
