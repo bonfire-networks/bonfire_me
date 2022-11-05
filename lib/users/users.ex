@@ -360,11 +360,11 @@ defmodule Bonfire.Me.Users do
   def changeset(:create, user, params, %Account{} = account) do
     params
     |> User.changeset(user, ...)
-    |> Changesets.put_assoc(:accounted, %{account_id: account.id})
-    |> Changesets.put_assoc(:encircles, [
+    |> Changesets.put_assoc!(:accounted, %{account_id: account.id})
+    |> Changesets.put_assoc!(:encircles, [
       %{circle_id: Circles.get_id!(:local)}
     ])
-    |> Changesets.put_assoc(:character, %{})
+    |> Changesets.put_assoc!(:character, %{})
     |> Changesets.cast_assoc(:character,
       required: true,
       with: &Characters.changeset/2
@@ -377,10 +377,10 @@ defmodule Bonfire.Me.Users do
 
   def changeset(:create, user, params, :remote) do
     User.changeset(user, params)
-    |> Changesets.put_assoc(:encircles, [
+    |> Changesets.put_assoc!(:encircles, [
       %{circle_id: Circles.get_id!(:activity_pub)}
     ])
-    |> Changesets.put_assoc(:character, %{})
+    |> Changesets.put_assoc!(:character, %{})
     |> Changesets.cast_assoc(:character,
       required: true,
       with: &Characters.remote_changeset/2
