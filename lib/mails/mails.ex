@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Mails do
 
     if is_binary(confirm_token) do
       app_name = Bonfire.Application.name()
-      url = url(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
+      url = url_path(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
 
       if Config.get(:env) != :test or
            System.get_env("START_SERVER") == "yes",
@@ -58,7 +58,7 @@ defmodule Bonfire.Me.Mails do
         |> Keyword.get(:forgot_password_email, [])
 
       app_name = Bonfire.Application.name()
-      url = url(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
+      url = url_path(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
 
       new_email()
       |> assign(:current_account, account)
