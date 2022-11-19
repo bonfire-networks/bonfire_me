@@ -3,13 +3,14 @@ defmodule Bonfire.Me.UsersTest do
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
+  alias Bonfire.Me.Characters
 
   test "creation works" do
     assert {:ok, account} = Accounts.signup(signup_form())
     attrs = create_user_form()
     assert {:ok, user} = Users.create(attrs, account)
     user = repo().preload(user, [:profile, :character])
-    assert attrs.character.username == user.character.username
+    assert Characters.clean_username(attrs.character.username) == user.character.username
     assert attrs.profile.name == user.profile.name
     assert attrs.profile.summary == user.profile.summary
   end
@@ -28,17 +29,18 @@ defmodule Bonfire.Me.UsersTest do
     assert {:ok, account} = Accounts.signup(signup_form())
     attrs = create_user_form()
     assert {:ok, _user} = Users.create(attrs, account)
-    assert {:ok, user} = Users.by_username(attrs.character.username)
-    assert user.character.username == attrs.character.username
+    username = Characters.clean_username(attrs.character.username)
+    assert {:ok, user} = Users.by_username(username)
+    assert user.character.username == username
     assert user.profile.name == attrs.profile.name
     assert user.profile.summary == attrs.profile.summary
   end
 
   test "can make a user an admin" do
     assert {:ok, account} = Accounts.signup(signup_form())
-    # first user is automatically admin
+    # first user is automatically admin (but not in test env)
     assert {:ok, fist_user} = Users.create(create_user_form(), account)
-    assert Users.is_admin?(fist_user)
+    refute Users.is_admin?(fist_user)
     assert {:ok, second_user} = Users.create(create_user_form(), account)
     refute Users.is_admin?(second_user)
     assert {:ok, second_user} = Users.make_admin(second_user)

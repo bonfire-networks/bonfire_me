@@ -234,8 +234,10 @@ defmodule Bonfire.Me.Users do
 
   def update(%User{} = user, params, extra \\ nil) do
     # TODO: check who is doing the update (except if extra==:remote)
-    repo().update(changeset(:update, user, params, extra))
-    # |> IO.inspect
+    changeset(:update, user, params, extra)
+    |> info()
+    |> repo().update()
+    # |> debug
     ~> post_mutate()
     ~> Bonfire.Federate.ActivityPub.Adapter.update_local_actor_cache()
   end
@@ -403,6 +405,7 @@ defmodule Bonfire.Me.Users do
     # add the ID for update
     params =
       params
+      # |> Map.merge(%{"id" => user.id})
       |> Map.merge(%{"profile" => %{"id" => user.id}}, fn _, a, b ->
         Map.merge(a, b)
       end)
@@ -416,8 +419,8 @@ defmodule Bonfire.Me.Users do
     #   maybe_apply(Bonfire.Geolocate.Geolocations, :thing_add_location, [user, user, loc])
     # end
 
-    user
-    |> User.changeset(params)
+    Ecto.Changeset.cast(user, params, [])
+    # |> info()
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
 
