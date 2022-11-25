@@ -194,7 +194,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   def maybe_authenticate(account, params) do
-    debug(params)
+    # debug(params)
 
     if Bonfire.Me.Accounts.SecondFactors.enabled?() do
       case validate_account_totp(
@@ -202,6 +202,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
              e(params, "auth_second_factor", "code", nil)
            ) do
         :valid_totp ->
+          debug("valid_totp :-)")
           {:ok, :valid_totp}
 
         # {:valid_backup_code, remaining} ->
@@ -213,6 +214,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
         #   )}
 
         :no_totp ->
+          debug("no_totp for this account")
           {:ok, :no_totp}
 
         :invalid ->

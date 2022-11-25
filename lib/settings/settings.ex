@@ -138,18 +138,20 @@ defmodule Bonfire.Me.Settings do
         nil
 
       id ->
-        if !e(opts, :preload, nil) and Config.get(:env) != :test,
-          do:
-            warn(
-              scope,
-              "fallback to querying since Settings aren't already preloaded in scoped object:"
-            )
+        if e(opts, :preload, nil) do
+          query_filter(Bonfire.Data.Identity.Settings, %{id: id})
+          # |> proload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
+          |> repo().one()
+        else
+          if Config.get(:env) != :test,
+            do:
+              warn(
+                scope,
+                "cannot lookup Settings since they aren't already preloaded in scoped object"
+              )
 
-        query_filter(Bonfire.Data.Identity.Settings, %{id: id})
-        # |> proload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
-        |> repo().one()
-
-        # |> debug()
+          nil
+        end
     end
   end
 
