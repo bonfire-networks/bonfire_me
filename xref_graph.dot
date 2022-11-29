@@ -1,0 +1,62 @@
+digraph "xref graph" {
+  "lib/accounts/accounts.ex"
+  "lib/accounts/accounts.ex" -> "lib/accounts/change_password_fields.ex" [label="(export)"]
+  "lib/accounts/accounts.ex" -> "lib/accounts/confirm_email_fields.ex" [label="(export)"]
+  "lib/accounts/accounts.ex" -> "lib/accounts/forgot_password_fields.ex" [label="(export)"]
+  "lib/accounts/accounts.ex" -> "lib/accounts/login_fields.ex" [label="(export)"]
+  "lib/accounts/accounts.ex" -> "lib/accounts/queries.ex"
+  "lib/accounts/queries.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/integration.ex" -> "lib/characters.ex"
+  "lib/characters.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/integration.ex" -> "lib/profiles.ex"
+  "lib/profiles.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/accounts/accounts.ex" -> "lib/accounts/second_factors.ex"
+  "lib/accounts/second_factors.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/accounts/accounts.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/accounts/accounts.ex" -> "lib/mails/mails.ex"
+  "lib/mails/mails.ex" -> "lib/mails/email_view.ex"
+  "lib/accounts/accounts.ex" -> "lib/users/users.ex"
+  "lib/users/users.ex" -> "lib/characters.ex"
+  "lib/users/users.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/users/users.ex" -> "lib/profiles.ex"
+  "lib/users/users.ex" -> "lib/settings/settings.ex"
+  "lib/settings/settings.ex" -> "lib/users/users.ex"
+  "lib/users/users.ex" -> "lib/users/shared_users.ex"
+  "lib/users/shared_users.ex" -> "lib/accounts/accounts.ex"
+  "lib/users/shared_users.ex" -> "lib/users/users.ex"
+  "lib/users/users.ex" -> "lib/users/users_queries.ex"
+  "lib/users/users_queries.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/users/users_queries.ex" -> "lib/users/shared_users.ex"
+  "lib/accounts/change_password_fields.ex"
+  "lib/accounts/confirm_email_fields.ex"
+  "lib/accounts/forgot_password_fields.ex"
+  "lib/accounts/login_fields.ex"
+  "lib/accounts/queries.ex"
+  "lib/accounts/second_factors.ex"
+  "lib/characters.ex"
+  "lib/integration.ex"
+  "lib/mails/email_view.ex"
+  "lib/mails/mails.ex"
+  "lib/me_api_graphql.ex"
+  "lib/me_api_graphql.ex" -> "lib/accounts/accounts.ex"
+  "lib/me_api_graphql.ex" -> "lib/users/shared_users.ex"
+  "lib/me_api_graphql.ex" -> "lib/users/users.ex"
+  "lib/migrations.ex"
+  "lib/profiles.ex"
+  "lib/runtime_config.ex"
+  "lib/runtime_config.ex" -> "lib/accounts/accounts.ex"
+  "lib/runtime_config.ex" -> "lib/users/users.ex"
+  "lib/settings/load_config.ex"
+  "lib/settings/load_config.ex" -> "lib/settings/settings.ex"
+  "lib/settings/settings.ex"
+  "lib/testing/fake.ex"
+  "lib/testing/fake.ex" -> "lib/accounts/accounts.ex"
+  "lib/testing/fake.ex" -> "lib/testing/helpers.ex" [label="(export)"]
+  "lib/testing/fake.ex" -> "lib/users/users.ex"
+  "lib/testing/helpers.ex"
+  "lib/users/delete_worker.ex"
+  "lib/users/delete_worker.ex" -> "lib/integration.ex" [label="(export)"]
+  "lib/users/shared_users.ex"
+  "lib/users/users.ex"
+  "lib/users/users_queries.ex"
+}
