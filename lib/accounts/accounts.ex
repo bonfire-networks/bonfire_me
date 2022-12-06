@@ -15,6 +15,7 @@ defmodule Bonfire.Me.Accounts do
   alias Bonfire.Me.Accounts.ConfirmEmailFields
   alias Bonfire.Me.Accounts.ForgotPasswordFields
   alias Bonfire.Me.Accounts.ChangePasswordFields
+  alias Bonfire.Me.Accounts.ChangeEmailFields
   alias Bonfire.Me.Accounts.LoginFields
   alias Bonfire.Me.Accounts.Queries
 
@@ -49,6 +50,13 @@ defmodule Bonfire.Me.Accounts do
         %ChangePasswordFields{},
         params,
         opts[:resetting_password]
+      )
+
+  def changeset(:change_email, params, opts) when not is_struct(params),
+    do:
+      ChangeEmailFields.changeset(
+        %ChangeEmailFields{},
+        params
       )
 
   def changeset(:confirm_email, params, _opts) when not is_struct(params),
@@ -379,6 +387,54 @@ defmodule Bonfire.Me.Accounts do
       |> Account.changeset(%{credential: Map.merge(params, %{"id" => id})})
       |> Changeset.cast_assoc(:credential, required: true)
       |> repo().update()
+    else
+      # avoid checking out tx
+      {:error, cs}
+    end
+  end
+
+  ###
+
+  def change_email(current_account, params_or_changeset, opts \\ [])
+
+  def change_email(current_account, params, opts) when not is_struct(params),
+    do:
+      maybe_change_email(
+        current_account,
+        changeset(:change_email, params, opts),
+        params,
+        opts
+      )
+
+  defp maybe_change_email(
+         %{id: account_id} = current_account,
+         %Changeset{} = cs,
+         %{"old_email" => old, "email" => new} = _params,
+         opts
+       ) do
+    with %Account{id: id} when id == account_id <- get_by_email(old) do
+      do_change_email(current_account, cs, new, opts)
+    else
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  defp do_change_email(
+         %{id: id} = current_account,
+         %Changeset{} = cs,
+         new,
+         opts
+       ) do
+    if cs.valid? do
+      with {:ok, %{email: %{email_address: new_saved}} = account} when new == new_saved <-
+             current_account
+             |> repo().preload(:email)
+             |> Account.changeset(%{email: Map.merge(%{"email_address" => new}, %{"id" => id})})
+             |> Changeset.cast_assoc(:email, required: true)
+             |> repo().update() do
+        {:ok, account}
+      end
     else
       # avoid checking out tx
       {:error, cs}
