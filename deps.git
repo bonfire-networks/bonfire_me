@@ -9,7 +9,6 @@ bonfire_data_identity="https://github.com/bonfire-networks/bonfire_data_identity
 bonfire_data_social="https://github.com/bonfire-networks/bonfire_data_social#main"
 # bonfire_web_phoenix = "https://github.com/bonfire-networks/bonfire_web_phoenix#main"
 pointers = "https://github.com/bonfire-networks/pointers#main"
-pointers_ulid = "https://github.com/bonfire-networks/pointers_ulid#main"
 # bonfire_ui_common = "https://github.com/bonfire-networks/bonfire_ui_common#main"
 # bonfire_ui_social = "https://github.com/bonfire-networks/bonfire_ui_social#main"
 # verbs = "https://github.com/shannonwells/verbs_ex"
