@@ -32,7 +32,12 @@ defmodule Bonfire.Me.Settings do
 
       result ->
         if keys_tree != [] do
-          get_in(result, keys_tree) || default
+          if Keyword.keyword?(result) or is_map(result) do
+            get_in(result, keys_tree) || default
+          else
+            error(result, "Settings are in an invalid structure and can't be used")
+            default
+          end
         else
           result || default
         end
