@@ -19,7 +19,9 @@ defmodule Bonfire.Me.Settings do
   def get(key, default \\ nil, opts \\ [])
 
   def get(keys, default, opts) when is_list(keys) do
-    {[otp_app], keys_tree} = Config.keys_tree(keys) |> Enum.split(1)
+    {[otp_app], keys_tree} =
+      Config.keys_tree(keys)
+      |> Enum.split(1)
 
     debug(keys_tree, "Get settings in #{inspect(otp_app)} for")
 
@@ -146,7 +148,7 @@ defmodule Bonfire.Me.Settings do
         if e(opts, :preload, nil) do
           query_filter(Bonfire.Data.Identity.Settings, %{id: id})
           # |> proload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
-          |> repo().one()
+          |> repo().maybe_one()
         else
           if Config.get(:env) != :test,
             do:

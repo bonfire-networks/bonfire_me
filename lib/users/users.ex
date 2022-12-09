@@ -34,7 +34,7 @@ defmodule Bonfire.Me.Users do
   ### Queries
 
   def get_current(nil), do: nil
-  def get_current(id) when is_binary(id), do: repo().one(Queries.current(id))
+  def get_current(id) when is_binary(id), do: repo().maybe_one(Queries.current(id))
 
   def fetch_current(id), do: repo().single(Queries.current(id))
 

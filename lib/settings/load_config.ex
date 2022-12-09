@@ -36,7 +36,7 @@ defmodule Bonfire.Me.Settings.LoadInstanceConfig do
       {put, Map.new(settings)}
     else
       Logger.info("No instance Settings to load into Config")
-      {:ok, %{skip: "No settings loaded"}}
+      {:ok, %{skip: "No settings to load"}}
     end
   end
 end

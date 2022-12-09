@@ -24,7 +24,7 @@ defmodule Bonfire.Me.Accounts do
 
   def get_current(nil), do: nil
   # |> debug
-  def get_current(id) when is_binary(id), do: repo().one(Queries.current(id))
+  def get_current(id) when is_binary(id), do: repo().maybe_one(Queries.current(id))
 
   def fetch_current(nil), do: {:error, :not_found}
 
