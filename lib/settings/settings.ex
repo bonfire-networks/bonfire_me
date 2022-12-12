@@ -175,7 +175,7 @@ defmodule Bonfire.Me.Settings do
     # |> debug("Putting settings for")
     map_put_in(keys, value)
     # |> debug()
-    |> input_to_atoms()
+    |> input_to_atoms(false, true)
     # |> debug()
     |> maybe_to_keyword_list(true)
     # |> debug()
@@ -281,11 +281,11 @@ defmodule Bonfire.Me.Settings do
           {:instance, instance_scope()}
 
         :instance ->
-          raise raise(
-                  Bonfire.Fail,
-                  {:unauthorized,
-                   l("change instance settings.") <> " " <> l("Please contact an admin.")}
-                )
+          raise(
+            Bonfire.Fail,
+            {:unauthorized,
+             l("change instance settings.") <> " " <> l("Please contact an admin.")}
+          )
 
         :account ->
           {:current_account, ulid(current_account)}
