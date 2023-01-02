@@ -159,9 +159,7 @@ defmodule Bonfire.Me.Settings do
 
       id ->
         if e(opts, :preload, nil) do
-          query_filter(Bonfire.Data.Identity.Settings, %{id: id})
-          # |> proload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
-          |> repo().maybe_one()
+          do_fetch(id)
         else
           if Config.get(:env) != :test,
             do:
@@ -180,6 +178,12 @@ defmodule Bonfire.Me.Settings do
     nil
   end
 
+  defp do_fetch(id) do
+    query_filter(Bonfire.Data.Identity.Settings, %{id: id})
+    # |> proload([:pointer]) # workaround for error "attempting to cast or change association `pointer` from `Bonfire.Data.Identity.Settings` that was not loaded. Please preload your associations before manipulating them through changesets"
+    |> repo().maybe_one()
+  end
+
   @doc """
   Put a setting using a key like `:key` or list of nested keys like `[:top_key, :sub_key]`
   """
@@ -187,11 +191,11 @@ defmodule Bonfire.Me.Settings do
     # keys = Config.keys_tree(keys) # Note: doing this in set/2 instead
     # |> debug("Putting settings for")
     map_put_in(keys, value)
-    # |> debug()
+    |> info("map_put_in")
     |> input_to_atoms(false, true)
-    # |> debug()
+    |> info("input_to_atoms")
     |> maybe_to_keyword_list(true)
-    # |> debug()
+    |> info("maybe_to_keyword_list")
     |> set(opts)
   end
 
@@ -416,6 +420,13 @@ defmodule Bonfire.Me.Settings do
     |> Bonfire.Data.Identity.Settings.changeset(settings, ...)
     # |> debug()
     |> repo().insert()
+  rescue
+    e in Ecto.ConstraintError ->
+      warn(e)
+
+      do_fetch(ulid!(scope_id))
+      |> Bonfire.Data.Identity.Settings.changeset(%{data: data})
+      |> repo().update()
   end
 
   defp do_update(
