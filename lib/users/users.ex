@@ -236,7 +236,7 @@ defmodule Bonfire.Me.Users do
   def update(%User{} = user, params, extra \\ nil) do
     # TODO: check who is doing the update (except if extra==:remote)
     changeset(:update, user, params, extra)
-    |> info()
+    # |> info()
     |> repo().update()
     # |> debug
     ~> post_mutate()

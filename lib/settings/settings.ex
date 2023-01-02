@@ -407,6 +407,15 @@ defmodule Bonfire.Me.Settings do
     |> do_update(settings, ...)
   end
 
+  defp upsert(
+         %Bonfire.Data.Identity.Settings{id: id} = settings,
+         data,
+         _
+       )
+       when is_binary(id) do
+    do_update(settings, data)
+  end
+
   defp upsert(%{settings: _} = parent, data, _) do
     parent
     |> repo().maybe_preload(:settings)
@@ -418,15 +427,15 @@ defmodule Bonfire.Me.Settings do
     %{id: ulid!(scope_id), data: data}
     # |> debug()
     |> Bonfire.Data.Identity.Settings.changeset(settings, ...)
-    # |> debug()
+    |> info()
     |> repo().insert()
   rescue
     e in Ecto.ConstraintError ->
-      warn(e)
+      warn(e, "ConstraintError - will next attempt to update instead")
 
       do_fetch(ulid!(scope_id))
-      |> Bonfire.Data.Identity.Settings.changeset(%{data: data})
-      |> repo().update()
+      |> info("fetched")
+      |> do_update(data)
   end
 
   defp do_update(
