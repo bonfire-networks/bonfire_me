@@ -35,13 +35,15 @@ defmodule Bonfire.Me.Settings do
       result ->
         if keys_tree != [] do
           if Keyword.keyword?(result) or is_map(result) do
-            get_in(result, keys_tree) || default
+            get_in(result, keys_tree)
+            |> debug(inspect(keys_tree))
+            |> maybe_fallback(default)
           else
             error(result, "Settings are in an invalid structure and can't be used")
             default
           end
         else
-          result || default
+          maybe_fallback(result, default)
         end
     end
   end
@@ -59,6 +61,9 @@ defmodule Bonfire.Me.Settings do
         value
     end
   end
+
+  defp maybe_fallback(nil, fallback), do: fallback
+  defp maybe_fallback(val, _fallback), do: val
 
   @doc """
   Get all config keys/values for a Bonfire extension or OTP app
@@ -288,17 +293,17 @@ defmodule Bonfire.Me.Settings do
           )
 
         :account ->
-          {:current_account, ulid(current_account)}
+          {:current_account, current_account}
 
         :user ->
-          {:current_user, ulid(current_user)}
+          {:current_user, current_user}
 
         _ ->
           if current_user do
-            {:current_user, ulid(current_user)}
+            {:current_user, current_user}
           else
             if current_account do
-              {:current_account, ulid(current_account)}
+              {:current_account, current_account}
             end
           end
       end
