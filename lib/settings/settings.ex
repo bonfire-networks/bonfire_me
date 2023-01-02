@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Settings do
 
     debug(keys_tree, "Get settings in #{inspect(otp_app)} for")
 
-    case get_all_ext(otp_app, opts) do
+    case get_merged_ext(otp_app, opts) do
       [] ->
         default
 
@@ -68,21 +68,19 @@ defmodule Bonfire.Me.Settings do
   @doc """
   Get all config keys/values for a Bonfire extension or OTP app
   """
-  def get_all_ext(module_or_otp_app, opts \\ []) do
+  def get_merged_ext(module_or_otp_app, opts \\ []) do
     otp_app =
       Extend.maybe_extension_loaded!(module_or_otp_app) ||
         Config.top_level_otp_app()
 
     # TODO get and merge dominoes based on current_user > current_account > instance > Config
     fetch_all_scopes(otp_app, opts)
-    # |> debug("list of different configs and settings for #{inspect otp_app}")
     |> deep_merge_reduce()
-
-    # |> debug("domino-merged settings")
+    |> debug("domino-merged settings for #{inspect(otp_app)}")
   end
 
-  def get_all_ext!(module_or_otp_app, opts \\ []) do
-    case get_all_ext(module_or_otp_app, opts) do
+  def get_merged_ext!(module_or_otp_app, opts \\ []) do
+    case get_merged_ext(module_or_otp_app, opts) do
       nil ->
         raise "Missing settings or configuration for extension: #{inspect(module_or_otp_app, pretty: true)}"
         []
@@ -95,7 +93,7 @@ defmodule Bonfire.Me.Settings do
   @doc """
   Fetch all config & settings, both from Mix.Config and DB. Order matters!
   """
-  def fetch_all_scopes(otp_app, opts) do
+  defp fetch_all_scopes(otp_app, opts) do
     # debug(opts, "opts")
     current_user = current_user(opts)
     current_account = current_account(opts)
@@ -105,20 +103,30 @@ defmodule Bonfire.Me.Settings do
     if is_nil(current_user) and is_nil(current_account) and e(opts, :scope, nil) != :instance do
       warn(
         otp_app,
-        "You should pass a current_user and/or current_account in opts depending on what scope of Settings you want for"
+        "You should pass a current_user and/or current_account in opts depending on what scope of Settings you want - for OTP app:"
       )
     end
 
-    ([Config.get_ext(otp_app)] ++
+    ([
+       Config.get_ext(otp_app)
+       |> debug()
+     ] ++
        [
          maybe_fetch({:current_account, current_account}, opts)
          |> e(:data, otp_app, nil)
        ] ++
        [
          maybe_fetch({:current_user, current_user}, opts)
-         |> e(:data, otp_app, nil)
+         |> debug()
+         #  |> e(:data, otp_app, nil)
+         |> e(:data, nil)
+         |> debug()
+         |> e(otp_app, nil)
+         |> debug()
        ])
+    |> debug()
     |> filter_empty([])
+    |> debug("list of different configs and settings for #{inspect(otp_app)}")
   end
 
   # not including this line in fetch_all_scopes because load_instance_settings preloads it into Config
@@ -281,7 +289,8 @@ defmodule Bonfire.Me.Settings do
         Bonfire.Me.Users.is_admin?(current_user || current_account)
 
     scope =
-      case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil)) |> debug do
+      case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil))
+           |> debug("scope to set") do
         :instance when is_admin == true ->
           {:instance, instance_scope()}
 
@@ -372,7 +381,7 @@ defmodule Bonfire.Me.Settings do
     do: Map.put(object, :settings, settings)
 
   defp fetch_or_empty(scoped, opts) do
-    maybe_fetch(scoped, opts) ||
+    maybe_fetch(scoped, to_options(opts) ++ [preload: true]) ||
       %Bonfire.Data.Identity.Settings{}
   end
 
@@ -384,7 +393,12 @@ defmodule Bonfire.Me.Settings do
          _
        )
        when is_list(existing_data) or is_map(existing_data) do
-    deep_merge(existing_data, data)
+    data
+    |> debug("new settings")
+
+    existing_data
+    # |> debug("existing_data")
+    |> deep_merge(data)
     |> debug("merged settings to set")
     |> do_update(settings, ...)
   end
