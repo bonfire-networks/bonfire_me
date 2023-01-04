@@ -126,7 +126,7 @@ defmodule Bonfire.Me.Settings do
        ])
     |> debug()
     |> filter_empty([])
-    |> debug("list of different configs and settings for #{inspect(otp_app)}")
+    # |> debug("list of different configs and settings for #{inspect(otp_app)}")
   end
 
   # not including this line in fetch_all_scopes because load_instance_settings preloads it into Config
