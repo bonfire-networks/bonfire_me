@@ -126,6 +126,7 @@ defmodule Bonfire.Me.Settings do
        ])
     |> debug()
     |> filter_empty([])
+
     # |> debug("list of different configs and settings for #{inspect(otp_app)}")
   end
 
