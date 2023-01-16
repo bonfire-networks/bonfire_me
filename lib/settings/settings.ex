@@ -76,7 +76,8 @@ defmodule Bonfire.Me.Settings do
     # TODO get and merge dominoes based on current_user > current_account > instance > Config
     fetch_all_scopes(otp_app, opts)
     |> deep_merge_reduce()
-    |> debug("domino-merged settings for #{inspect(otp_app)}")
+
+    # |> debug("domino-merged settings for #{inspect(otp_app)}")
   end
 
   def get_merged_ext!(module_or_otp_app, opts \\ []) do
@@ -107,9 +108,9 @@ defmodule Bonfire.Me.Settings do
       )
     end
 
+    #  |> debug()
     ([
        Config.get_ext(otp_app)
-       |> debug()
      ] ++
        [
          maybe_fetch({:current_account, current_account}, opts)
@@ -117,14 +118,14 @@ defmodule Bonfire.Me.Settings do
        ] ++
        [
          maybe_fetch({:current_user, current_user}, opts)
-         |> debug()
+         #  |> debug()
          #  |> e(:data, otp_app, nil)
          |> e(:data, nil)
-         |> debug()
+         #  |> debug()
          |> e(otp_app, nil)
-         |> debug()
+         #  |> debug()
        ])
-    |> debug()
+    # |> debug()
     |> filter_empty([])
 
     # |> debug("list of different configs and settings for #{inspect(otp_app)}")
