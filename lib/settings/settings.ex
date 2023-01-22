@@ -218,7 +218,7 @@ defmodule Bonfire.Me.Settings do
   def set(attrs, opts) when is_map(attrs) do
     attrs
     |> input_to_atoms(false, true)
-    |> debug("input as atoms")
+    |> debug("settings to set as atoms")
     |> set_with_hooks(opts)
   end
 
