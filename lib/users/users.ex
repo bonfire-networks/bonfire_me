@@ -199,8 +199,10 @@ defmodule Bonfire.Me.Users do
   end
 
   def revoke_admin(%User{} = user) do
-    update_is_admin(user, false)
-    remove_from_admin_circle(user)
+    with {:ok, user} <- update_is_admin(user, false) do
+      remove_from_admin_circle(user)
+      {:ok, user}
+    end
   end
 
   defp remove_from_admin_circle(user) do
