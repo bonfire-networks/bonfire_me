@@ -403,7 +403,7 @@ defmodule Bonfire.Me.Users do
 
     # Ecto doesn't liked mixed keys so we convert them all to strings
     # TODO: use atoms instead?
-    params = Utils.stringify_keys(params, true)
+    params = Enums.stringify_keys(params, true)
 
     # add the ID for update
     params =

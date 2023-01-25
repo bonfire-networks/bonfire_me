@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Characters do
+  use Bonfire.Common.Utils
   alias Bonfire.Data.Identity.Character
   alias Bonfire.Common.URIs
-  alias Bonfire.Common.Utils
   alias Bonfire.Common.Types
 
   alias Ecto.Changeset
@@ -74,7 +74,7 @@ defmodule Bonfire.Me.Characters do
         else
           params
         end
-        |> Utils.input_to_atoms()
+        |> Enums.input_to_atoms()
         |> Character.changeset(char, ..., :update)
         |> changeset_common()
 

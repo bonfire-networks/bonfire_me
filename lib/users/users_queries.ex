@@ -4,7 +4,7 @@ defmodule Bonfire.Me.Users.Queries do
   import Bonfire.Me.Integration
   # alias Bonfire.Me.Users
   alias Bonfire.Data.Identity.User
-  alias Bonfire.Common.Utils
+  use Bonfire.Common.Utils
   import Bonfire.Common.Extend
   import EctoSparkles
 
@@ -30,7 +30,7 @@ defmodule Bonfire.Me.Users.Queries do
 
   # OR ID
   def by_username_or_id(username_or_id, opts \\ []) do
-    if Utils.is_ulid?(username_or_id),
+    if Types.is_ulid?(username_or_id),
       do: by_id(username_or_id, opts),
       else: by_username_query(username_or_id)
   end
@@ -91,7 +91,7 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   def by_account(account_id) do
-    account_id = Utils.ulid(account_id)
+    account_id = Types.ulid(account_id)
 
     from(u in User, as: :user)
     |> proloads(:local)
@@ -104,7 +104,7 @@ defmodule Bonfire.Me.Users.Queries do
     else
       from(u in User, as: :user)
       |> proloads(:local)
-      |> where([accounted: a], a.account_id == ^Utils.ulid(account_id))
+      |> where([accounted: a], a.account_id == ^Types.ulid(account_id))
       |> where([character: c], c.username == ^username)
     end
   end

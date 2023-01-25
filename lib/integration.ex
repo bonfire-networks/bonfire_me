@@ -31,7 +31,7 @@ defmodule Bonfire.Me.Integration do
         # search["hits"]
         search
         # |> Enum.map(&tag_hit_prepare(&1, tag_search))
-        |> Utils.filter_empty([])
+        |> Enums.filter_empty([])
 
         # |> debug("maybe_search results")
       end

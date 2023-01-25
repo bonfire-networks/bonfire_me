@@ -356,7 +356,7 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
       account = GraphQL.current_account(info)
 
       if account do
-        Accounts.change_password(account, Utils.stringify_keys(args, true))
+        Accounts.change_password(account, Enums.stringify_keys(args, true))
       else
         {:error, "Not authenticated"}
       end
@@ -393,7 +393,7 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
                  Bonfire.Me.SharedUsers.add_account(
                    user,
                    username_or_email,
-                   Utils.stringify_keys(args, true)
+                   Enums.stringify_keys(args, true)
                  ) do
             :ok
           end
@@ -406,11 +406,11 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
     end
 
     def icon(thing, _, _info) do
-      {:ok, Bonfire.Common.Utils.avatar_url(thing)}
+      {:ok, Bonfire.Common.Media.avatar_url(thing)}
     end
 
     def image(thing, _, _info) do
-      {:ok, Bonfire.Common.Utils.banner_url(thing)}
+      {:ok, Bonfire.Common.Media.banner_url(thing)}
     end
 
     def maybe_upload(user, changes, info) do
