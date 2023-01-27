@@ -13,11 +13,11 @@ defmodule Bonfire.Me.Profiles do
     |> Profile.changeset(params)
     |> Changeset.validate_length(:name,
       min: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_min, 3),
-      max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_max, 50)
+      max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_max, 100)
     )
     |> Changeset.validate_length(:summary,
       min: 0,
-      max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_summary_max, 1024)
+      max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_summary_max, 10240)
     )
     |> EctoSparkles.SanitiseStrings.clean_html()
   end
