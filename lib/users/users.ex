@@ -146,7 +146,7 @@ defmodule Bonfire.Me.Users do
            |> debug("changeset")
            |> repo().insert() do
       if maybe_make_admin, do: add_to_admin_circle(user)
-      post_create(user)
+      after_creation(user, extra)
     end
   end
 
@@ -156,15 +156,21 @@ defmodule Bonfire.Me.Users do
     |> create()
   end
 
-  defp post_create(%{} = user) do
+  defp after_creation(%{} = user, opts) do
+    opts = to_options(opts)
+
     # |> debug("created_default_boundaries")
     if module_enabled?(Bonfire.Boundaries),
-      do: Bonfire.Boundaries.Users.create_default_boundaries(user)
+      do: Bonfire.Boundaries.Users.create_default_boundaries(user, opts)
 
-    post_mutate(user)
+    Bonfire.Me.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
+      current_user: user
+    )
+
+    after_mutation(user)
   end
 
-  defp post_mutate(%{} = user) do
+  defp after_mutation(%{} = user) do
     user = repo().maybe_preload(user, [:character, :profile])
 
     maybe_index_user(user)
@@ -241,7 +247,7 @@ defmodule Bonfire.Me.Users do
     # |> info()
     |> repo().update()
     # |> debug
-    ~> post_mutate()
+    ~> after_mutation()
     ~> Bonfire.Federate.ActivityPub.Adapter.update_local_actor_cache()
   end
 

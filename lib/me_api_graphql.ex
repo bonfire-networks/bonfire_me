@@ -266,7 +266,7 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
     end
 
     defp all_flags(%{} = user_or_account, _args, _info) do
-      Bonfire.Social.Flags.list_paginated([], user_or_account)
+      Bonfire.Social.Flags.list([], user_or_account)
       |> feed()
     end
 
