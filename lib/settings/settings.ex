@@ -101,7 +101,7 @@ defmodule Bonfire.Me.Settings do
     # debug(current_user, "current_user")
     # debug(current_account, "current_account")
 
-    if is_nil(current_user) and is_nil(current_account) and e(opts, :scope, nil) != :instance do
+    if is_nil(current_user) and is_nil(current_account) and e(opts, :scope, opts) != :instance do
       warn(
         otp_app,
         "You should pass a current_user and/or current_account in opts depending on what scope of Settings you want - for OTP app:"
@@ -344,19 +344,18 @@ defmodule Bonfire.Me.Settings do
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
      %{
-       assign_context: [current_user: map_put_settings(current_user_required!(opts), ...)]
+       assign_context: [current_user: map_put_settings(scoped, ...)]
      }}
-
-    # TODO: put into assigns
   end
 
   defp set_for({:current_account, scoped} = scope_tuple, settings, opts) do
     fetch_or_empty(scope_tuple, opts)
     # |> debug
     |> upsert(settings, ulid(scoped))
-
-    # ~> {:assign, current_account(opts)}
-    # TODO: put into assigns
+    ~> {:ok,
+     %{
+       assign_context: [current_account: map_put_settings(scoped, ...)]
+     }}
   end
 
   defp set_for({:instance, scoped} = scope_tuple, settings, opts) do
