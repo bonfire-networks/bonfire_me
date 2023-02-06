@@ -396,7 +396,7 @@ defmodule Bonfire.Me.Users do
       required: true,
       with: &Characters.remote_changeset/2
     )
-    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset_simple/2)
     |> Changeset.cast_assoc(:peered)
   end
 

@@ -10,7 +10,7 @@ defmodule Bonfire.Me.Profiles do
 
   def changeset(profile \\ %Profile{}, params) do
     profile
-    |> Profile.changeset(params)
+    |> changeset_simple(params)
     |> Changeset.validate_length(:name,
       min: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_min, 3),
       max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_max, 100)
@@ -19,6 +19,11 @@ defmodule Bonfire.Me.Profiles do
       min: 0,
       max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_summary_max, 10240)
     )
+  end
+
+  def changeset_simple(profile \\ %Profile{}, params) do
+    profile
+    |> Profile.changeset(params)
     |> EctoSparkles.SanitiseStrings.clean_html()
   end
 
