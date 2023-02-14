@@ -151,21 +151,23 @@ defmodule Bonfire.Me.Users do
   end
 
   def create(params, extra) when not is_struct(params) do
-    params
-    |> changeset(:create, ..., extra)
+    changeset(:create, params, extra)
     |> create()
   end
 
   defp after_creation(%{} = user, opts) do
-    opts = to_options(opts)
+    opts =
+      to_options(opts)
+      |> debug("opts")
 
-    # |> debug("created_default_boundaries")
     if module_enabled?(Bonfire.Boundaries),
       do: Bonfire.Boundaries.Users.create_default_boundaries(user, opts)
 
-    Bonfire.Me.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
-      current_user: user
-    )
+    if not is_nil(opts[:undiscoverable]),
+      do:
+        Bonfire.Me.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
+          current_user: user
+        )
 
     after_mutation(user)
   end

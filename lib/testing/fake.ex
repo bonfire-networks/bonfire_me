@@ -25,12 +25,13 @@ defmodule Bonfire.Me.Fake do
   #   account
   # end
 
-  def fake_user!(account \\ %{}, attrs \\ %{})
+  def fake_user!(account \\ %{}, attrs \\ %{}, opts_or_extra \\ [])
 
-  def fake_user!(%Account{} = account, attrs) do
+  def fake_user!(%Account{} = account, attrs, opts_or_extra) do
     custom_username = attrs[:character][:username]
 
-    with {:ok, user} <- Users.create(create_user_form(attrs), account) do
+    with cs <- Users.changeset(:create, create_user_form(attrs), account),
+         {:ok, user} <- Users.create(cs, opts_or_extra) do
       Map.put(user, :settings, nil)
     else
       {:error, %Ecto.Changeset{}} when is_binary(custom_username) ->
@@ -38,18 +39,19 @@ defmodule Bonfire.Me.Fake do
     end
   end
 
-  def fake_user!(name, user_attrs) when is_binary(name) do
+  def fake_user!(name, user_attrs, opts_or_extra) when is_binary(name) do
     fake_user!(
       fake_account!(),
       Map.merge(user_attrs, %{
         profile: %{name: name},
         character: %{username: name}
-      })
+      }),
+      opts_or_extra
     )
   end
 
-  def fake_user!(account_attrs, user_attrs) do
+  def fake_user!(account_attrs, user_attrs, opts_or_extra) do
     fake_account!(account_attrs)
-    |> fake_user!(user_attrs)
+    |> fake_user!(user_attrs, opts_or_extra)
   end
 end
