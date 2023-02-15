@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Profiles do
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
-  import Untangle
+  # import Untangle
   import Bonfire.Me.Integration
 
   @behaviour Bonfire.Common.ContextModule

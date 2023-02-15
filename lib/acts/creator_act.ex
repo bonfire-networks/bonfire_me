@@ -15,7 +15,7 @@ defmodule Bonfire.Me.Acts.Creator do
   """
 
   alias Bonfire.Epics
-  alias Bonfire.Epics.Act
+  # alias Bonfire.Epics.Act
   alias Bonfire.Epics.Epic
 
   alias Ecto.Changeset

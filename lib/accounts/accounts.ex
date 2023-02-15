@@ -52,7 +52,7 @@ defmodule Bonfire.Me.Accounts do
         opts[:resetting_password]
       )
 
-  def changeset(:change_email, params, opts) when not is_struct(params),
+  def changeset(:change_email, params, _opts) when not is_struct(params),
     do:
       ChangeEmailFields.changeset(
         %ChangeEmailFields{},
@@ -424,7 +424,7 @@ defmodule Bonfire.Me.Accounts do
          %{id: id} = current_account,
          %Changeset{} = cs,
          new,
-         opts
+         _opts
        ) do
     if cs.valid? do
       with {:ok, %{email: %{email_address: new_saved}} = account} when new == new_saved <-

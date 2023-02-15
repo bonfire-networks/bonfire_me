@@ -7,8 +7,8 @@ defmodule Bonfire.Me.Fake.Helpers do
   # def location, do: Faker.Pokemon.location()
   def atusername, do: "@" <> username()
 
-  def icon_url(slug \\ nil), do: Faker.Internet.image_url()
-  def image_url(slug \\ nil), do: Faker.Internet.image_url()
+  def icon_url(_slug \\ nil), do: Faker.Internet.image_url()
+  def image_url(_slug \\ nil), do: Faker.Internet.image_url()
   def avatar_url(slug), do: Faker.Avatar.image_url(slug, 140, 140)
   def avatar_url(), do: Faker.Avatar.image_url(140, 140)
 

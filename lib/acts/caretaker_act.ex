@@ -15,7 +15,7 @@ defmodule Bonfire.Me.Acts.Caretaker do
   """
 
   alias Bonfire.Epics
-  alias Bonfire.Epics.Act
+  # alias Bonfire.Epics.Act
   alias Bonfire.Epics.Epic
 
   alias Ecto.Changeset
@@ -82,7 +82,7 @@ defmodule Bonfire.Me.Acts.Caretaker do
                 maybe_debug(epic, act, id, "Casting current user as caretaker")
                 cast(epic, act, changeset, on, id)
 
-              other ->
+              _other ->
                 Epics.smart(
                   epic,
                   act,
@@ -104,7 +104,7 @@ defmodule Bonfire.Me.Acts.Caretaker do
     end
   end
 
-  defp cast(epic, act, changeset, on, caretaker_id) do
+  defp cast(epic, _act, changeset, on, caretaker_id) do
     id = Changeset.get_field(changeset, :id)
 
     changeset

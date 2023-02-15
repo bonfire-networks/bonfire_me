@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Accounts.Queries do
   import Ecto.Query
   alias Bonfire.Data.Identity.Account
-  import Bonfire.Me.Integration
+  # import Bonfire.Me.Integration
 
   def current(id) when is_binary(id) do
     from(a in Account,

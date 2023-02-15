@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Fake do
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
 
-  import Bonfire.Common.Simulation
+  # import Bonfire.Common.Simulation
   import Bonfire.Me.Fake.Helpers
 
   def fake_account!(attrs \\ %{}, opts \\ []) do

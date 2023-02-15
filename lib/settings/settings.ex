@@ -141,7 +141,7 @@ defmodule Bonfire.Me.Settings do
 
   def maybe_fetch(scope, opts \\ [])
 
-  def maybe_fetch({scope, scoped} = scope_tuple, opts) do
+  def maybe_fetch({_scope, scoped} = scope_tuple, opts) do
     case scoped_object(scope_tuple) do
       %{settings: %Ecto.Association.NotLoaded{}} -> maybe_fetch(scoped, opts)
       %{settings: settings} -> settings

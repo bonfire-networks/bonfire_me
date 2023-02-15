@@ -20,7 +20,7 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   alias Pointers.Changesets
-  alias Pointers.ULID
+  # alias Pointers.ULID
 
   @type changeset_name :: :create
   @type changeset_extra :: Account.t() | :remote

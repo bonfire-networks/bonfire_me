@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   import Untangle
 
   alias Bonfire.Data.Identity.AuthSecondFactor
-  alias Bonfire.Data.Identity.Account
+  # alias Bonfire.Data.Identity.Account
   alias Ecto.Changeset
 
   def enabled? do
