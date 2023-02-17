@@ -91,9 +91,7 @@ defmodule Bonfire.Me.Settings do
     end
   end
 
-  @doc """
-  Fetch all config & settings, both from Mix.Config and DB. Order matters!
-  """
+  # @doc "Fetch all config & settings, both from Mix.Config and DB. Order matters!"
   defp fetch_all_scopes(otp_app, opts) do
     # debug(opts, "opts")
     current_user = current_user(opts)
@@ -389,8 +387,6 @@ defmodule Bonfire.Me.Settings do
     maybe_fetch(scoped, to_options(opts) ++ [preload: true]) ||
       %Bonfire.Data.Identity.Settings{}
   end
-
-  defp upsert(parent_or_settings, data, scope_id \\ nil)
 
   defp upsert(
          %Bonfire.Data.Identity.Settings{data: existing_data} = settings,

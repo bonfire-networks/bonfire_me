@@ -14,11 +14,11 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   def new() do
-    if enabled?, do: NimbleTOTP.secret()
+    if enabled?(), do: NimbleTOTP.secret()
   end
 
   def new_uri(secret \\ nil) do
-    if enabled? do
+    if enabled?() do
       issuer = Config.get([:ui, :theme, :instance_name], Bonfire.Application.name())
 
       NimbleTOTP.otpauth_uri("#{issuer}", secret || new(), issuer: "#{issuer}")
@@ -26,7 +26,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   def new_qrcode(opts \\ []) do
-    if enabled?,
+    if enabled?(),
       do:
         (opts[:uri] || new_uri(opts[:secret]))
         |> EQRCode.encode()
@@ -128,13 +128,13 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
     |> debug()
   end
 
-  @doc """
-  Regenerates the account backup codes for totp.
-  ## Examples
-      iex> regenerate_account_totp_backup_codes(%AuthSecondFactor{})
-      %AuthSecondFactor{backup_codes: [...]}
-  """
-
+  # TODO
+  # @doc """
+  # Regenerates the account backup codes for totp.
+  # ## Examples
+  #     iex> regenerate_account_totp_backup_codes(%AuthSecondFactor{})
+  #     %AuthSecondFactor{backup_codes: [...]}
+  # """
   # def regenerate_account_totp_backup_codes(totp) do
   #   {:ok, updated_totp} =
   #     Repo.transaction(fn ->

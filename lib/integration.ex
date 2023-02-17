@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Integration do
   alias Bonfire.Common.Config
   alias Bonfire.Common.Utils
   alias Bonfire.Common.Extend
+  alias Bonfire.Common.Enums
   import Untangle
 
   def repo, do: Config.repo()

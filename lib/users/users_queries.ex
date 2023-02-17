@@ -47,13 +47,6 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([peered: p], p.canonical_uri == ^canonical_uri)
   end
 
-  defp proloads(query) do
-    proloads(
-      query,
-      :default
-    )
-  end
-
   defp proloads(query, :local) do
     proload(query, [
       :accounted,

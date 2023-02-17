@@ -84,7 +84,7 @@ defmodule Bonfire.Me.Acts.Creator do
                 maybe_debug(epic, act, id, "Casting current user as creator")
                 cast(epic, act, changeset, on, id)
 
-              other ->
+              _other ->
                 Epics.smart(
                   epic,
                   act,
