@@ -16,7 +16,7 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Me.Users.Queries
 
   alias Bonfire.Boundaries.Circles
-  alias Bonfire.Federate.ActivityPub.Federator.AdapterUtils
+  alias Bonfire.Federate.ActivityPub.AdapterUtils
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
   alias Pointers.Changesets
@@ -250,7 +250,7 @@ defmodule Bonfire.Me.Users do
     |> repo().update()
     # |> debug
     ~> after_mutation()
-    ~> Bonfire.Federate.ActivityPub.Federator.Adapter.update_local_actor_cache()
+    ~> Bonfire.Federate.ActivityPub.Adapter.update_local_actor_cache()
   end
 
   ## Delete
@@ -304,9 +304,7 @@ defmodule Bonfire.Me.Users do
   def ap_receive_activity(_creator, _activity, object) do
     debug(object, "Users.ap_receive_activity")
 
-    Bonfire.Federate.ActivityPub.Federator.Adapter.maybe_create_remote_actor(
-      Utils.e(object, :data, object)
-    )
+    Bonfire.Federate.ActivityPub.Adapter.maybe_create_remote_actor(Utils.e(object, :data, object))
   end
 
   @doc "Creates a remote user"
