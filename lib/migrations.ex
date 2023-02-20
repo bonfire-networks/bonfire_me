@@ -1,4 +1,5 @@
 defmodule Bonfire.Me.Migrations do
+  @moduledoc false
   use Ecto.Migration
   # import Pointers.Migration
 
