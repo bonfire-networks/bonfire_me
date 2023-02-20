@@ -58,8 +58,8 @@ defmodule Bonfire.Me.Fake.Helpers do
     # we want the username to match the name for test readability
     %{profile: %{name: name}, character: %{username: name}}
     |> Map.merge(base)
-    |> put_form_lazy(:profile, &profile_subform/1)
-    |> put_form_lazy(:character, &character_subform/1)
+    |> Map.put(:profile, profile_subform(base))
+    |> Map.put(:character, character_subform(base))
   end
 
   def user_live(base \\ %{}) do

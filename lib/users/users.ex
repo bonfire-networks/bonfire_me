@@ -370,6 +370,18 @@ defmodule Bonfire.Me.Users do
 
   def changeset(name, user \\ %User{}, params, extra)
 
+  def changeset(action, user, %{"keys" => keys} = params, extra) do
+    # for AP library
+    changeset(
+      action,
+      user,
+      params
+      |> Map.merge(%{"character" => %{"actor" => %{"signing_key" => keys}}})
+      |> Map.drop(["keys"]),
+      extra
+    )
+  end
+
   def changeset(:create, user, params, %Account{} = account) do
     params
     |> User.changeset(user, ...)
