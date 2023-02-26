@@ -401,7 +401,9 @@ defmodule Bonfire.Me.Users do
   end
 
   def changeset(:create, user, params, :remote) do
-    User.changeset(user, params)
+    params
+    |> debug("chhhs")
+    |> User.changeset(user, ...)
     |> Changesets.put_assoc!(:encircles, [
       %{circle_id: Circles.get_id!(:activity_pub)}
     ])
