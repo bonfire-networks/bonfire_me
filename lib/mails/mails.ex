@@ -26,7 +26,7 @@ defmodule Bonfire.Me.Mails do
       app_name = Bonfire.Application.name()
       url = url_path(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
 
-      if Config.get(:env) != :test or
+      if Config.env() != :test or
            System.get_env("START_SERVER") == "yes",
          do: warn("Email confirmation link: #{url}")
 

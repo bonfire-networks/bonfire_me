@@ -109,7 +109,7 @@ defmodule Bonfire.Me.Accounts do
       |> Keyword.put_new(
         :must_confirm?,
         # or !is_first_account || (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
-        Config.get(:env) != :test
+        Config.env() != :test
       )
       |> debug("opts")
 
@@ -444,7 +444,7 @@ defmodule Bonfire.Me.Accounts do
   ### invites
 
   def instance_is_invite_only? do
-    Config.get(:env) != :test and
+    Config.env() != :test and
       Config.get(:invite_only)
 
     # System.get_env("INVITE_ONLY", "true") in ["true", true]

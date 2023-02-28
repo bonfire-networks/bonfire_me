@@ -135,7 +135,7 @@ defmodule Bonfire.Me.Users do
 
   def create(%Changeset{data: %User{}} = changeset, extra) do
     maybe_make_admin =
-      (extra != :remote and Config.get(:env) != :test and is_first_user?())
+      (extra != :remote and Config.env() != :test and is_first_user?())
       |> debug("maybe_make_admin?")
 
     with {:ok, user} <-

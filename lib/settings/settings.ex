@@ -161,7 +161,7 @@ defmodule Bonfire.Me.Settings do
         if e(opts, :preload, nil) do
           do_fetch(id)
         else
-          if Config.get(:env) != :test,
+          if Config.env() != :test,
             do:
               warn(
                 scope,
