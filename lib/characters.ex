@@ -142,6 +142,19 @@ defmodule Bonfire.Me.Characters do
     "#{prefix || "@"}#{username}"
   end
 
+  def display_username(%{type: :group} = thing, always_include_domain, is_local?, nil) do
+    display_username(thing, always_include_domain, is_local?, "&")
+  end
+
+  def display_username(%{type: :topic} = thing, always_include_domain, is_local?, nil) do
+    display_username(thing, always_include_domain, is_local?, "+")
+  end
+
+  def display_username(%{__schema__: schema} = thing, always_include_domain, is_local?, nil)
+      when schema == Bonfire.Classify.Category do
+    display_username(thing, always_include_domain, is_local?, "+")
+  end
+
   def display_username(
         %{username: username} = character,
         always_include_domain,
@@ -178,8 +191,6 @@ defmodule Bonfire.Me.Characters do
         _,
         prefix
       ) do
-    repo().maybe_preload(thing, character: :peered)
-
     display_username(
       Map.get(thing, :character),
       always_include_domain,
