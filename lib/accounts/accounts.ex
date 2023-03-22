@@ -68,7 +68,8 @@ defmodule Bonfire.Me.Accounts do
   def changeset(:signup, params, opts) do
     # debug(opts)
     if allow_signup?(opts) do
-      signup_changeset(params, opts)
+      input_to_atoms(params)
+      |> signup_changeset(opts)
     else
       invite_error_changeset()
     end

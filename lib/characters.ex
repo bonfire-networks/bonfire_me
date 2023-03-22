@@ -212,25 +212,27 @@ defmodule Bonfire.Me.Characters do
     end
   end
 
-  def character_url(username) when is_binary(username) do
-    ap_base_path = Bonfire.Common.Config.get(:ap_base_path, "/pub")
-    domain = Bonfire.Common.URIs.base_url()
-    domain <> ap_base_path <> "/actors/" <> username
-  end
+  def character_url(character), do: URIs.canonical_url(character)
 
-  def character_url(%{username: username}) when not is_nil(username) do
-    character_url(username)
-  end
+  # def character_url(username) when is_binary(username) do
+  #   ap_base_path = Bonfire.Common.Config.get(:ap_base_path, "/pub")
+  #   domain = Bonfire.Common.URIs.base_url()
+  #   domain <> ap_base_path <> "/actors/" <> username
+  # end
 
-  def character_url(%{character: _} = thing) do
-    repo().maybe_preload(thing, :character)
-    character_url(Map.get(thing, :character))
-  end
+  # def character_url(%{username: username}) when not is_nil(username) do
+  #   character_url(username)
+  # end
 
-  def character_url(other) do
-    warn(other, "Dunno how to handle")
-    nil
-  end
+  # def character_url(%{character: _} = thing) do
+  #   repo().maybe_preload(thing, :character)
+  #   character_url(Map.get(thing, :character))
+  # end
+
+  # def character_url(other) do
+  #   warn(other, "Dunno how to handle")
+  #   nil
+  # end
 
   def indexing_object_format(%{character: obj}), do: indexing_object_format(obj)
 

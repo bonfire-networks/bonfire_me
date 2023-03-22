@@ -246,9 +246,9 @@ defmodule Bonfire.Me.Users do
   def update(%User{} = user, params, extra \\ nil) do
     # TODO: check who is doing the update (except if extra==:remote)
     changeset(:update, user, params, extra)
-    # |> info()
+    |> debug("csss")
     |> repo().update()
-    # |> debug
+    |> debug("updatted")
     ~> after_mutation()
     ~> Bonfire.Federate.ActivityPub.Adapter.update_local_actor_cache()
   end
@@ -370,20 +370,21 @@ defmodule Bonfire.Me.Users do
 
   def changeset(name, user \\ %User{}, params, extra)
 
-  def changeset(action, user, %{"keys" => keys} = params, extra) do
+  def changeset(action, user, %{keys: keys} = params, extra) do
     # for AP library
     changeset(
       action,
       user,
       params
-      |> Map.merge(%{"character" => %{"actor" => %{"signing_key" => keys}}})
-      |> Map.drop(["keys"]),
+      |> deep_merge(%{character: %{actor: %{signing_key: keys}}})
+      |> Map.drop([:keys]),
       extra
     )
   end
 
   def changeset(:create, user, params, %Account{} = account) do
     params
+    |> debug("params")
     |> User.changeset(user, ...)
     |> Changesets.put_assoc!(:accounted, %{account_id: account.id})
     |> Changesets.put_assoc!(:encircles, [
