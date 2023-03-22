@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Fake do
   use Arrows
-  # import Untangle
+  import Untangle
   alias Bonfire.Data.Identity.Account
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
@@ -28,13 +28,14 @@ defmodule Bonfire.Me.Fake do
   def fake_user!(account \\ %{}, attrs \\ %{}, opts_or_extra \\ [])
 
   def fake_user!(%Account{} = account, attrs, opts_or_extra) do
-    custom_username = attrs[:character][:username]
+    custom_username = attrs[:username]
 
     with cs <- Users.changeset(:create, create_user_form(attrs), account),
          {:ok, user} <- Users.create(cs, opts_or_extra) do
       Map.put(user, :settings, nil)
     else
-      {:error, %Ecto.Changeset{}} when is_binary(custom_username) ->
+      {:error, %Ecto.Changeset{} = e} when is_binary(custom_username) ->
+        debug(e)
         Users.by_username!(custom_username)
     end
   end
@@ -43,8 +44,8 @@ defmodule Bonfire.Me.Fake do
     fake_user!(
       fake_account!(),
       Map.merge(user_attrs, %{
-        profile: %{name: name},
-        character: %{username: name}
+        name: name,
+        username: name
       }),
       opts_or_extra
     )

@@ -56,10 +56,10 @@ defmodule Bonfire.Me.Fake.Helpers do
   def create_user_form(base \\ %{}) do
     name = name()
     # we want the username to match the name for test readability
-    %{profile: %{name: name}, character: %{username: name}}
+    %{name: name, username: name}
     |> Map.merge(base)
-    |> Map.put(:profile, profile_subform(base))
-    |> Map.put(:character, character_subform(base))
+    |> Map.put(..., :profile, profile_subform(...))
+    |> Map.put(..., :character, character_subform(...))
   end
 
   def user_live(base \\ %{}) do
