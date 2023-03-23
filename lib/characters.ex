@@ -23,6 +23,9 @@ defmodule Bonfire.Me.Characters do
   def by_username(username) when is_binary(username),
     do: by_username_q(username) |> repo().single()
 
+  def by_username!(username) when is_binary(username),
+    do: by_username_q(username) |> repo().one()
+
   def get(ids) when is_list(ids), do: {:ok, q_by_id(ids) |> repo().many()}
 
   def get(id) when is_binary(id) do
