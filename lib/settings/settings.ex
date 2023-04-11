@@ -302,7 +302,7 @@ defmodule Bonfire.Me.Settings do
           raise(
             Bonfire.Fail,
             {:unauthorized,
-             l("change instance settings.") <> " " <> l("Please contact an admin.")}
+             l("to change instance settings.") <> " " <> l("Please contact an admin.")}
           )
 
         :account ->
