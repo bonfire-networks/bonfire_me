@@ -37,7 +37,7 @@ defmodule Bonfire.Me.MixProject do
            branch: "main",
            optional: true},
           {:absinthe, "~> 1.7", optional: true},
-          {:nimble_totp, "~> 0.2.0", optional: true},
+          {:nimble_totp, "~> 1.0.0", optional: true},
           {:eqrcode, "~> 0.1.10", optional: true}
         ])
     ]
