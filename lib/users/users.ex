@@ -112,7 +112,7 @@ defmodule Bonfire.Me.Users do
 
     # Note: users who said they don't want to be publicly discoverable in settings will be filtered based on boundaries (i.e. not shown to guests)
     Queries.list(Keyword.get(opts, :show, :local))
-    |> boundarise(id, opts ++ [verbs: [:see]])
+    |> boundarise(user.id, opts ++ [verbs: [:see]])
     |> repo().many()
   end
 
