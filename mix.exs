@@ -36,6 +36,10 @@ defmodule Bonfire.Me.MixProject do
            git: "https://github.com/bonfire-networks/bonfire_api_graphql",
            branch: "main",
            optional: true},
+           {:bonfire_files,
+           git: "https://github.com/bonfire-networks/bonfire_files",
+           branch: "main",
+           optional: true},
           {:absinthe, "~> 1.7", optional: true},
           {:nimble_totp, "~> 1.0.0", optional: true},
           {:eqrcode, "~> 0.1.10", optional: true}

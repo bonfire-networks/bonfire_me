@@ -15,29 +15,29 @@ defmodule Bonfire.Me.Integration do
     end
   end
 
-  def maybe_search(tag_search, facets \\ nil) do
-    # debug(searched: tag_search)
-    # debug(facets: facets)
+  # def maybe_search(tag_search, facets \\ nil) do
+  #   # debug(searched: tag_search)
+  #   # debug(facets: facets)
 
-    # use search index if available
-    if Extend.module_enabled?(Bonfire.Search) do
-      debug("searching #{inspect(tag_search)} with facets #{inspect(facets)}")
+  #   # use search index if available
+  #   if Extend.module_enabled?(Bonfire.Search) do
+  #     debug("searching #{inspect(tag_search)} with facets #{inspect(facets)}")
 
-      # search = Bonfire.Search.search(tag_search, opts, false, facets) |> e("hits")
-      search =
-        Bonfire.Search.search_by_type(tag_search, facets)
-        |> debug("results")
+  #     # search = Bonfire.Search.search(tag_search, opts, false, facets) |> e("hits")
+  #     search =
+  #       Bonfire.Search.search_by_type(tag_search, facets)
+  #       |> debug("results")
 
-      if(is_list(search) and search != []) do
-        # search["hits"]
-        search
-        # |> Enum.map(&tag_hit_prepare(&1, tag_search))
-        |> Enums.filter_empty([])
+  #     if(is_list(search) and search != []) do
+  #       # search["hits"]
+  #       search
+  #       # |> Enum.map(&tag_hit_prepare(&1, tag_search))
+  #       |> Enums.filter_empty([])
 
-        # |> debug("maybe_search results")
-      end
-    end
-  end
+  #       # |> debug("maybe_search results")
+  #     end
+  #   end
+  # end
 
   def maybe_index({:ok, object}), do: {:ok, maybe_index(object)}
 
