@@ -99,10 +99,10 @@ defmodule Bonfire.Me.Settings do
     # debug(current_user, "current_user")
     # debug(current_account, "current_account")
 
-    if is_nil(current_user) and is_nil(current_account) and e(opts, :scope, opts) != :instance do
+    if e(opts, :scope, opts) != :instance and is_nil(current_user) and is_nil(current_account) do
       warn(
-        otp_app,
-        "You should pass a current_user and/or current_account in opts depending on what scope of Settings you want - for OTP app:"
+        opts,
+        "You should pass a current_user and/or current_account in `opts` depending on what scope of Settings you want for OTP app: #{otp_app} with opts"
       )
     end
 
@@ -191,11 +191,11 @@ defmodule Bonfire.Me.Settings do
     # keys = Config.keys_tree(keys) # Note: doing this in set/2 instead
     # |> debug("Putting settings for")
     map_put_in(keys, value)
-    |> info("map_put_in")
+    |> debug("map_put_in")
     |> input_to_atoms(false, true)
-    |> info("input_to_atoms")
+    |> debug("input_to_atoms")
     |> maybe_to_keyword_list(true)
-    |> info("maybe_to_keyword_list")
+    |> debug("maybe_to_keyword_list")
     |> set(opts)
   end
 
