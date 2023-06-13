@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Settings do
 
     debug(keys_tree, "Get settings in #{inspect(otp_app)} for")
 
-    case get_merged_ext(otp_app, opts) do
+    case get_for_ext(otp_app, opts) do
       [] ->
         default
 
@@ -65,16 +65,24 @@ defmodule Bonfire.Me.Settings do
   defp maybe_fallback(nil, fallback), do: fallback
   defp maybe_fallback(val, _fallback), do: val
 
+  defp the_otp_app(module_or_otp_app),
+    do: Extend.maybe_extension_loaded!(module_or_otp_app) || Config.top_level_otp_app()
+
+  def get_for_ext(module_or_otp_app, opts \\ []) do
+    if e(opts, :one_scope_only, false) do
+      the_otp_app(module_or_otp_app)
+      |> fetch_one_scope(opts)
+    else
+      get_merged_ext(module_or_otp_app, opts)
+    end
+  end
+
   @doc """
   Get all config keys/values for a Bonfire extension or OTP app
   """
   def get_merged_ext(module_or_otp_app, opts \\ []) do
-    otp_app =
-      Extend.maybe_extension_loaded!(module_or_otp_app) ||
-        Config.top_level_otp_app()
-
-    # TODO get and merge dominoes based on current_user > current_account > instance > Config
-    fetch_all_scopes(otp_app, opts)
+    the_otp_app(module_or_otp_app)
+    |> fetch_all_scopes(opts)
     |> deep_merge_reduce()
 
     # |> debug("domino-merged settings for #{inspect(otp_app)}")
@@ -91,15 +99,17 @@ defmodule Bonfire.Me.Settings do
     end
   end
 
-  # @doc "Fetch all config & settings, both from Mix.Config and DB. Order matters!"
+  # @doc "Fetch all config & settings, both from Mix.Config and DB. Order matters! current_user > current_account > instance > Config"
   defp fetch_all_scopes(otp_app, opts) do
     # debug(opts, "opts")
     current_user = current_user(opts)
     current_account = current_account(opts)
+    scope = e(opts, :scope, nil) || if is_atom(opts), do: opts
+    scope_id = id(scope)
     # debug(current_user, "current_user")
     # debug(current_account, "current_account")
 
-    if e(opts, :scope, opts) != :instance and is_nil(current_user) and is_nil(current_account) do
+    if scope != :instance and is_nil(current_user) and is_nil(current_account) do
       warn(
         opts,
         "You should pass a current_user and/or current_account in `opts` depending on what scope of Settings you want for OTP app: #{otp_app} with opts"
@@ -111,45 +121,105 @@ defmodule Bonfire.Me.Settings do
        Config.get_ext(otp_app)
      ] ++
        [
-         maybe_fetch({:current_account, current_account}, opts)
+         maybe_fetch(current_account, opts)
          |> e(:data, otp_app, nil)
        ] ++
        [
-         maybe_fetch({:current_user, current_user}, opts)
+         maybe_fetch(current_user, opts)
          #  |> debug()
          #  |> e(:data, otp_app, nil)
          |> e(:data, nil)
          #  |> debug()
          |> e(otp_app, nil)
          #  |> debug()
-       ])
+       ] ++
+       if(is_map(scope) and scope_id != id(current_user) and scope_id != id(current_account),
+         do: [
+           maybe_fetch(scope, opts)
+           |> e(:data, otp_app, nil)
+         ],
+         else: []
+       ))
     # |> debug()
     |> filter_empty([])
 
     # |> debug("list of different configs and settings for #{inspect(otp_app)}")
   end
 
+  defp fetch_one_scope(otp_app, opts) do
+    debug(opts, "opts")
+    current_user = current_user(opts)
+    current_account = current_account(opts)
+    scope = e(opts, :scope, nil)
+
+    cond do
+      is_map(scope) ->
+        maybe_fetch(scope, opts)
+        |> settings_data_for_app(otp_app)
+
+      not is_nil(current_user) ->
+        debug("for user")
+
+        maybe_fetch(current_user, opts)
+        |> settings_data_for_app(otp_app)
+
+      not is_nil(current_account) ->
+        debug("for account")
+
+        maybe_fetch(current_account, opts)
+        |> settings_data_for_app(otp_app)
+
+      true ->
+        debug("for instance")
+        Config.get_ext(otp_app)
+    end
+    |> debug("config/settings for #{inspect(otp_app)}")
+  end
+
+  defp settings_data_for_app(settings, otp_app) do
+    # dunno why `|> e(:data, otp_app, nil)` messes this up...
+    (settings || %{})
+    |> Map.get(:data, %{})
+    |> Enums.fun(:get, [otp_app, %{}])
+    |> debug("for app #{otp_app}")
+  end
+
   # not including this line in fetch_all_scopes because load_instance_settings preloads it into Config
   # [load_instance_settings() |> e(otp_app, nil) ] # should already be loaded in Config
 
   def load_instance_settings() do
-    maybe_fetch({:instance, instance_scope()}, preload: true)
+    maybe_fetch(instance_scope(), preload: true)
     |> e(:data, nil)
   end
 
   def maybe_fetch(scope, opts \\ [])
 
-  def maybe_fetch({_scope, scoped} = scope_tuple, opts) do
-    case scoped_object(scope_tuple) do
-      %{settings: %Ecto.Association.NotLoaded{}} -> maybe_fetch(scoped, opts)
-      %{settings: settings} -> settings
-      _ -> maybe_fetch(scoped, opts)
+  def maybe_fetch({_scope, scoped} = _scope_tuple, opts) do
+    maybe_fetch(scoped, opts)
+  end
+
+  def maybe_fetch(scope_id, opts) when is_binary(scope_id) do
+    if e(opts, :preload, nil) do
+      do_fetch(scope_id)
+    else
+      if Config.env() != :test,
+        do:
+          error(
+            scope_id,
+            "cannot lookup Settings since they aren't already preloaded in scoped object"
+          )
+
+      nil
     end
   end
 
-  def maybe_fetch(scope, opts) when not is_nil(scope) do
-    case ulid(scope) do
+  def maybe_fetch(scope, opts) when is_map(scope) do
+    case id(scope) do
       nil ->
+        # if is_map(scope) or Keyword.keyword?(scope) do
+        #   scope
+        # else
+
         error(
           scope,
           "no ID for scope"
@@ -157,18 +227,18 @@ defmodule Bonfire.Me.Settings do
 
         nil
 
-      id ->
-        if e(opts, :preload, nil) do
-          do_fetch(id)
-        else
-          if Config.env() != :test,
-            do:
-              warn(
-                scope,
-                "cannot lookup Settings since they aren't already preloaded in scoped object"
-              )
+      # end
 
-          nil
+      scope_id ->
+        case scope do
+          %{settings: %Ecto.Association.NotLoaded{}} ->
+            maybe_fetch(scope_id, opts)
+
+          %{settings: settings} ->
+            settings
+
+          _ ->
+            maybe_fetch(scope_id, opts)
         end
     end
   end
@@ -227,12 +297,18 @@ defmodule Bonfire.Me.Settings do
   end
 
   def reset_instance() do
-    with {:ok, set} <- do_update(%Bonfire.Data.Identity.Settings{id: ulid!(instance_scope())}, []) do
+    with {:ok, set} <-
+           repo().delete(%Bonfire.Data.Identity.Settings{id: id(instance_scope())}, []) do
       # also put_env to cache it in Elixir's Config
       Config.put([])
 
       {:ok, set}
     end
+  end
+
+  def reset_all() do
+    reset_instance()
+    repo().delete_all(Bonfire.Data.Identity.Settings)
   end
 
   # TODO: find a better, more pluggable way to add hooks to settings
@@ -294,7 +370,7 @@ defmodule Bonfire.Me.Settings do
 
     scope =
       case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil))
-           |> debug("scope to set") do
+           |> debug("scope specified to set") do
         :instance when is_admin == true ->
           {:instance, instance_scope()}
 
@@ -311,6 +387,9 @@ defmodule Bonfire.Me.Settings do
         :user ->
           {:current_user, current_user}
 
+        object when is_map(object) ->
+          object
+
         _ ->
           if current_user do
             {:current_user, current_user}
@@ -321,7 +400,7 @@ defmodule Bonfire.Me.Settings do
           end
       end
 
-    debug(scope, "computed scope")
+    debug(scope, "computed scope to set")
 
     if scope do
       settings
@@ -336,8 +415,8 @@ defmodule Bonfire.Me.Settings do
     end
   end
 
-  defp set_for({:current_user, scoped} = scope_tuple, settings, opts) do
-    fetch_or_empty(scope_tuple, opts)
+  defp set_for({:current_user, scoped} = _scope_tuple, settings, opts) do
+    fetch_or_empty(scoped, opts)
     # |> debug
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
@@ -346,8 +425,8 @@ defmodule Bonfire.Me.Settings do
      }}
   end
 
-  defp set_for({:current_account, scoped} = scope_tuple, settings, opts) do
-    fetch_or_empty(scope_tuple, opts)
+  defp set_for({:current_account, scoped} = _scope_tuple, settings, opts) do
+    fetch_or_empty(scoped, opts)
     # |> debug
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
@@ -356,13 +435,14 @@ defmodule Bonfire.Me.Settings do
      }}
   end
 
-  defp set_for({:instance, scoped} = scope_tuple, settings, opts) do
-    with {:ok, set} <-
-           fetch_or_empty(scope_tuple, opts)
+  defp set_for({:instance, scoped} = _scope_tuple, settings, opts) do
+    with {:ok, %{data: data} = set} <-
+           fetch_or_empty(scoped, opts)
            # |> debug
            |> upsert(settings, ulid(scoped)) do
       # also put_env to cache it in Elixir's Config
-      Config.put(settings)
+      Config.put(data)
+      |> debug("put in config")
 
       {:ok, set}
     end
@@ -457,28 +537,6 @@ defmodule Bonfire.Me.Settings do
   # def delete(key, opts) do
   #   # Config.delete(key, otp_app) # if scope==instance
   # end
-
-  def scoped_object(scope_tuple, opts \\ [])
-
-  def scoped_object({:current_user, scoped}, opts) do
-    current_user(opts) || scoped
-
-    # |> debug
-  end
-
-  def scoped_object({:current_account, scoped}, opts) do
-    current_account(opts) || scoped
-
-    # |> debug
-  end
-
-  def scoped_object({_, scoped}, _opts) do
-    scoped
-  end
-
-  def scoped_object(scoped, _opts) do
-    scoped
-  end
 
   defp instance_scope,
     do: Bonfire.Boundaries.Circles.get_id(:local) || "3SERSFR0MY0VR10CA11NSTANCE"
