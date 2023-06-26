@@ -372,7 +372,9 @@ defmodule Bonfire.Me.Accounts do
 
     with {:ok, _} <-
            login_check_password(current_account, %{password: old_password}, cs) do
-      change_password(current_account, cs, %{"password" => new_password}, resetting_password: true)
+      change_password(current_account, cs, %{"password" => new_password},
+        resetting_password: true
+      )
     end
   end
 
