@@ -299,8 +299,8 @@ defmodule Bonfire.Me.Settings do
   def reset_instance() do
     with {:ok, set} <-
            repo().delete(%Bonfire.Data.Identity.Settings{id: id(instance_scope())}, []) do
-      # also put_env to cache it in Elixir's Config
-      Config.put([])
+      # also put_env to cache it in Elixir's Config?
+      # Config.put([])
 
       {:ok, set}
     end
