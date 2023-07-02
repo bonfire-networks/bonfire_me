@@ -262,7 +262,7 @@ defmodule Bonfire.Me.Users do
     |> List.first()
   end
 
-  def delete(%User{} = user, _) do
+  def delete(%{} = user, _) do
     assocs = [
       :actor,
       :character,
@@ -276,7 +276,7 @@ defmodule Bonfire.Me.Users do
 
     # user = repo().maybe_preload(user, assocs)
 
-    # with :ok <- delete_caretaken(user) do # TODO: delete user's content do
+    # with :ok <- delete_caretaken(user) do 
     Bonfire.Social.Objects.maybe_generic_delete(User, user,
       current_user: user,
       delete_associations: assocs

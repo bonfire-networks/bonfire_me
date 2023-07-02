@@ -47,9 +47,20 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([peered: p], p.canonical_uri == ^canonical_uri)
   end
 
+  defp proloads(query, :current) do
+    proloads(query, :locals)
+    |> proload(accounted: [account: [:settings]])
+  end
+
   defp proloads(query, :local) do
+    proloads(query, :locals)
+    |> proload([
+      :accounted
+    ])
+  end
+
+  defp proloads(query, :locals) do
     proload(query, [
-      :accounted,
       :instance_admin,
       :settings,
       character: [:follow_count],
@@ -102,7 +113,7 @@ defmodule Bonfire.Me.Users.Queries do
     end
   end
 
-  def current(user_id), do: by_username_or_id(user_id, :local)
+  def current(user_id), do: by_username_or_id(user_id, :current)
 
   def count(:local) do
     count(nil)
