@@ -427,7 +427,7 @@ defmodule Bonfire.Me.Accounts do
          %{id: id} = current_account,
          %Changeset{} = cs,
          new,
-         _opts
+         opts
        ) do
     if cs.valid? do
       with {:ok, %{email: %{email_address: new_saved}} = account} when new == new_saved <-
@@ -435,7 +435,8 @@ defmodule Bonfire.Me.Accounts do
              |> repo().preload(:email)
              |> Account.changeset(%{email: Map.merge(%{"email_address" => new}, %{"id" => id})})
              |> Changeset.cast_assoc(:email, required: true)
-             |> repo().update() do
+             |> repo().update()
+             ~> maybe_send_confirm_email(opts) do
         {:ok, account}
       end
     else
