@@ -35,6 +35,15 @@ defmodule Bonfire.Me.Accounts.Queries do
     )
   end
 
+  def login_by_account_id(id) when is_binary(id) do
+    from(a in Account,
+      join: e in assoc(a, :email),
+      join: c in assoc(a, :credential),
+      where: a.id == ^id,
+      preload: [email: e, credential: c]
+    )
+  end
+
   def login_by_email(email) when is_binary(email) do
     from(a in Account,
       join: e in assoc(a, :email),

@@ -147,9 +147,30 @@ defmodule Bonfire.Me.Accounts do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
       repo().find(login_query(form), cs)
       ~> login_check_password(form, cs)
-      ~> login_check_confirmed(cs, opts)
       ~> login_maybe_check_second_factor(cs, opts)
+      ~> login_check_confirmed(cs, opts)
       ~> login_response()
+    end
+  end
+
+  def login_valid?(%{id: _user_id, accounted: %{account_id: account}} = _user, password) do
+    login_valid?(account, password)
+  end
+
+  def login_valid?(account, password) do
+    params = %{account_id: account, password: password}
+    cs = changeset(:login, params, [])
+    # ^ FIXME: should not need a changeset here
+    with {:ok, _} <-
+           repo().find(login_query(params), cs)
+           ~> login_check_password(params, cs) do
+      # ~> login_maybe_check_second_factor(cs, opts)
+      # ~> login_check_confirmed(cs, opts) do
+      true
+    else
+      e ->
+        error(e)
+        false
     end
   end
 
@@ -161,6 +182,9 @@ defmodule Bonfire.Me.Accounts do
 
   defp login_query(%{username: username}) when is_binary(username),
     do: Queries.login_by_username(username)
+
+  defp login_query(%{account_id: account}) when is_binary(account),
+    do: Queries.login_by_account_id(account)
 
   defp login_check_password(nil, _form, changeset) do
     # don't leak whether the user exists

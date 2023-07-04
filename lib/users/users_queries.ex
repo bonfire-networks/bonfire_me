@@ -158,6 +158,8 @@ defmodule Bonfire.Me.Users.Queries do
       join: p in assoc(u, :profile),
       left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
+      #  TODO: in config
+      where: c.username not in ["activitypub_fetcher"],
       preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}]
     )
   end
