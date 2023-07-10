@@ -64,4 +64,5 @@ defmodule Bonfire.Me.DeleteWorker do
         from(c in Bonfire.Data.Identity.Caretaker, where: c.caretaker_id in ^Types.ulids(ids))
         |> proload(:pointer)
       )
+      |> repo().maybe_preload(:pointer)
 end
