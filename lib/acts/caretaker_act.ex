@@ -105,7 +105,7 @@ defmodule Bonfire.Me.Acts.Caretaker do
   end
 
   defp cast(epic, _act, changeset, on, caretaker_id) do
-    id = Changeset.get_field(changeset, :id)
+    id = Pointers.Changesets.get_field(changeset, :id)
 
     changeset
     |> Changeset.cast(%{caretaker: %{id: id, caretaker_id: caretaker_id}}, [])

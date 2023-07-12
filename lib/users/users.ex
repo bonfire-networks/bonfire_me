@@ -454,7 +454,7 @@ defmodule Bonfire.Me.Users do
   end
 
   # defp put_character(changeset) do
-  #   user_id = Changeset.get_field(changeset, :id)
+  #   user_id = Pointers.Changesets.get_field(changeset, :id)
   #   Changeset.put_assoc(changeset, :character, %{id: user_id})
   # end
 
