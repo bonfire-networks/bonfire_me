@@ -222,20 +222,24 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp login_response(%Account{accounted: %{user: %User{} = user}} = account),
-    do: {:ok, account, user}
+    do: {:ok, account, user_if_active(user)}
 
   defp login_response(%Account{accounted: [%{user: %User{} = user}]} = account),
-    do: {:ok, account, user}
+    do: {:ok, account, user_if_active(user)}
 
   defp login_response(%Account{} = account) do
     # if there's only one user in the account, we can log them directly into it
     case Users.get_only_in_account(account) do
       {:ok, user} ->
-        {:ok, account, user}
+        {:ok, account, user_if_active(user)}
 
       :error ->
         {:ok, account, nil}
     end
+  end
+
+  defp user_if_active(user) do
+    if Users.is_active?(user), do: user
   end
 
   ###  request_confirm_email

@@ -85,11 +85,26 @@ defmodule Bonfire.Me.Users do
     with {:ok, user} <-
            repo().single(Queries.by_username_and_account(username, account_id)),
          # check if user isn't blocked instance-wide
-         blocked? when blocked? != true <-
-           Bonfire.Boundaries.Blocks.is_blocked?(user, :ghost, :instance_wide) do
+         {:ok, _} <- check_active(user) do
       {:ok, user}
     end
   end
+
+  def is_active?(user), do: !Bonfire.Boundaries.Blocks.is_blocked?(user, :ghost, :instance_wide)
+
+  def check_active(users) when is_list(users), do: Enum.map(users, &check_active/1)
+
+  def check_active(user) do
+    if is_active?(user), do: {:ok, user}, else: {:error, :inactive_user}
+  end
+
+  def check_active!(users) when is_list(users), do: Enum.map(users, &check_active!/1)
+
+  def check_active!(user) when is_map(user) or is_binary(user) do
+    if is_active?(user), do: user, else: throw(:inactive_user)
+  end
+
+  def check_active!(other), do: other
 
   def search(search) do
     Utils.maybe_apply(
@@ -383,6 +398,10 @@ defmodule Bonfire.Me.Users do
   end
 
   def changeset(:create, user, params, %Account{} = account) do
+    # check that none of the account's users have been disabled by instance admin
+    by_account(account)
+    |> check_active!()
+
     params
     |> debug("params")
     |> User.changeset(user, ...)
