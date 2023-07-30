@@ -173,7 +173,8 @@ defmodule Bonfire.Me.Settings do
         debug("for instance")
         Config.get_ext(otp_app)
     end
-    |> debug("config/settings for #{inspect(otp_app)}")
+
+    # |> debug("config/settings for #{inspect(otp_app)}")
   end
 
   defp settings_data_for_app(settings, otp_app) do
