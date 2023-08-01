@@ -62,8 +62,19 @@ defmodule Bonfire.Me.Accounts do
   def changeset(:confirm_email, params, _opts) when not is_struct(params),
     do: ConfirmEmailFields.changeset(params)
 
+  def changeset(:login, %{openid_email: _} = params, _opts) when not is_struct(params),
+    do: struct(Ecto.Changeset, params)
+
   def changeset(:login, params, _opts) when not is_struct(params),
     do: LoginFields.changeset(params)
+
+  def changeset(:signup, %{openid_email: email} = _params, opts) do
+    if allow_signup?(opts) do
+      signup_changeset_base(%{email: %{email_address: email}}, opts)
+    else
+      invite_error_changeset()
+    end
+  end
 
   def changeset(:signup, params, opts) do
     # debug(opts)
@@ -75,13 +86,17 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  defp signup_changeset(params, opts) do
+  defp signup_changeset_base(params, opts) do
     %Account{}
     |> Account.changeset(params)
     |> Changeset.cast_assoc(:email,
       required: true,
       with: &Email.changeset(&1, &2, opts)
     )
+  end
+
+  defp signup_changeset(params, opts) do
+    signup_changeset_base(params, opts)
     |> Changeset.cast_assoc(
       :credential,
       required: true,
@@ -95,10 +110,29 @@ defmodule Bonfire.Me.Accounts do
   def signup(params_or_changeset, opts \\ [])
 
   def signup(params, opts) when not is_struct(params) do
-    signup(changeset(:signup, params, opts), opts)
+    signup(changeset(:signup, params, opts), opts ++ [params: params])
   end
 
   def signup(%Changeset{data: %Account{}} = cs, opts) do
+    if cs.valid? do
+      do_signup(cs, opts)
+    else
+      # avoid checking out txn
+      {:error, cs}
+    end
+  end
+
+  def signup(%Changeset{} = cs, opts) do
+    case opts[:params][:openid_email] do
+      nil ->
+        error("Did not find a valid signup changeset or OpenID email")
+
+      email ->
+        do_signup(%{email: email}, opts)
+    end
+  end
+
+  def do_signup(%{} = cs_or_params, opts) do
     is_first_account = is_first_account?()
 
     opts =
@@ -114,17 +148,12 @@ defmodule Bonfire.Me.Accounts do
       )
       |> debug("opts")
 
-    if cs.valid? do
-      # revert if email send fails
-      repo().transact_with(fn ->
-        repo().insert(cs)
-        ~> maybe_redeem_invite(opts)
-        ~> maybe_send_confirm_email(opts)
-      end)
-    else
-      # avoid checking out txn
-      {:error, cs}
-    end
+    # revert if email send fails
+    repo().transact_with(fn ->
+      repo().insert(cs_or_params)
+      ~> maybe_redeem_invite(opts)
+      ~> maybe_send_confirm_email(opts)
+    end)
   end
 
   ### login
@@ -147,10 +176,32 @@ defmodule Bonfire.Me.Accounts do
     with {:ok, form} <- Changeset.apply_action(cs, :insert) do
       repo().find(login_query(form), cs)
       ~> login_check_password(form, cs)
-      ~> login_maybe_check_second_factor(cs, opts)
-      ~> login_check_confirmed(cs, opts)
-      ~> login_response()
+      ~> login_extras(cs, opts)
     end
+  end
+
+  def login(%Changeset{} = cs, opts) do
+    debug(opts)
+
+    case opts[:params][:openid_email] do
+      nil ->
+        error("Did not find a valid login changeset or OpenID email")
+
+      email ->
+        # TODO: should check that this user has previously authenticated with this provider
+
+        Queries.by_email(email)
+        |> repo().find(cs)
+        # ~> login_check_password(form, cs) # skip for oauth
+        ~> login_extras(cs, opts)
+    end
+  end
+
+  defp login_extras(account, cs, opts) do
+    account
+    |> login_maybe_check_second_factor(cs, opts)
+    ~> login_check_confirmed(cs, opts)
+    ~> login_response()
   end
 
   def login_valid?(%{id: _user_id, accounted: %{account_id: account}} = _user, password) do
