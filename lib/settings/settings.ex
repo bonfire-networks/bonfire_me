@@ -111,9 +111,10 @@ defmodule Bonfire.Me.Settings do
 
     if scope != :instance and is_nil(current_user) and is_nil(current_account) do
       warn(
-        opts,
-        "You should pass a current_user and/or current_account in `opts` depending on what scope of Settings you want for OTP app: #{otp_app} with opts"
+        otp_app,
+        "You should pass a current_user and/or current_account in `opts` depending on what scope of Settings you want for OTP app"
       )
+      #debug(opts)
     end
 
     #  |> debug()
