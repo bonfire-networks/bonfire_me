@@ -114,7 +114,8 @@ defmodule Bonfire.Me.Settings do
         otp_app,
         "You should pass a current_user and/or current_account in `opts` depending on what scope of Settings you want for OTP app"
       )
-      #debug(opts)
+
+      # debug(opts)
     end
 
     #  |> debug()
