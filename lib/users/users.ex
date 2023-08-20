@@ -29,7 +29,7 @@ defmodule Bonfire.Me.Users do
 
   @behaviour Bonfire.Common.ContextModule
   def schema_module, do: User
-  def federation_module, do: ["Person"]
+  def federation_module, do: ["Person", "Author"]
 
   ### Queries
 
