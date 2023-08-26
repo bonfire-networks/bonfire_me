@@ -14,6 +14,7 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Me.Characters
   alias Bonfire.Me.Profiles
   alias Bonfire.Me.Users.Queries
+  alias Bonfire.Me.Accounts
 
   alias Bonfire.Boundaries.Circles
   alias Bonfire.Federate.ActivityPub.AdapterUtils
@@ -205,7 +206,7 @@ defmodule Bonfire.Me.Users do
 
   def make_admin(%User{} = user) do
     add_to_admin_circle(user)
-    update_is_admin(user, true)
+    Accounts.update_is_admin(user, true)
   end
 
   defp add_to_admin_circle(user) do
@@ -222,7 +223,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def revoke_admin(%User{} = user) do
-    with {:ok, user} <- update_is_admin(user, false) do
+    with {:ok, user} <- Accounts.update_is_admin(user, false) do
       remove_from_admin_circle(user)
       {:ok, user}
     end
@@ -233,17 +234,6 @@ defmodule Bonfire.Me.Users do
       user,
       Bonfire.Boundaries.Fixtures.admin_circle()
     )
-  end
-
-  defp update_is_admin(%User{} = user, make_admin_or_revoke) do
-    user
-    |> repo().preload(:instance_admin)
-    |> Changeset.cast(
-      %{instance_admin: %{is_instance_admin: make_admin_or_revoke}},
-      []
-    )
-    |> Changeset.cast_assoc(:instance_admin)
-    |> repo().update()
   end
 
   def get_only_in_account(%Account{id: id}) do

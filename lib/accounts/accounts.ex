@@ -640,4 +640,22 @@ defmodule Bonfire.Me.Accounts do
   def is_first_account? do
     count() < 1
   end
+
+  def update_is_admin(%User{} = user, make_admin_or_revoke) do
+    user
+    |> repo().preload(:account)
+    |> Map.get(:account)
+    |> update_is_admin(make_admin_or_revoke)
+  end
+
+  def update_is_admin(%Account{} = user, make_admin_or_revoke) do
+    user
+    |> repo().preload(:instance_admin)
+    |> Changeset.cast(
+      %{instance_admin: %{is_instance_admin: make_admin_or_revoke}},
+      []
+    )
+    |> Changeset.cast_assoc(:instance_admin)
+    |> repo().update()
+  end
 end
