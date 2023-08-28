@@ -101,7 +101,7 @@ defmodule Bonfire.Me.Users.Queries do
   defp proloads(query, :current) do
     proloads(query, :minimal)
     # NOTE: we load account and settings here so the LoadCurrentUser LivePlug can set the current_account without a separate query
-    |> proload([:shared_user, account: {"account_", [:settings, :instance_admin]}])
+    |> proload([:settings, :shared_user, account: {"account_", [:settings, :instance_admin]}])
 
     # |> proload(accounted: [account: [:settings]])
   end
