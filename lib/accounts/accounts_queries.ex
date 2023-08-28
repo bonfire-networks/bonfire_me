@@ -2,13 +2,16 @@ defmodule Bonfire.Me.Accounts.Queries do
   import Ecto.Query
   alias Bonfire.Data.Identity.Account
   # import Bonfire.Me.Integration
+  import EctoSparkles
 
   def current(id) when is_binary(id) do
     from(a in Account,
-      left_join: s in assoc(a, :settings),
-      where: a.id == ^id,
-      preload: [settings: s]
+      where: a.id == ^id
     )
+    |> proload([
+      :settings,
+      :instance_admin
+    ])
   end
 
   def by_email(email) when is_binary(email) do
@@ -37,11 +40,13 @@ defmodule Bonfire.Me.Accounts.Queries do
 
   def login_by_account_id(id) when is_binary(id) do
     from(a in Account,
-      join: e in assoc(a, :email),
-      join: c in assoc(a, :credential),
-      where: a.id == ^id,
-      preload: [email: e, credential: c]
+      where: a.id == ^id
     )
+    |> proload([
+      # :instance_admin
+      :email,
+      :credential
+    ])
   end
 
   def login_by_email(email) when is_binary(email) do

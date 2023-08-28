@@ -21,6 +21,7 @@ defmodule Bonfire.Me.Accounts do
 
   alias Bonfire.Me.Users
   alias Ecto.Changeset
+  alias Pointers.Changesets
 
   def get_current(nil), do: nil
   # |> debug
@@ -641,21 +642,54 @@ defmodule Bonfire.Me.Accounts do
     count() < 1
   end
 
-  def update_is_admin(%User{} = user, make_admin_or_revoke) do
+  def update_is_admin(user_or_account, make_admin_or_revoke, user \\ nil)
+
+  def update_is_admin(%User{} = user, make_admin_or_revoke, _) do
     user
     |> repo().preload(:account)
     |> Map.get(:account)
-    |> update_is_admin(make_admin_or_revoke)
+    |> update_is_admin(make_admin_or_revoke, user)
   end
 
-  def update_is_admin(%Account{} = user, make_admin_or_revoke) do
-    user
-    |> repo().preload(:instance_admin)
-    |> Changeset.cast(
-      %{instance_admin: %{is_instance_admin: make_admin_or_revoke}},
-      []
-    )
-    |> Changeset.cast_assoc(:instance_admin)
+  def update_is_admin(%Account{} = account, make_admin_or_revoke, user) do
+    instance_admin = %{
+      is_instance_admin: make_admin_or_revoke,
+      user: user
+    }
+
+    account
+    |> repo().preload(instance_admin: [:user])
+    |> debug()
+    # |> Changeset.cast(
+    #   %{instance_admin: instance_admin},
+    #   []
+    # )
+    # |> Changeset.cast_assoc(:instance_admin)
+    |> Changesets.put_assoc(:instance_admin, instance_admin)
+    |> debug()
     |> repo().update()
   end
+
+  def is_admin?(%{instance_admin: %{is_instance_admin: val}}),
+    do: val
+
+  def is_admin?(%{current_account: %{instance_admin: %{is_instance_admin: val}}}),
+    do: val
+
+  def is_admin?(%{current_account: %{instance_admin: nil}}),
+    do: false
+
+  def is_admin?(%{account: %{instance_admin: %{is_instance_admin: val}}}),
+    do: val
+
+  def is_admin?(%{account: %{instance_admin: nil}}),
+    do: false
+
+  def is_admin?(%{instance_admin: nil}),
+    do: false
+
+  def is_admin?(assigns) when is_list(assigns) or is_map(assigns),
+    do: current_account(assigns) |> debug() |> is_admin?()
+
+  def is_admin?(_), do: false
 end

@@ -36,6 +36,10 @@ defmodule Bonfire.Me.Users do
 
   def get_current(nil), do: nil
   def get_current(id) when is_binary(id), do: repo().maybe_one(Queries.current(id))
+  def get_current(nil, _), do: nil
+
+  def get_current(id, account_id) when is_binary(id),
+    do: repo().maybe_one(Queries.current(id, account_id))
 
   def fetch_current(id), do: repo().single(Queries.current(id))
 
@@ -137,11 +141,6 @@ defmodule Bonfire.Me.Users do
     |> Map.merge(user, user.profile)
     |> Map.merge(user, user.character)
   end
-
-  def is_admin?(%User{} = user),
-    do: Utils.e(user, :instance_admin, :is_instance_admin, false)
-
-  def is_admin?(_), do: false
 
   ### Mutations
   ## Create

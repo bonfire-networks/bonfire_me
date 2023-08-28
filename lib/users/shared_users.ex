@@ -166,13 +166,15 @@ defmodule Bonfire.Me.SharedUsers do
         repo().maybe_preload(
           account,
           [
-            users: [:shared_user, :character, :profile],
-            shared_users: [:shared_user, :character, :profile]
+            users: [:shared_user, :instance_admin, :character, profile: [:icon]],
+            shared_users: [:shared_user, :character, profile: [:icon]]
           ],
           false
         )
 
-      Map.get(account, :users, []) ++ Map.get(account, :shared_users, [])
+      # FIXME: should this call Accounts.by_account instead?
+
+      Enum.uniq_by(Map.get(account, :users, []) ++ Map.get(account, :shared_users, []), &id/1)
     end
 
     def by_account(account_id) when is_binary(account_id),

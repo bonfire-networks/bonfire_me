@@ -18,9 +18,9 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
       field(:profile, :profile)
       field(:character, :character)
 
-      field(:is_instance_admin, :boolean) do
-        resolve(fn user, _, _ -> {:ok, Users.is_admin?(user)} end)
-      end
+      # field(:is_instance_admin, :boolean) do
+      #   resolve(fn user, _, _ -> {:ok, Bonfire.Me.Accounts.is_admin?(user)} end)
+      # end
 
       field :posts, list_of(:post) do
         # TODO

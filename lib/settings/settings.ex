@@ -366,10 +366,10 @@ defmodule Bonfire.Me.Settings do
   defp do_set(settings, opts) when is_list(settings) do
     current_user = current_user(opts)
     current_account = current_account(opts)
-    # FIXME: use instance boundaries (so need to associate each setting to a verb?)
+    # FIXME: do we need to associate each setting key to a verb? (eg. :describe)
     is_admin =
       e(opts, :skip_boundary_check, nil) ||
-        Bonfire.Me.Users.is_admin?(current_user || current_account)
+        Bonfire.Boundaries.can?(current_account, :configure, :instance)
 
     scope =
       case maybe_to_atom(e(settings, :scope, nil) || e(opts, :scope, nil))
@@ -435,6 +435,7 @@ defmodule Bonfire.Me.Settings do
     ~> {:ok,
      %{
        assign_context: [current_account: map_put_settings(scoped, ...)]
+       # TODO: assign this within current_user ?
      }}
   end
 
