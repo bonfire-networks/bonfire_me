@@ -79,7 +79,7 @@ defmodule Bonfire.Me.Users.Queries do
     else
       from(u in User, as: :user)
       |> proloads(:local)
-      |> where([accounted: a], a.account_id == ^Types.ulid(account_id))
+      |> where([account: account], account.id == ^Types.ulid(account_id))
       |> where([character: c], c.username == ^username)
     end
   end
@@ -89,7 +89,7 @@ defmodule Bonfire.Me.Users.Queries do
 
     from(u in User, as: :user)
     |> proloads(:local)
-    |> where([accounted: a], a.account_id == ^account_id)
+    |> where([account: account], account.id == ^account_id)
   end
 
   def by_canonical_uri(canonical_uri, opts \\ []) do

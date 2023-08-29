@@ -135,6 +135,7 @@ defmodule Bonfire.Me.Accounts do
 
   def do_signup(%{} = cs_or_params, opts) do
     is_first_account = is_first_account?()
+    make_admin? = Config.env() != :test and is_first_account
 
     opts =
       opts
@@ -151,7 +152,12 @@ defmodule Bonfire.Me.Accounts do
 
     # revert if email send fails
     repo().transact_with(fn ->
-      repo().insert(cs_or_params)
+      cs_or_params
+      |> Changesets.put_assoc(:instance_admin, %{
+        is_instance_admin: make_admin?
+      })
+      |> debug("changeset")
+      |> repo().insert()
       ~> maybe_redeem_invite(opts)
       ~> maybe_send_confirm_email(opts)
     end)

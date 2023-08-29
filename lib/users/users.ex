@@ -149,18 +149,14 @@ defmodule Bonfire.Me.Users do
   def create(params_or_changeset, extra \\ nil)
 
   def create(%Changeset{data: %User{}} = changeset, extra) do
-    maybe_make_admin =
+    add_to_admin_circle? =
       (extra != :remote and Config.env() != :test and is_first_user?())
       |> debug("maybe_make_admin?")
 
     with {:ok, user} <-
            changeset
-           |> Changesets.put_assoc(:instance_admin, %{
-             is_instance_admin: maybe_make_admin
-           })
-           |> debug("changeset")
            |> repo().insert() do
-      if maybe_make_admin, do: add_to_admin_circle(user)
+      if add_to_admin_circle?, do: add_to_admin_circle(user)
       after_creation(user, extra)
     end
   end
