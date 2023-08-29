@@ -64,7 +64,7 @@ defmodule Bonfire.Me.Users.Queries do
   def by_username_or_id(username_or_id, opts \\ []) do
     if Types.is_ulid?(username_or_id),
       do: by_id(username_or_id, opts),
-      else: by_username_query(username_or_id)
+      else: by_username_query(username_or_id, opts)
   end
 
   def by_username_query(username, opts \\ []) do
@@ -134,6 +134,11 @@ defmodule Bonfire.Me.Users.Queries do
       # :instance_admin,
       character: [:peered]
     )
+  end
+
+  defp proloads(query, :profile) do
+    proloads(query, :default)
+    |> proload(:instance_admin)
   end
 
   defp proloads(query, :minimal) do

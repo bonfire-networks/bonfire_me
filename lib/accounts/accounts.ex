@@ -651,9 +651,9 @@ defmodule Bonfire.Me.Accounts do
     |> update_is_admin(make_admin_or_revoke, user)
   end
 
-  def update_is_admin(%Account{} = account, make_admin_or_revoke, user) do
+  def update_is_admin(%Account{} = account, true, user) do
     instance_admin = %{
-      is_instance_admin: make_admin_or_revoke,
+      is_instance_admin: true,
       user: user
     }
 
@@ -668,6 +668,14 @@ defmodule Bonfire.Me.Accounts do
     |> Changesets.put_assoc(:instance_admin, instance_admin)
     |> debug()
     |> repo().update()
+  end
+
+  def update_is_admin(%Account{} = account, _, _user) do
+    # delete mixin
+    account
+    |> repo().preload([:instance_admin])
+    |> Map.get(:instance_admin)
+    |> repo().delete()
   end
 
   def is_admin?(%{instance_admin: %{is_instance_admin: val}}),

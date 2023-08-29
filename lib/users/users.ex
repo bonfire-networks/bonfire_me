@@ -53,10 +53,10 @@ defmodule Bonfire.Me.Users do
   def by_id([id], opts), do: by_id(id, opts)
 
   # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
-  def by_username(username) when is_binary(username) do
+  def by_username(username, opts \\ []) when is_binary(username) do
     # info(self(), username)
     # info(repo())
-    repo().single(Queries.by_username_or_id(username))
+    repo().single(Queries.by_username_or_id(username, opts[:preload]))
   end
 
   def by_canonical_uri(uri) when is_binary(uri) do
@@ -204,8 +204,10 @@ defmodule Bonfire.Me.Users do
   end
 
   def make_admin(%User{} = user) do
-    add_to_admin_circle(user)
-    Accounts.update_is_admin(user, true)
+    with {:ok, account} <- Accounts.update_is_admin(user, true) do
+      add_to_admin_circle(user)
+      {:ok, Map.put(user, :account, account)}
+    end
   end
 
   defp add_to_admin_circle(user) do
@@ -222,9 +224,16 @@ defmodule Bonfire.Me.Users do
   end
 
   def revoke_admin(%User{} = user) do
-    with {:ok, user} <- Accounts.update_is_admin(user, false) do
+    with {:ok, account} <- Accounts.update_is_admin(user, false) do
       remove_from_admin_circle(user)
-      {:ok, user}
+
+      {:ok,
+       user
+       |> Map.put(
+         :account,
+         Map.put(e(user, :account, %{}), :instance_admin, nil)
+       )
+       |> Map.put(:instance_admin, nil)}
     end
   end
 
