@@ -67,8 +67,6 @@ defmodule Bonfire.Me.Characters do
   end
 
   def changeset(char \\ %Character{}, params, _profile \\ :local) do
-    debug(params)
-
     case Changeset.cast(char, %{}, []).data.__meta__.state do
       :built ->
         char
@@ -94,7 +92,8 @@ defmodule Bonfire.Me.Characters do
       :deleted ->
         raise RuntimeError, message: "deletion unimplemented"
     end
-    |> debug("char cs")
+
+    # |> debug("char cs")
   end
 
   defp changeset_common(changeset) do

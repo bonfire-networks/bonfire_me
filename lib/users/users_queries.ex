@@ -204,7 +204,7 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
       #  TODO: in config
-      where: c.username not in ["activitypub_fetcher"],
+      where: u.id != "1ACT1V1TYPVBREM0TESFETCHER",
       preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}]
     )
   end

@@ -399,6 +399,7 @@ defmodule Bonfire.Me.Users do
     params
     |> debug("params")
     |> User.changeset(user, ...)
+    |> debug("initial cs")
     |> Changesets.put_assoc!(:accounted, %{account_id: account.id})
     |> Changesets.put_assoc!(:encircles, [
       %{circle_id: Circles.get_id!(:local)}
@@ -412,6 +413,7 @@ defmodule Bonfire.Me.Users do
       required: true,
       with: &Profiles.changeset/2
     )
+    |> debug("full cs")
   end
 
   def changeset(:create, user, params, :remote) do
