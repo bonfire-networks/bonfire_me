@@ -15,6 +15,8 @@ defmodule Bonfire.Me.Users.Queries do
   @behaviour Bonfire.Common.QueryModule
   def schema_module, do: User
 
+  @remote_fetcher "1ACT1V1TYPVBREM0TESFETCHER"
+
   def current(user_id), do: by_username_or_id(user_id, :current)
 
   def current(user_id, account_id) when is_binary(account_id) do
@@ -204,7 +206,7 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
       #  TODO: in config
-      where: u.id != "1ACT1V1TYPVBREM0TESFETCHER",
+      where: u.id != ^@remote_fetcher,
       preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}]
     )
   end
