@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Fake do
   def fake_user!(name, user_attrs, opts_or_extra) when is_binary(name) do
     fake_user!(
       fake_account!(),
-      Map.merge(user_attrs, %{
+      Enum.into(user_attrs, %{
         name: name,
         username: name
       }),

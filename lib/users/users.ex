@@ -455,10 +455,14 @@ defmodule Bonfire.Me.Users do
       end)
 
     # FIXME: Tag with Geolocation
-    # loc = params["profile"]["location"]
-    # if loc && loc !="" do
-    #   maybe_apply(Bonfire.Geolocate.Geolocations, :thing_add_location, [user, user, loc])
-    # end
+    case e(params["profile"], :location, nil) do
+      location when is_binary(location) and location != "" ->
+        maybe_apply(Bonfire.Geolocate.Geolocations, :thing_add_location, [user, user, location])
+
+      _ ->
+        user
+    end
+    |> debug("location added?")
 
     Ecto.Changeset.cast(user, params, [])
     # |> info()
