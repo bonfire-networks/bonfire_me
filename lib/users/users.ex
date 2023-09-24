@@ -56,7 +56,9 @@ defmodule Bonfire.Me.Users do
   def by_username(username, opts \\ []) when is_binary(username) do
     # info(self(), username)
     # info(repo())
-    repo().single(Queries.by_username_or_id(username, opts[:preload]))
+    Queries.by_username_or_id(username, opts[:preload])
+    |> debug()
+    |> repo().single()
   end
 
   def by_canonical_uri(uri) when is_binary(uri) do

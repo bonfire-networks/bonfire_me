@@ -140,7 +140,10 @@ defmodule Bonfire.Me.Users.Queries do
 
   defp proloads(query, :profile) do
     proloads(query, :default)
-    |> proload(:instance_admin)
+    |> proload([
+      :instance_admin,
+      profile: [:icon, :image]
+    ])
   end
 
   defp proloads(query, :minimal) do
