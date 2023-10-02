@@ -390,6 +390,12 @@ defmodule Bonfire.Me.Settings do
         :user ->
           {:current_user, current_user}
 
+        %Bonfire.Data.Identity.Account{} = scope ->
+          {:current_account, scope}
+
+        %Bonfire.Data.Identity.User{} = scope ->
+          {:current_user, scope}
+
         object when is_map(object) ->
           object
 
@@ -424,7 +430,7 @@ defmodule Bonfire.Me.Settings do
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
      %{
-       assign_context: [current_user: map_put_settings(scoped, ...)]
+       __context__: %{current_user: map_put_settings(scoped, ...)}
      }}
   end
 
@@ -434,7 +440,7 @@ defmodule Bonfire.Me.Settings do
     |> upsert(settings, ulid(scoped))
     ~> {:ok,
      %{
-       assign_context: [current_account: map_put_settings(scoped, ...)]
+       __context__: %{current_account: map_put_settings(scoped, ...)}
        # TODO: assign this within current_user ?
      }}
   end
