@@ -301,7 +301,7 @@ defmodule Bonfire.Me.Users do
   ### ActivityPub
 
   def by_ap_id(ap_id) do
-    with {:ok, %{username: username}} = ActivityPub.Actor.get_cached(ap_id: ap_id) do
+    with {:ok, %{username: username}} <- ActivityPub.Actor.get_cached(ap_id: ap_id) do
       by_username(username)
     end
   end
