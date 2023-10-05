@@ -222,7 +222,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def revoke_admin(%User{} = user) do
-    with {:ok, account} <- Accounts.update_is_admin(user, false) do
+    with {:ok, _account} <- Accounts.update_is_admin(user, false) do
       remove_from_admin_circle(user)
 
       {:ok,
@@ -287,7 +287,7 @@ defmodule Bonfire.Me.Users do
 
     # user = repo().maybe_preload(user, assocs)
 
-    # with :ok <- delete_caretaken(user) do 
+    # with :ok <- delete_caretaken(user) do
     Bonfire.Social.Objects.maybe_generic_delete(User, user,
       current_user: user,
       delete_associations: assocs

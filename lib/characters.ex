@@ -9,7 +9,7 @@ defmodule Bonfire.Me.Characters do
   import Bonfire.Me.Integration
   import Ecto.Query
   import EctoSparkles
-  import Untangle
+  # import Untangle
   use Arrows
 
   @behaviour Bonfire.Common.ContextModule

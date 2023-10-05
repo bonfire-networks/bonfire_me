@@ -123,7 +123,7 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  def signup(%Changeset{} = cs, opts) do
+  def signup(%Changeset{} = _cs, opts) do
     case opts[:params][:openid_email] do
       nil ->
         error("Did not find a valid signup changeset or OpenID email")
