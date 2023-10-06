@@ -301,7 +301,7 @@ defmodule Bonfire.Me.Settings do
 
   def reset_instance() do
     with {:ok, set} <-
-           repo().delete(%Bonfire.Data.Identity.Settings{id: id(instance_scope())}, []) do
+           repo().delete(struct(Bonfire.Data.Identity.Settings, id: id(instance_scope())), []) do
       # also put_env to cache it in Elixir's Config?
       # Config.put([])
 
@@ -390,10 +390,10 @@ defmodule Bonfire.Me.Settings do
         :user ->
           {:current_user, current_user}
 
-        %Bonfire.Data.Identity.Account{} = scope ->
+        %schema{} = scope when schema==Bonfire.Data.Identity.Account ->
           {:current_account, scope}
 
-        %Bonfire.Data.Identity.User{} = scope ->
+        %schema{} = scope when schema==Bonfire.Data.Identity.User ->
           {:current_user, scope}
 
         object when is_map(object) ->
@@ -475,15 +475,15 @@ defmodule Bonfire.Me.Settings do
 
   defp fetch_or_empty(scoped, opts) do
     maybe_fetch(scoped, to_options(opts) ++ [preload: true]) ||
-      %Bonfire.Data.Identity.Settings{}
+      struct(Bonfire.Data.Identity.Settings)
   end
 
   defp upsert(
-         %Bonfire.Data.Identity.Settings{data: existing_data} = settings,
+         %schema{data: existing_data} = settings,
          data,
          _
        )
-       when is_list(existing_data) or is_map(existing_data) do
+       when schema==Bonfire.Data.Identity.Settings and is_list(existing_data) or is_map(existing_data) do
     data
     |> debug("new settings")
 
@@ -495,22 +495,22 @@ defmodule Bonfire.Me.Settings do
   end
 
   defp upsert(
-         %Bonfire.Data.Identity.Settings{id: id} = settings,
+         %schema{id: id} = settings,
          data,
          _
        )
-       when is_binary(id) do
+       when schema==Bonfire.Data.Identity.Settings and is_binary(id) do
     do_update(settings, data)
   end
 
   defp upsert(%{settings: _} = parent, data, _) do
     parent
     |> repo().maybe_preload(:settings)
-    |> e(:settings, %Bonfire.Data.Identity.Settings{})
+    |> e(:settings, struct(Bonfire.Data.Identity.Settings))
     |> upsert(data, ulid(parent))
   end
 
-  defp upsert(%Bonfire.Data.Identity.Settings{} = settings, data, scope_id) do
+  defp upsert(%schema{} = settings, data, scope_id) when schema==Bonfire.Data.Identity.Settings do
     %{id: ulid!(scope_id), data: data}
     # |> debug()
     |> Bonfire.Data.Identity.Settings.changeset(settings, ...)
@@ -526,9 +526,9 @@ defmodule Bonfire.Me.Settings do
   end
 
   defp do_update(
-         %Bonfire.Data.Identity.Settings{} = settings,
+         %schema{} = settings,
          data
-       ) do
+       ) when schema==Bonfire.Data.Identity.Settings do
     Bonfire.Data.Identity.Settings.changeset(settings, %{data: data})
     |> repo().update()
   end
