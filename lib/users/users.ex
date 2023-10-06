@@ -178,7 +178,7 @@ defmodule Bonfire.Me.Users do
 
     if not is_nil(opts[:undiscoverable]),
       do:
-        Bonfire.Me.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
+        Bonfire.Common.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
           current_user: user
         )
 
