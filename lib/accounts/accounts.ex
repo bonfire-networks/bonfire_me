@@ -534,8 +534,8 @@ defmodule Bonfire.Me.Accounts do
   ### invites
 
   def instance_is_invite_only? do
-    Config.env() != :test and
-      Config.get(:invite_only)
+    (Config.env() != :test and
+       Config.get(:invite_only)) || false
 
     # System.get_env("INVITE_ONLY", "true") in ["true", true]
   end
