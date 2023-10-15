@@ -176,11 +176,23 @@ defmodule Bonfire.Me.Users do
     if module_enabled?(Bonfire.Boundaries),
       do: Bonfire.Boundaries.Users.create_default_boundaries(user, opts)
 
-    if not is_nil(opts[:undiscoverable]),
-      do:
-        Bonfire.Common.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
-          current_user: user
-        )
+    user =
+      if not is_nil(opts[:undiscoverable]),
+        do:
+          Bonfire.Common.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
+            current_user: user
+          )
+          |> current_user(),
+        else: user
+
+    user =
+      if not is_nil(opts[:unindexable]),
+        do:
+          Bonfire.Common.Settings.put([Bonfire.Search.Indexer, :disabled], opts[:unindexable],
+            current_user: user
+          )
+          |> current_user(),
+        else: user
 
     after_mutation(user)
   end
