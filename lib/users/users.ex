@@ -349,7 +349,7 @@ defmodule Bonfire.Me.Users do
   # end
 
   @doc "Updates a remote user"
-  def update_remote(user, params) do
+  def update_remote_actor(user, params) do
     user
     # |> repo().reload() # to avoid stale struct errors
     |> update(params, :remote)
@@ -393,7 +393,7 @@ defmodule Bonfire.Me.Users do
 
   def changeset(name, user \\ %User{}, params, extra)
 
-  def changeset(action, user, %{keys: keys} = params, extra) do
+  def changeset(action, user, %{keys: keys} = params, extra) when not is_nil(keys) do
     # for AP library
     changeset(
       action,

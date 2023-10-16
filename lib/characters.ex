@@ -66,25 +66,22 @@ defmodule Bonfire.Me.Characters do
     |> String.trim("_")
   end
 
+  def update(%Character{} = character, attrs) do
+    repo().update(changeset(character, attrs, :update))
+  end
+
   def changeset(char \\ %Character{}, params, _profile \\ :local) do
-    case Changeset.cast(char, %{}, []).data.__meta__.state do
+    case Changeset.cast(char, %{}, []).data.__meta__.state |> debug("cs_state") do
       :built ->
         char
         |> Character.changeset(params, :hash)
         |> changeset_common()
 
       :loaded ->
-        char = repo().maybe_preload(char, [:actor, :outbox, :inbox, :notifications])
+        # , :outbox, :inbox, :notifications]
+        char = repo().maybe_preload(char, [:actor])
 
-        if Utils.e(char, :actor, nil) do
-          Map.merge(params, %{"actor" => %{"id" => Utils.e(char, :actor, :id, nil)}}, fn _,
-                                                                                         a,
-                                                                                         b ->
-            Map.merge(a, b)
-          end)
-        else
-          params
-        end
+        params
         |> Enums.input_to_atoms()
         |> Character.changeset(char, ..., :update)
         |> changeset_common()
@@ -92,6 +89,7 @@ defmodule Bonfire.Me.Characters do
       :deleted ->
         raise RuntimeError, message: "deletion unimplemented"
     end
+    |> debug("FIXME: why is actor not being cast?")
 
     # |> debug("char cs")
   end
@@ -100,27 +98,27 @@ defmodule Bonfire.Me.Characters do
     changeset
     |> Changeset.update_change(:username, &clean_username/1)
     |> Changeset.validate_format(:username, @username_regex)
-    |> Changeset.cast_assoc(:actor)
+    |> Changesets.cast_assoc(:actor)
   end
 
-  def remote_changeset(char, params), do: do_remote_changeset(char, params)
-
-  defp do_remote_changeset(changeset, params) do
+  def remote_changeset(changeset, params) do
     # If it's a character, turn it into a changeset
     changeset = Changesets.cast(changeset, %{}, [])
 
     if is_binary(changeset.data.id) do
       # update
       changeset
-      |> Character.changeset(params, :hash)
+      |> Character.changeset(params, :update)
       |> Changeset.cast_assoc(:feed)
       |> Changeset.cast_assoc(:follow_count)
+      |> Changeset.cast_assoc(:actor)
     else
       # insert
       changeset
       |> Character.changeset(params, :hash)
       |> Changeset.cast_assoc(:actor)
     end
+    |> debug("FIXME: why is actor not being cast?")
 
     # |> info()
   end
