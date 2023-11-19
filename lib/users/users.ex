@@ -32,6 +32,9 @@ defmodule Bonfire.Me.Users do
   def schema_module, do: User
   def federation_module, do: ["Person", "Author"]
 
+  @remote_fetcher "1ACT1V1TYPVBREM0TESFETCHER"
+  def remote_fetcher, do: @remote_fetcher
+
   ### Queries
 
   def get_current(nil), do: nil
