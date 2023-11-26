@@ -300,6 +300,9 @@ defmodule Bonfire.Me.Users do
       :accounted
     ]
 
+    # TODO: delete edges (likes/follows/etc), and boundaries (circles/ACLs/etc)
+    # TODO: delete user's objects (based on caretaker) and activities
+
     # user = repo().maybe_preload(user, assocs)
 
     # with :ok <- delete_caretaken(user) do
