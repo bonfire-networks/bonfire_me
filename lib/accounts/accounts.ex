@@ -573,22 +573,23 @@ defmodule Bonfire.Me.Accounts do
     |> Changeset.add_error(:form, "invite_only")
   end
 
-  def queue_delete(account) when is_struct(account) do
+  def enqueue_delete(%{} = account) when is_struct(account) do
     account =
       account
       |> repo().maybe_preload(:users)
 
-    Bonfire.Me.DeleteWorker.do_delete([account] ++ e(account, :users, []))
+    Bonfire.Me.DeleteWorker.enqueue_delete([account] ++ e(account, :users, []))
   end
 
-  def queue_delete(account) when is_binary(account) do
+  def enqueue_delete(account) when is_binary(account) do
     account =
       get_current(account) ||
         Bonfire.Boundaries.load_pointer(account, include_deleted: true, skip_boundary_check: true)
 
-    queue_delete(account)
+    enqueue_delete(account)
   end
 
+  @doc "Use `enqueue_delete/1` instead"
   def delete(account, _opts \\ [])
 
   def delete(%Account{} = account, _opts) do

@@ -281,6 +281,21 @@ defmodule Bonfire.Me.Users do
 
   ## Delete
 
+  def enqueue_delete(%{} = user) when is_struct(user) do
+    user
+    |> repo().maybe_preload([:character])
+    |> Bonfire.Me.DeleteWorker.enqueue_delete()
+  end
+
+  def enqueue_delete(user) when is_binary(user) do
+    account =
+      get_current(user) ||
+        Bonfire.Boundaries.load_pointer(user, include_deleted: true, skip_boundary_check: true)
+
+    enqueue_delete(user)
+  end
+
+  @doc "Use `enqueue_delete/1` instead"
   def delete(user, _opts \\ [])
 
   def delete(users, _) when is_list(users) do

@@ -12,10 +12,10 @@ defmodule Bonfire.Me.DeleteWorker do
   use Bonfire.Common.Repo
 
   def delete(ids, opts) do
-    do_delete(Bonfire.Boundaries.load_pointers(ids, opts))
+    enqueue_delete(Bonfire.Boundaries.load_pointers(ids, opts))
   end
 
-  def do_delete(ids) do
+  def enqueue_delete(ids) do
     enqueue([queue: :deletion], %{"ids" => Types.ulids(ids)})
   end
 
@@ -52,8 +52,8 @@ defmodule Bonfire.Me.DeleteWorker do
     Bonfire.Social.Objects.do_delete(closures, skip_boundary_check: true)
     |> debug("then delete the caretakers themselves")
 
-    Bonfire.Ecto.Acts.Delete.maybe_delete(closures, repo())
-    |> debug("double-check that main things are deleted")
+    Bonfire.Ecto.Acts.Delete.maybe_delete(main, repo())
+    |> debug("double-check that main thing(s) are deleted")
   end
 
   def closures(ids), do: repo().all(CareClosure.by_branch(Types.ulids(ids)))

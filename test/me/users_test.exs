@@ -36,6 +36,17 @@ defmodule Bonfire.Me.UsersTest do
     assert user.profile.summary == attrs.profile.summary
   end
 
+  test "deletion works" do
+    assert {:ok, account} = Accounts.signup(signup_form())
+    attrs = create_user_form()
+    assert {:ok, user} = Users.create(attrs, account)
+
+    {:ok, _} = Users.enqueue_delete(user)
+
+    username = Characters.clean_username(attrs.character.username)
+    refute Users.by_username!(username)
+  end
+
   # test "can make a user an admin" do
   #   # FIXME: admin is now linked to Account
   #   assert {:ok, account} = Accounts.signup(signup_form())
