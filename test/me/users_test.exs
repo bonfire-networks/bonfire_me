@@ -37,14 +37,38 @@ defmodule Bonfire.Me.UsersTest do
   end
 
   test "deletion works" do
-    assert {:ok, account} = Accounts.signup(signup_form())
-    attrs = create_user_form()
-    assert {:ok, user} = Users.create(attrs, account)
+    Oban.Testing.with_testing_mode(:inline, fn ->
+      assert {:ok, account} = Accounts.signup(signup_form())
+      attrs = create_user_form()
+      username = Characters.clean_username(attrs.character.username)
 
-    {:ok, _} = Users.enqueue_delete(user)
+      assert {:ok, user} = Users.create(attrs, account)
+      assert Users.by_username!(username)
 
-    username = Characters.clean_username(attrs.character.username)
-    refute Users.by_username!(username)
+      {:ok, _} =
+        Users.enqueue_delete(user)
+        |> debug("del?")
+
+      refute Users.by_username!(username)
+    end)
+  end
+
+  test "deletion an account also deletes its users" do
+    Oban.Testing.with_testing_mode(:inline, fn ->
+      assert {:ok, account} = Accounts.signup(signup_form())
+
+      attrs = create_user_form()
+      username = Characters.clean_username(attrs.character.username)
+
+      assert {:ok, user} = Users.create(attrs, account)
+
+      {:ok, _} =
+        Accounts.enqueue_delete(account)
+        |> debug("del?")
+
+      refute Accounts.get_current(Enums.id(account))
+      refute Users.by_username!(username)
+    end)
   end
 
   # test "can make a user an admin" do

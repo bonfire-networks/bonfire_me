@@ -288,11 +288,10 @@ defmodule Bonfire.Me.Users do
   end
 
   def enqueue_delete(user) when is_binary(user) do
-    account =
+    enqueue_delete(
       get_current(user) ||
         Bonfire.Boundaries.load_pointer(user, include_deleted: true, skip_boundary_check: true)
-
-    enqueue_delete(user)
+    )
   end
 
   @doc "Use `enqueue_delete/1` instead"

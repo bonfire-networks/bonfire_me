@@ -155,4 +155,17 @@ defmodule Bonfire.Me.AccountsTest do
                )
     end
   end
+
+  test "deletion works" do
+    Oban.Testing.with_testing_mode(:inline, fn ->
+      assert {:ok, account} = Accounts.signup(signup_form())
+      assert Accounts.get_current(Enums.id(account))
+
+      {:ok, _} =
+        Accounts.enqueue_delete(account)
+        |> debug("del?")
+
+      refute Accounts.get_current(Enums.id(account))
+    end)
+  end
 end

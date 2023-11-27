@@ -23,6 +23,7 @@ defmodule Bonfire.Me.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       # import Bonfire.Me.DataCase
+      use Bonfire.Common.Utils
 
       import Bonfire.Me.Fake.Helpers
       import Bonfire.Me.Integration
