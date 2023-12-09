@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.DeleteWorker do
   use Oban.Worker,
     queue: :deletion,
-    max_attempts: 1
+    max_attempts: 3
 
   # import Bonfire.Me.Integration
   alias Bonfire.Common.Utils
