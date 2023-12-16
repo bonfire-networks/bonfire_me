@@ -135,7 +135,7 @@ defmodule Bonfire.Me.Characters do
   end
 
   def display_username(username, true, true, prefix) when is_binary(username) do
-    "#{prefix || "@"}#{username}@#{URIs.instance_domain()}"
+    "#{prefix || "@"}#{username}@#{URIs.base_domain()}"
   end
 
   def display_username(username, _, _, prefix) when is_binary(username) do
