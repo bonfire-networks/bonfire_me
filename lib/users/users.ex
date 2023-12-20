@@ -141,6 +141,12 @@ defmodule Bonfire.Me.Users do
     |> repo().many()
   end
 
+  def list_paginated(filters, opts \\ []) do
+    Queries.query(filters, opts)
+    # return a page of items (reverse chronological) + pagination metadata
+    |> Integration.many(opts[:paginate?], opts)
+  end
+
   def flatten(user) do
     user
     |> Map.merge(user, user.profile)
