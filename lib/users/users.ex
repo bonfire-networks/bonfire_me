@@ -30,6 +30,8 @@ defmodule Bonfire.Me.Users do
 
   @behaviour Bonfire.Common.ContextModule
   def schema_module, do: User
+  def query_module, do: __MODULE__
+
   @behaviour Bonfire.Federate.ActivityPub.FederationModules
   def federation_module, do: ["Person", "Author"]
 
