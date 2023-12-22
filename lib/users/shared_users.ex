@@ -13,6 +13,7 @@ defmodule Bonfire.Me.SharedUsers do
     import Ecto.Query
 
     # temporary until these are implemented elsewhere
+    @behaviour Bonfire.Federate.ActivityPub.FederationModules
     def federation_module, do: ["Organization", "Service", "Application"]
 
     def add_accounts(
