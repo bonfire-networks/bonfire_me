@@ -198,13 +198,14 @@ defmodule Bonfire.Me.Users do
         else: user
 
     user =
-      if not is_nil(opts[:unindexable]),
-        do:
-          Bonfire.Common.Settings.put([Bonfire.Search.Indexer, :disabled], opts[:unindexable],
-            current_user: user
-          )
-          |> current_user(),
-        else: user
+      if opts[:unindexable] do
+        Bonfire.Common.Settings.put([Bonfire.Search.Indexer, :modularity], :disabled,
+          current_user: user
+        )
+        |> current_user()
+      else
+        user
+      end
 
     after_mutation(user)
   end
