@@ -7,7 +7,7 @@ defmodule Bonfire.Me.DeleteWorker do
   alias Bonfire.Common.Utils
   alias Bonfire.Common.Enums
   alias Bonfire.Common.Types
-  # alias Pointers.Pointer
+  # alias Needle.Pointer
   alias Bonfire.Data.Identity.CareClosure
   use Bonfire.Common.Repo
 

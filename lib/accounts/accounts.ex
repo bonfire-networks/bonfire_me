@@ -21,7 +21,7 @@ defmodule Bonfire.Me.Accounts do
 
   alias Bonfire.Me.Users
   alias Ecto.Changeset
-  alias Pointers.Changesets
+  alias Needle.Changesets
 
   def get_current(nil), do: nil
   # |> debug
@@ -621,7 +621,7 @@ defmodule Bonfire.Me.Accounts do
       delete(account)
     else
       _ ->
-        Bonfire.Common.Pointers.get(account,
+        Bonfire.Common.Needle.get(account,
           deleted: true,
           skip_boundary_check: true
         )

@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Characters do
   alias Bonfire.Common.Types
 
   alias Ecto.Changeset
-  alias Pointers.Changesets
+  alias Needle.Changesets
   import Bonfire.Me.Integration
   import Ecto.Query
   import EctoSparkles

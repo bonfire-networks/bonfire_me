@@ -20,8 +20,8 @@ defmodule Bonfire.Me.Users do
   alias Bonfire.Federate.ActivityPub.AdapterUtils
   alias Bonfire.Common.Utils
   alias Ecto.Changeset
-  alias Pointers.Changesets
-  # alias Pointers.ULID
+  alias Needle.Changesets
+  # alias Needle.ULID
 
   @type changeset_name :: :create
   @type changeset_extra :: Account.t() | :remote
@@ -517,7 +517,7 @@ defmodule Bonfire.Me.Users do
   end
 
   # defp put_character(changeset) do
-  #   user_id = Pointers.Changesets.get_field(changeset, :id)
+  #   user_id = Needle.Changesets.get_field(changeset, :id)
   #   Changeset.put_assoc(changeset, :character, %{id: user_id})
   # end
 

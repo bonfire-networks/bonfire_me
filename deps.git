@@ -1,4 +1,3 @@
-arrows = "https://github.com/bonfire-networks/arrows#main"
 activity_pub = "https://github.com/bonfire-networks/activity_pub#develop"
 bonfire_common = "https://github.com/bonfire-networks/bonfire_common#main"
 bonfire_epics = "https://github.com/bonfire-networks/bonfire_epics#main"
@@ -9,7 +8,6 @@ bonfire_data_activity_pub="https://github.com/bonfire-networks/bonfire_data_acti
 bonfire_data_identity="https://github.com/bonfire-networks/bonfire_data_identity#main"
 bonfire_data_social="https://github.com/bonfire-networks/bonfire_data_social#main"
 # bonfire_web_phoenix = "https://github.com/bonfire-networks/bonfire_web_phoenix#main"
-pointers = "https://github.com/bonfire-networks/pointers#main"
 # bonfire_ui_common = "https://github.com/bonfire-networks/bonfire_ui_common#main"
 # bonfire_ui_social = "https://github.com/bonfire-networks/bonfire_ui_social#main"
 # verbs = "https://github.com/shannonwells/verbs_ex"

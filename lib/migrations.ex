@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Migrations do
   @moduledoc false
   use Ecto.Migration
-  # import Pointers.Migration
+  # import Needle.Migration
 
   defp mm(:up) do
     quote do
