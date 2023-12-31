@@ -27,7 +27,7 @@ if Bonfire.Common.Extend.module_enabled?(Bonfire.API.GraphQL) and
         arg(:paginate, :paginate)
 
         resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer))
-        # resolve(&Bonfire.Common.Needle.maybe_resolve(:posts, &1, &2, &2))
+        # resolve(&Bonfire.Common.Needles.maybe_resolve(:posts, &1, &2, &2))
       end
 
       field :user_activities, list_of(:activity) do

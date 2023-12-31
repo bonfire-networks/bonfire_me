@@ -621,7 +621,7 @@ defmodule Bonfire.Me.Accounts do
       delete(account)
     else
       _ ->
-        Bonfire.Common.Needle.get(account,
+        Bonfire.Common.Needles.get(account,
           deleted: true,
           skip_boundary_check: true
         )
