@@ -329,13 +329,11 @@ defmodule Bonfire.Me.Users do
 
     # user = repo().maybe_preload(user, assocs)
 
-    # with :ok <- delete_caretaken(user) do
     Bonfire.Social.Objects.maybe_generic_delete(User, user,
       current_user: user,
-      delete_associations: assocs
+      delete_associations: assocs,
+      delete_caretaken: true
     )
-
-    # end
   end
 
   # def delete(users) when is_list(users) do

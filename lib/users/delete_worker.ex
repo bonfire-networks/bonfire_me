@@ -8,7 +8,6 @@ defmodule Bonfire.Me.DeleteWorker do
   alias Bonfire.Common.Enums
   alias Bonfire.Common.Types
   # alias Needle.Pointer
-  alias Bonfire.Data.Identity.CareClosure
   use Bonfire.Common.Repo
 
   def delete(ids, opts) do
@@ -32,37 +31,6 @@ defmodule Bonfire.Me.DeleteWorker do
       Bonfire.Boundaries.load_pointers(ids, skip_boundary_check: true, include_deleted: true)
       |> debug("main")
 
-    # ^ `from: Pointer` means we include deleted ones (in case we need to sweep associated data that isn't fully deleted)
-
-    closures =
-      (closures(main) ++ main)
-      |> Enums.uniq_by_id()
-      |> debug(
-        "First of all, we must collate a list of recursive caretakers, plus ID(s) provided"
-      )
-
-    care_taken = care_taken(ids)
-
-    care_taken
-    |> Enum.map(&(Utils.e(&1, :pointer, nil) || Utils.id(&1)))
-    |> debug("then delete list things they are caretaker of ")
-    |> Bonfire.Social.Objects.do_delete(skip_boundary_check: true)
-    |> debug("deleted care_taken")
-
-    Bonfire.Social.Objects.do_delete(closures, skip_boundary_check: true)
-    |> debug("then delete the caretakers themselves")
-
-    Bonfire.Ecto.Acts.Delete.maybe_delete(main, repo())
-    |> debug("double-check that main thing(s) are deleted")
+    Bonfire.Social.Objects.do_delete(main)
   end
-
-  def closures(ids), do: repo().all(CareClosure.by_branch(Types.ulids(ids)))
-
-  def care_taken(ids),
-    do:
-      repo().all(
-        from(c in Bonfire.Data.Identity.Caretaker, where: c.caretaker_id in ^Types.ulids(ids))
-        |> proload(:pointer)
-      )
-      |> repo().maybe_preload(:pointer)
 end
