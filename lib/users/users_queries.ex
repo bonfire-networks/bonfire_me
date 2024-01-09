@@ -14,6 +14,57 @@ defmodule Bonfire.Me.Users.Queries do
 
   @behaviour Bonfire.Common.QueryModule
   def schema_module, do: User
+  def context_module, do: Bonfire.Me.Users
+
+  def query(filters, _opts \\ [])
+  def query({:id, id}, opts), do: by_id(id, opts)
+  def query({:username, username}, opts), do: by_username_or_id(username, opts)
+  def query([filter], opts), do: query(filter, opts)
+
+  def query(filter, _opts) do
+    error(filter, "No such filter defined")
+    {:error, "Could not query"}
+  end
+
+  # defp query(), do: from(u in User, as: :user)
+
+  def search(text) when is_binary(text) do
+    from(u in User,
+      as: :user,
+      # join: a in assoc(u, :accounted),
+      join: c in assoc(u, :character),
+      join: p in assoc(u, :profile),
+      left_join: ic in assoc(p, :icon),
+      left_join: ia in assoc(u, :instance_admin),
+      preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}],
+      where:
+        ilike(p.name, ^"#{text}%") or
+          ilike(p.name, ^"% #{text}%") or
+          ilike(c.username, ^"#{text}%") or
+          ilike(c.username, ^"% #{text}%"),
+      order_by: [
+        {:desc, fragment("? % ?", ^text, c.username)},
+        {:desc, fragment("? % ?", ^text, p.name)}
+      ]
+    )
+  end
+
+  # def search(text) when is_binary(text) do
+  #   from(u in User,
+  #     as: :user,
+  #     # join: a in assoc(u, :accounted),
+  #     join: c in assoc(u, :character),
+  #     join: p in assoc(u, :profile),
+  #     left_join: ic in assoc(p, :icon),
+  #     left_join: ia in assoc(u, :instance_admin),
+  #     preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}],
+  #     where:
+  #       ilike(p.name, ^"#{text}%") or
+  #         ilike(p.name, ^"% #{text}%") or
+  #         ilike(c.username, ^"#{text}%") or
+  #         ilike(c.username, ^"% #{text}%")
+  #   )
+  # end
 
   def current(user_id), do: by_username_or_id(user_id, :current)
 
@@ -40,18 +91,6 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   def current(user_id, _), do: current(user_id)
-
-  def query(filters, _opts \\ [])
-  def query({:id, id}, opts), do: by_id(id, opts)
-  def query({:username, username}, opts), do: by_username_or_id(username, opts)
-  def query([filter], opts), do: query(filter, opts)
-
-  def query(filter, _opts) do
-    error(filter, "No such filter defined")
-    {:error, "Could not query"}
-  end
-
-  # defp query(), do: from(u in User, as: :user)
 
   def base_by_id(id) when is_binary(id), do: from(u in User, as: :user, where: u.id == ^id)
 
@@ -216,22 +255,5 @@ defmodule Bonfire.Me.Users.Queries do
     q
     |> reusable_join(:left, [u], character in assoc(u, :character), as: :character)
     |> reusable_join(:left, [character: c], peered in assoc(c, :peered), as: :peered)
-  end
-
-  def search(text) do
-    from(u in User,
-      as: :user,
-      # join: a in assoc(u, :accounted),
-      join: c in assoc(u, :character),
-      join: p in assoc(u, :profile),
-      left_join: ic in assoc(p, :icon),
-      left_join: ia in assoc(u, :instance_admin),
-      preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}],
-      where:
-        ilike(p.name, ^"#{text}%") or
-          ilike(p.name, ^"% #{text}%") or
-          ilike(c.username, ^"#{text}%") or
-          ilike(c.username, ^"% #{text}%")
-    )
   end
 end

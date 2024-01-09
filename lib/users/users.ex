@@ -26,11 +26,9 @@ defmodule Bonfire.Me.Users do
   @type changeset_name :: :create
   @type changeset_extra :: Account.t() | :remote
 
-  @search_type "Bonfire.Data.Identity.User"
-
   @behaviour Bonfire.Common.ContextModule
   def schema_module, do: User
-  def query_module, do: __MODULE__
+  def query_module, do: Bonfire.Me.Users.Queries
 
   @behaviour Bonfire.Federate.ActivityPub.FederationModules
   def federation_module, do: ["Person", "Author"]
@@ -49,7 +47,11 @@ defmodule Bonfire.Me.Users do
 
   def fetch_current(id), do: repo().single(Queries.current(id))
 
-  def query([id: id], opts \\ []) when is_binary(id), do: by_id(id, opts)
+  # def query(filters, opts \\ []) 
+  # def query([id: id], opts) when is_binary(id), do: by_id(id, opts)
+  # def query(filters, opts) when is_binary(term) do
+  #   Queries.query(filters, opts)
+  # end
 
   def by_id(id, opts \\ [])
 
@@ -119,18 +121,18 @@ defmodule Bonfire.Me.Users do
 
   def check_active!(other), do: other
 
-  def search(search) do
+  def search(search, opts \\ []) do
     Utils.maybe_apply(
       Bonfire.Search,
       :search_by_type,
-      [search, @search_type],
+      [search, User, opts],
       &none/2
-    ) || search_db(search)
+    ) || search_db(search, opts)
   end
 
-  defp none(_, _), do: nil
+  defp none(_, _), do: []
 
-  def search_db(search), do: repo().many(Queries.search(search))
+  def search_db(search, _opts \\ []), do: repo().many(Queries.search(search))
 
   def list_all(show \\ :local), do: repo().many(Queries.list(show))
   def list_admins(), do: repo().many(Queries.admins())
@@ -522,7 +524,7 @@ defmodule Bonfire.Me.Users do
   def indexing_object_format(u) do
     %{
       "id" => u.id,
-      "index_type" => @search_type,
+      "index_type" => Types.module_to_str(User),
       # "url" => path(obj),
       "profile" => Bonfire.Me.Profiles.indexing_object_format(u.profile),
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character)
