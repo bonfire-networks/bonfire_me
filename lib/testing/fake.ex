@@ -9,7 +9,10 @@ defmodule Bonfire.Me.Fake do
   import Bonfire.Me.Fake.Helpers
 
   def fake_account!(attrs \\ %{}, opts \\ []) do
-    opts = Keyword.put_new(opts, :must_confirm?, false)
+    opts =
+      opts
+      |> Keyword.put_new(:must_confirm?, false)
+      |> Keyword.put_new(:skip_invite_check, true)
 
     {:ok, account} =
       signup_form(attrs)
