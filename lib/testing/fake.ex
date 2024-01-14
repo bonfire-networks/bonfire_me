@@ -40,6 +40,11 @@ defmodule Bonfire.Me.Fake do
       {:error, %Ecto.Changeset{} = e} when is_binary(custom_username) ->
         debug(e)
         Users.by_username!(custom_username)
+
+      {:error, %Ecto.Changeset{valid?: false}} = e ->
+        debug(e)
+        i = opts_or_extra[:i] || 1
+        if i < 3, do: fake_user!(account, attrs, opts_or_extra ++ [i: i + 1]), else: e
     end
   end
 
