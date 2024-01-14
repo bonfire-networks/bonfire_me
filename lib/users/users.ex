@@ -127,12 +127,13 @@ defmodule Bonfire.Me.Users do
       :search_by_type,
       [search, User, opts],
       &none/2
-    ) || search_db(search, opts)
+    ) ||
+      search_query(search, opts) |> repo().many()
   end
 
   defp none(_, _), do: []
 
-  def search_db(search, _opts \\ []), do: repo().many(Queries.search(search))
+  def search_query(search, opts \\ []), do: Queries.search(search, opts)
 
   def list_all(show \\ :local), do: repo().many(Queries.list(show))
   def list_admins(), do: repo().many(Queries.admins())

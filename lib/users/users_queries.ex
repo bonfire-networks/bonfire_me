@@ -28,25 +28,36 @@ defmodule Bonfire.Me.Users.Queries do
 
   # defp query(), do: from(u in User, as: :user)
 
-  def search(text) when is_binary(text) do
+  def base_query do
     from(u in User,
-      as: :user,
+      as: :user
       # join: a in assoc(u, :accounted),
-      join: c in assoc(u, :character),
-      join: p in assoc(u, :profile),
-      left_join: ic in assoc(p, :icon),
-      left_join: ia in assoc(u, :instance_admin),
-      preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}],
-      where:
-        ilike(p.name, ^"#{text}%") or
-          ilike(p.name, ^"% #{text}%") or
-          ilike(c.username, ^"#{text}%") or
-          ilike(c.username, ^"% #{text}%"),
-      order_by: [
-        {:desc, fragment("? % ?", ^text, c.username)},
-        {:desc, fragment("? % ?", ^text, p.name)}
-      ]
+      # join: c in assoc(u, :character), as: :character,
+      # join: p in assoc(u, :profile), as: :profile,
+      # left_join: ic in assoc(p, :icon),
+      # left_join: ia in assoc(u, :instance_admin),
+      # preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}]
     )
+  end
+
+  def search(text, opts \\ []) when is_binary(text) do
+    (opts[:query] || base_query())
+    |> proload([
+      # :instance_admin, 
+      :character,
+      # : [:icon]
+      :profile
+    ])
+    |> or_where(
+      [profile: p, character: c],
+      ilike(p.name, ^"#{text}%") or
+        ilike(p.name, ^"% #{text}%") or
+        ilike(c.username, ^"#{text}%") or
+        ilike(c.username, ^"% #{text}%")
+    )
+    |> prepend_order_by([profile: p, character: c], [
+      {:desc, fragment("(? <% ?)::int + (? <% ?)::int", ^text, c.username, ^text, p.name)}
+    ])
   end
 
   # def search(text) when is_binary(text) do
