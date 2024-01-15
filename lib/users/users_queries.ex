@@ -52,11 +52,22 @@ defmodule Bonfire.Me.Users.Queries do
       [profile: p, character: c],
       ilike(p.name, ^"#{text}%") or
         ilike(p.name, ^"% #{text}%") or
+        ilike(p.summary, ^"#{text}%") or
+        ilike(p.summary, ^"% #{text}%") or
         ilike(c.username, ^"#{text}%") or
         ilike(c.username, ^"% #{text}%")
     )
     |> prepend_order_by([profile: p, character: c], [
-      {:desc, fragment("(? <% ?)::int + (? <% ?)::int", ^text, c.username, ^text, p.name)}
+      {:desc,
+       fragment(
+         "(? <% ?)::int + (? <% ?)::int + (? <% ?)::int",
+         ^text,
+         c.username,
+         ^text,
+         p.name,
+         ^text,
+         p.summary
+       )}
     ])
   end
 
