@@ -545,7 +545,7 @@ defmodule Bonfire.Me.Accounts do
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
 
     opts[:is_first_account] == true or
-      opts[:skip_invite_check]==true or !instance_is_invite_only?() or
+      opts[:skip_invite_check] == true or !instance_is_invite_only?() or
       (not is_nil(opts[:invite]) and
          opts[:invite] in [valid_invite, special_invite]) or
       redeemable_invite?(opts[:invite])
