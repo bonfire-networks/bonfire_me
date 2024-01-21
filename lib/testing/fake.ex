@@ -14,12 +14,8 @@ defmodule Bonfire.Me.Fake do
       |> Keyword.put_new(:must_confirm?, false)
       |> Keyword.put_new(:skip_invite_check, true)
 
-    {:ok, account} =
-      signup_form(attrs)
-      # |> debug
-      |> Accounts.signup(..., opts)
-
-    Map.put(account, :settings, nil)
+    {:ok, account} = Bonfire.Me.Accounts.make_account(signup_form(attrs), opts)
+    account
   end
 
   # def fake_account!(attrs \\ %{}) do
@@ -33,9 +29,8 @@ defmodule Bonfire.Me.Fake do
   def fake_user!(%Account{} = account, attrs, opts_or_extra) do
     custom_username = attrs[:username]
 
-    with cs <- Users.changeset(:create, create_user_form(attrs), account),
-         {:ok, user} <- Users.create(cs, opts_or_extra) do
-      Map.put(user, :settings, nil)
+    with {:ok, user} <- Users.make_user(create_user_form(attrs), account, opts_or_extra) do
+      user
     else
       {:error, %Ecto.Changeset{} = e} when is_binary(custom_username) ->
         debug(e)

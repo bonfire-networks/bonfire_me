@@ -708,4 +708,10 @@ defmodule Bonfire.Me.Accounts do
     do: current_account(assigns) |> debug() |> is_admin?()
 
   def is_admin?(_), do: false
+
+  def make_account(attrs \\ %{}, opts \\ []) do
+    with {:ok, account} <- signup(attrs, opts) do
+      {:ok, Map.put(account, :settings, nil)}
+    end
+  end
 end

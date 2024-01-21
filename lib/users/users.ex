@@ -554,4 +554,10 @@ defmodule Bonfire.Me.Users do
   def is_first_user? do
     count() < 1
   end
+
+  def make_user(attrs, account, opts \\ []) do
+    with {:ok, user} <- changeset(:create, attrs, account) |> create(opts) do
+      {:ok, Map.put(user, :settings, nil)}
+    end
+  end
 end
