@@ -285,11 +285,11 @@ defmodule Bonfire.Me.Users do
   def update(%User{} = user, params, extra \\ nil) do
     # TODO: check who is doing the update (except if extra==:remote)
     changeset(:update, user, params, extra)
-    |> debug("csss")
+    # |> debug("csss")
     |> repo().update()
     |> debug("updatted")
     ~> after_mutation()
-    ~> Bonfire.Federate.ActivityPub.Adapter.update_local_actor_cache()
+    ~> Bonfire.Federate.ActivityPub.Adapter.local_actor_updated(extra != :remote)
   end
 
   ## Delete
@@ -308,14 +308,14 @@ defmodule Bonfire.Me.Users do
   end
 
   @doc "Use `enqueue_delete/1` instead"
-  def delete(user, _opts \\ [])
+  def delete(user, opts \\ [])
 
-  def delete(users, _) when is_list(users) do
-    Enum.map(users, &delete/1)
+  def delete(users, opts) when is_list(users) do
+    Enum.map(users, &delete(&1, opts))
     |> List.first()
   end
 
-  def delete(%{} = user, _) do
+  def delete(%{} = user, opts) do
     assocs = [
       :actor,
       :character,
@@ -332,10 +332,15 @@ defmodule Bonfire.Me.Users do
 
     # user = repo().maybe_preload(user, assocs)
 
-    Bonfire.Social.Objects.maybe_generic_delete(User, user,
-      current_user: user,
-      delete_associations: assocs,
-      delete_caretaken: true
+    Bonfire.Social.Objects.maybe_generic_delete(
+      User,
+      user,
+      opts ++
+        [
+          current_user: user,
+          delete_associations: assocs,
+          delete_caretaken: true
+        ]
     )
   end
 

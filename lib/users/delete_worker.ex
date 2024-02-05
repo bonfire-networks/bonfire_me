@@ -31,6 +31,6 @@ defmodule Bonfire.Me.DeleteWorker do
       Bonfire.Boundaries.load_pointers(ids, skip_boundary_check: true, include_deleted: true)
       |> debug("main")
 
-    Bonfire.Social.Objects.do_delete(main)
+    Bonfire.Social.Objects.do_delete(main, federate_inline: true)
   end
 end
