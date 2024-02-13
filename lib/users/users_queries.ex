@@ -258,6 +258,13 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([peered: p], not is_nil(p.id))
   end
 
+  def list({:instance, id}) do
+    list(nil)
+    |> join_peered()
+    |> reusable_join(:left, [peered: p], peer in assoc(p, :peer), as: :peer)
+    |> where([peer: p], p.id == ^id)
+  end
+
   def list(_) do
     from(u in User,
       as: :user,
