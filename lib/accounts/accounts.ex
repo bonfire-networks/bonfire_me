@@ -410,24 +410,32 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp send_confirm_email(account, opts) do
-    case account do
-      %{email: %{email_address: email}} ->
-        mail = Mails.confirm_email(account, opts)
+    mailer = mailer()
+    mail = Mails.confirm_email(account, opts)
 
-        mailer().send_now(mail, email)
-        |> mailer_response(account)
+    if mailer do
+      case account do
+        %{email: %{email_address: email}} ->
+          mailer().send_now(mail, email)
+          |> mailer_response(account)
 
-      _ ->
-        case repo().preload(account, :email) do
-          %{email: %{email_address: email}} ->
-            mail = Mails.confirm_email(account, opts)
+        _ ->
+          case repo().preload(account, :email) do
+            %{email: %{email_address: email}} ->
+              mailer().send_now(mail, email)
+              |> mailer_response(account)
 
-            mailer().send_now(mail, email)
-            |> mailer_response(account)
+            _ ->
+              {:error, :email_missing}
+          end
+      end
+    else
+      error(
+        mail,
+        "No mailer module available. Missing configuration value: [:bonfire, :mailer_module]. Skipping sending of email confirmation"
+      )
 
-          _ ->
-            {:error, :email_missing}
-        end
+      {:ok, account}
     end
   end
 

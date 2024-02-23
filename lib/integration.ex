@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Integration do
 
   def repo, do: Config.repo()
 
-  def mailer, do: Config.get!(:mailer_module)
+  def mailer, do: Config.get(:mailer_module)
 
   def is_local?(thing, opts \\ []) do
     if Bonfire.Common.Extend.module_enabled?(Bonfire.Federate.ActivityPub.AdapterUtils) do
