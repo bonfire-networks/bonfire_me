@@ -285,13 +285,21 @@ defmodule Bonfire.Me.Accounts do
   defp login_response(%Account{accounted: [%{user: %User{} = user}]} = account),
     do: {:ok, account, user_if_active(user)}
 
+  defp login_response(%Account{accounted: users} = account) when is_list(users) and users != [] do
+    users
+    |> Users.check_active!()
+
+    # if none of the users are disabled we can show the user picker
+    {:ok, account, nil}
+  end
+
   defp login_response(%Account{} = account) do
     # if there's only one user in the account, we can log them directly into it
     case Users.get_only_in_account(account) do
       {:ok, user} ->
         {:ok, account, user_if_active(user)}
 
-      :error ->
+      _ ->
         {:ok, account, nil}
     end
   end
