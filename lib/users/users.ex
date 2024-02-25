@@ -88,6 +88,11 @@ defmodule Bonfire.Me.Users do
     end
   end
 
+  def by_account!(account) do
+    by_account(account)
+    |> Enum.map(&check_active!/1)
+  end
+
   defp do_by_account(%Account{id: id}), do: by_account(id)
 
   defp do_by_account(account_id) when is_binary(account_id),

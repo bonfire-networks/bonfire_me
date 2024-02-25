@@ -280,32 +280,34 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp login_response(%Account{accounted: %{user: %User{} = user}} = account),
-    do: {:ok, account, user_if_active(user)}
+    do: ok_if_active(account, user)
 
   defp login_response(%Account{accounted: [%{user: %User{} = user}]} = account),
-    do: {:ok, account, user_if_active(user)}
+    do: ok_if_active(account, user)
 
-  defp login_response(%Account{accounted: users} = account) when is_list(users) and users != [] do
-    users
-    |> Users.check_active!()
-
-    # if none of the users are disabled we can show the user picker
-    {:ok, account, nil}
-  end
+  # defp login_response(%Account{accounted: users} = account) when is_list(users) and users != [] do
+  #   # if none of the users are disabled we can show the user picker
+  #   ok_if_active(account, users)
+  # end
 
   defp login_response(%Account{} = account) do
     # if there's only one user in the account, we can log them directly into it
     case Users.get_only_in_account(account) do
       {:ok, user} ->
-        {:ok, account, user_if_active(user)}
+        ok_if_active(account, user)
 
       _ ->
-        {:ok, account, nil}
+        ok_if_active(account, nil)
     end
   end
 
-  defp user_if_active(user) do
-    if Users.is_active?(user), do: user
+  defp ok_if_active(account, user) do
+    if user, do: Users.check_active!(user)
+
+    # check if any other user on this account is blocked (TODO: optimise, eg by only fetching user ids)
+    Users.by_account!(account)
+
+    {:ok, account, user}
   end
 
   ###  request_confirm_email
