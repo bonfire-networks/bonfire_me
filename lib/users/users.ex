@@ -4,7 +4,8 @@ defmodule Bonfire.Me.Users do
   """
   use Arrows
   use Bonfire.Common.Utils
-  import Bonfire.Me.Integration
+  alias Bonfire.Me.Integration
+  import Integration
   import Ecto.Query, only: [limit: 2]
   import Bonfire.Boundaries.Queries
   # alias ActivityPub.Actor
@@ -143,19 +144,29 @@ defmodule Bonfire.Me.Users do
   def list_all(show \\ :local), do: repo().many(Queries.list(show))
   def list_admins(), do: repo().many(Queries.admins())
 
+  def list_boundarised_query(opts) do
+    # Note: users who said they don't want to be publicly discoverable in settings will be filtered based on boundaries (i.e. not shown to guests)
+    Queries.list(Keyword.get(opts, :show, :local))
+    # Queries.query(filters, opts)
+    |> boundarise(user.id, opts ++ [verbs: [:see]])
+  end
+
   def list(opts) do
     opts = to_options(opts)
 
     # Note: users who said they don't want to be publicly discoverable in settings will be filtered based on boundaries (i.e. not shown to guests)
-    Queries.list(Keyword.get(opts, :show, :local))
-    |> boundarise(user.id, opts ++ [verbs: [:see]])
+    list_boundarised_query(opts)
     |> repo().many()
   end
 
-  def list_paginated(filters, opts \\ []) do
-    Queries.query(filters, opts)
+  def list_paginated(opts \\ []) do
+    opts =
+      to_options(opts)
+      |> debug()
+
+    list_boundarised_query(opts)
     # return a page of items (reverse chronological) + pagination metadata
-    |> Integration.many(opts[:paginate?], opts)
+    |> repo().many_paginated(opts)
   end
 
   def flatten(user) do
