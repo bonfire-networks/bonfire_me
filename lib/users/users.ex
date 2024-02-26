@@ -141,7 +141,7 @@ defmodule Bonfire.Me.Users do
 
   def search_query(search, opts \\ []), do: Queries.search(search, opts)
 
-  def list_all(show \\ :local), do: repo().many(Queries.list(show))
+  # def list_all(show \\ :local), do: repo().many(Queries.list(show))
   def list_admins(), do: repo().many(Queries.admins())
 
   def list_boundarised_query(opts) do
