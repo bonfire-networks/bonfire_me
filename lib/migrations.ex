@@ -17,6 +17,7 @@ defmodule Bonfire.Me.Migrations do
       require Bonfire.Data.Identity.ExtraInfo.Migration
       require Bonfire.Data.Identity.AuthSecondFactor.Migration
       require Bonfire.Data.Identity.Alias.Migration
+      require Bonfire.Data.Social.Profile.Migration
 
       Bonfire.Data.Identity.Named.Migration.migrate_named()
       Bonfire.Data.Identity.Account.Migration.migrate_account()
@@ -30,6 +31,7 @@ defmodule Bonfire.Me.Migrations do
       Bonfire.Data.Identity.AuthSecondFactor.Migration.migrate_auth_second_factor()
       Bonfire.Data.Identity.ExtraInfo.Migration.migrate_extra_info()
       Bonfire.Data.Identity.Alias.Migration.migrate_alias()
+      Bonfire.Data.Social.Profile.Migration.migrate_profile()
     end
   end
 
@@ -47,7 +49,9 @@ defmodule Bonfire.Me.Migrations do
       require Bonfire.Data.Identity.ExtraInfo.Migration
       require Bonfire.Data.Identity.AuthSecondFactor.Migration
       require Bonfire.Data.Identity.Alias.Migration
+      require Bonfire.Data.Social.Profile.Migration
 
+      Bonfire.Data.Social.Profile.Migration.migrate_profile()
       Bonfire.Data.Identity.Alias.Migration.migrate_alias()
       Bonfire.Data.Identity.ExtraInfo.Migration.migrate_extra_info()
       Bonfire.Data.Identity.AuthSecondFactor.Migration.migrate_auth_second_factor()
