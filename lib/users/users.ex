@@ -414,8 +414,6 @@ defmodule Bonfire.Me.Users do
   ## Adapter callbacks
 
   def update_local_actor(%User{} = user, params) do
-    info(params)
-
     with {:ok, user} <- update(repo().reload(user), params),
          actor <- format_actor(user) do
       {:ok, actor}

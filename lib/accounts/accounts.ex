@@ -148,7 +148,6 @@ defmodule Bonfire.Me.Accounts do
         # or !is_first_account || (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
         Config.env() != :test
       )
-      |> debug("opts")
 
     # revert if email send fails
     repo().transact_with(fn ->
