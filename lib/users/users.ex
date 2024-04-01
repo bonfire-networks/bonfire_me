@@ -225,9 +225,12 @@ defmodule Bonfire.Me.Users do
         user
       end
 
-    user = if make_admin?, do: make_admin(user), else: user
-
-    after_mutation(user)
+    if make_admin? do
+      make_admin(user)
+      ~> after_mutation()
+    else
+      after_mutation(user)
+    end
   end
 
   defp after_mutation(%{} = user) do

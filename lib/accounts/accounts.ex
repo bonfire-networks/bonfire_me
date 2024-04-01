@@ -386,6 +386,7 @@ defmodule Bonfire.Me.Accounts do
 
   ### confirm_email
 
+  @doc "Confirm an account's email address as valid, usually by providing a confirmation token, or directly by providing an Account"
   def confirm_email(account_or_token, opts \\ [])
 
   def confirm_email(%Account{} = account, _opts) do
@@ -398,6 +399,13 @@ defmodule Bonfire.Me.Accounts do
       repo().single(Queries.confirm_email(token))
       ~> ce(opts)
     end)
+  end
+
+  @doc "Confirm an account's email manually, by providing the email address. Only for internal or CLI use."
+  def confirm_email_manually(email) do
+    with %Account{} = account <- get_by_email(email) do
+      confirm_email(account)
+    end
   end
 
   defp ce(account, opts) do
