@@ -1,9 +1,16 @@
 defmodule Bonfire.Me.Integration do
+  use Bonfire.Common.Utils
   alias Bonfire.Common.Config
-  alias Bonfire.Common.Utils
   # alias Bonfire.Common.Extend
   # alias Bonfire.Common.Enums
   import Untangle
+
+  declare_extension("Users, accounts and profiles",
+    icon: "carbon:user-avatar",
+    emoji: "🧑🏼",
+    description:
+      l("Functionality for signing in, creating, editing and viewing accounts and user profiles.")
+  )
 
   def repo, do: Config.repo()
 
