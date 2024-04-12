@@ -1,5 +1,5 @@
-defmodule Bonfire.Me.SharedUsers do
-  if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
+if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
+  defmodule Bonfire.Me.SharedUsers do
     alias Bonfire.Data.SharedUser
     alias Bonfire.Data.Identity.Account
     alias Bonfire.Data.Identity.User

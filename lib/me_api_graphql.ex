@@ -386,12 +386,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     defp add_team_member(%{username_or_email: username_or_email} = args, info) do
-      if module_enabled?(Bonfire.Data.SharedUser) do
-        user = GraphQL.current_user(info)
+      user = GraphQL.current_user(info)
 
+      if module = maybe_module(Bonfire.Me.SharedUsers, user) do
         if user do
           with %{} = _shared_user <-
-                 Bonfire.Me.SharedUsers.add_account(
+                 module.add_account(
                    user,
                    username_or_email,
                    Enums.stringify_keys(args, true)
@@ -415,9 +415,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     def maybe_upload(user, changes, info) do
-      if module_enabled?(Bonfire.Files.GraphQL) do
+      if module = maybe_module(Bonfire.Files.GraphQL, user) do
         debug("API - attempt to upload")
-        Bonfire.Files.GraphQL.upload(user, changes, info)
+        module.upload(user, changes, info)
       else
         error("API upload via GraphQL is not implemented")
         {:ok, %{}}

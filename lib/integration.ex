@@ -17,9 +17,7 @@ defmodule Bonfire.Me.Integration do
   def mailer, do: Config.get(:mailer_module)
 
   def is_local?(thing, opts \\ []) do
-    if Bonfire.Common.Extend.module_enabled?(Bonfire.Federate.ActivityPub.AdapterUtils) do
-      Bonfire.Federate.ActivityPub.AdapterUtils.is_local?(thing, opts)
-    end
+    maybe_apply(Bonfire.Federate.ActivityPub.AdapterUtils, :is_local?, [thing, opts], opts)
   end
 
   # def maybe_search(tag_search, facets \\ nil) do
@@ -49,13 +47,14 @@ defmodule Bonfire.Me.Integration do
   def maybe_index({:ok, object}), do: {:ok, maybe_index(object)}
 
   def maybe_index(object) do
-    if Bonfire.Common.Extend.module_enabled?(
-         Bonfire.Search.Indexer,
-         Utils.e(object, :creator, :id, nil) ||
-           Utils.e(object, :created, :creator_id, nil) || object
-       ) do
+    if module =
+         Bonfire.Common.Extend.maybe_module(
+           Bonfire.Search.Indexer,
+           Utils.e(object, :creator, :id, nil) ||
+             Utils.e(object, :created, :creator_id, nil) || object
+         ) do
       debug("search: index #{inspect(object)}")
-      Bonfire.Search.Indexer.maybe_index_object(object)
+      module.maybe_index_object(object)
       object
     else
       object

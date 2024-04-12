@@ -82,8 +82,8 @@ defmodule Bonfire.Me.Users do
     do: repo().one(Queries.by_username_or_id(username))
 
   def by_account(account) do
-    if module_enabled?(Bonfire.Data.SharedUser) do
-      Bonfire.Me.SharedUsers.by_account(account)
+    if module = maybe_module(Bonfire.Me.SharedUsers) do
+      module.by_account(account)
     else
       do_by_account(account)
     end
