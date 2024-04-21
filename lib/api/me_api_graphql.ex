@@ -48,7 +48,19 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     object :me do
       # field(:current_account, :json)
       field(:user, :user) do
-        resolve(&get_user/3)
+        resolve(fn
+          %Bonfire.Data.Identity.User{} = user, _, _ ->
+            {:ok, user}
+
+          other, _, _ ->
+            e =
+              l(
+                "No user profile found, you may need to first authenticate with a username instead of an email address, or select a user profile to indicate which one to use."
+              )
+
+            error(other, e <> " NOTE: You can use the selectUser API mutation.")
+            raise e
+        end)
       end
 
       field(:account_id, :id) do
@@ -253,6 +265,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     defp get_me(_parent, _args, info) do
+      dump(info)
       {:ok, GraphQL.current_user(info) || GraphQL.current_account(info)}
     end
 

@@ -102,9 +102,9 @@ defmodule Bonfire.Me.Users do
   @doc """
   Used for switch-user functionality
   """
-  def by_username_and_account(username, account_id) do
+  def by_user_and_account(username_or_user_id, account_id) do
     with {:ok, user} <-
-           repo().single(Queries.by_username_and_account(username, account_id)),
+           repo().single(Queries.by_user_and_account(username_or_user_id, account_id)),
          # check if user isn't blocked instance-wide
          {:ok, _} <- check_active(user) do
       {:ok, user}

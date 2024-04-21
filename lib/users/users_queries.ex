@@ -134,14 +134,26 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([character: c], c.username == ^username)
   end
 
-  def by_username_and_account(username, account_id) do
-    if module = maybe_module(Bonfire.Me.SharedUsers) do
-      module.by_username_and_account_query(username, account_id)
-    else
+  def by_user_and_account(username_or_user_id, account_id) do
+    if user_id = Types.ulid(username_or_user_id) do
+      # if module = maybe_module(Bonfire.Me.SharedUsers) do # TODO
+      #   module.by_username_and_account_query(user_id, account_id)
+      # else
       from(u in User, as: :user)
       |> proloads(:local)
       |> where([account: account], account.id == ^Types.ulid(account_id))
-      |> where([character: c], c.username == ^username)
+      |> where([character: c], c.id == ^user_id)
+
+      # end
+    else
+      if module = maybe_module(Bonfire.Me.SharedUsers) do
+        module.by_username_and_account_query(username_or_user_id, account_id)
+      else
+        from(u in User, as: :user)
+        |> proloads(:local)
+        |> where([account: account], account.id == ^Types.ulid(account_id))
+        |> where([character: c], c.username == ^username_or_user_id)
+      end
     end
   end
 
