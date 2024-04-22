@@ -3,6 +3,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
   defmodule Bonfire.Me.API.GraphQL do
     import Untangle
     use Absinthe.Schema.Notation
+    use Absinthe.Relay.Schema.Notation, :modern
     use Bonfire.Common.Utils
     alias Absinthe.Resolution.Helpers
 
@@ -71,25 +72,28 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         resolve(&account_users/3)
       end
 
-      field :user_feed, list_of(:activity) do
-        # TODO
-        arg(:paginate, :paginate)
-
-        resolve(&my_feed/3)
+      connection field :my_feed, node_type: :activity do
+        # field :my_feed, list_of(:activity) do
+        # resolve(&Bonfire.Social.API.GraphQL.my_feed/3)
+        resolve(fn _parent, args, info ->
+          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:my, args, info])
+        end)
       end
 
-      field :user_notifications, list_of(:activity) do
-        # TODO
-        arg(:paginate, :paginate)
-
-        resolve(&my_notifications/3)
+      connection field :notifications, node_type: :activity do
+        # field :user_notifications, list_of(:activity) do
+        # resolve(&Bonfire.Social.API.GraphQL.my_notifications/3)
+        resolve(fn _parent, args, info ->
+          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:notifications, args, info])
+        end)
       end
 
-      field :flags_for_moderation, list_of(:activity) do
-        # TODO
-        arg(:paginate, :paginate)
-
-        resolve(&all_flags/3)
+      connection field :flags, node_type: :activity do
+        # field :flags_for_moderation, list_of(:activity) do
+        # resolve(&Bonfire.Social.API.GraphQL.all_flags/3)
+        resolve(fn _parent, args, info ->
+          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:flags, args, info])
+        end)
       end
 
       field :like_activities, list_of(:activity) do
@@ -265,30 +269,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     defp get_me(_parent, _args, info) do
-      dump(info)
+      # dump(info)
       {:ok, GraphQL.current_user(info) || GraphQL.current_account(info)}
     end
-
-    defp my_feed(%{} = parent, _args, _info) do
-      Bonfire.Social.FeedActivities.my_feed(parent)
-      |> feed()
-    end
-
-    defp my_notifications(%User{} = user, _args, _info) do
-      Bonfire.Social.FeedActivities.feed(:notifications, user)
-      |> feed()
-    end
-
-    defp all_flags(%{} = user_or_account, _args, _info) do
-      Bonfire.Social.Flags.list(user_or_account)
-      |> feed()
-    end
-
-    defp feed(%{edges: feed}) when is_list(feed) do
-      {:ok, Enum.map(feed, &Map.get(&1, :activity))}
-    end
-
-    defp feed(_), do: {:ok, nil}
 
     defp account_id(%{accounted: %{account_id: account_id}}, _, _) do
       {:ok, account_id}
