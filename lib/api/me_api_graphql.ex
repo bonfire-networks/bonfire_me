@@ -19,6 +19,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       field(:profile, :profile)
       field(:character, :character)
 
+      field(:date_created, :datetime) do
+        resolve(fn %{id: id}, _, _ ->
+          {:ok, Bonfire.Common.DatesTimes.date_from_pointer(id)}
+        end)
+      end
+
       # field(:is_instance_admin, :boolean) do
       #   resolve(fn user, _, _ -> {:ok, Bonfire.Me.Accounts.is_admin?(user)} end)
       # end
@@ -147,6 +153,13 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
     object :character do
       field(:username, :string)
+
+      field(:canonical_uri, :string) do
+        resolve(fn character, _, _ ->
+          # IO.inspect(activity)
+          {:ok, Bonfire.Common.URIs.canonical_url(character)}
+        end)
+      end
     end
 
     input_object :character_input do
@@ -160,11 +173,19 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     object :me_queries do
-      @desc "Get a user"
+      @desc "Get or lookup a user"
       field :user, :user do
         arg(:filter, :character_filters)
 
         resolve(&get_user/3)
+      end
+
+      @desc "List or lookup users"
+      field :users, list_of(:user) do
+        # TODO: lookup by filters
+        # arg(:filter, :character_filters)
+
+        resolve(&list_users/3)
       end
 
       @desc "Get information about and for the current account and/or user"
@@ -251,6 +272,16 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end
     end
 
+    defp list_users(_, filters, info) do
+      # TODO: pagination
+      # Bonfire.Me.Users.list_paginated(
+      #    current_user: current_user,
+      #    paginate: paginate
+      #  )
+      # TODO: check if viewing directory is allowed
+      {:ok, Bonfire.Me.Users.list(current_user: GraphQL.current_user(info))}
+    end
+
     defp get_user(_parent, %{filter: %{username: username}}, _info) do
       Users.by_username(username)
     end
@@ -270,7 +301,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
     defp get_me(_parent, _args, info) do
       # dump(info)
-      {:ok, GraphQL.current_user(info) || GraphQL.current_account(info)}
+      case GraphQL.current_user(info) || GraphQL.current_account(info) do
+        nil ->
+          raise(Bonfire.Fail.Auth, :needs_login)
+
+        # {:error, :needs_login}
+        me ->
+          {:ok, me}
+      end
     end
 
     defp account_id(%{accounted: %{account_id: account_id}}, _, _) do
