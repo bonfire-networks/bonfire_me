@@ -447,16 +447,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     def icon(thing, _, _info) do
-      {:ok, Bonfire.Common.Media.avatar_url(thing) |> maybe_full_url()}
+      {:ok, Bonfire.Common.Media.avatar_url(thing) |> URIs.based_url()}
     end
 
     def image(thing, _, _info) do
-      {:ok, Bonfire.Common.Media.banner_url(thing) |> maybe_full_url()}
+      {:ok, Bonfire.Common.Media.banner_url(thing) |> URIs.based_url()}
     end
-
-    defp maybe_full_url("http" <> _ = url), do: url
-    defp maybe_full_url("/" <> url), do: "#{URIs.base_url()}/#{url}"
-    defp maybe_full_url(url), do: url
 
     def maybe_upload(user, changes, info) do
       if module = maybe_module(Bonfire.Files.GraphQL, user) do
