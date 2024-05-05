@@ -1,4 +1,6 @@
 defmodule Bonfire.Me do
+  @moduledoc "./README.md" |> File.stream!() |> Enum.drop(1) |> Enum.join()
+
   import Untangle
 
   def make_account_and_user(name, email, password, opts \\ []) do
