@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Bonfire.User.Admin.Promote do
   @shortdoc "Promotes a user to an administrator"
 
   @moduledoc """
-  Creates an account in the database, automatically activated
+  Promotes a user to an administrator
 
   ## Usage
 
