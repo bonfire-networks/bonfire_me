@@ -577,7 +577,9 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def redeemable_invite?(invite) do
-    if module = maybe_module(Bonfire.Invite.Links) and not is_nil(invite) do
+    module = maybe_module(Bonfire.Invite.Links)
+
+    if module and not is_nil(invite) do
       module.redeemable?(invite)
     end
   end
