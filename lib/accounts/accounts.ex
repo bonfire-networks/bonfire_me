@@ -585,7 +585,9 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def maybe_redeem_invite(data, opts) do
-    if module = maybe_module(Bonfire.Invite.Links, opts) do
+    module = maybe_module(Bonfire.Invite.Links, opts)
+
+    if module do
       module.redeem(opts[:invite])
     end
 
