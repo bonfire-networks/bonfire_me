@@ -581,8 +581,6 @@ defmodule Bonfire.Me.Accounts do
 
     if not is_nil(module) && not is_nil(invite) do
       module.redeemable?(invite)
-    else
-      false
     end
   end
 
