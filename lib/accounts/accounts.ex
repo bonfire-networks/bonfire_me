@@ -78,7 +78,8 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def changeset(:signup, params, opts) do
-    # debug(opts)
+    opts = prepare_signup_opts(opts)
+
     if allow_signup?(opts) do
       input_to_atoms(params)
       |> signup_changeset(opts)
@@ -97,6 +98,8 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp signup_changeset(params, opts) do
+    debug(opts)
+
     signup_changeset_base(params, opts)
     |> Changeset.cast_assoc(
       :credential,
@@ -133,21 +136,27 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  def do_signup(%{} = cs_or_params, opts) do
-    is_first_account = is_first_account?()
-    make_admin? = Config.env() != :test and is_first_account
-
+  def prepare_signup_opts(opts) do
     opts =
       opts
-      |> Keyword.put_new(
-        :is_first_account,
-        is_first_account
+      |> Keyword.put_new_lazy(
+        :is_first_account?,
+        &is_first_account?/0
       )
-      |> Keyword.put_new(
-        :must_confirm?,
-        # or !is_first_account || (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
-        Config.env() != :test
-      )
+
+    opts
+    |> Keyword.put_new(
+      :must_confirm?,
+      !opts[:is_first_account?] or
+        (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
+      # Config.env() != :test
+    )
+  end
+
+  def do_signup(%{} = cs_or_params, opts) do
+    opts = prepare_signup_opts(opts)
+
+    make_admin? = Config.env() != :test and opts[:is_first_account?]
 
     # revert if email send fails
     repo().transact_with(fn ->
@@ -569,7 +578,7 @@ defmodule Bonfire.Me.Accounts do
     valid_invite = System.get_env("INVITE_KEY")
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
 
-    opts[:is_first_account] == true or
+    opts[:is_first_account?] == true or
       opts[:skip_invite_check] == true or !instance_is_invite_only?() or
       (not is_nil(opts[:invite]) and
          opts[:invite] in [valid_invite, special_invite]) or
@@ -674,7 +683,7 @@ defmodule Bonfire.Me.Accounts do
 
   defp mailer_response(_, _), do: {:error, :email}
 
-  def count(), do: repo().one(Queries.count())
+  def count(), do: repo().one(Queries.count()) |> debug()
 
   def is_first_account? do
     count() < 1
