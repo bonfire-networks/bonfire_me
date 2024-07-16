@@ -1,7 +1,7 @@
 defmodule Bonfire.Me.Users.Queries do
   import Untangle
   import Ecto.Query
-  alias Bonfire.Me.Integration
+  # alias Bonfire.Me.Integration
   # alias Bonfire.Me.Users
   alias Bonfire.Data.Identity.User
   alias Bonfire.Data.Identity.Account
@@ -43,7 +43,7 @@ defmodule Bonfire.Me.Users.Queries do
   def search(text, opts \\ []) when is_binary(text) do
     (opts[:query] || base_query())
     |> proload([
-      # :instance_admin, 
+      # :instance_admin,
       :character,
       # : [:icon]
       :profile

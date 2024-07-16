@@ -19,7 +19,13 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
 
   def new_uri(secret \\ nil) do
     if enabled?() do
-      issuer = Config.get([:ui, :theme, :instance_name], Bonfire.Application.name())
+      issuer = Config.get([:ui, :theme, :instance_name],
+      Common.Utils.maybe_apply(
+        Bonfire.Application,
+        :name,
+        []
+      )
+      )
 
       NimbleTOTP.otpauth_uri("#{issuer}", secret || new(), issuer: "#{issuer}")
     end

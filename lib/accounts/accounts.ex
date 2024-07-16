@@ -633,11 +633,14 @@ defmodule Bonfire.Me.Accounts do
     ]
 
     # account = repo().maybe_preload(account, assocs)
-
-    Bonfire.Social.Objects.maybe_generic_delete(Account, account,
+    Common.Utils.maybe_apply(
+      Bonfire.Social.Objects,
+      :maybe_generic_delete,
+      [Account, account,
       current_account: account,
       delete_associations: assocs,
       delete_caretaken: true
+    ]
     )
 
     # repo().delete(account) # handled by Epic

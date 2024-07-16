@@ -48,7 +48,7 @@ defmodule Bonfire.Me.Users do
 
   def fetch_current(id), do: repo().single(Queries.current(id))
 
-  # def query(filters, opts \\ []) 
+  # def query(filters, opts \\ [])
   # def query([id: id], opts) when is_binary(id), do: by_id(id, opts)
   # def query(filters, opts) when is_binary(term) do
   #   Queries.query(filters, opts)
@@ -351,17 +351,21 @@ defmodule Bonfire.Me.Users do
     # TODO: delete user's objects (based on caretaker) and activities
 
     # user = repo().maybe_preload(user, assocs)
-
-    Bonfire.Social.Objects.maybe_generic_delete(
-      User,
-      user,
-      opts ++
-        [
-          current_user: user,
-          delete_associations: assocs,
-          delete_caretaken: true
-        ]
+    Common.Utils.maybe_apply(
+      Bonfire.Social.Objects,
+      :maybe_generic_delete,
+      [User, user, opts ++ [current_user: user, delete_associations: assocs, delete_caretaken: true]]
     )
+    # Bonfire.Social.Objects.maybe_generic_delete(
+    #   User,
+    #   user,
+    #   opts ++
+    #     [
+    #       current_user: user,
+    #       delete_associations: assocs,
+    #       delete_caretaken: true
+    #     ]
+    # )
   end
 
   # def delete(users) when is_list(users) do
@@ -383,7 +387,11 @@ defmodule Bonfire.Me.Users do
   def ap_receive_activity(_creator, _activity, object) do
     debug(object, "Users.ap_receive_activity")
 
-    Bonfire.Federate.ActivityPub.Adapter.maybe_create_remote_actor(Utils.e(object, :data, object))
+    Common.Utils.maybe_apply(
+      Bonfire.Federate.ActivityPub.Adapter,
+      :maybe_create_remote_actor,
+      [Utils.e(object, :data, object)]
+    )
   end
 
   @doc "Creates a remote user"
@@ -412,7 +420,11 @@ defmodule Bonfire.Me.Users do
   end
 
   def format_actor(user) do
-    AdapterUtils.format_actor(user, "Person")
+    Common.Utils.maybe_apply(
+      Bonfire.Federate.ActivityPub.Adapter,
+      :format_actor,
+      [user, "Person"]
+    )
   end
 
   ## Adapter callbacks

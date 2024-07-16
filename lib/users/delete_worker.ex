@@ -4,8 +4,8 @@ defmodule Bonfire.Me.DeleteWorker do
     max_attempts: 3
 
   # import Bonfire.Me.Integration
-  alias Bonfire.Common.Utils
-  alias Bonfire.Common.Enums
+  # alias Bonfire.Common.Utils
+  # alias Bonfire.Common.Enums
   alias Bonfire.Common.Types
   # alias Needle.Pointer
   use Bonfire.Common.Repo
@@ -31,6 +31,10 @@ defmodule Bonfire.Me.DeleteWorker do
       Bonfire.Boundaries.load_pointers(ids, skip_boundary_check: true, include_deleted: true)
       |> debug("main")
 
-    Bonfire.Social.Objects.do_delete(main, federate_inline: true)
+    Common.Utils.maybe_apply(
+      Bonfire.Social.Objects,
+      :do_delete,
+      [main, federate_inline: true]
+    )
   end
 end

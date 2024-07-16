@@ -23,7 +23,7 @@ defmodule Bonfire.Me.Mails do
     confirm_token = Utils.e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
-      app_name = Bonfire.Application.name()
+      app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
       url = url_path(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
 
       if Config.env() != :test or
@@ -57,7 +57,7 @@ defmodule Bonfire.Me.Mails do
         Config.get(__MODULE__, [])
         |> Keyword.get(:forgot_password_email, [])
 
-      app_name = Bonfire.Application.name()
+      app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
       url = url_path(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
 
       new_email()

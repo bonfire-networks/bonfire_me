@@ -2,7 +2,7 @@ defmodule Bonfire.Me.Fake do
   use Arrows
   import Untangle
   alias Bonfire.Data.Identity.Account
-  alias Bonfire.Me.Accounts
+  # alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
 
   # import Bonfire.Common.Simulation
