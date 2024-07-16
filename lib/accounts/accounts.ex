@@ -645,11 +645,11 @@ defmodule Bonfire.Me.Accounts do
     Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :maybe_generic_delete,
-      [Account, account,
-      current_account: account,
-      delete_associations: assocs,
-      delete_caretaken: true
-    ]
+      [
+        Account,
+        account,
+        [current_account: account, delete_associations: assocs, delete_caretaken: true]
+      ]
     )
 
     # repo().delete(account) # handled by Epic

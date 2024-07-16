@@ -354,8 +354,13 @@ defmodule Bonfire.Me.Users do
     Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :maybe_generic_delete,
-      [User, user, opts ++ [current_user: user, delete_associations: assocs, delete_caretaken: true]]
+      [
+        User,
+        user,
+        opts ++ [current_user: user, delete_associations: assocs, delete_caretaken: true]
+      ]
     )
+
     # Bonfire.Social.Objects.maybe_generic_delete(
     #   User,
     #   user,
