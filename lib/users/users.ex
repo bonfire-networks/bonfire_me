@@ -359,7 +359,7 @@ defmodule Bonfire.Me.Users do
         user,
         opts ++ [current_user: user, delete_associations: assocs, delete_caretaken: true]
       ]
-    )
+    ) |> debug("maybe_generic_delete")
 
     # Bonfire.Social.Objects.maybe_generic_delete(
     #   User,
