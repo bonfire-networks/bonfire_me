@@ -31,7 +31,7 @@ defmodule Bonfire.Me.DeleteWorker do
       Bonfire.Boundaries.load_pointers(ids, skip_boundary_check: true, include_deleted: true)
       |> debug("main")
 
-    Common.Utils.maybe_apply(
+    Bonfire.Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :do_delete,
       [main, federate_inline: true]

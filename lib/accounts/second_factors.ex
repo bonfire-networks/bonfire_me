@@ -22,7 +22,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
       issuer =
         Config.get(
           [:ui, :theme, :instance_name],
-          Common.Utils.maybe_apply(
+          Bonfire.Common.Utils.maybe_apply(
             Bonfire.Application,
             :name,
             []

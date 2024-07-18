@@ -642,7 +642,7 @@ defmodule Bonfire.Me.Accounts do
     ]
 
     # account = repo().maybe_preload(account, assocs)
-    Common.Utils.maybe_apply(
+    Bonfire.Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :maybe_generic_delete,
       [

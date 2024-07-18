@@ -351,7 +351,7 @@ defmodule Bonfire.Me.Users do
     # TODO: delete user's objects (based on caretaker) and activities
 
     # user = repo().maybe_preload(user, assocs)
-    Common.Utils.maybe_apply(
+    Bonfire.Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :maybe_generic_delete,
       [
@@ -359,7 +359,8 @@ defmodule Bonfire.Me.Users do
         user,
         opts ++ [current_user: user, delete_associations: assocs, delete_caretaken: true]
       ]
-    ) |> debug("maybe_generic_delete")
+    )
+    |> debug("maybe_generic_delete")
 
     # Bonfire.Social.Objects.maybe_generic_delete(
     #   User,
@@ -392,7 +393,7 @@ defmodule Bonfire.Me.Users do
   def ap_receive_activity(_creator, _activity, object) do
     debug(object, "Users.ap_receive_activity")
 
-    Common.Utils.maybe_apply(
+    Bonfire.Common.Utils.maybe_apply(
       Bonfire.Federate.ActivityPub.Adapter,
       :maybe_create_remote_actor,
       [Utils.e(object, :data, object)]
@@ -425,7 +426,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def format_actor(user) do
-    Common.Utils.maybe_apply(
+    Bonfire.Common.Utils.maybe_apply(
       Bonfire.Federate.ActivityPub.Adapter,
       :format_actor,
       [user, "Person"]
