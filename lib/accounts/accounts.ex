@@ -1,4 +1,8 @@
 defmodule Bonfire.Me.Accounts do
+  @doc """
+  An account represents a private identity within the system, and can have many User identities (see `Bonfire.Me.Accounts`). An account usually has an `Bonfire.Data.Identity.Email` and a `Bonfire.Data.Identity.Credential` user for login.
+  """
+
   use Arrows
   use Bonfire.Common.Utils
   import Bonfire.Me.Integration

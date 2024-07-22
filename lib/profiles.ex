@@ -1,4 +1,16 @@
 defmodule Bonfire.Me.Profiles do
+  @moduledoc """
+  Shared helpers for profiles (such as the profile of a User or Category)
+
+  Context for `Bonfire.Data.Social.Profile` mixin, which has these fields:
+  - name
+  - summary
+  - website
+  - location (plaintext, see )
+  - icon: eg. avatar (references a `Bonfire.Files.Media`)
+  - image: eg. banner
+  """
+
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
   # import Untangle

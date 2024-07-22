@@ -1,4 +1,15 @@
 defmodule Bonfire.Me.Characters do
+  @moduledoc """
+  Shared helpers for character types (such as User or Category)
+
+  Context for `Bonfire.Data.Identity.Character` mixin, which has these fields:
+  - username
+  - username_hash: hashed username (used for preserving uniqueness incl. deleted usernames)
+  - outbox: Feed of activities by the user
+  - inbox: Feed of messages and other activities for the user
+  - notifications: Feed of notifications for the user
+  """
+
   use Bonfire.Common.Utils
   alias Bonfire.Data.Identity.Character
   alias Bonfire.Common.URIs

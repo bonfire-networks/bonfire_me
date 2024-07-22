@@ -1,4 +1,5 @@
 defmodule Bonfire.Me.Accounts.Queries do
+  @moduledoc "Queries for `Bonfire.Me.Accounts`"
   import Ecto.Query
   alias Bonfire.Data.Identity.Account
   # import Bonfire.Me.Integration

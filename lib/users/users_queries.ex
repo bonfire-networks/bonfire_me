@@ -1,4 +1,6 @@
 defmodule Bonfire.Me.Users.Queries do
+  @moduledoc "Queries for `Bonfire.Me.Users`"
+
   import Untangle
   import Ecto.Query
   # alias Bonfire.Me.Integration

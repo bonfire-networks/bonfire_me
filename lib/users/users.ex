@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Users do
   @doc """
-  A User is a logical identity within the system belonging to an Account.
+  A User represents a visible identity within the system belonging to an Account (see `Bonfire.Me.Accounts`) and having a Profile (see `Bonfire.Me.Profiles`) and a Character identified by a username (see `Bonfire.Me.Characters`).
   """
   use Arrows
   use Bonfire.Common.Utils
@@ -540,7 +540,7 @@ defmodule Bonfire.Me.Users do
         Map.merge(a, b)
       end)
 
-    # FIXME: Tag with Geolocation
+    # FIXME: Tag with Geolocation # TODO: move to Profiles changeset?
     case e(params["profile"], :location, nil) do
       location when is_binary(location) and location != "" ->
         maybe_apply(Bonfire.Geolocate.Geolocations, :thing_add_location, [user, user, location])

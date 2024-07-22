@@ -1,4 +1,5 @@
 defmodule Bonfire.Me.Accounts.SecondFactors do
+  @moduledoc "Support for second-factor authentication. Powered by `NimbleTOTP`."
   use Arrows
   use Bonfire.Common.Utils
   import Bonfire.Me.Integration

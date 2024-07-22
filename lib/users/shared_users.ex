@@ -1,5 +1,6 @@
 if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
   defmodule Bonfire.Me.SharedUsers do
+    @moduledoc "Enables multiple people to share one identity, by associating one User with many Accounts. Context for `Bonfire.Data.SharedUser`"
     alias Bonfire.Data.SharedUser
     alias Bonfire.Data.Identity.Account
     alias Bonfire.Data.Identity.User

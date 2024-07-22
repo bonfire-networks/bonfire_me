@@ -1,4 +1,6 @@
 defmodule Bonfire.Me.DeleteWorker do
+  @moduledoc "Handles queued deletion of a user and its data."
+
   use Oban.Worker,
     queue: :deletion,
     max_attempts: 3
@@ -34,7 +36,8 @@ defmodule Bonfire.Me.DeleteWorker do
     Bonfire.Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :do_delete,
-      [main, federate_inline: true]
+      [main, federate_inline: true],
+      fallback_return: {:error, "Missing required module: Bonfire.Social.Objects"}
     )
   end
 end

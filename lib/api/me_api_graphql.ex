@@ -1,6 +1,7 @@
 if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
      Code.ensure_loaded?(Absinthe.Schema.Notation) do
   defmodule Bonfire.Me.API.GraphQL do
+    @moduledoc "Account/User related API fields/endpoints for GraphQL"
     import Untangle
     use Absinthe.Schema.Notation
     use Absinthe.Relay.Schema.Notation, :modern

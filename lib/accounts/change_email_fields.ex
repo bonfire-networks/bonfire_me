@@ -1,4 +1,6 @@
 defmodule Bonfire.Me.Accounts.ChangeEmailFields do
+  @moduledoc "A changeset for changing an account's email address"
+
   use Ecto.Schema
   alias Ecto.Changeset
   alias Bonfire.Me.Accounts.ChangeEmailFields

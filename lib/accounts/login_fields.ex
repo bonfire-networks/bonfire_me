@@ -1,4 +1,6 @@
 defmodule Bonfire.Me.Accounts.LoginFields do
+  @moduledoc "A changeset for logging in"
+
   use Ecto.Schema
   alias Ecto.Changeset
   alias Bonfire.Me.Accounts.LoginFields

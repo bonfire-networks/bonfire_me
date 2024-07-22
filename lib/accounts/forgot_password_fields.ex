@@ -1,4 +1,6 @@
 defmodule Bonfire.Me.Accounts.ForgotPasswordFields do
+  @moduledoc "A changeset for requesting a password reset"
+
   use Ecto.Schema
   alias Ecto.Changeset
   alias Bonfire.Me.Accounts.ForgotPasswordFields

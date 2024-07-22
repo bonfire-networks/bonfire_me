@@ -1,5 +1,7 @@
 if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
   defmodule Bonfire.Me.API.GraphQLMasto.Adapter do
+    @moduledoc "Account/User related API endpoints for Mastodon-compatible client apps, powered by the GraphQL API (see `Bonfire.Me.API.GraphQL`)"
+
     # use Bonfire.UI.Common.Web, :controller
     use Arrows
     import Untangle

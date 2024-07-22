@@ -1,4 +1,5 @@
 defmodule Bonfire.Me.Accounts.ConfirmEmailFields do
+  @moduledoc "A changeset for confirming an email address"
   use Ecto.Schema
   alias Ecto.Changeset
   alias Bonfire.Me.Accounts.ConfirmEmailFields
