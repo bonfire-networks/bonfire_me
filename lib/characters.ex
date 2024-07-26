@@ -31,12 +31,31 @@ defmodule Bonfire.Me.Characters do
   @username_forbidden ~r/[^a-z0-9_]+/i
   @username_regex ~r(^[a-z0-9_]{2,63}$)i
 
+  @doc """
+  Retrieves a character by username.
+
+  ## Examples
+
+      > Bonfire.Me.Characters.by_username("username")
+      %Bonfire.Data.Identity.Character{}
+  """
   def by_username(username) when is_binary(username),
     do: by_username_q(username) |> repo().single()
 
   def by_username!(username) when is_binary(username),
     do: by_username_q(username) |> repo().one()
 
+  @doc """
+  Retrieves multiple characters by IDs.
+
+  ## Examples
+
+      > Bonfire.Me.Characters.get("id_or_username")
+      %Bonfire.Data.Identity.Character{}
+
+      > Bonfire.Me.Characters.get(["id1", "id2"])
+      {:ok, [%Bonfire.Data.Identity.Character{}, %Bonfire.Data.Identity.Character{}]}
+  """
   def get(ids) when is_list(ids), do: {:ok, q_by_id(ids) |> repo().many()}
 
   def get(id) when is_binary(id) do
@@ -58,25 +77,64 @@ defmodule Bonfire.Me.Characters do
     |> proload([:peered, :profile, :actor])
   end
 
+  @doc """
+  Checks if a username is available.
+
+  ## Examples
+
+      iex> Bonfire.Me.Characters.username_available?("non_existing_username")
+      true
+  """
   def username_available?(username) do
     not repo().exists?(from(c in Character, where: c.username == ^username)) and
       hash_available?(Character.hash(username))
   end
 
+  @doc """
+  Checks if a username hash is available.
+
+  ## Examples
+
+      iex> Bonfire.Me.Characters.hash_available?("hash")
+      true
+  """
   def hash_available?(hash) do
     not repo().exists?(from(c in Character, where: c.username_hash == ^hash))
   end
 
+  @doc """
+  Deletes a character by username hash.
+
+  ## Examples
+
+      > Bonfire.Me.Characters.hash_delete("hash")
+  """
   def hash_delete(hash) do
     repo().delete_all(from(c in Character, where: c.username_hash == ^hash))
   end
 
+  @doc """
+  Cleans a username by replacing forbidden characters with underscores.
+
+  ## Examples
+
+      iex> Bonfire.Me.Characters.clean_username("invalid username!")
+      "invalid_username"
+  """
   def clean_username(username) do
     Regex.replace(@username_forbidden, username, "_")
     |> String.slice(0..(@username_max_length - 1))
     |> String.trim("_")
   end
 
+  @doc """
+  Updates a character with the given attributes.
+
+  ## Examples
+
+      > Bonfire.Me.Characters.update(%Bonfire.Data.Identity.Character{}, %{field: "value"})
+      {:ok, %Bonfire.Data.Identity.Character{}}
+  """
   def update(%Character{} = character, attrs) do
     repo().update(changeset(character, attrs, :update))
   end
@@ -134,6 +192,17 @@ defmodule Bonfire.Me.Characters do
     # |> info()
   end
 
+  @doc """
+  Displays a username with optional domain and prefix.
+
+  ## Examples
+
+      iex> Bonfire.Me.Characters.display_username("username")
+      "@username"
+
+      iex> Bonfire.Me.Characters.display_username("username", true, true, "@")
+      "@username@domain.com"
+  """
   def display_username(
         user,
         always_include_domain \\ false,
@@ -214,6 +283,14 @@ defmodule Bonfire.Me.Characters do
     nil
   end
 
+  @doc """
+  Returns the appropriate mention prefix for a character type.
+
+  ## Examples
+
+      iex> Bonfire.Me.Characters.character_mention_prefix(%Bonfire.Data.Identity.User{})
+      "@"
+  """
   def character_mention_prefix(object) do
     case Types.object_type(object) do
       Bonfire.Data.Identity.User -> "@"
@@ -223,6 +300,14 @@ defmodule Bonfire.Me.Characters do
     end
   end
 
+  @doc """
+  Returns the canonical URL for a character.
+
+  ## Examples
+
+      iex> Bonfire.Me.Characters.character_url(%Bonfire.Data.Identity.Character{})
+      "http://example.com/character/username"
+  """
   def character_url(character), do: URIs.canonical_url(character)
 
   # def character_url(username) when is_binary(username) do

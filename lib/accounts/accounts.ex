@@ -27,20 +27,65 @@ defmodule Bonfire.Me.Accounts do
   alias Ecto.Changeset
   alias Needle.Changesets
 
+  @doc """
+  Returns the current account by its ID or nil if the ID is nil.
+
+  ## Examples
+
+      iex> get_current(nil)
+      nil
+
+      > get_current("some_id")
+      %Account{id: "some_id"}
+
+  """
   def get_current(nil), do: nil
   # |> debug
   def get_current(id) when is_binary(id), do: repo().maybe_one(Queries.current(id))
 
+  @doc """
+  Fetches the current account by its ID, returns `{:error, :not_found}` if the ID is nil.
+
+  ## Examples
+
+      iex> fetch_current(nil)
+      {:error, :not_found}
+
+      > fetch_current("some_id")
+      {:ok, %Account{id: "some_id"}}
+
+  """
   def fetch_current(nil), do: {:error, :not_found}
 
   def fetch_current(id) when is_binary(id),
     do: repo().single(Queries.current(id))
 
+  @doc """
+  Returns the account by its email.
+
+  ## Examples
+
+      > get_by_email("test@example.com")
+      %Account{email: "test@example.com"}
+
+  """
   def get_by_email(email) when is_binary(email),
     do: repo().one(Queries.by_email(email))
 
   @type changeset_name :: :change_password | :confirm_email | :login | :signup
 
+  @doc """
+  Returns a changeset for the given changeset name and parameters.
+
+  ## Examples
+
+      > changeset(:forgot_password, %{})
+      %Changeset{}
+
+      > changeset(:login, %{email: "test@example.com", password: "secret"})
+      %Changeset{}
+
+  """
   @spec changeset(changeset_name, params :: map) :: Changeset.t()
   @spec changeset(changeset_name, params :: map, opts :: Keyword.t()) ::
           Changeset.t()
@@ -115,6 +160,18 @@ defmodule Bonfire.Me.Accounts do
 
   ### signup
 
+  @doc """
+  Signs up a new account with the given parameters.
+
+  ## Examples
+
+      > signup(%{email: "test@example.com", password: "secret"})
+      {:ok, %Account{}}
+
+      > signup(%Changeset{valid?: false})
+      {:error, %Changeset{}}
+
+  """
   def signup(params_or_changeset, opts \\ [])
 
   def signup(params, opts) when not is_struct(params) do
@@ -185,6 +242,18 @@ defmodule Bonfire.Me.Accounts do
   On success, returns `{:ok, account, user}` if a username was
   provided and `{:ok, account, nil}` otherwise.
   On error, returns `{:error, changeset}`
+
+  ## Examples
+
+      > login(%{email: "test@example.com", password: "secret"})
+      {:ok, %Account{}, nil}
+
+      > login(%{username: "test", password: "secret"})
+      {:ok, %Account{}, %User{}}
+
+      > login(%Changeset{valid?: false})
+      {:error, %Changeset{}}
+
   """
   def login(params_or_changeset, opts \\ [])
 
@@ -324,6 +393,18 @@ defmodule Bonfire.Me.Accounts do
 
   ###  request_confirm_email
 
+  @doc """
+  Requests an email confirmation for the account.
+
+  ## Examples
+
+      > request_confirm_email(%{email: "test@example.com"})
+      {:ok, :resent, %Account{}}
+
+      > request_confirm_email(%Changeset{valid?: false})
+      {:error, %Changeset{}}
+
+  """
   def request_confirm_email(params_or_changeset_or_form_or_account, opts \\ [])
 
   def request_confirm_email(%Changeset{data: %ConfirmEmailFields{}} = cs, opts),
@@ -399,7 +480,18 @@ defmodule Bonfire.Me.Accounts do
 
   ### confirm_email
 
-  @doc "Confirm an account's email address as valid, usually by providing a confirmation token, or directly by providing an Account"
+  @doc """
+  Confirms an account's email address as valid, usually by providing a confirmation token, or directly by providing an Account.
+
+  ## Examples
+
+      > confirm_email("some_token")
+      {:ok, %Account{}}
+
+      > confirm_email(%Account{})
+      {:ok, %Account{}}
+
+  """
   def confirm_email(account_or_token, opts \\ [])
 
   def confirm_email(%Account{} = account, _opts) do
@@ -414,7 +506,15 @@ defmodule Bonfire.Me.Accounts do
     end)
   end
 
-  @doc "Confirm an account's email manually, by providing the email address. Only for internal or CLI use."
+  @doc """
+  Confirms an account's email manually, by providing the email address. Only for internal or CLI use.
+
+  ## Examples
+
+      > confirm_email_manually("test@example.com")
+      {:ok, %Account{}}
+
+  """
   def confirm_email_manually(email) do
     with %Account{} = account <- get_by_email(email) do
       confirm_email(account)
@@ -471,10 +571,31 @@ defmodule Bonfire.Me.Accounts do
 
   ### forgot/change password
 
+  @doc """
+  Requests a password reset to be sent for the account.
+
+  ## Examples
+
+      > request_forgot_password(%{email: "test@example.com"})
+      {:ok, :resent, %Account{}}
+
+  """
   def request_forgot_password(params) do
     request_confirm_email(params, confirm_action: :forgot_password)
   end
 
+  @doc """
+  Changes the password for the current account.
+
+  ## Examples
+
+      > change_password(%Account{}, %{old_password: "old", password: "new"})
+      {:ok, %Account{}}
+
+      > change_password(%Account{}, %Changeset{valid?: false})
+      {:error, %Changeset{}}
+
+  """
   def change_password(current_account, params_or_changeset, opts \\ [])
 
   def change_password(current_account, params, opts) when not is_struct(params),
@@ -520,8 +641,18 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
-  ###
+  @doc """
+  Changes the email for the current account.
 
+  ## Examples
+
+      > change_email(%Account{}, %{old_email: "old@example.com", email: "new@example.com"})
+      {:ok, %Account{}}
+
+      > change_email(%Account{}, %Changeset{valid?: false})
+      {:error, %Changeset{}}
+
+  """
   def change_email(current_account, params_or_changeset, opts \\ [])
 
   def change_email(current_account, params, opts) when not is_struct(params),
@@ -571,6 +702,15 @@ defmodule Bonfire.Me.Accounts do
 
   ### invites
 
+  @doc """
+  Checks if the instance is invite-only.
+
+  ## Examples
+
+      > instance_is_invite_only?()
+      true
+
+  """
   def instance_is_invite_only? do
     (Config.env() != :test and
        Config.get(:invite_only)) || false
@@ -578,6 +718,15 @@ defmodule Bonfire.Me.Accounts do
     # System.get_env("INVITE_ONLY", "true") in ["true", true]
   end
 
+  @doc """
+  Checks if signup is allowed based on instance config and provided options.
+
+  ## Examples
+
+      iex> allow_signup?(%{invite: "invite_code"})
+      true
+
+  """
   def allow_signup?(opts) do
     valid_invite = System.get_env("INVITE_KEY")
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
@@ -613,6 +762,18 @@ defmodule Bonfire.Me.Accounts do
     |> Changeset.add_error(:form, "invite_only")
   end
 
+  @doc """
+  Enqueues the deletion of the given account.
+
+  ## Examples
+
+      > enqueue_delete(%Account{})
+      :ok
+
+      > enqueue_delete("some_account_id")
+      :ok
+
+  """
   def enqueue_delete(%{} = account) when is_struct(account) do
     account =
       account
@@ -629,7 +790,18 @@ defmodule Bonfire.Me.Accounts do
     enqueue_delete(account)
   end
 
-  @doc "Use `enqueue_delete/1` instead"
+  @doc """
+  Deletes the given account - use `enqueue_delete/1` instead.
+
+  ## Examples
+
+      iex> delete(%Account{})
+      :ok
+
+      iex> delete("some_account_id")
+      :ok
+
+  """
   def delete(account, _opts \\ [])
 
   def delete(%Account{} = account, _opts) do
@@ -687,6 +859,15 @@ defmodule Bonfire.Me.Accounts do
 
   defp mailer_response(_, _), do: {:error, :email}
 
+  @doc """
+  Counts the number of accounts.
+
+  ## Examples
+
+      iex> count()
+      42
+
+  """
   def count(), do: repo().one(Queries.count()) |> debug()
 
   def is_first_account? do
@@ -729,6 +910,18 @@ defmodule Bonfire.Me.Accounts do
     |> repo().delete()
   end
 
+  @doc """
+  Checks if the given user or account is an admin.
+
+  ## Examples
+
+      > is_admin?(user)
+      true
+
+      > is_admin?(account)
+      true
+
+  """
   def is_admin?(%{instance_admin: %{is_instance_admin: val}}),
     do: val
 

@@ -2,6 +2,7 @@ defmodule Bonfire.Me.Users do
   @doc """
   A User represents a visible identity within the system belonging to an Account (see `Bonfire.Me.Accounts`) and having a Profile (see `Bonfire.Me.Profiles`) and a Character identified by a username (see `Bonfire.Me.Characters`).
   """
+
   use Arrows
   use Bonfire.Common.Utils
   alias Bonfire.Me.Integration
@@ -39,6 +40,17 @@ defmodule Bonfire.Me.Users do
 
   ### Queries
 
+  @doc """
+  Gets the current user by ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.get_current(nil)
+      nil
+
+      > Bonfire.Me.Users.get_current("user_id")
+      %Bonfire.Data.Identity.User{}
+  """
   def get_current(nil), do: nil
   def get_current(id) when is_binary(id), do: repo().maybe_one(Queries.current(id))
   def get_current(nil, _), do: nil
@@ -46,6 +58,14 @@ defmodule Bonfire.Me.Users do
   def get_current(id, account_id) when is_binary(id),
     do: repo().maybe_one(Queries.current(id, account_id))
 
+  @doc """
+  Fetches the current user by ID.
+
+  ## Examples
+
+      > Bonfire.Me.Users.fetch_current("user_id")
+      %Bonfire.Data.Identity.User{}
+  """
   def fetch_current(id), do: repo().single(Queries.current(id))
 
   # def query(filters, opts \\ [])
@@ -54,6 +74,17 @@ defmodule Bonfire.Me.Users do
   #   Queries.query(filters, opts)
   # end
 
+  @doc """
+  Gets a user by ID.
+
+  ## Examples
+
+      > Bonfire.Me.Users.by_id("user_id")
+      %Bonfire.Data.Identity.User{}
+
+      > Bonfire.Me.Users.by_id(["user_id"])
+      %Bonfire.Data.Identity.User{}
+  """
   def by_id(id, opts \\ [])
 
   def by_id(id, opts) when is_binary(id),
@@ -61,6 +92,14 @@ defmodule Bonfire.Me.Users do
 
   def by_id([id], opts), do: by_id(id, opts)
 
+  @doc """
+  Gets a user by username.
+
+  ## Examples
+
+      > Bonfire.Me.Users.by_username("username")
+      %Bonfire.Data.Identity.User{}
+  """
   # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
   def by_username(username, opts \\ []) when is_binary(username) do
     # info(self(), username)
@@ -70,6 +109,14 @@ defmodule Bonfire.Me.Users do
     |> repo().single()
   end
 
+  @doc """
+  Gets a user by canonical URI.
+
+  ## Examples
+
+      > Bonfire.Me.Users.by_canonical_uri("http://example.com")
+      %Bonfire.Data.Identity.User{}
+  """
   def by_canonical_uri(uri) when is_binary(uri) do
     Queries.by_canonical_uri(uri)
     # |> info(repo())
@@ -78,9 +125,28 @@ defmodule Bonfire.Me.Users do
     # |> info(uri)
   end
 
+  @doc """
+  Gets a user by username, raising an error if not found.
+
+  ## Examples
+
+      > Bonfire.Me.Users.by_username!("username")
+      %Bonfire.Data.Identity.User{}
+  """
   def by_username!(username) when is_binary(username),
     do: repo().one(Queries.by_username_or_id(username))
 
+  @doc """
+  Gets users by account.
+
+  ## Examples
+
+      > Bonfire.Me.Users.by_account(%Bonfire.Data.Identity.Account{id: "account_id"})
+      [%Bonfire.Data.Identity.User{}]
+
+      > Bonfire.Me.Users.by_account!("account_id")
+      [%Bonfire.Data.Identity.User{}]
+  """
   def by_account(account) do
     if module = maybe_module(Bonfire.Me.SharedUsers) do
       module.by_account(account)
@@ -100,7 +166,12 @@ defmodule Bonfire.Me.Users do
     do: repo().many(Queries.by_account(account_id))
 
   @doc """
-  Used for switch-user functionality
+  Gets a user by username or user ID and account ID, useful for switch-user functionality.
+
+  ## Examples
+
+      > Bonfire.Me.Users.by_user_and_account("username", "account_id")
+      {:ok, %Bonfire.Data.Identity.User{}}
   """
   def by_user_and_account(username_or_user_id, account_id) do
     with {:ok, user} <-
@@ -111,8 +182,27 @@ defmodule Bonfire.Me.Users do
     end
   end
 
+  @doc """
+  Checks if a user is active.
+
+  ## Examples
+
+      > Bonfire.Me.Users.is_active?(user)
+        
+  """
   def is_active?(user), do: !Bonfire.Boundaries.Blocks.is_blocked?(user, :ghost, :instance_wide)
 
+  @doc """
+  Checks if users are active.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.check_active([user1])
+      [{:ok, %Bonfire.Data.Identity.User{}}]
+
+      iex> Bonfire.Me.Users.check_active(user)
+      {:ok, %Bonfire.Data.Identity.User{}}
+  """
   def check_active(users) when is_list(users), do: Enum.map(users, &check_active/1)
 
   def check_active(user) do
@@ -127,6 +217,14 @@ defmodule Bonfire.Me.Users do
 
   def check_active!(other), do: other
 
+  @doc """
+  Searches for users.
+
+  ## Examples
+
+      > Bonfire.Me.Users.search("username")
+      [%Bonfire.Data.Identity.User{}]
+  """
   def search(search, opts \\ []) do
     Utils.maybe_apply(
       Bonfire.Search,
@@ -139,6 +237,14 @@ defmodule Bonfire.Me.Users do
 
   defp none(_, _), do: []
 
+  @doc """
+  Query for searching for users.
+
+  ## Examples
+
+      > Bonfire.Me.Users.search_query("search_term")
+      %Ecto.Query{}
+  """
   def search_query(search, opts \\ []), do: Queries.search(search, opts)
 
   # def list_all(show \\ :local), do: repo().many(Queries.list(show))
