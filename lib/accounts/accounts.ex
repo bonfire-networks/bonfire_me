@@ -426,7 +426,7 @@ defmodule Bonfire.Me.Accounts do
     do: {:error, Changeset.add_error(changeset, :form, "confirmation_disabled")}
 
   defp rce_check_confirm(true, form, changeset, opts) do
-    repo().one(Queries.request_confirm_email(form.email))
+    repo().one(Queries.by_email(form.email))
     |> rce_check_account(form, changeset, opts)
   end
 
@@ -501,7 +501,7 @@ defmodule Bonfire.Me.Accounts do
 
   def confirm_email(token, opts) when is_binary(token) do
     repo().transact_with(fn ->
-      repo().single(Queries.confirm_email(token))
+      repo().single(Queries.by_confirm_token(token))
       ~> ce(opts)
     end)
   end

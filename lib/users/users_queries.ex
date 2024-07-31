@@ -18,6 +18,18 @@ defmodule Bonfire.Me.Users.Queries do
   def schema_module, do: User
   def context_module, do: Bonfire.Me.Users
 
+  @doc """
+  Queries for a user based on the given filter.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.query(id: "some_id")
+
+      iex> Bonfire.Me.Users.Queries.query(username: "some_username")
+
+      iex> Bonfire.Me.Users.Queries.query(:invalid_filter)
+      {:error, "Could not query"}
+  """
   def query(filters, _opts \\ [])
   def query({:id, id}, opts), do: by_id(id, opts)
   def query({:username, username}, opts), do: by_username_or_id(username, opts)
@@ -42,6 +54,13 @@ defmodule Bonfire.Me.Users.Queries do
     )
   end
 
+  @doc """
+  Searches for users based on a text string.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.search("userna")
+  """
   def search(text, opts \\ []) when is_binary(text) do
     (opts[:query] || base_query())
     |> proload([
@@ -90,8 +109,22 @@ defmodule Bonfire.Me.Users.Queries do
   #   )
   # end
 
+  @doc """
+  Returns for the current user based on the user ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.current("user_id")
+  """
   def current(user_id), do: by_username_or_id(user_id, :current)
 
+  @doc """
+  Returns for the current user based on the user ID and account ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.current("user_id", "account_id")
+  """
   def current(user_id, account_id) when is_binary(account_id) do
     base_by_id(user_id)
     # NOTE: this to avoid loading the wrong account in the case of SharedUser
@@ -118,24 +151,51 @@ defmodule Bonfire.Me.Users.Queries do
 
   def base_by_id(id) when is_binary(id), do: from(u in User, as: :user, where: u.id == ^id)
 
+  @doc """
+  Gets a user by ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.by_id("user_id")
+  """
   def by_id(id, opts \\ []),
     do:
       base_by_id(id)
       |> proloads(opts)
 
-  # OR ID
+  @doc """
+  Finds a user by username or ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.by_username_or_id("username_or_id")
+  """
   def by_username_or_id(username_or_id, opts \\ []) do
     if Types.is_ulid?(username_or_id),
       do: by_id(username_or_id, opts),
       else: by_username_query(username_or_id, opts)
   end
 
+  @doc """
+  Finds a user by username.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.by_username_query("username")
+  """
   def by_username_query(username, opts \\ []) do
     from(u in User, as: :user)
     |> proloads(opts)
     |> where([character: c], c.username == ^username)
   end
 
+  @doc """
+  Finds a user by username or user ID and account ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.by_user_and_account("username_or_user_id", "account_id")
+  """
   def by_user_and_account(username_or_user_id, account_id) do
     if user_id = Types.ulid(username_or_user_id) do
       # if module = maybe_module(Bonfire.Me.SharedUsers) do # TODO
@@ -159,6 +219,13 @@ defmodule Bonfire.Me.Users.Queries do
     end
   end
 
+  @doc """
+  Finds users by account ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.by_account("account_id")
+  """
   def by_account(account_id) do
     account_id = Types.ulid(account_id)
 
@@ -167,6 +234,13 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([account: account], account.id == ^account_id)
   end
 
+  @doc """
+  Finds a user by canonical URI.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.by_canonical_uri("canonical_uri")
+  """
   def by_canonical_uri(canonical_uri, opts \\ []) do
     from(u in User, as: :user)
     |> proloads(opts)
@@ -238,6 +312,17 @@ defmodule Bonfire.Me.Users.Queries do
     ])
   end
 
+  @doc """
+  Counts the number of users.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.count(:all)
+
+      iex> Bonfire.Me.Users.Queries.count(:local)
+
+      iex> Bonfire.Me.Users.Queries.count(:remote)
+  """
   def count(:local) do
     count(nil)
     |> join_peered()
@@ -254,12 +339,28 @@ defmodule Bonfire.Me.Users.Queries do
     select(User, [u], count(u.id))
   end
 
+  @doc """
+  Returns the query to list admin users.
+  """
   def admins(opts \\ []) do
     from(u in User, as: :user)
     |> proloads(Utils.e(opts, :preload, :admins))
     |> where([instance_admin: ia], ia.is_instance_admin == true)
   end
 
+  @doc """
+  Lists all users, or local or remote users, or users by instance ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.list(:all)
+
+      iex> Bonfire.Me.Users.Queries.list(:local)
+
+      iex> Bonfire.Me.Users.Queries.list(:remote)
+
+      iex> Bonfire.Me.Users.Queries.list({:instance, "instance_id"})
+  """
   def list(:local) do
     list(nil)
     |> join_peered()

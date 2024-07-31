@@ -5,6 +5,13 @@ defmodule Bonfire.Me.Accounts.Queries do
   # import Bonfire.Me.Integration
   import EctoSparkles
 
+  @doc """
+  Retrieves the current account by ID.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.Queries.current("some_id")
+  """
   def current(id) when is_binary(id) do
     from(a in Account,
       where: a.id == ^id
@@ -15,6 +22,14 @@ defmodule Bonfire.Me.Accounts.Queries do
     ])
   end
 
+  @doc """
+  Finds an account by email address.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.Queries.by_email("example@example.com")
+      #Ecto.Query<...>
+  """
   def by_email(email) when is_binary(email) do
     from(a in Account,
       join: e in assoc(a, :email),
@@ -23,15 +38,15 @@ defmodule Bonfire.Me.Accounts.Queries do
     )
   end
 
-  def request_confirm_email(email) when is_binary(email) do
-    from(a in Account,
-      join: e in assoc(a, :email),
-      where: e.email_address == ^email,
-      preload: [email: e]
-    )
-  end
+  @doc """
+  Finds an account by email confirmation token.
 
-  def confirm_email(token) when is_binary(token) do
+  ## Examples
+
+      iex> by_confirm_token("some_token")
+      #Ecto.Query<...>
+  """
+  def by_confirm_token(token) when is_binary(token) do
     from(a in Account,
       join: e in assoc(a, :email),
       where: e.confirm_token == ^token,
@@ -39,6 +54,9 @@ defmodule Bonfire.Me.Accounts.Queries do
     )
   end
 
+  @doc """
+  Find an account by ID, preloading email and credential information.
+  """
   def login_by_account_id(id) when is_binary(id) do
     from(a in Account,
       where: a.id == ^id
@@ -50,6 +68,9 @@ defmodule Bonfire.Me.Accounts.Queries do
     ])
   end
 
+  @doc """
+  Find an account by email address, preloading email and credential information.
+  """
   def login_by_email(email) when is_binary(email) do
     from(a in Account,
       join: e in assoc(a, :email),
@@ -59,6 +80,9 @@ defmodule Bonfire.Me.Accounts.Queries do
     )
   end
 
+  @doc """
+  Find an account by username, preloading the user (with character, and profile information).
+  """
   def login_by_username(username) when is_binary(username) do
     from(a in Account,
       join: c in assoc(a, :credential),
@@ -76,6 +100,15 @@ defmodule Bonfire.Me.Accounts.Queries do
     )
   end
 
+  @doc """
+  Counts the total number of accounts, or counts the number of records in the provided query.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.Queries.count()
+
+      iex> Bonfire.Me.Accounts.Queries.count(from(a in Account, where: a.active == true))
+  """
   def count(q \\ Account) do
     select(q, [u], count(u.id))
   end

@@ -1,5 +1,6 @@
 defmodule Bonfire.Me.Accounts.SecondFactors do
   @moduledoc "Support for second-factor authentication. Powered by `NimbleTOTP`."
+
   use Arrows
   use Bonfire.Common.Utils
   import Bonfire.Me.Integration
@@ -9,15 +10,44 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   # alias Bonfire.Data.Identity.Account
   alias Ecto.Changeset
 
+  @doc """
+  Checks if second-factor authentication (TOTP) is enabled on the instance.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.enabled?()
+      true
+  """
   def enabled? do
     module_enabled?(Bonfire.Data.Identity.AuthSecondFactor) and
       module_enabled?(NimbleTOTP)
   end
 
+  @doc """
+  Generates a new TOTP secret if second-factor authentication is enabled.
+
+   The secret is a random 20 bytes binary that is used to generate the QR Code to enable 2FA using auth applications. 
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.new()
+      "JBSWY3DPEHPK3PXP"
+  """
   def new() do
     if enabled?(), do: NimbleTOTP.secret()
   end
 
+  @doc """
+  Generates a new TOTP URI for use in an authentication app.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.new_uri()
+      "otpauth://totp/bonfire:AccountName?secret=APYWY3DPEHPK3PXV&issuer=Issuer"
+
+      iex> Bonfire.Me.Accounts.SecondFactors.new_uri("JBSWY3DPEHPK3PXP")
+      "otpauth://totp/bonfire:AccountName?secret=JBSWY3DPEHPK3PXP&issuer=Issuer"
+  """
   def new_uri(secret \\ nil) do
     if enabled?() do
       issuer =
@@ -34,6 +64,14 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
     end
   end
 
+  @doc """
+  Generates a QR code for the TOTP URI.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.new_qrcode()
+      "<svg>...</svg>"
+  """
   def new_qrcode(opts \\ []) do
     if enabled?(),
       do:
@@ -42,7 +80,15 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
         |> EQRCode.svg(width: 264)
   end
 
-  def format_secret(secret) do
+  @doc """
+  Formats a TOTP secret into a human-readable format.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.format_secret("JBSWY3DPEHPK3PXP")
+      "JBSW Y3DP EHPK 3PXP"
+  """
+  def format_secret(secret \\ new()) do
     secret
     |> Base.encode32(padding: false)
     |> String.graphemes()
@@ -52,7 +98,15 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   @doc """
-  Gets the %AuthSecondFactor{} entry, if any.
+  Retrieves the second factor record for an account, if any.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.get_account_totp(%{auth_second_factor: %AuthSecondFactor{}})
+      %AuthSecondFactor{}
+
+      iex> Bonfire.Me.Accounts.SecondFactors.get_account_totp("some_id")
+      %AuthSecondFactor{}
   """
   def get_account_totp(%{auth_second_factor: %AuthSecondFactor{} = totp}) do
     totp
@@ -68,6 +122,14 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
     end
   end
 
+  @doc """
+  Conditionally casts a TOTP changeset based on parameters and options.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.maybe_cast_totp_changeset(changeset, %{auth_second_factor: %{code: "123456"}}, [])
+      %Ecto.Changeset{data: %AuthSecondFactor{}}
+  """
   def maybe_cast_totp_changeset(changeset, params, opts) do
     if Bonfire.Me.Accounts.SecondFactors.enabled?() do
       debug("enabled")
@@ -104,12 +166,13 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   @doc """
-  Sets or updates the TOTP secret.
-  The secret is a random 20 bytes binary that is used to generate the QR Code to
-  enable 2FA using auth applications. It will only be updated if the OTP code
-  sent is valid.
+   Creates or updates a TOTP changeset.
+
+    The secret will only be updated if the OTP code sent is valid.
+
   ## Examples
-      iex> changeset(%AuthSecondFactor{secret: <<...>>}, code: "123456")
+
+      iex> Bonfire.Me.Accounts.SecondFactors.changeset(%AuthSecondFactor{}, %{secret: "new_secret"}, [])
       %Ecto.Changeset{data: %AuthSecondFactor{}}
   """
   def changeset(
@@ -158,6 +221,12 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
 
   @doc """
   Disables the TOTP configuration for the given account.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.delete_account_totp(%AuthSecondFactor{id: "some_id"})
+
+      iex> Bonfire.Me.Accounts.SecondFactors.delete_account_totp("some_id")
   """
   def delete_account_totp(%AuthSecondFactor{} = account_totp) do
     repo().transaction(fn ->
@@ -174,6 +243,14 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
 
   @doc """
   Validates if the given TOTP code is valid.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.validate_account_totp(%AuthSecondFactor{id: "some_id", secret: "JBSWY3DPEHPK3PXP"}, "123456")
+      :valid_totp
+
+       iex> Bonfire.Me.Accounts.SecondFactors.validate_account_totp("some_id", "123456")
+      :valid_totp
   """
   def validate_account_totp(%AuthSecondFactor{} = totp, code) do
     cond do
@@ -202,6 +279,14 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
     end
   end
 
+  @doc """
+  Tries to authenticates an account using the provided parameters.
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.SecondFactors.maybe_authenticate("account_id", %{"auth_second_factor" => %{"code" => "123456"}})
+      {:ok, :valid_totp}
+  """
   def maybe_authenticate(account, params) do
     # debug(params)
 

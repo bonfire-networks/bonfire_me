@@ -1,4 +1,8 @@
 defmodule Bonfire.Me.Mails do
+  @moduledoc """
+  Handles email sending functionality for accounts and users
+  """
+
   use Bamboo.Template, view: Bonfire.Me.Mails.EmailView
 
   alias Bonfire.Data.Identity.Account
@@ -11,6 +15,23 @@ defmodule Bonfire.Me.Mails do
   import Bonfire.Common.Localise.Gettext.Helpers
   alias Bonfire.Common.Config
 
+  @doc """
+  Sends a confirmation email based on the specified action.
+
+  ## Parameters
+
+    - `account`: The `%Account{}` struct for the user.
+    - `opts`: Options including `:confirm_action`, which determines the type of email to send.
+
+  ## Examples
+
+      iex> Bonfire.Me.Mails.confirm_email(%Account{})
+      # sends signup confirmation
+
+      iex> Bonfire.Me.Mails.confirm_email(%Account{}, confirm_action: :forgot_password)
+
+      iex> Bonfire.Me.Mails.confirm_email(%Account{}, confirm_action: :forgot_password)
+  """
   def confirm_email(account, opts \\ []) do
     case opts[:confirm_action] do
       :forgot_password -> forgot_password(account)
@@ -19,6 +40,17 @@ defmodule Bonfire.Me.Mails do
     end
   end
 
+  @doc """
+  Sends a confirmation email for user signup.
+
+  ## Parameters
+
+    - `account`: The `%Account{}` struct for the user.
+
+  ## Examples
+
+      iex> Bonfire.Me.Mails.signup_confirm_email(%Account{email: %{confirm_token: "token"}})
+  """
   def signup_confirm_email(%Account{} = account) do
     confirm_token = Utils.e(account, :email, :confirm_token, nil)
 
@@ -49,6 +81,18 @@ defmodule Bonfire.Me.Mails do
     end
   end
 
+  @doc """
+  Sends a password reset email.
+
+  ## Parameters
+
+    - `account`: The `%Account{}` struct for the user.
+
+  ## Examples
+
+      iex> Bonfire.Me.Mails.forgot_password(%Account{email: %{confirm_token: "token"}})
+      :ok
+  """
   def forgot_password(%Account{} = account) do
     confirm_token = Utils.e(account, :email, :confirm_token, nil)
 
