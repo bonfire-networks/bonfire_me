@@ -811,7 +811,7 @@ defmodule Bonfire.Me.Accounts do
       :credential,
       :email,
       :accounted,
-      :users,
+      # :users, # handled by `delete_users/1`
       :shared_users,
       :auth_second_factor,
       :settings
@@ -832,11 +832,11 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def delete(account, _opts) do
-    # re-delete already deleted pointable (eg. to catch any missing assocs)
     with {:ok, account} <- fetch_current(account) do
       delete(account)
     else
       _ ->
+        # re-delete already deleted pointable (eg. to catch any missing assocs)
         Bonfire.Common.Needles.get(account,
           deleted: true,
           skip_boundary_check: true
