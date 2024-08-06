@@ -1,5 +1,5 @@
 defmodule Bonfire.Me.Users do
-  @doc """
+  @moduledoc """
   A User represents a visible identity within the system belonging to an Account (see `Bonfire.Me.Accounts`) and having a Profile (see `Bonfire.Me.Profiles`) and a Character identified by a username (see `Bonfire.Me.Characters`).
   """
 
