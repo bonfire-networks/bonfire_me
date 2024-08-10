@@ -1,4 +1,4 @@
-activity_pub = "https://github.com/bonfire-networks/activity_pub#develop"
+activity_pub = "https://github.com/bonfire-networks/activity_pub"
 bonfire_common = "https://github.com/bonfire-networks/bonfire_common"
 bonfire_epics = "https://github.com/bonfire-networks/bonfire_epics"
 bonfire_mailer = "https://github.com/bonfire-networks/bonfire_mailer"
