@@ -71,17 +71,14 @@ defmodule Bonfire.Me.UsersTest do
     end)
   end
 
-  # test "can make a user an admin" do
-  #   # FIXME: admin is now linked to Account
-  #   assert {:ok, account} = Accounts.signup(signup_form())
-  #   # first user is automatically admin (but not in test env)
-  #   assert {:ok, fist_user} = Users.create(create_user_form(), account)
-  #   refute Users.is_admin?(fist_user)
-  #   assert {:ok, second_user} = Users.create(create_user_form(), account)
-  #   refute Users.is_admin?(second_user)
-  #   assert {:ok, second_user} = Users.make_admin(second_user)
-  #   assert second_user.instance_admin.is_instance_admin
-  #   assert {:ok, second_user} = Users.by_id(second_user.id)
-  #   assert Users.is_admin?(second_user)
-  # end
+  test "first user is automatically promoted to admin" do
+    # first user is automatically admin (but not in test env), so we change env for the sake of the test
+    Process.put([:bonfire, :env], "prod")
+    on_exit(fn -> Process.delete(:env) end)
+    assert {:ok, account} = Accounts.signup(signup_form())
+    assert Accounts.is_admin?(account)
+    attrs = create_user_form()
+    assert {:ok, user} = Users.create(attrs, account)
+    assert Accounts.is_admin?(user)
+  end
 end
