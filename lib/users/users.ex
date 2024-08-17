@@ -7,7 +7,7 @@ defmodule Bonfire.Me.Users do
   use Bonfire.Common.Utils
   alias Bonfire.Me.Integration
   import Integration
-  import Ecto.Query, only: [limit: 2]
+  import Ecto.Query, only: [limit: 2, select: 2]
   import Bonfire.Boundaries.Queries
   # alias ActivityPub.Actor
   alias Bonfire.Data.Identity.Account
@@ -157,13 +157,14 @@ defmodule Bonfire.Me.Users do
 
   def by_account!(account) do
     by_account(account)
-    |> Enum.map(&check_active!/1)
+    |> check_active!()
   end
 
-  defp do_by_account(%Account{id: id}), do: by_account(id)
+  defp do_by_account(account_id),
+    do: Queries.by_account(account_id) |> repo().many()
 
-  defp do_by_account(account_id) when is_binary(account_id),
-    do: repo().many(Queries.by_account(account_id))
+  def ids_by_account(account_id),
+    do: Queries.by_account(account_id) |> repo().pluck(:id)
 
   @doc """
   Gets a user by username or user ID and account ID, useful for switch-user functionality.
@@ -584,9 +585,20 @@ defmodule Bonfire.Me.Users do
   end
 
   def changeset(:create, user, params, %Account{} = account) do
-    # check that none of the account's users have been disabled by instance admin
-    by_account(account)
-    |> check_active!()
+    existing_users_for_account = ids_by_account(account)
+
+    # check that we can still create more users for this account
+    if Config.get(
+         [Bonfire.Me.Users, :max_per_account],
+         4
+       ) <= length(existing_users_for_account),
+       do:
+         throw(
+           "You have reached the maximum number of user profiles you can create. Please contact your instance admins."
+         )
+
+    # check that none of the account's users have been disabled by instance admin - FIXME: can we do it without querying the full list of users?
+    check_active!(existing_users_for_account)
 
     params
     |> debug("params")

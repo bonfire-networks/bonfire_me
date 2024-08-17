@@ -227,11 +227,9 @@ defmodule Bonfire.Me.Users.Queries do
       iex> Bonfire.Me.Users.Queries.by_account("account_id")
   """
   def by_account(account_id) do
-    account_id = Types.ulid(account_id)
-
     from(u in User, as: :user)
     |> proloads(:local)
-    |> where([account: account], account.id == ^account_id)
+    |> where([account: account], account.id == ^Types.ulid!(account_id))
   end
 
   @doc """

@@ -25,6 +25,18 @@ defmodule Bonfire.Me.UsersTest do
     assert([username: {_, _}] = character.errors)
   end
 
+  test "user creation blocked when max_per_account reached" do
+    Process.put(
+      [:bonfire_me, Bonfire.Me.Users, :max_per_account],
+      1
+    )
+
+    assert {:ok, account} = Accounts.signup(signup_form())
+    assert {:ok, _user} = Users.create(create_user_form(), account)
+    assert catch_throw(Users.create(create_user_form(), account))
+    Process.delete([:bonfire_me, Bonfire.Me.Users, :max_per_account])
+  end
+
   test "fetching by username" do
     assert {:ok, account} = Accounts.signup(signup_form())
     attrs = create_user_form()
