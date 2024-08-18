@@ -167,7 +167,9 @@ defmodule Bonfire.Me.Users do
     do: Queries.by_account(account_id) |> repo().pluck(:id)
 
   @doc """
-  Gets a user by username or user ID and account ID, useful for switch-user functionality.
+  Gets a user by username or user ID and account ID, useful for switch-user functionality. 
+
+  Will throw an error if any of the account's users is blocked instance-wide by admins.
 
   ## Examples
 
@@ -175,10 +177,13 @@ defmodule Bonfire.Me.Users do
       {:ok, %Bonfire.Data.Identity.User{}}
   """
   def by_user_and_account(username_or_user_id, account_id) do
+    # check that none of the account's users have been disabled by instance admin - FIXME: can we do it without querying the full list of users?
+    check_active!(ids_by_account(account_id))
+
     with {:ok, user} <-
-           repo().single(Queries.by_user_and_account(username_or_user_id, account_id)),
-         # check if user isn't blocked instance-wide
-         {:ok, _} <- check_active(user) do
+           repo().single(Queries.by_user_and_account(username_or_user_id, account_id)) do
+      # check if user isn't blocked instance-wide (already done above)
+      #  {:ok, _} <- check_active(user) do
       {:ok, user}
     end
   end
