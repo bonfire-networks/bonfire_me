@@ -439,7 +439,8 @@ defmodule Bonfire.Me.Users do
     )
   end
 
-  @doc "Use `enqueue_delete/1` instead"
+  # Call `enqueue_delete/1` instead
+  @doc false
   def delete(user, opts \\ [])
 
   def delete(users, opts) when is_list(users) do
@@ -448,19 +449,24 @@ defmodule Bonfire.Me.Users do
   end
 
   def delete(%{} = user, opts) do
-    assocs = [
-      :actor,
-      :character,
-      :follow_count,
-      :like_count,
-      :profile,
-      :settings,
-      :self,
-      :accounted
-    ]
+    assocs =
+      [
+        :follow_count,
+        :like_count,
+        :settings,
+        :self,
+        :accounted,
+        :actor,
+        :character,
+        :profile
+        # profile: [:icon, :image] # handled by Media.delete
+      ]
+      |> debug("user_delete_assocs")
 
-    # TODO: delete edges (likes/follows/etc), and boundaries (circles/ACLs/etc)
-    # TODO: delete user's objects (based on caretaker) and activities
+    # TO CHECK: deletion of user's edges (likes/follows/etc), and boundaries (circles/ACLs/etc)
+    # TO CHECK: deletion of user's objects (based on caretaker) and activities
+
+    user = repo().maybe_preload(user, profile: [:icon, :image])
 
     # user = repo().maybe_preload(user, assocs)
     Bonfire.Common.Utils.maybe_apply(
@@ -469,7 +475,13 @@ defmodule Bonfire.Me.Users do
       [
         User,
         user,
-        opts ++ [current_user: user, delete_associations: assocs, delete_caretaken: true]
+        Keyword.merge(opts,
+          current_user: user,
+          delete_associations: assocs,
+          delete_caretaken: true,
+          delete_media: [e(user, :profile, :icon, nil), e(user, :profile, :banner, nil)]
+        )
+        # |> debug("maybe_generic_delete_opts")
       ]
     )
     |> debug("maybe_generic_delete")

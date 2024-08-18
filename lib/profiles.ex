@@ -39,6 +39,24 @@ defmodule Bonfire.Me.Profiles do
     |> EctoSparkles.SanitiseStrings.clean_html()
   end
 
+  def set_profile_image(:icon, %{} = user, uploaded_media) do
+    Bonfire.Me.Users.update(user, %{
+      "profile" => %{
+        "icon" => uploaded_media,
+        "icon_id" => uploaded_media.id
+      }
+    })
+  end
+
+  def set_profile_image(:banner, %{} = user, uploaded_media) do
+    Bonfire.Me.Users.update(user, %{
+      "profile" => %{
+        "image" => uploaded_media,
+        "image_id" => uploaded_media.id
+      }
+    })
+  end
+
   def indexing_object_format(%{profile: obj}), do: indexing_object_format(obj)
 
   def indexing_object_format(%Profile{id: _} = obj) do

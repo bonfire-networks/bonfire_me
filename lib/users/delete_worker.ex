@@ -32,11 +32,14 @@ defmodule Bonfire.Me.DeleteWorker do
     main =
       Bonfire.Boundaries.load_pointers(ids, skip_boundary_check: true, include_deleted: true)
       |> debug("main")
+      |> delete_structs_now()
+  end
 
+  def delete_structs_now(structs) do
     Bonfire.Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :do_delete,
-      [main, federate_inline: true],
+      [structs, federate_inline: true],
       fallback_return: {:error, "Missing required module: Bonfire.Social.Objects"}
     )
   end

@@ -1,9 +1,14 @@
 defmodule Bonfire.Me.UsersTest do
   use Bonfire.Me.DataCase, async: true
+  import Bonfire.Files.Simulation
+
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
   alias Bonfire.Me.Characters
+
+  alias Bonfire.Files
+  alias Bonfire.Files.IconUploader
 
   test "creation works" do
     assert {:ok, account} = Accounts.signup(signup_form())
@@ -81,6 +86,19 @@ defmodule Bonfire.Me.UsersTest do
       refute Accounts.get_current(Enums.id(account))
       refute Users.by_username!(username)
     end)
+  end
+
+  test "when user is deleted, also delete avatar file" do
+    me = Fake.fake_user!()
+    assert {:ok, upload} = Files.upload(IconUploader, me, icon_file())
+
+    assert path = Files.local_path(IconUploader, upload)
+    assert File.exists?(path)
+
+    {:ok, me} = Bonfire.Me.Profiles.set_profile_image(:icon, me, upload)
+
+    assert {:ok, _} = Bonfire.Me.DeleteWorker.delete_structs_now(me)
+    refute File.exists?(path)
   end
 
   test "first user is automatically promoted to admin" do
