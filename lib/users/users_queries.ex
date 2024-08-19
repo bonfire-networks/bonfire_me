@@ -388,7 +388,7 @@ defmodule Bonfire.Me.Users.Queries do
       left_join: ic in assoc(p, :icon),
       left_join: ia in assoc(u, :instance_admin),
       #  TODO: in config
-      where: u.id != ^Bonfire.Me.Users.remote_fetcher(),
+      where: u.id != ^Bonfire.Me.Users.remote_fetcher_id(),
       preload: [instance_admin: ia, character: c, profile: {p, [icon: ic]}]
     )
   end

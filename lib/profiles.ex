@@ -39,6 +39,16 @@ defmodule Bonfire.Me.Profiles do
     |> EctoSparkles.SanitiseStrings.clean_html()
   end
 
+  def spam_check!(text, context) do
+    if spam?(text, context) do
+      raise Bonfire.Fail, :spam
+    end
+  end
+
+  def spam?(text, context) do
+    :spam == Bonfire.Common.AntiSpam.service().check_profile(text, context)
+  end
+
   def set_profile_image(:icon, %{} = user, uploaded_media) do
     Bonfire.Me.Users.update(user, %{
       "profile" => %{

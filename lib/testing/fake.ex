@@ -29,7 +29,12 @@ defmodule Bonfire.Me.Fake do
   def fake_user!(%Account{} = account, attrs, opts_or_extra) do
     custom_username = attrs[:username]
 
-    with {:ok, user} <- Users.make_user(create_user_form(attrs), account, opts_or_extra) do
+    with {:ok, user} <-
+           Users.make_user(
+             create_user_form(attrs),
+             account,
+             opts_or_extra ++ [repo_insert_fun: :insert_or_ignore]
+           ) do
       user
     else
       {:error, %Ecto.Changeset{} = e} when is_binary(custom_username) ->

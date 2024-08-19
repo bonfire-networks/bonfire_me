@@ -35,8 +35,11 @@ defmodule Bonfire.Me.Users do
   @behaviour Bonfire.Federate.ActivityPub.FederationModules
   def federation_module, do: ["Person", "Author"]
 
-  @remote_fetcher "1ACT1V1TYPVBREM0TESFETCHER"
-  def remote_fetcher, do: @remote_fetcher
+  @remote_fetcher_id "1ACT1V1TYPVBREM0TESFETCHER"
+  def remote_fetcher_id, do: @remote_fetcher_id
+
+  @automod_id "1FR1END1YAVT0M0DERAT0RB0TS"
+  def automod_id, do: @automod_id
 
   ### Queries
 
@@ -291,18 +294,27 @@ defmodule Bonfire.Me.Users do
   ## Create
 
   # @spec create(params_or_changeset, extra :: changeset_extra) :: Changeset.t
-  def create(params_or_changeset, extra \\ nil)
+  def create(params_or_changeset, opts \\ [])
 
-  def create(%Changeset{data: %User{}} = changeset, extra) do
+  def create(%Changeset{data: %User{}} = changeset, opts) do
     make_admin? =
-      (extra != :remote and Config.env() != :test and is_first_user?())
+      (opts != :remote and Config.env() != :test and is_first_user?())
       |> debug("maybe_make_admin?")
 
-    with {:ok, user} <-
-           changeset
-           |> repo().insert() do
-      after_creation(user, make_admin?, extra)
+    Profiles.spam_check!(
+      "#{get_attr(changeset, :profile, :name)} #{get_attr(changeset, :profile, :summary)}",
+      to_options(opts)
+    )
+
+    repo_insert_fun = (opts[:repo_insert_fun] || :insert) |> debug()
+
+    with {:ok, user} <- apply(repo(), repo_insert_fun, [changeset]) do
+      after_creation(user, make_admin?, opts)
     end
+  end
+
+  defp get_attr(changeset, assoc, key) do
+    Utils.e(changeset, :changes, assoc, :changes, key, nil)
   end
 
   def create(params, extra) when not is_struct(params) do
@@ -414,9 +426,17 @@ defmodule Bonfire.Me.Users do
 
   ## Update
 
-  def update(%User{} = user, params, extra \\ nil) do
+  def update(%User{} = user, params, extra \\ []) do
     # TODO: check who is doing the update (except if extra==:remote)
-    changeset(:update, user, params, extra)
+
+    changeset = changeset(:update, user, params, extra)
+
+    Profiles.spam_check!(
+      "#{get_attr(changeset, :profile, :name)} #{get_attr(changeset, :profile, :summary)}",
+      to_options(extra) ++ [current_user: user]
+    )
+
+    changeset
     # |> debug("csss")
     |> repo().update()
     |> debug("updatted")
@@ -456,6 +476,7 @@ defmodule Bonfire.Me.Users do
         :settings,
         :self,
         :accounted,
+        :encircles,
         :actor,
         :character,
         :profile
@@ -735,5 +756,24 @@ defmodule Bonfire.Me.Users do
     with {:ok, user} <- changeset(:create, attrs, account) |> create(opts) do
       {:ok, Map.put(user, :settings, nil)}
     end
+  end
+
+  def get_or_create_automod, do: get_or_create_service_character(automod_id(), "Mod Helper Bot")
+
+  def get_or_create_service_character(service_character_id, service_character_username) do
+    with {:ok, user} <- Bonfire.Me.Users.by_id(service_character_id) do
+      user
+    else
+      {:error, :not_found} ->
+        create_service_character(service_character_id, service_character_username)
+    end
+  end
+
+  defp create_service_character(service_character_id, service_character_username) do
+    # TODO: do not fill bio/homepage with fake data
+    Bonfire.Me.Fake.fake_user!(service_character_username, %{id: service_character_id},
+      request_before_follow: true,
+      undiscoverable: true
+    )
   end
 end

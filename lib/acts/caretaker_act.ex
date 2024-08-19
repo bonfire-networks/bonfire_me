@@ -25,7 +25,7 @@ defmodule Bonfire.Me.Acts.Caretaker do
   def run(epic, act) do
     on = act.options[:on]
     changeset = epic.assigns[on]
-    current_user = epic.assigns[:options][:current_user]
+    current_user = Bonfire.Common.Utils.current_user(epic.assigns[:options])
 
     cond do
       epic.errors != [] ->
