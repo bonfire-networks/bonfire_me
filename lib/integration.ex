@@ -50,8 +50,8 @@ defmodule Bonfire.Me.Integration do
     if module =
          Bonfire.Common.Extend.maybe_module(
            Bonfire.Search.Indexer,
-           Utils.e(object, :creator, :id, nil) ||
-             Utils.e(object, :created, :creator_id, nil) || object
+           e(object, :creator, :id, nil) ||
+             e(object, :created, :creator_id, nil) || object
          ) do
       debug("search: index #{inspect(object)}")
       module.maybe_index_object(object)

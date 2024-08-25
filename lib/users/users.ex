@@ -314,7 +314,7 @@ defmodule Bonfire.Me.Users do
   end
 
   defp get_attr(changeset, assoc, key) do
-    Utils.e(changeset, :changes, assoc, :changes, key, nil)
+    e(changeset, :changes, assoc, :changes, key, nil)
   end
 
   def create(params, extra) when not is_struct(params) do
@@ -541,7 +541,7 @@ defmodule Bonfire.Me.Users do
     Bonfire.Common.Utils.maybe_apply(
       Bonfire.Federate.ActivityPub.Adapter,
       :maybe_create_remote_actor,
-      [Utils.e(object, :data, object)]
+      [e(object, :data, object)]
     )
   end
 

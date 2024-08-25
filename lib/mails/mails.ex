@@ -5,15 +5,17 @@ defmodule Bonfire.Me.Mails do
 
   use Bamboo.Template, view: Bonfire.Me.Mails.EmailView
 
-  alias Bonfire.Data.Identity.Account
-  # alias Bonfire.Me.Mails.EmailView
-  alias Bonfire.Common.Utils
   # import Bonfire.Me.Integration
+  use Bonfire.Common.E
   import Bonfire.Common.URIs
   import Untangle
   require Bonfire.Common.Localise.Gettext
   import Bonfire.Common.Localise.Gettext.Helpers
+
   alias Bonfire.Common.Config
+  alias Bonfire.Data.Identity.Account
+  # alias Bonfire.Me.Mails.EmailView
+  alias Bonfire.Common.Utils
 
   @doc """
   Sends a confirmation email based on the specified action.
@@ -52,7 +54,7 @@ defmodule Bonfire.Me.Mails do
       iex> Bonfire.Me.Mails.signup_confirm_email(%Account{email: %{confirm_token: "token"}})
   """
   def signup_confirm_email(%Account{} = account) do
-    confirm_token = Utils.e(account, :email, :confirm_token, nil)
+    confirm_token = e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
       app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
@@ -94,7 +96,7 @@ defmodule Bonfire.Me.Mails do
       :ok
   """
   def forgot_password(%Account{} = account) do
-    confirm_token = Utils.e(account, :email, :confirm_token, nil)
+    confirm_token = e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
       conf =

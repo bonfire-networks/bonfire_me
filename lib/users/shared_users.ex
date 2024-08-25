@@ -134,7 +134,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     defp changeset(:make_shared_user, %User{} = user, params) do
       params =
         params
-        |> Utils.e("shared_user", params)
+        |> e("shared_user", params)
         # default label for shared users, do not localise here as it is a DB and schema level classification
         |> Map.put_new(
           "label",

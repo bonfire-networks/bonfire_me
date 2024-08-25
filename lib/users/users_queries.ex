@@ -299,7 +299,7 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   defp proloads(query, opts) when is_list(opts) do
-    proloads(query, Utils.e(opts, :preload, :default))
+    proloads(query, e(opts, :preload, :default))
   end
 
   defp proloads(query, _default) do
@@ -342,7 +342,7 @@ defmodule Bonfire.Me.Users.Queries do
   """
   def admins(opts \\ []) do
     from(u in User, as: :user)
-    |> proloads(Utils.e(opts, :preload, :admins))
+    |> proloads(e(opts, :preload, :admins))
     |> where([instance_admin: ia], ia.is_instance_admin == true)
   end
 
