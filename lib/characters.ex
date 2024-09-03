@@ -59,7 +59,7 @@ defmodule Bonfire.Me.Characters do
   def get(ids) when is_list(ids), do: {:ok, q_by_id(ids) |> repo().many()}
 
   def get(id) when is_binary(id) do
-    if is_ulid?(id) do
+    if is_uid?(id) do
       q_by_id(id)
     else
       by_username_q(id)

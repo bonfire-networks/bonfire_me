@@ -171,7 +171,7 @@ defmodule Bonfire.Me.Users.Queries do
       iex> Bonfire.Me.Users.Queries.by_username_or_id("username_or_id")
   """
   def by_username_or_id(username_or_id, opts \\ []) do
-    if Types.is_ulid?(username_or_id),
+    if Types.is_uid?(username_or_id),
       do: by_id(username_or_id, opts),
       else: by_username_query(username_or_id, opts)
   end
@@ -197,13 +197,13 @@ defmodule Bonfire.Me.Users.Queries do
       iex> Bonfire.Me.Users.Queries.by_user_and_account("username_or_user_id", "account_id")
   """
   def by_user_and_account(username_or_user_id, account_id) do
-    if user_id = Types.ulid(username_or_user_id) do
+    if user_id = Types.uid(username_or_user_id) do
       # if module = maybe_module(Bonfire.Me.SharedUsers) do # TODO
       #   module.by_username_and_account_query(user_id, account_id)
       # else
       from(u in User, as: :user)
       |> proloads(:local)
-      |> where([account: account], account.id == ^Types.ulid(account_id))
+      |> where([account: account], account.id == ^Types.uid(account_id))
       |> where([character: c], c.id == ^user_id)
 
       # end
@@ -213,7 +213,7 @@ defmodule Bonfire.Me.Users.Queries do
       else
         from(u in User, as: :user)
         |> proloads(:local)
-        |> where([account: account], account.id == ^Types.ulid(account_id))
+        |> where([account: account], account.id == ^Types.uid(account_id))
         |> where([character: c], c.username == ^username_or_user_id)
       end
     end
@@ -229,7 +229,7 @@ defmodule Bonfire.Me.Users.Queries do
   def by_account(account_id) do
     from(u in User, as: :user)
     |> proloads(:local)
-    |> where([account: account], account.id == ^Types.ulid!(account_id))
+    |> where([account: account], account.id == ^Types.uid!(account_id))
   end
 
   @doc """

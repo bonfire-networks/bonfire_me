@@ -191,7 +191,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
         left_join: su in assoc(u, :shared_user),
         left_join: ca in assoc(u, :caretaker_accounts),
         where: c.username == ^username,
-        where: a.account_id == ^ulid(account) or ca.id == ^ulid(account),
+        where: a.account_id == ^uid(account) or ca.id == ^uid(account),
         preload: [profile: {p, [icon: ic]}, character: c, accounted: a],
         order_by: [asc: u.id]
       )

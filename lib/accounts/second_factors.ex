@@ -113,7 +113,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   end
 
   def get_account_totp(account) do
-    case ulid(account) do
+    case uid(account) do
       id when is_binary(id) ->
         repo().get_by(AuthSecondFactor, id: id)
 
