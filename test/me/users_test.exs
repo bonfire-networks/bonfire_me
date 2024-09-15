@@ -104,7 +104,7 @@ defmodule Bonfire.Me.UsersTest do
   test "first user is automatically promoted to admin" do
     # first user is automatically admin (but not in test env), so we change env for the sake of the test
     Process.put([:bonfire, :env], :prod)
-    on_exit(fn -> Process.delete(:env) end)
+    on_exit(fn -> Process.delete([:bonfire, :env]) end)
     assert {:ok, account} = Accounts.signup(signup_form())
     assert Accounts.is_admin?(account)
     attrs = create_user_form()

@@ -17,6 +17,8 @@ defmodule Bonfire.Me.Mails do
   # alias Bonfire.Me.Mails.EmailView
   alias Bonfire.Common.Utils
 
+  def mailer, do: Config.get(:mailer_module)
+
   @doc """
   Sends a confirmation email based on the specified action.
 
@@ -68,7 +70,7 @@ defmodule Bonfire.Me.Mails do
         Config.get(__MODULE__, [])
         |> Keyword.get(:confirm_email, [])
 
-      new_email()
+      mailer().new()
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
@@ -106,12 +108,13 @@ defmodule Bonfire.Me.Mails do
       app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
       url = url_path(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
 
-      new_email()
+      mailer().new()
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
       |> subject(Keyword.get(conf, :subject, "#{app_name} - #{l("Reset your password")}"))
       |> render(:forgot_password)
+      |> debug()
     else
       error(l("No confirmation token"))
     end
