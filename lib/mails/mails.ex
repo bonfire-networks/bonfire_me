@@ -74,7 +74,9 @@ defmodule Bonfire.Me.Mails do
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
-      |> subject(Keyword.get(conf, :subject, "#{app_name} - " <> l("Confirm your email")))
+      |> mailer().subject(
+        Keyword.get(conf, :subject, "#{app_name} - " <> l("Confirm your email"))
+      )
       |> render(:confirm_email)
 
       # |> put_html_layout({EmailView, "confirm_email.html"})
@@ -112,9 +114,10 @@ defmodule Bonfire.Me.Mails do
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
-      |> subject(Keyword.get(conf, :subject, "#{app_name} - #{l("Reset your password")}"))
+      |> mailer().subject(
+        Keyword.get(conf, :subject, "#{app_name} - #{l("Reset your password")}")
+      )
       |> render(:forgot_password)
-      |> debug()
     else
       error(l("No confirmation token"))
     end
