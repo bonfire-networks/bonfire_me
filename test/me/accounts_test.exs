@@ -100,7 +100,7 @@ defmodule Bonfire.Me.AccountsTest do
                  email: attrs.email.email_address
                })
 
-      assert [form: {"already_confirmed", []}] = changeset.errors
+      assert [form: {:already_confirmed, []}] = changeset.errors
     end
   end
 

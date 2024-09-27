@@ -423,7 +423,7 @@ defmodule Bonfire.Me.Accounts do
     do: rce_check_confirm(Email.must_confirm?(opts), form, changeset, opts)
 
   defp rce_check_confirm(false, _form, changeset, _opts),
-    do: {:error, Changeset.add_error(changeset, :form, "confirmation_disabled")}
+    do: {:error, Changeset.add_error(changeset, :form, :confirmation_disabled)}
 
   defp rce_check_confirm(true, form, changeset, opts) do
     repo().one(Queries.by_email(form.email))
@@ -438,11 +438,12 @@ defmodule Bonfire.Me.Accounts do
 
   defp rce_check_what_to_do(account, changeset, opts) do
     what_to_do =
-      if opts[:confirm_action] do
+      if opts[:confirm_action] |> debug() do
         Email.should_request_or_refresh?(account.email, opts)
       else
         Email.may_request_confirm_email?(account.email, opts)
       end
+      |> debug()
 
     case what_to_do do
       {:ok, :resend} -> resend_confirm_email(account, opts)
@@ -502,7 +503,9 @@ defmodule Bonfire.Me.Accounts do
   def confirm_email(token, opts) when is_binary(token) do
     repo().transact_with(fn ->
       repo().single(Queries.by_confirm_token(token))
+      |> debug()
       ~> ce(opts)
+      |> debug()
     end)
   end
 
@@ -521,12 +524,20 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
+  defp ce(%{email: %{id: _} = email} = account, opts) do
+    if opts[:confirm_action] do
+      confirm_email(account)
+    else
+      with :ok <- Email.may_confirm?(email, opts) |> debug(),
+           do: confirm_email(account)
+    end
+  end
+
   defp ce(account, opts) do
     if opts[:confirm_action] do
       confirm_email(account)
     else
-      with :ok <- Email.may_confirm?(account.email, opts),
-           do: confirm_email(account)
+      error(account, "Could not find an email address to confirm")
     end
   end
 
