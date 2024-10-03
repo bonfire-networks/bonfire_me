@@ -879,7 +879,7 @@ defmodule Bonfire.Me.Accounts do
       42
 
   """
-  def count(), do: repo().one(Queries.count()) |> debug()
+  def count(), do: repo().one(Queries.count())
 
   def is_first_account? do
     count() < 1

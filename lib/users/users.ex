@@ -383,7 +383,7 @@ defmodule Bonfire.Me.Users do
   defp add_to_admin_circle(user) do
     Bonfire.Boundaries.Circles.add_to_circles(
       user,
-      Bonfire.Boundaries.Fixtures.admin_circle()
+      Bonfire.Boundaries.Scaffold.Instance.admin_circle()
     )
   end
 
@@ -410,7 +410,7 @@ defmodule Bonfire.Me.Users do
   defp remove_from_admin_circle(user) do
     Bonfire.Boundaries.Circles.remove_from_circles(
       user,
-      Bonfire.Boundaries.Fixtures.admin_circle()
+      Bonfire.Boundaries.Scaffold.Instance.admin_circle()
     )
   end
 
@@ -639,9 +639,9 @@ defmodule Bonfire.Me.Users do
     check_active!(existing_users_for_account)
 
     params
-    |> debug("params")
+    # |> debug("params")
     |> User.changeset(user, ...)
-    |> debug("initial cs")
+    # |> debug("initial cs")
     |> Changesets.put_assoc!(:accounted, %{account_id: account.id})
     |> Changesets.put_assoc!(:encircles, [
       %{circle_id: Circles.get_id!(:local)}
