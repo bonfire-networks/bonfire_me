@@ -572,7 +572,7 @@ defmodule Bonfire.Me.Users do
 
   def format_actor(user) do
     Bonfire.Common.Utils.maybe_apply(
-      Bonfire.Federate.ActivityPub.Adapter,
+      Bonfire.Federate.ActivityPub.AdapterUtils,
       :format_actor,
       [user, "Person"]
     )
