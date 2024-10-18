@@ -158,7 +158,6 @@ defmodule Bonfire.Me.Characters do
       :deleted ->
         raise RuntimeError, message: "deletion unimplemented"
     end
-    |> debug("FIXME: why is actor not being cast?")
 
     # |> debug("char cs")
   end
