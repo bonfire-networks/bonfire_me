@@ -297,24 +297,23 @@ defmodule Bonfire.Me.Users do
   def create(params_or_changeset, opts \\ [])
 
   def create(%Changeset{data: %User{}} = changeset, opts) do
+    clean_opts = to_options(opts)
+
     make_admin? =
-      (opts != :remote and Config.env() != :test and is_first_user?())
+      (!(opts == :remote or clean_opts[:local] == false) and Config.env() != :test and
+         is_first_user?())
       |> debug("maybe_make_admin?")
 
     Profiles.spam_check!(
       "#{get_attr(changeset, :profile, :name)} #{get_attr(changeset, :profile, :summary)}",
-      to_options(opts)
+      clean_opts
     )
 
-    repo_insert_fun = (opts[:repo_insert_fun] || :insert) |> debug()
+    repo_insert_fun = (clean_opts[:repo_insert_fun] || :insert) |> debug()
 
     with {:ok, user} <- apply(repo(), repo_insert_fun, [changeset]) do
       after_creation(user, make_admin?, opts)
     end
-  end
-
-  defp get_attr(changeset, assoc, key) do
-    e(changeset, :changes, assoc, :changes, key, nil)
   end
 
   def create(params, extra) when not is_struct(params) do
@@ -323,24 +322,26 @@ defmodule Bonfire.Me.Users do
   end
 
   defp after_creation(%{} = user, make_admin?, opts) do
-    opts =
+    clean_opts =
       to_options(opts)
       |> debug("opts")
 
-    if module_enabled?(Bonfire.Boundaries),
-      do: Bonfire.Boundaries.Users.create_default_boundaries(user, opts)
+    if module = maybe_module(Bonfire.Boundaries.Users),
+      do: module.create_default_boundaries(user, opts)
 
     user =
-      if not is_nil(opts[:undiscoverable]),
+      if not is_nil(clean_opts[:undiscoverable]),
         do:
-          Bonfire.Common.Settings.put([Bonfire.Me.Users, :undiscoverable], opts[:undiscoverable],
+          Bonfire.Common.Settings.put(
+            [Bonfire.Me.Users, :undiscoverable],
+            clean_opts[:undiscoverable],
             current_user: user
           )
           |> current_user(),
         else: user
 
     user =
-      if opts[:unindexable] do
+      if clean_opts[:unindexable] do
         Bonfire.Common.Settings.put([Bonfire.Search.Indexer, :modularity], :disabled,
           current_user: user
         )
@@ -363,6 +364,10 @@ defmodule Bonfire.Me.Users do
     maybe_index_user(user)
 
     {:ok, user}
+  end
+
+  defp get_attr(changeset, assoc, key) do
+    e(changeset, :changes, assoc, :changes, key, nil)
   end
 
   ## instance admin
@@ -546,8 +551,8 @@ defmodule Bonfire.Me.Users do
   end
 
   @doc "Creates a remote user"
-  def create_remote(params) do
-    with {:ok, user} <- create(changeset(:create, %User{}, params, :remote)) do
+  def create_remote(params, opts \\ []) do
+    with {:ok, user} <- create(changeset(:create, %User{}, params, :remote), opts) do
       # debug(user)
       # |> add_acl("public")
       {:ok, user}
@@ -700,6 +705,9 @@ defmodule Bonfire.Me.Users do
     case e(params["profile"], :location, nil) do
       location when is_binary(location) and location != "" ->
         maybe_apply(Bonfire.Geolocate.Geolocations, :thing_add_location, [user, user, location])
+
+      # TODO: also set user's timezone?
+      # TzWorld.timezone_at(%Geo.Point{_})
 
       _ ->
         user
