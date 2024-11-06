@@ -235,6 +235,11 @@ defmodule Bonfire.Me.Users do
       [%Bonfire.Data.Identity.User{}]
   """
   def search(search, opts \\ []) do
+    opts =
+      to_options(opts)
+      # TEMP: to speed things up
+      |> Keyword.put_new(:skip_boundary_check, true)
+
     Utils.maybe_apply(
       Bonfire.Search,
       :search_by_type,
