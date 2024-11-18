@@ -6,11 +6,12 @@ defmodule Bonfire.Me.Profiles do
   - name
   - summary
   - website
-  - location (plaintext, see )
+  - location (plaintext, see also Geolocation integration for storing GPS coordinates)
   - icon: eg. avatar (references a `Bonfire.Files.Media`)
   - image: eg. banner
   """
 
+  alias Bonfire.Common.Types
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
   # import Untangle
@@ -77,12 +78,14 @@ defmodule Bonfire.Me.Profiles do
     # info(obj.id)
 
     %{
-      "index_type" => "Bonfire.Data.Social.Profile",
+      "index_type" => Types.module_to_str(Profile),
       "name" => obj.name,
       "id" => obj.id,
       "summary" => obj.summary,
-      "icon" => %{"url" => icon},
-      "image" => %{"url" => image}
+      "website" => obj.website,
+      "location" => obj.location
+      # "icon" => %{"url" => icon}, # TODO: index alt tags
+      # "image" => %{"url" => image}
     }
   end
 

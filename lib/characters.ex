@@ -333,7 +333,7 @@ defmodule Bonfire.Me.Characters do
 
   def indexing_object_format(%Character{id: _} = obj) do
     %{
-      "index_type" => "Bonfire.Data.Identity.Character",
+      "index_type" => Types.module_to_str(Character),
       "username" => obj.username,
       "url" => character_url(obj)
     }

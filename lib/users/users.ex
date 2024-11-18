@@ -740,8 +740,7 @@ defmodule Bonfire.Me.Users do
       "profile" => Bonfire.Me.Profiles.indexing_object_format(u.profile),
       "character" => Bonfire.Me.Characters.indexing_object_format(u.character)
     }
-
-    # |> IO.inspect
+    |> debug()
   end
 
   # TODO: less boilerplate
