@@ -78,9 +78,9 @@ defmodule Bonfire.Me.Profiles do
     # info(obj.id)
 
     %{
-      "index_type" => Types.module_to_str(Profile),
+      # "index_type" => Types.module_to_str(Profile), # no need as can be inferred later by `Enums.maybe_to_structs/1`
+      # "id" => obj.id,
       "name" => obj.name,
-      "id" => obj.id,
       "summary" => obj.summary,
       "website" => obj.website,
       "location" => obj.location

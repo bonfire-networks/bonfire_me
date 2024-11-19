@@ -333,7 +333,7 @@ defmodule Bonfire.Me.Characters do
 
   def indexing_object_format(%Character{id: _} = obj) do
     %{
-      "index_type" => Types.module_to_str(Character),
+      # "index_type" => Types.module_to_str(Character), # no need as can be inferred later by `Enums.maybe_to_structs/1`
       "username" => obj.username,
       "url" => character_url(obj)
     }

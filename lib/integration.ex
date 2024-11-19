@@ -67,6 +67,9 @@ defmodule Bonfire.Me.Integration do
 
   def indexing_format_creator(profile, character) do
     %{
+      "id" => id(character) || id(profile),
+      #  FIXME: should not assume User here
+      "index_type" => Types.module_to_str(User),
       "profile" => Bonfire.Me.Profiles.indexing_object_format(profile),
       "character" => Bonfire.Me.Characters.indexing_object_format(character)
     }
