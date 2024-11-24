@@ -50,8 +50,9 @@ defmodule Bonfire.Me.Integration do
     if module =
          Bonfire.Common.Extend.maybe_module(
            Bonfire.Search.Indexer,
-           e(object, :creator, :id, nil) ||
-             e(object, :created, :creator_id, nil) || object
+           current_user:
+             e(object, :creator, :id, nil) ||
+               e(object, :created, :creator_id, nil) || object
          ) do
       debug("search: index #{inspect(object)}")
       module.maybe_index_object(object)
@@ -61,17 +62,92 @@ defmodule Bonfire.Me.Integration do
     end
   end
 
-  def indexing_format_created(profile, character) do
-    %{"creator" => indexing_format_creator(profile, character)}
+  def indexing_format_created(object) do
+    # current_user = current_user(opts)
+
+    case object do
+      %{
+        created: %{creator: %{id: _} = creator}
+      } ->
+        indexing_format_creator(creator)
+
+      %{
+        creator: %{id: _} = creator
+      } ->
+        indexing_format_creator(creator)
+
+      %{
+        activity: %{created: %{creator: %{id: _} = creator}}
+      } ->
+        indexing_format_creator(creator)
+
+      %{
+        creator_id: creator_id,
+        activity: %{
+          subject: %{profile: %{id: id} = _profile, character: _} = subject
+        }
+      } ->
+        indexing_format_creator(subject)
+
+      %{
+        created: %{creator_id: creator_id},
+        activity: %{
+          subject: %{profile: %{id: id} = _profile, character: _} = subject
+        }
+      } ->
+        indexing_format_creator(subject)
+
+      %{
+        activity: %{
+          created: %{creator_id: creator_id},
+          subject: %{profile: %{id: id} = _profile, character: _} = subject
+        }
+      } ->
+        indexing_format_creator(subject)
+
+      %{
+        object: %{creator_id: creator_id}
+      } ->
+        indexing_format_creator(Bonfire.Me.Users.by_id(creator_id))
+
+      %{creator_id: creator_id} ->
+        indexing_format_creator(Bonfire.Me.Users.by_id(creator_id))
+
+      %{
+        activity: %{created: %{creator_id: creator_id}}
+      } ->
+        creator =
+          indexing_format_creator(Bonfire.Me.Users.by_id(creator_id))
+
+      %{
+        activity: %{
+          subject: %{profile: %{id: _} = profile, character: _} = subject
+        }
+        # The indexer is written in terms of the inserted object, so changesets need fake inserting
+      } ->
+        indexing_format_creator(subject)
+
+      %{
+        activity: %{subject_id: subject_id}
+      } ->
+        indexing_format_creator(Bonfire.Me.Users.by_id(subject_id))
+
+      _ ->
+        warn("could not find a creator")
+        debug(object)
+        nil
+    end
   end
 
-  def indexing_format_creator(profile, character) do
+  def indexing_format_creator(user_etc) do
     %{
-      "id" => id(character) || id(profile),
-      #  FIXME: should not assume User here
-      "index_type" => Types.module_to_str(User),
-      "profile" => Bonfire.Me.Profiles.indexing_object_format(profile),
-      "character" => Bonfire.Me.Characters.indexing_object_format(character)
+      "creator" => %{
+        "id" => id(user_etc),
+        #  FIXME: should not assume User here
+        "index_type" => Types.module_to_str(object_type(user_etc)),
+        "profile" => Bonfire.Me.Profiles.indexing_object_format(e(user_etc, :profile, nil)),
+        "character" => Bonfire.Me.Characters.indexing_object_format(e(user_etc, :character, nil))
+      }
     }
   end
 end

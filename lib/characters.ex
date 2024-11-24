@@ -331,7 +331,7 @@ defmodule Bonfire.Me.Characters do
 
   def indexing_object_format(%{character: obj}), do: indexing_object_format(obj)
 
-  def indexing_object_format(%Character{id: _} = obj) do
+  def indexing_object_format(%{username: _} = obj) do
     %{
       # "index_type" => Types.module_to_str(Character), # no need as can be inferred later by `Enums.maybe_to_structs/1`
       "username" => obj.username,

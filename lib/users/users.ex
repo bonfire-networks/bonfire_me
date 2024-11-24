@@ -743,8 +743,8 @@ defmodule Bonfire.Me.Users do
     |> debug()
   end
 
-  # TODO: less boilerplate
   def maybe_index_user(object) when is_map(object) do
+    # TODO: check boundaries and discovery settings
     # |> debug
     # defp config(), do: Application.get_env(:bonfire_me, Users)
 
