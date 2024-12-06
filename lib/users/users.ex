@@ -372,7 +372,7 @@ defmodule Bonfire.Me.Users do
   end
 
   defp get_attr(changeset, assoc, key) do
-    e(changeset, :changes, assoc, :changes, key, nil)
+    ed(changeset, :changes, assoc, :changes, key, nil)
   end
 
   ## instance admin
