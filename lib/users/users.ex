@@ -363,10 +363,10 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  defp after_mutation(%{} = user) do
+  defp after_mutation(%{} = user, previous_user \\ nil) do
     user = repo().maybe_preload(user, [:character, :profile])
 
-    maybe_index_user(user)
+    maybe_index_user(user, previous_user)
 
     {:ok, user}
   end
@@ -450,7 +450,7 @@ defmodule Bonfire.Me.Users do
     # |> debug("csss")
     |> repo().update()
     |> debug("updatted")
-    ~> after_mutation()
+    ~> after_mutation(user)
     ~> Bonfire.Federate.ActivityPub.Adapter.local_actor_updated(extra != :remote)
   end
 
@@ -743,15 +743,20 @@ defmodule Bonfire.Me.Users do
     |> debug()
   end
 
-  def maybe_index_user(object) when is_map(object) do
-    # TODO: check boundaries and discovery settings
-    # |> debug
-    # defp config(), do: Application.get_env(:bonfire_me, Users)
+  def maybe_index_user(object, previous \\ nil)
 
-    object |> indexing_object_format() |> maybe_index()
+  def maybe_index_user(object, previous) when is_map(object) do
+    # check discovery settings
+    user = repo().maybe_preload(previous || object, :settings)
+
+    if !Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) do
+      object
+      # |> indexing_object_format() 
+      |> maybe_index(user)
+    end
   end
 
-  def maybe_index_user(_other), do: nil
+  def maybe_index_user(_other, _), do: nil
 
   def count(show \\ :local), do: repo().one(Queries.count(show))
 
