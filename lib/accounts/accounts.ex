@@ -349,7 +349,7 @@ defmodule Bonfire.Me.Accounts do
       {:ok, account}
     else
       {:error, e} ->
-        {:error, Changeset.add_error(changeset, :form, e)}
+        {:error, Changeset.add_error(changeset, :form, to_string(e))}
     end
   end
 
@@ -361,32 +361,36 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp login_response(%Account{accounted: %{user: %User{} = user}} = account),
-    do: ok_if_active(account, user)
+    do: validate_and_record_login_if_not_blocked(account, user)
 
   defp login_response(%Account{accounted: [%{user: %User{} = user}]} = account),
-    do: ok_if_active(account, user)
+    do: validate_and_record_login_if_not_blocked(account, user)
 
   # defp login_response(%Account{accounted: users} = account) when is_list(users) and users != [] do
   #   # if none of the users are disabled we can show the user picker
-  #   ok_if_active(account, users)
+  #   validate_and_record_login_if_not_blocked(account, users)
   # end
 
   defp login_response(%Account{} = account) do
     # if there's only one user in the account, we can log them directly into it
     case Users.get_only_in_account(account) do
       {:ok, user} ->
-        ok_if_active(account, user)
+        validate_and_record_login_if_not_blocked(account, user)
 
       _ ->
-        ok_if_active(account, nil)
+        validate_and_record_login_if_not_blocked(account, nil)
     end
   end
 
-  defp ok_if_active(account, user) do
+  defp validate_and_record_login_if_not_blocked(account, user) do
     if user, do: Users.check_active!(user)
 
     # check if any other user on this account is blocked (TODO: optimise, eg by only fetching user ids)
     Users.by_account!(account)
+
+    # OK now we now we can sign in, so we record the 'last seen' date/time
+    maybe_apply(Bonfire.Social.Seen, :mark_seen, [user || account, account, [upsert: true]])
+    |> debug("recorded last_login")
 
     {:ok, account, user}
   end
@@ -423,7 +427,7 @@ defmodule Bonfire.Me.Accounts do
     do: rce_check_confirm(Email.must_confirm?(opts), form, changeset, opts)
 
   defp rce_check_confirm(false, _form, changeset, _opts),
-    do: {:error, Changeset.add_error(changeset, :form, :confirmation_disabled)}
+    do: {:error, Changeset.add_error(changeset, :form, "confirmation_disabled")}
 
   defp rce_check_confirm(true, form, changeset, opts) do
     repo().one(Queries.by_email(form.email))
@@ -438,17 +442,21 @@ defmodule Bonfire.Me.Accounts do
 
   defp rce_check_what_to_do(account, changeset, opts) do
     what_to_do =
-      if opts[:confirm_action] |> debug() do
+      if opts[:confirm_action] do
         Email.should_request_or_refresh?(account.email, opts)
       else
         Email.may_request_confirm_email?(account.email, opts)
       end
-      |> debug()
+
+    # |> debug()
 
     case what_to_do do
       {:ok, :resend} -> resend_confirm_email(account, opts)
       {:ok, :refresh} -> refresh_confirm_email(account, opts)
-      {:error, error} -> {:error, Changeset.add_error(changeset, :form, error)}
+      # {:error, :already_confirmed} -> {:error, Changeset.add_error(changeset, :form, "Your email address was already confirmed. Please try to login instead.")}
+      # {:error, :confirmation_disabled} -> {:error, Changeset.add_error(changeset, :form, "Email confirmation is disabled. Please try to login instead.")}
+      # {:error, :no_expiry} -> {:error, Changeset.add_error(changeset, :form, "Email confirmation was invalid, please request a new one.")}
+      {:error, error} -> {:error, Changeset.add_error(changeset, :form, to_string(error))}
     end
   end
 

@@ -1,4 +1,4 @@
-defmodule Bonfire.Me.AccountUserssTest do
+defmodule Bonfire.Me.DisabledTest do
   use Bonfire.Me.DataCase, async: true
   import Bonfire.Me.Integration
   alias Bonfire.Data.Identity.Credential

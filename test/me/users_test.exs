@@ -111,4 +111,43 @@ defmodule Bonfire.Me.UsersTest do
     assert {:ok, user} = Users.create(attrs, account)
     assert Accounts.is_admin?(user)
   end
+
+  describe "login" do
+    test "by: :username" do
+      attrs = signup_form()
+      assert {:ok, %{id: account_id} = account} = Accounts.signup(attrs)
+      attrs_u = create_user_form()
+      assert {:ok, %{id: user_id} = user} = Users.create(attrs_u, account)
+
+      assert {:ok, %{id: account_id}, %{id: user_id}} =
+               Accounts.login(%{
+                 email_or_username: user.character.username,
+                 password: attrs.credential.password
+               })
+    end
+
+    test "updates the last_login / last seen date" do
+      attrs = signup_form()
+      assert {:ok, %{id: account_id} = account} = Accounts.signup(attrs, must_confirm?: false)
+
+      attrs_u = create_user_form()
+      assert {:ok, %{id: user_id} = user} = Users.create(attrs_u, account)
+
+      refute Bonfire.Social.Seen.last_date(user_id, account_id)
+      refute Bonfire.Social.Seen.last_date(account_id, account_id)
+      refute Bonfire.Social.Seen.last_date(account_id, user_id)
+
+      assert {:ok, %{id: account_id}, %{id: user_id}} =
+               Accounts.login(%{
+                 email_or_username: user.character.username,
+                 password: attrs.credential.password
+               })
+
+      last_datetime = Bonfire.Social.Seen.last_date(user_id, account_id)
+      assert DateTime.to_date(last_datetime) == Date.utc_today()
+
+      refute Bonfire.Social.Seen.last_date(account_id, account_id)
+      refute Bonfire.Social.Seen.last_date(account_id, user_id)
+    end
+  end
 end

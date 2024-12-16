@@ -81,6 +81,7 @@ defmodule Bonfire.Me.AccountsTest do
       attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs, must_confirm?: true)
 
+      # FIXME: why is it resending instead?
       assert {:ok, :refreshed, account} =
                Accounts.request_confirm_email(%{
                  email: attrs.email.email_address
@@ -100,7 +101,7 @@ defmodule Bonfire.Me.AccountsTest do
                  email: attrs.email.email_address
                })
 
-      assert [form: {:already_confirmed, []}] = changeset.errors
+      assert [form: {"already_confirmed", []}] = changeset.errors
     end
   end
 
@@ -142,12 +143,12 @@ defmodule Bonfire.Me.AccountsTest do
       assert changeset.errors[:form] == {"email_not_confirmed", []}
     end
 
-    test "by: :email, confirmed: true" do
+    test "by: :email, with manual confirmation" do
       attrs = signup_form()
-      assert {:ok, account} = Accounts.signup(attrs, must_confirm?: true)
+      assert {:ok, %{id: account_id} = account} = Accounts.signup(attrs, must_confirm?: true)
       {:ok, _} = Accounts.confirm_email(account)
 
-      assert {:ok, account, _user} =
+      assert {:ok, %{id: account_id}, nil} =
                Accounts.login(%{
                  email_or_username: attrs.email.email_address,
                  password: attrs.credential.password
@@ -158,20 +159,20 @@ defmodule Bonfire.Me.AccountsTest do
 
     test "by: :email, confirmed: :auto" do
       attrs = signup_form()
-      assert {:ok, _account} = Accounts.signup(attrs, must_confirm?: false)
+      assert {:ok, %{id: account_id} = account} = Accounts.signup(attrs, must_confirm?: false)
 
-      assert {:ok, _account, _user} =
+      assert {:ok, %{id: account_id}, nil} =
                Accounts.login(%{
                  email_or_username: attrs.email.email_address,
                  password: attrs.credential.password
                })
     end
 
-    test "by: :email, must_confirm?: false" do
+    test "by: :email, must_confirm?: true on signup but must_confirm?: false on login" do
       attrs = signup_form()
-      assert {:ok, _account} = Accounts.signup(attrs, must_confirm?: true)
+      assert {:ok, %{id: account_id} = account} = Accounts.signup(attrs, must_confirm?: true)
 
-      assert {:ok, _account, _user} =
+      assert {:ok, %{id: account_id}, nil} =
                Accounts.login(
                  %{
                    email_or_username: attrs.email.email_address,
@@ -179,6 +180,22 @@ defmodule Bonfire.Me.AccountsTest do
                  },
                  must_confirm?: false
                )
+    end
+
+    test "updates the last_login / last seen date" do
+      attrs = signup_form()
+      assert {:ok, %{id: account_id} = account} = Accounts.signup(attrs, must_confirm?: false)
+
+      refute Bonfire.Social.Seen.last_date(account_id, account_id)
+
+      assert {:ok, %{id: account_id}, nil} =
+               Accounts.login(%{
+                 email_or_username: attrs.email.email_address,
+                 password: attrs.credential.password
+               })
+
+      last_datetime = Bonfire.Social.Seen.last_date(account_id, account_id)
+      assert DateTime.to_date(last_datetime) == Date.utc_today()
     end
   end
 

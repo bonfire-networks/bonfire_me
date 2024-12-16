@@ -36,10 +36,13 @@ defmodule Bonfire.Me.Fake do
              opts_or_extra ++ [repo_insert_fun: :insert_or_ignore]
            ) do
       user
+      |> Map.put(:account, account)
     else
       {:error, %Ecto.Changeset{} = e} when is_binary(custom_username) ->
         debug(e)
+
         Users.by_username!(custom_username)
+        |> Map.put(:account, account)
 
       {:error, %Ecto.Changeset{valid?: false}} = e ->
         debug(e)
