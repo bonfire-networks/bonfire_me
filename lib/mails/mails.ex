@@ -9,7 +9,7 @@ defmodule Bonfire.Me.Mails do
   use Bonfire.Common.E
   import Bonfire.Common.URIs
   import Untangle
-  require Bonfire.Common.Localise.Gettext
+  use Gettext, backend: Bonfire.Common.Localise.Gettext
   import Bonfire.Common.Localise.Gettext.Helpers
 
   alias Bonfire.Common.Config
