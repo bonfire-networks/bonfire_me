@@ -35,12 +35,6 @@ defmodule Bonfire.Me.Users do
   @behaviour Bonfire.Federate.ActivityPub.FederationModules
   def federation_module, do: ["Person", "Author"]
 
-  @remote_fetcher_id "1ACT1V1TYPVBREM0TESFETCHER"
-  def remote_fetcher_id, do: @remote_fetcher_id
-
-  @automod_id "1FR1END1YAVT0M0DERAT0RB0TS"
-  def automod_id, do: @automod_id
-
   ### Queries
 
   @doc """
@@ -775,20 +769,23 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  def get_or_create_automod, do: get_or_create_service_character(automod_id(), "Mod Helper Bot")
-
-  def get_or_create_service_character(service_character_id, service_character_username) do
+  def get_or_create_service_character(
+        service_character_id,
+        service_character_username,
+        bio \\ nil
+      ) do
     with {:ok, user} <- Bonfire.Me.Users.by_id(service_character_id) do
       user
     else
       {:error, :not_found} ->
-        create_service_character(service_character_id, service_character_username)
+        create_service_character(service_character_id, service_character_username, bio)
     end
   end
 
-  defp create_service_character(service_character_id, service_character_username) do
-    # TODO: do not fill bio/homepage with fake data
-    Bonfire.Me.Fake.fake_user!(service_character_username, %{id: service_character_id},
+  defp create_service_character(service_character_id, service_character_username, bio \\ nil) do
+    Bonfire.Me.Fake.fake_user!(
+      service_character_username,
+      %{id: service_character_id, summary: bio, website: nil, location: nil},
       request_before_follow: true,
       undiscoverable: true
     )
