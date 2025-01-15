@@ -771,6 +771,19 @@ defmodule Bonfire.Me.Users do
     end
   end
 
+  def get_or_create_service_user(
+        service_character_username,
+        data \\ %{summary: nil, website: nil, location: nil}
+      ) do
+    with {:ok, user} <-
+           Bonfire.Me.Users.by_username(Characters.clean_username(service_character_username)) do
+      user
+    else
+      {:error, :not_found} ->
+        create_service_character(service_character_username, data)
+    end
+  end
+
   def get_or_create_service_character(
         service_character_id,
         service_character_username,
@@ -780,14 +793,19 @@ defmodule Bonfire.Me.Users do
       user
     else
       {:error, :not_found} ->
-        create_service_character(service_character_id, service_character_username, bio)
+        create_service_character(service_character_username, %{
+          id: service_character_id,
+          summary: bio,
+          website: nil,
+          location: nil
+        })
     end
   end
 
-  defp create_service_character(service_character_id, service_character_username, bio \\ nil) do
+  defp create_service_character(service_character_username, data) do
     Bonfire.Me.Fake.fake_user!(
       service_character_username,
-      %{id: service_character_id, summary: bio, website: nil, location: nil},
+      data,
       request_before_follow: true,
       undiscoverable: true,
       skip_spam_check: true
