@@ -303,10 +303,12 @@ defmodule Bonfire.Me.Users do
          is_first_user?())
       |> debug("maybe_make_admin?")
 
-    Profiles.spam_check!(
-      "#{get_attr(changeset, :profile, :name)} #{get_attr(changeset, :profile, :summary)}",
-      clean_opts
-    )
+    if !clean_opts[:skip_spam_check],
+      do:
+        Profiles.spam_check!(
+          "#{get_attr(changeset, :profile, :name)} #{get_attr(changeset, :profile, :summary)}",
+          clean_opts
+        )
 
     repo_insert_fun = (clean_opts[:repo_insert_fun] || :insert) |> debug()
 
@@ -787,7 +789,8 @@ defmodule Bonfire.Me.Users do
       service_character_username,
       %{id: service_character_id, summary: bio, website: nil, location: nil},
       request_before_follow: true,
-      undiscoverable: true
+      undiscoverable: true,
+      skip_spam_check: true
     )
   end
 end
