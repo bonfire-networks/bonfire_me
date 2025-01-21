@@ -872,9 +872,10 @@ defmodule Bonfire.Me.Accounts do
   ## misc
 
   defp mailer_response({:ok, _}, account), do: {:ok, account}
-  
+
   defp mailer_response({:error, :timeout}, account),
-    do: {:ok, account} # we ignore mailer timeouts to avoid blocking the signup
+    #  we ignore mailer timeouts to avoid blocking the signup
+    do: {:ok, account}
 
   defp mailer_response({:error, error}, _) when is_atom(error),
     do: {:error, error}
