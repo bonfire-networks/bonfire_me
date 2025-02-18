@@ -208,7 +208,8 @@ defmodule Bonfire.Me.Users.Queries do
 
       # end
     else
-      if module = maybe_module(Bonfire.Me.SharedUsers) do
+      if module_enabled?(Bonfire.Data.SharedUser) and module_enabled?(Bonfire.Me.SharedUsers) and
+           module = maybe_module(Bonfire.Me.SharedUsers) do
         module.by_username_and_account_query(username_or_user_id, account_id)
       else
         from(u in User, as: :user)
