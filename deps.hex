@@ -1,7 +1,7 @@
 faker = "~> 0.14" # fake data generation
 telemetry = "~> 1.1"
-telemetry_metrics = "~> 0.6.1"
-telemetry_poller = "~> 1.0.0"
+telemetry_metrics = "~> 1.0"
+telemetry_poller = "~> 1.1"
 # ex_spirit = "~> 0.4"
 # plugins
 # bonfire_data_access_control = "~> 0.1"
