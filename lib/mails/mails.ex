@@ -110,6 +110,10 @@ defmodule Bonfire.Me.Mails do
       app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
       url = url_path(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
 
+      if Config.env() != :test or
+           System.get_env("PHX_SERVER") == "yes",
+         do: warn("Reset link: #{url}")
+
       mailer().new()
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
