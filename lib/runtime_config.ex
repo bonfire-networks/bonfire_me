@@ -16,11 +16,8 @@ defmodule Bonfire.Me.RuntimeConfig do
         delete: []
       ]
 
-    config :bonfire_me, Bonfire.Me.Users,
-      # whether profiles should be dicoverable by search engines (can be overriden in user settings)
-      # undiscoverable: false,
-      # TODO: not hooked up yet:
-      # Maximum number of users that an account may create
-      max_per_account: 5
+    # config :bonfire_me, Bonfire.Me.Users,
+    # whether profiles should be dicoverable by search engines (can be overriden in user settings)
+    # undiscoverable: false,
   end
 end
