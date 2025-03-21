@@ -44,25 +44,6 @@ defmodule Bonfire.Me.Integration do
   #   end
   # end
 
-  def maybe_index(object, creator \\ nil)
-  def maybe_index({:ok, object}, creator), do: {:ok, maybe_index(object, creator)}
-
-  def maybe_index(object, creator) do
-    creator = creator || e(object, :created, :creator, nil) || e(object, :creator, nil) || object
-
-    if module =
-         Bonfire.Common.Extend.maybe_module(
-           Bonfire.Search.Indexer,
-           current_user: repo().maybe_preload(creator, :settings)
-         ) do
-      debug("search: index #{inspect(object)}")
-      module.maybe_index_object(object)
-      object
-    else
-      object
-    end
-  end
-
   def indexing_format_created(object) do
     # current_user = current_user(opts)
 

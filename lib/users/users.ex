@@ -746,9 +746,7 @@ defmodule Bonfire.Me.Users do
     user = repo().maybe_preload(previous || object, :settings)
 
     if !Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) do
-      object
-      # |> indexing_object_format() 
-      |> maybe_index(user)
+      maybe_apply(Bonfire.Search, :maybe_index, [object, false, user], user)
     end
   end
 
