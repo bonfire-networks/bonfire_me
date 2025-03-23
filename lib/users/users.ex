@@ -102,7 +102,7 @@ defmodule Bonfire.Me.Users do
     # info(self(), username)
     # info(repo())
     Queries.by_username_or_id(username, opts[:preload])
-    |> debug()
+    # |> debug()
     |> repo().single()
   end
 

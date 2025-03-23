@@ -41,8 +41,18 @@ defmodule Bonfire.Me.Fake do
       {:error, %Ecto.Changeset{} = e} when is_binary(custom_username) ->
         debug(e)
 
-        Users.by_username!(custom_username)
-        |> Map.put(:account, account)
+        custom_username =
+          custom_username
+          |> Bonfire.Me.Characters.clean_username()
+
+        case Users.by_username!(custom_username) do
+          %{} = user ->
+            user
+            |> Map.put(:account, account)
+
+          _ ->
+            error(e, "User #{custom_username} could not be created or found")
+        end
 
       {:error, %Ecto.Changeset{valid?: false}} = e ->
         debug(e)
