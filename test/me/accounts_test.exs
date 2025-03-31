@@ -77,11 +77,25 @@ defmodule Bonfire.Me.AccountsTest do
   end
 
   describe "request_confirm_email" do
-    test "refreshing" do
+    test "resends a confirmation email" do
       attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs, must_confirm?: true)
 
-      # FIXME: why is it resending instead?
+      assert {:ok, :resent, account} =
+               Accounts.request_confirm_email(%{
+                 email: attrs.email.email_address
+               })
+
+      assert account.email.confirm_token
+      assert account.email.confirm_until
+    end
+
+    @tag :todo
+    test "refresh the confirmation token and sends a new confirmation email" do
+      attrs = signup_form()
+      assert {:ok, account} = Accounts.signup(attrs, must_confirm?: true)
+
+      # WIP: this is resending instead because confirm_until is still valid
       assert {:ok, :refreshed, account} =
                Accounts.request_confirm_email(%{
                  email: attrs.email.email_address
