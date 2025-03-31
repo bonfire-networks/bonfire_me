@@ -81,7 +81,7 @@ defmodule Bonfire.Me.Mails do
 
       # |> put_html_layout({EmailView, "confirm_email.html"})
       # |> put_text_layout({EmailView, "confirm_email.text"})
-      # |> IO.inspect
+      # |> debug()
     else
       error("No confirmation token")
     end
