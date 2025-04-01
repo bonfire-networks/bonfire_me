@@ -745,8 +745,10 @@ defmodule Bonfire.Me.Users do
     # check discovery settings
     user = repo().maybe_preload(previous || object, :settings)
 
-    if !Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) do
-      maybe_apply(Bonfire.Search, :maybe_index, [object, false, user], user)
+    if Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) do
+      maybe_apply(Bonfire.Search, :maybe_index, [object, "private", user], user)
+    else
+      maybe_apply(Bonfire.Search, :maybe_index, [object, "public", user], user)
     end
   end
 
