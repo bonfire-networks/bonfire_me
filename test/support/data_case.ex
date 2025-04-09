@@ -27,6 +27,8 @@ defmodule Bonfire.Me.DataCase do
 
       import Bonfire.Me.Fake.Helpers
       import Bonfire.Me.Integration
+
+      @moduletag :backend
     end
   end
 
