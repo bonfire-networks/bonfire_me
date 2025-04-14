@@ -256,7 +256,7 @@ defmodule Bonfire.Me.Users do
   def search_query(search, opts \\ []), do: Queries.search(search, opts)
 
   # def list_all(show \\ :local), do: repo().many(Queries.list(show))
-  def list_admins(), do: repo().many(Queries.admins())
+  def list_admins(opts \\ []), do: repo().many(Queries.admins(opts))
 
   def list_boundarised_query(opts) do
     # Note: users who said they don't want to be publicly discoverable in settings will be filtered based on boundaries (i.e. not shown to guests)

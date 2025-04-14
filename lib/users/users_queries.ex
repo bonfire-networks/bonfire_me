@@ -300,6 +300,13 @@ defmodule Bonfire.Me.Users.Queries do
     ])
   end
 
+  defp proloads(query, :internal) do
+    proload(query, [
+      :instance_admin,
+      character: [:peered]
+    ])
+  end
+
   defp proloads(query, opts) when is_list(opts) do
     proloads(query, e(opts, :preload, :default))
   end
