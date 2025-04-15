@@ -511,7 +511,7 @@ defmodule Bonfire.Me.Users do
         # |> debug("maybe_generic_delete_opts")
       ]
     )
-    |> debug("maybe_generic_delete")
+    |> debug("attempted to delete user with generic_delete")
 
     # Bonfire.Social.Objects.maybe_generic_delete(
     #   User,
