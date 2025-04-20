@@ -39,7 +39,7 @@ defmodule Bonfire.Me.MixProject do
            optional: true, runtime: false},
           {:absinthe, "~> 1.7", optional: true},
           {:nimble_totp, "~> 1.0.0", optional: true},
-          {:eqrcode, "~> 0.1.10", optional: true}
+          {:eqrcode, "~> 0.2.1", optional: true}
         ])
     ]
   end
