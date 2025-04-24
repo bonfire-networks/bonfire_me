@@ -97,7 +97,7 @@ defmodule Bonfire.Me.Users do
       > Bonfire.Me.Users.by_username("username")
       %Bonfire.Data.Identity.User{}
   """
-  # FIXME: if the username is a valid ULID, it will actually go looking for the wrong thing and not find them.
+  # FIXME: if the username looks like a valid ULID, it will actually go looking for the wrong thing and not find them.
   def by_username(username, opts \\ []) when is_binary(username) do
     # info(self(), username)
     # info(repo())
@@ -130,8 +130,8 @@ defmodule Bonfire.Me.Users do
       > Bonfire.Me.Users.by_username!("username")
       %Bonfire.Data.Identity.User{}
   """
-  def by_username!(username) when is_binary(username),
-    do: repo().one(Queries.by_username_or_id(username))
+  def by_username!(username, opts \\ []) when is_binary(username),
+    do: repo().one(Queries.by_username_or_id(username, opts))
 
   @doc """
   Gets users by account.

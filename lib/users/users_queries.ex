@@ -277,14 +277,6 @@ defmodule Bonfire.Me.Users.Queries do
     ])
   end
 
-  defp proloads(query, :default) do
-    proloads(query, :minimal)
-    |> proload(
-      # :instance_admin,
-      character: [:peered]
-    )
-  end
-
   defp proloads(query, :profile) do
     proloads(query, :default)
     |> proload([
@@ -312,11 +304,11 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   defp proloads(query, _default) do
-    proload(query, [
-      :instance_admin,
+    query
+    |> proload(
       profile: [:icon],
       character: [:peered]
-    ])
+    )
   end
 
   @doc """
