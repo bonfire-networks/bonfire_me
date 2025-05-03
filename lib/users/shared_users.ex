@@ -9,6 +9,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     alias Bonfire.Me.Users
 
     use Bonfire.Common.Utils
+    use Bonfire.Common.Config
     import Bonfire.Common.Config, only: [repo: 0]
     alias Ecto.Changeset
     import Ecto.Query

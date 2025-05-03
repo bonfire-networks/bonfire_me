@@ -13,7 +13,7 @@ defmodule Bonfire.Me.Accounts do
   alias Bonfire.Data.Identity.Email
   alias Bonfire.Data.Identity.User
 
-  alias Bonfire.Common.Config
+  use Bonfire.Common.Config
   alias Bonfire.Me.Mails
 
   alias Bonfire.Me.Accounts.ConfirmEmailFields

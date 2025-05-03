@@ -12,6 +12,7 @@ defmodule Bonfire.Me.Profiles do
   """
 
   use Bonfire.Common.E
+  use Bonfire.Common.Config
   alias Bonfire.Common.Types
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset

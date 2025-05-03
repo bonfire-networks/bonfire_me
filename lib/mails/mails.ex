@@ -12,7 +12,7 @@ defmodule Bonfire.Me.Mails do
   use Gettext, backend: Bonfire.Common.Localise.Gettext
   import Bonfire.Common.Localise.Gettext.Helpers
 
-  alias Bonfire.Common.Config
+  use Bonfire.Common.Config
   alias Bonfire.Data.Identity.Account
   # alias Bonfire.Me.Mails.EmailView
   alias Bonfire.Common.Utils

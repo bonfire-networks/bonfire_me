@@ -1,6 +1,6 @@
 defmodule Bonfire.Me.Integration do
   use Bonfire.Common.Utils
-  alias Bonfire.Common.Config
+  use Bonfire.Common.Config
   # alias Bonfire.Common.Extend
   # alias Bonfire.Common.Enums
   import Untangle
