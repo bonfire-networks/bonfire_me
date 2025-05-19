@@ -34,7 +34,7 @@ defmodule Bonfire.Me.MixProject do
           {:bonfire_api_graphql,
            git: "https://github.com/bonfire-networks/bonfire_api_graphql",
            optional: true, runtime: false},
-           {:bonfire_files,
+          {:bonfire_files,
            git: "https://github.com/bonfire-networks/bonfire_files",
            optional: true, runtime: false},
           {:absinthe, "~> 1.7", optional: true},
