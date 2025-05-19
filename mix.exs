@@ -27,7 +27,7 @@ defmodule Bonfire.Me.MixProject do
         Mess.deps([
           {:phoenix_live_reload, "~> 1.2", only: :dev},
 
-          # {:floki, ">= 0.0.0", only: [:dev, :test]},
+          {:floki, ">= 0.0.0", only: [:dev, :test]},
           {:bonfire_data_shared_user,
            git: "https://github.com/bonfire-networks/bonfire_data_shared_user",
            optional: true, runtime: false},
@@ -36,7 +36,7 @@ defmodule Bonfire.Me.MixProject do
            optional: true, runtime: false},
           {:bonfire_files,
            git: "https://github.com/bonfire-networks/bonfire_files",
-           optional: true, runtime: false},
+           optional: true, runtime: false, only: if(System.get_env("CI"), do: [])},
           {:absinthe, "~> 1.7", optional: true},
           {:nimble_totp, "~> 1.0.0", optional: true},
           {:eqrcode, "~> 0.2.1", optional: true}
