@@ -28,8 +28,10 @@ defmodule Bonfire.Me.Characters do
   def schema_module, do: Character
 
   @username_max_length 62
-  @username_forbidden ~r/[^a-z0-9_]+/i
-  @username_regex ~r(^[a-z0-9_]{2,63}$)i
+
+  # Regex patterns defined as functions to comply with Erlang/OTP 28
+  defp username_forbidden, do: ~r/[^a-z0-9_]+/i
+  defp username_regex, do: ~r(^[a-z0-9_]{2,63}$)i
 
   @doc """
   Retrieves a character by username.
@@ -122,7 +124,7 @@ defmodule Bonfire.Me.Characters do
       "invalid_username"
   """
   def clean_username(username) do
-    Regex.replace(@username_forbidden, username, "_")
+    Regex.replace(username_forbidden(), username, "_")
     |> String.slice(0..(@username_max_length - 1))
     |> String.trim("_")
   end
@@ -165,7 +167,7 @@ defmodule Bonfire.Me.Characters do
   defp changeset_common(changeset) do
     changeset
     |> Changeset.update_change(:username, &clean_username/1)
-    |> Changeset.validate_format(:username, @username_regex)
+    |> Changeset.validate_format(:username, username_regex())
     |> Changesets.cast_assoc(:actor)
   end
 
