@@ -894,13 +894,13 @@ defmodule Bonfire.Me.Accounts do
   def is_first_account? do
     # Cache the result to avoid repeated COUNT queries during tests
     case Process.get(:is_first_account_cached) do
-      nil ->
+      false ->
+        false
+
+      _nil_or_true ->
         result = count() < 1
         Process.put(:is_first_account_cached, result)
         result
-
-      cached_result ->
-        cached_result
     end
   end
 
