@@ -5,6 +5,11 @@ defmodule Bonfire.Me.AccountsTest do
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Accounts
 
+  setup do
+    Bonfire.Me.Fake.clear_caches()
+    :ok
+  end
+
   describe "signup" do
     test "email: :valid, with must_confirm?: true" do
       attrs = signup_form()

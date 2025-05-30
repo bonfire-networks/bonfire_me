@@ -892,7 +892,23 @@ defmodule Bonfire.Me.Accounts do
   def count(), do: repo().one(Queries.count())
 
   def is_first_account? do
-    count() < 1
+    # Cache the result to avoid repeated COUNT queries during tests
+    case Process.get(:is_first_account_cached) do
+      nil ->
+        result = count() < 1
+        Process.put(:is_first_account_cached, result)
+        result
+
+      cached_result ->
+        cached_result
+    end
+  end
+
+  @doc """
+  Clears cached values for testing. Call this in test setup/teardown.
+  """
+  def clear_cache do
+    Process.delete(:is_first_account_cached)
   end
 
   def update_is_admin(user_or_account, make_admin_or_revoke, user \\ nil)

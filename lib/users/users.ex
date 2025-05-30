@@ -762,7 +762,23 @@ defmodule Bonfire.Me.Users do
   end
 
   def is_first_user? do
-    count() < 1
+    # Cache the result to avoid repeated COUNT queries during tests
+    case Process.get(:is_first_user_cached) do
+      nil ->
+        result = count() < 1
+        Process.put(:is_first_user_cached, result)
+        result
+
+      cached_result ->
+        cached_result
+    end
+  end
+
+  @doc """
+  Clears cached values for testing. Call this in test setup/teardown.
+  """
+  def clear_cache do
+    Process.delete(:is_first_user_cached)
   end
 
   def make_user(attrs, account, opts \\ []) do

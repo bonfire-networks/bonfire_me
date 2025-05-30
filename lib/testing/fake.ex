@@ -29,11 +29,15 @@ defmodule Bonfire.Me.Fake do
   def fake_user!(%Account{} = account, attrs, opts_or_extra) do
     custom_username = attrs[:username]
 
+    # Use regular insert for tests to avoid lock contention, fall back to insert_or_ignore for retries
+    insert_fun =
+      if opts_or_extra[:i] && opts_or_extra[:i] > 1, do: :insert_or_ignore, else: :insert
+
     with {:ok, user} <-
            Users.make_user(
              create_user_form(attrs),
              account,
-             opts_or_extra ++ [repo_insert_fun: :insert_or_ignore]
+             opts_or_extra ++ [repo_insert_fun: insert_fun]
            ) do
       user
       |> Map.put(:account, account)
@@ -75,5 +79,15 @@ defmodule Bonfire.Me.Fake do
   def fake_user!(account_attrs, user_attrs, opts_or_extra) do
     fake_account!(account_attrs)
     |> fake_user!(user_attrs, opts_or_extra)
+  end
+
+  @doc """
+  Clears all cached values that can cause issues in tests.
+  Call this in your test setup or teardown.
+  """
+  def clear_caches do
+    Bonfire.Me.Users.clear_cache()
+    Bonfire.Me.Accounts.clear_cache()
+    :ok
   end
 end
