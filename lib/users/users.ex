@@ -312,11 +312,10 @@ defmodule Bonfire.Me.Users do
 
     repo_insert_fun = (clean_opts[:repo_insert_fun] || :insert) |> debug()
 
-      with {:ok, user} <-
-        repo().transact_with(fn -> apply(repo(), repo_insert_fun, [changeset]) end) do
-        after_creation(user, make_admin?, opts)
-      end
-
+    with {:ok, user} <-
+           repo().transact_with(fn -> apply(repo(), repo_insert_fun, [changeset]) end) do
+      after_creation(user, make_admin?, opts)
+    end
   end
 
   def create(params, extra) when not is_struct(params) do
