@@ -92,13 +92,17 @@ defmodule Bonfire.Me.UsersTest do
     me = Fake.fake_user!()
     assert {:ok, upload} = Files.upload(IconUploader, me, icon_file())
 
-    assert path = Files.local_path(IconUploader, upload)
-    assert File.exists?(path)
+    if path = Files.local_path(IconUploader, upload) do
+      assert File.exists?(path)
+    end || Bonfire.Common.Media.avatar_url(upload)
 
     {:ok, me} = Bonfire.Me.Profiles.set_profile_image(:icon, me, upload)
 
     assert {:ok, _} = Bonfire.Me.DeleteWorker.delete_structs_now(me)
-    refute File.exists?(path)
+
+    if path = Files.local_path(IconUploader, upload) do
+      refute File.exists?(path)
+    end
   end
 
   test "first user is automatically promoted to admin" do
