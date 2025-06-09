@@ -175,7 +175,10 @@ defmodule Bonfire.Me.Accounts do
   def signup(params_or_changeset, opts \\ [])
 
   def signup(params, opts) when not is_struct(params) do
-    signup(changeset(:signup, params, opts), opts ++ [params: params])
+    signup(
+      changeset(:signup, params, opts) |> info("changeset"),
+      to_options(opts) |> Keyword.put(:params, params)
+    )
   end
 
   def signup(%Changeset{data: %Account{}} = cs, opts) do
@@ -183,12 +186,12 @@ defmodule Bonfire.Me.Accounts do
       do_signup(cs, opts)
     else
       # avoid checking out txn
-      {:error, cs}
+      error(cs)
     end
   end
 
   def signup(%Changeset{} = _cs, opts) do
-    case opts[:params][:openid_email] do
+    case e(opts, :params, :openid_email, nil) do
       nil ->
         error("Did not find a valid signup changeset or OpenID email")
 
@@ -212,6 +215,7 @@ defmodule Bonfire.Me.Accounts do
         (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
       # Config.env() != :test
     )
+    |> info()
   end
 
   def do_signup(%{} = cs_or_params, opts) do
@@ -228,6 +232,7 @@ defmodule Bonfire.Me.Accounts do
       |> debug("changeset")
       |> repo().insert()
     end)
+    |> info("attempted to insert account")
     ~> maybe_redeem_invite(opts)
     ~> maybe_send_confirm_email(opts)
   end
