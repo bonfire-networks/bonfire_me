@@ -753,18 +753,22 @@ defmodule Bonfire.Me.Accounts do
     valid_invite = System.get_env("INVITE_KEY")
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
 
-    opts[:is_first_account?] == true or
-      opts[:skip_invite_check] == true or !instance_is_invite_only?() or
-      redeemable_invite?(opts[:invite]) or
+    (opts[:is_first_account?] == true or
+       opts[:skip_invite_check] == true or !instance_is_invite_only?() or
+       redeemable_invite?(opts[:invite])) ||
       (not is_nil(opts[:invite]) and
          opts[:invite] in [valid_invite, special_invite])
   end
 
+  def redeemable_invite?(nil), do: false
+
   def redeemable_invite?(invite) do
     module = maybe_module(Bonfire.Invite.Links)
 
-    if not is_nil(module) && not is_nil(invite) do
+    if not is_nil(module) and invite do
       module.redeemable?(invite)
+    else
+      false
     end
   end
 
