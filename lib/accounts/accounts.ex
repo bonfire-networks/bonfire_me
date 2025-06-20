@@ -736,8 +736,8 @@ defmodule Bonfire.Me.Accounts do
 
   """
   def instance_is_invite_only? do
-    (Config.env() != :test and
-       Config.get(:invite_only)) || false
+    Config.env() != :test and
+      Config.get(:invite_only, true)
   end
 
   @doc """
@@ -750,14 +750,13 @@ defmodule Bonfire.Me.Accounts do
 
   """
   def allow_signup?(opts) do
-    valid_invite = System.get_env("INVITE_KEY")
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
 
     (opts[:is_first_account?] == true or
        opts[:skip_invite_check] == true or !instance_is_invite_only?() or
        redeemable_invite?(opts[:invite])) ||
       (not is_nil(opts[:invite]) and
-         opts[:invite] in [valid_invite, special_invite])
+         opts[:invite] == special_invite)
   end
 
   def redeemable_invite?(nil), do: false
