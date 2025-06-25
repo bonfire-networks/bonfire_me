@@ -88,19 +88,16 @@ defmodule Bonfire.Me.UsersTest do
     end)
   end
 
-  test "when user is deleted, also delete avatar file" do
-    me = Fake.fake_user!()
-    assert {:ok, upload} = Files.upload(IconUploader, me, icon_file())
+  test "can create a user with avatar, and when user is deleted it also deletes avatar file" do
+    %{user: me, upload: upload, path: path, url: url} =
+      fake_user_with_avatar!()
 
-    if path = Files.local_path(IconUploader, upload) do
-      assert File.exists?(path)
-    end || Bonfire.Common.Media.avatar_url(upload)
-
-    {:ok, me} = Bonfire.Me.Profiles.set_profile_image(:icon, me, upload)
+    assert path || url,
+           "Expected a path or URL for the uploaded file, got neither."
 
     assert {:ok, _} = Bonfire.Me.DeleteWorker.delete_structs_now(me)
 
-    if path = Files.local_path(IconUploader, upload) do
+    if path do
       refute File.exists?(path)
     end
   end

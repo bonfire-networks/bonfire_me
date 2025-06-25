@@ -85,6 +85,7 @@ defmodule Bonfire.Me.Profiles do
       "summary" => e(obj, :summary, nil),
       "website" => e(obj, :website, nil),
       "location" => e(obj, :location, nil)
+      # NOTE: do not store images in index, instead rely on preloading from DB when displaying results
       # "icon" => %{"url" => icon}, # TODO: index alt tags
       # "image" => %{"url" => image}
     }
