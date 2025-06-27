@@ -215,7 +215,7 @@ defmodule Bonfire.Me.Accounts do
         (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
       # Config.env() != :test
     )
-    |> info()
+    |> debug("signup opts")
   end
 
   def do_signup(%{} = cs_or_params, opts) do
@@ -229,10 +229,10 @@ defmodule Bonfire.Me.Accounts do
       |> Changesets.put_assoc(:instance_admin, %{
         is_instance_admin: make_admin?
       })
-      |> debug("changeset")
+      # |> debug("changeset")
       |> repo().insert()
     end)
-    |> info("attempted to insert account")
+    |> debug("attempted to insert account")
     ~> maybe_redeem_invite(opts)
     ~> maybe_send_confirm_email(opts)
   end
@@ -752,11 +752,14 @@ defmodule Bonfire.Me.Accounts do
   def allow_signup?(opts) do
     special_invite = System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
 
-    (opts[:is_first_account?] == true or
-       opts[:skip_invite_check] == true or !instance_is_invite_only?() or
-       redeemable_invite?(opts[:invite])) ||
-      (not is_nil(opts[:invite]) and
-         opts[:invite] == special_invite)
+    invite = opts[:invite]
+
+    (not is_nil(invite) and
+       invite == special_invite) or
+      (opts[:is_first_account?] == true or
+         opts[:skip_invite_check] == true or !instance_is_invite_only?() or
+         (Types.is_uid?(invite) and
+            redeemable_invite?(invite)))
   end
 
   def redeemable_invite?(nil), do: false
@@ -901,7 +904,7 @@ defmodule Bonfire.Me.Accounts do
 
   def is_first_account? do
     # Cache the result to avoid repeated COUNT queries during tests
-    case Process.get(:is_first_account_cached) do
+    case ProcessTree.get(:is_first_account_cached) do
       false ->
         false
 
