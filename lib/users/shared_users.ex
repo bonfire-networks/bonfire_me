@@ -181,7 +181,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     end
 
     def by_account(account_id) when is_binary(account_id),
-      do: by_account(Bonfire.Me.Accounts.fetch_current(account_id))
+      do: Bonfire.Me.Accounts.fetch_current(account_id) ~> by_account()
 
     def by_username_and_account_query(username, account) do
       from(u in User,
