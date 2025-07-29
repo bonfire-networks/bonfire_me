@@ -147,15 +147,24 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp signup_changeset(params, opts) do
-    debug(opts)
+    # debug(opts)
 
     signup_changeset_base(params, opts)
-    |> Changeset.cast_assoc(
-      :credential,
-      required: true,
-      with: &Credential.confirmation_changeset(&1, &2)
-    )
+    |> maybe_cast_credential(params, opts)
     |> Bonfire.Me.Accounts.SecondFactors.maybe_cast_totp_changeset(params, opts)
+  end
+
+  defp maybe_cast_credential(cs, params, opts) do
+    if is_tuple(opts[:open_id_provider]) and !params[:password] do
+      cs
+    else
+      cs
+      |> Changeset.cast_assoc(
+        :credential,
+        required: true,
+        with: &Credential.confirmation_changeset(&1, &2)
+      )
+    end
   end
 
   ### signup
@@ -211,8 +220,9 @@ defmodule Bonfire.Me.Accounts do
     opts
     |> Keyword.put_new(
       :must_confirm?,
-      !opts[:is_first_account?] or
-        (opts[:invite] && opts[:invite] == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS"))
+      !opts[:is_first_account?] and
+        !opts[:open_id_provider] and
+        opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
       # Config.env() != :test
     )
     |> debug("signup opts")

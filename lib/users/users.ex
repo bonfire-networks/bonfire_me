@@ -331,6 +331,18 @@ defmodule Bonfire.Me.Users do
     if module = maybe_module(Bonfire.Boundaries.Users),
       do: module.create_default_boundaries(user, opts)
 
+    case opts[:open_id_provider] do
+      {provider, provider_token} ->
+        maybe_apply(Bonfire.OpenID.Client, :link_provider_token, [
+          user,
+          provider,
+          provider_token
+        ])
+
+      _ ->
+        :ok
+    end
+
     user =
       if not is_nil(clean_opts[:undiscoverable]),
         do:
