@@ -3,6 +3,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @moduledoc "Account/User related API endpoints for Mastodon-compatible client apps, powered by the GraphQL API (see `Bonfire.Me.API.GraphQL`)"
 
     # use Bonfire.UI.Common.Web, :controller
+    use Bonfire.Common.Utils
     use Arrows
     import Untangle
 
@@ -61,25 +62,61 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       })
     end
 
-    def prepare_user(user) do
-      # TODO: implement these fields
+    def prepare_user(data) do
+      # TODO: we need to load settings for the user
+      user = e(data, :user, nil)
+      # |> flood("daaata")
+
+      indexable = Bonfire.Common.Extend.module_enabled?(Bonfire.Search.Indexer, user)
+
+      discoverable =
+        Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) !=
+          true
+
       %{
+        "indexable" => indexable,
+        "discoverable" => discoverable,
+        # ^ note some clients don't accept nil for note
+        "created_at" => DatesTimes.date_from_pointer(user) ~> DateTime.to_iso8601(),
+        "uri" => e(user, :character, :url, nil),
+        "source" => %{
+          # TODO: source field only on me query?
+          "indexable" => indexable,
+          "discoverable" => discoverable,
+          "note" => e(user, :profile, :note, ""),
+          # TODO: also implement these fields:
+          "follow_requests_count" => 5,
+          "hide_collections" => false,
+          "attribution_domains" => [],
+          "privacy" => "public",
+          "sensitive" => false,
+          "language" => ""
+        },
+
+        # TODO: also implement these fields:
         "locked" => false,
+        "fields" => [],
+        "emojis" => [],
+        "bot" => false,
+        "group" => false,
+        "noindex" => nil,
+        "moved" => nil,
+        "memorial" => nil,
+        "suspended" => nil,
+        "limited" => false,
+        "last_status_at" => DateTime.utc_now() |> DateTime.to_iso8601(),
+        "statuses_count" => 1,
         "followers_count" => 1,
         "following_count" => 1,
-        "statuses_count" => 1,
-        "last_status_at" => DateTime.utc_now() |> DateTime.to_iso8601(),
-        # TODO: this field only on me query
-        "source" => %{},
-        "emojis" => [],
-        "fields" => []
+        "hide_collections" => nil,
+        "roles" => [],
+        "role" => nil
       }
       |> Map.merge(
         user
         |> Enums.maybe_flatten()
-        # because some clients don't accept nil
-        |> Enums.map_put_default(:note, "")
       )
+      |> Map.put("note", Text.maybe_markdown_to_html(e(user, :profile, :note, nil)) || "")
       |> debug()
     end
   end
