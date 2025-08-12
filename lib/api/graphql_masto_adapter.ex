@@ -65,7 +65,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     def prepare_user(data) do
       # TODO: we need to load settings for the user
       user = e(data, :user, nil)
-      # |> flood("daaata")
+      # |> debug("daaata")
 
       indexable = Bonfire.Common.Extend.module_enabled?(Bonfire.Search.Indexer, user)
 
