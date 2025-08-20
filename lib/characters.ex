@@ -48,6 +48,17 @@ defmodule Bonfire.Me.Characters do
     do: by_username_q(username) |> repo().one()
 
   @doc """
+  Retrieves multiple characters by usernames.
+
+  ## Examples
+
+      > Bonfire.Me.Characters.by_usernames(["username1", "username2"])
+      [%Bonfire.Data.Identity.Character{}, %Bonfire.Data.Identity.Character{}]
+  """
+  def by_usernames(usernames) when is_list(usernames),
+    do: by_username_q(usernames) |> repo().many()
+
+  @doc """
   Retrieves multiple characters by IDs.
 
   ## Examples
@@ -67,6 +78,11 @@ defmodule Bonfire.Me.Characters do
       by_username_q(id)
     end
     |> repo().single()
+  end
+
+  def by_username_q(usernames) when is_list(usernames) do
+    from(c in Character, where: c.username in ^usernames)
+    |> proload([:profile, :peered, :actor])
   end
 
   def by_username_q(username) do
