@@ -405,7 +405,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     def update_user(args, info) do
-      # || (Users.by_username("test") |> ok_unwrap)
+      # || (Users.by_username("test") |> from_ok)
       user = GraphQL.current_user(info)
 
       if user do
