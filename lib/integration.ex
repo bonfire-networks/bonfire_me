@@ -123,14 +123,15 @@ defmodule Bonfire.Me.Integration do
 
   def indexing_format_creator(user_etc) do
     %{
-      "creator" => %{
-        "id" => id(user_etc),
-        #  FIXME: should not assume User here
-        "index_type" => Types.module_to_str(object_type(user_etc))
-        # NOTE: no longer indexing the metadata of the user, as it can be fetched from the DB when displaying search results
-        # "profile" => Bonfire.Me.Profiles.indexing_object_format(e(user_etc, :profile, nil)),
-        # "character" => Bonfire.Me.Characters.indexing_object_format(e(user_etc, :character, nil))
-      }
+      "creator_id" => id(user_etc)
+      # NOTE: no longer indexing the metadata of the user, as it can be fetched from the DB when displaying search results
+      # "creator" => %{
+      #   "id" => id(user_etc),
+      #   #  FIXME: should not assume User here
+      #   "index_type" => Types.module_to_str(object_type(user_etc))
+      #   # "profile" => Bonfire.Me.Profiles.indexing_object_format(e(user_etc, :profile, nil)),
+      #   # "character" => Bonfire.Me.Characters.indexing_object_format(e(user_etc, :character, nil))
+      # }
     }
   end
 end
