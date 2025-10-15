@@ -206,13 +206,17 @@ defmodule Bonfire.Me.Users do
       iex> Bonfire.Me.Users.check_active(user)
       {:ok, %Bonfire.Data.Identity.User{}}
   """
-  def check_active(users) when is_list(users), do: Enum.map(users, &check_active/1)
+  # Enum.map(users, &check_active/1) 
+  def check_active(users) when is_list(users),
+    do: Bonfire.Boundaries.Blocks.reject_blocked(users, :ghost, :instance_wide)
 
   def check_active(user) do
     if is_active?(user), do: {:ok, user}, else: {:error, :inactive_user}
   end
 
-  def check_active!(users) when is_list(users), do: Enum.map(users, &check_active!/1)
+  # Enum.map(users, &check_active!/1)
+  def check_active!(users) when is_list(users),
+    do: Bonfire.Boundaries.Blocks.check_blocked!(users, :ghost, :instance_wide, :inactive_user)
 
   def check_active!(user) when is_map(user) or is_binary(user) do
     if is_active?(user), do: user, else: throw(:inactive_user)
