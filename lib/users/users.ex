@@ -328,7 +328,7 @@ defmodule Bonfire.Me.Users do
       to_options(opts)
       |> debug("opts")
 
-    if module = maybe_module(Bonfire.Boundaries.Users),
+    if module = maybe_module(Bonfire.Boundaries.Scaffold.Users),
       do: module.create_default_boundaries(user, opts)
 
     case opts[:open_id_provider] do

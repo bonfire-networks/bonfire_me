@@ -14,8 +14,8 @@ defmodule Bonfire.Me.Repo.Migrations.ProfileImages do
     )
 
     alter table("bonfire_data_social_profile") do
-      Ecto.Migration.add_if_not_exists(:icon_id, strong_pointer(Bonfire.Files.Media))
-      Ecto.Migration.add_if_not_exists(:image_id, strong_pointer(Bonfire.Files.Media))
+      add_pointer_if_not_exists(:icon_id, :strong, Bonfire.Files.Media)
+      add_pointer_if_not_exists(:image_id, :strong, Bonfire.Files.Media)
     end
   end
 
