@@ -144,7 +144,7 @@ defmodule Bonfire.Me.Users.Queries do
       as: :account,
       on: accounted.account_id == account.id
     )
-    |> proloads(:current)
+    |> user_proloads(:current)
   end
 
   def current(user_id, _), do: current(user_id)
@@ -161,7 +161,7 @@ defmodule Bonfire.Me.Users.Queries do
   def by_id(id, opts \\ []),
     do:
       base_by_id(id)
-      |> proloads(opts)
+      |> user_proloads(opts)
 
   @doc """
   Finds a user by username or ID.
@@ -185,7 +185,7 @@ defmodule Bonfire.Me.Users.Queries do
   """
   def by_username_query(username, opts \\ []) do
     from(u in User, as: :user)
-    |> proloads(opts)
+    |> user_proloads(opts)
     |> where([character: c], c.username == ^username)
   end
 
@@ -202,7 +202,7 @@ defmodule Bonfire.Me.Users.Queries do
       #   module.by_username_and_account_query(user_id, account_id)
       # else
       from(u in User, as: :user)
-      |> proloads(:local)
+      |> user_proloads(:local)
       |> where([account: account], account.id == ^Types.uid(account_id))
       |> where([character: c], c.id == ^user_id)
 
@@ -214,7 +214,7 @@ defmodule Bonfire.Me.Users.Queries do
         module.by_username_and_account_query(username_or_user_id, account_id)
       else
         from(u in User, as: :user)
-        |> proloads(:local)
+        |> user_proloads(:local)
         |> where([account: account], account.id == ^Types.uid(account_id))
         |> where([character: c], c.username == ^username_or_user_id)
       end
@@ -228,10 +228,18 @@ defmodule Bonfire.Me.Users.Queries do
 
       iex> Bonfire.Me.Users.Queries.by_account("account_id")
   """
-  def by_account(account_id) do
+  def by_account(account_id, opts \\ []) do
     from(u in User, as: :user)
-    |> proloads(:local)
+    |> user_proloads(:local)
     |> where([account: account], account.id == ^Types.uid!(account_id))
+    |> maybe_exclude_user_id(opts)
+  end
+
+  def maybe_exclude_user_id(query, opts) do
+    case opts[:exclude_user_id] do
+      nil -> query
+      exclude_id -> where(query, [u], u.id != ^exclude_id)
+    end
   end
 
   @doc """
@@ -243,67 +251,67 @@ defmodule Bonfire.Me.Users.Queries do
   """
   def by_canonical_uri(canonical_uri, opts \\ []) do
     from(u in User, as: :user)
-    |> proloads(opts)
+    |> user_proloads(opts)
     |> where([peered: p], p.canonical_uri == ^canonical_uri)
   end
 
-  defp proloads(query, :current) do
-    proloads(query, :minimal)
+  def user_proloads(query, :current) do
+    user_proloads(query, :minimal)
     # NOTE: we load account and settings here so the LoadCurrentUser LivePlug can set the current_account without a separate query
     |> proload([:settings, :shared_user, account: {"account_", [:settings, :instance_admin]}])
 
     # |> proload(accounted: [account: [:settings]])
   end
 
-  defp proloads(query, :local) do
-    proloads(query, :locals)
+  def user_proloads(query, :local) do
+    user_proloads(query, :locals)
     |> proload([
       :account
     ])
   end
 
-  defp proloads(query, :locals) do
-    proloads(query, :admins)
+  def user_proloads(query, :locals) do
+    user_proloads(query, :admins)
     |> proload([
       # :settings,
       # character: [:follow_count],
     ])
   end
 
-  defp proloads(query, :admins) do
-    proloads(query, :minimal)
+  def user_proloads(query, :admins) do
+    user_proloads(query, :minimal)
     |> proload([
       :instance_admin
     ])
   end
 
-  defp proloads(query, :profile) do
-    proloads(query, :default)
+  def user_proloads(query, :profile) do
+    user_proloads(query, :default)
     |> proload([
       :instance_admin,
       profile: [:icon, :image]
     ])
   end
 
-  defp proloads(query, :minimal) do
+  def user_proloads(query, :minimal) do
     proload(query, [
       :character,
       profile: [:icon]
     ])
   end
 
-  defp proloads(query, :internal) do
+  def user_proloads(query, :internal) do
     proload(query, [
       :instance_admin,
       character: [:peered]
     ])
   end
 
-  defp proloads(query, opts) when is_list(opts) do
-    proloads(query, e(opts, :preload, :default))
+  def user_proloads(query, opts) when is_list(opts) do
+    user_proloads(query, e(opts, :preload, :default))
   end
 
-  defp proloads(query, _default) do
+  def user_proloads(query, _default) do
     query
     |> proload(
       profile: [:icon],
@@ -343,7 +351,7 @@ defmodule Bonfire.Me.Users.Queries do
   """
   def admins(opts \\ []) do
     from(u in User, as: :user)
-    |> proloads(e(opts, :preload, :admins))
+    |> user_proloads(e(opts, :preload, :admins))
     |> where([instance_admin: ia], ia.is_instance_admin == true)
   end
 

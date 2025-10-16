@@ -163,25 +163,38 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
       |> Changeset.put_assoc(:caretaker_accounts, [account])
     end
 
-    def by_account(%Account{} = account) do
-      # debug("shared by")
+    defp user_preloads do
+      [:shared_user, :character, profile: [:icon]]
+    end
+
+    defp user_preload_query(opts) do
+      from(u in User)
+      |> Bonfire.Me.Users.Queries.maybe_exclude_user_id(opts)
+      |> Bonfire.Me.Users.Queries.user_proloads(opts[:preload_type] || :local)
+    end
+
+    def by_account(%Account{} = account, opts \\ []) do
+      preload_spec =
+        [
+          users: user_preload_query(opts),
+          shared_users: user_preload_query(opts)
+        ]
+        |> debug("preload_spec")
+
       account =
-        repo().maybe_preload(
-          account,
-          [
-            users: [:shared_user, :instance_admin, :character, profile: [:icon]],
-            shared_users: [:shared_user, :character, profile: [:icon]]
-          ],
-          false
-        )
+        repo().maybe_preload(account, preload_spec, false)
+        |> debug("preloaded")
 
       # FIXME: should this call Accounts.by_account instead?
 
-      Enum.uniq_by(Map.get(account, :users, []) ++ Map.get(account, :shared_users, []), &id/1)
+      Enum.uniq_by(
+        Map.get(account, :users, []) ++ Map.get(account, :shared_users, []),
+        &id/1
+      )
     end
 
-    def by_account(account_id) when is_binary(account_id),
-      do: Bonfire.Me.Accounts.fetch_current(account_id) ~> by_account()
+    def by_account(account_id, opts),
+      do: Bonfire.Me.Accounts.fetch_current(account_id) ~> by_account(opts)
 
     def by_username_and_account_query(username, account) do
       from(u in User,

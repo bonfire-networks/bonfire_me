@@ -144,24 +144,24 @@ defmodule Bonfire.Me.Users do
       > Bonfire.Me.Users.by_account!("account_id")
       [%Bonfire.Data.Identity.User{}]
   """
-  def by_account(account) do
+  def by_account(account, opts \\ []) do
     if module = maybe_module(Bonfire.Me.SharedUsers) do
-      module.by_account(account)
+      module.by_account(account, opts)
     else
-      do_by_account(account)
+      do_by_account(account, opts)
     end
   end
 
-  def by_account!(account) do
-    by_account(account)
+  def by_account!(account, opts \\ []) do
+    by_account(account, opts)
     |> check_active!()
   end
 
-  defp do_by_account(account_id),
-    do: Queries.by_account(account_id) |> repo().many()
+  defp do_by_account(account_id, opts \\ []),
+    do: Queries.by_account(account_id, opts) |> repo().many()
 
-  def ids_by_account(account_id),
-    do: Queries.by_account(account_id) |> repo().pluck(:id)
+  def ids_by_account(account_id, opts \\ []),
+    do: Queries.by_account(account_id, opts) |> repo().pluck(:id)
 
   @doc """
   Gets a user by username or user ID and account ID, useful for switch-user functionality. 
