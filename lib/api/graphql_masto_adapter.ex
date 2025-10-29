@@ -115,9 +115,10 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       |> Map.merge(
         user
         |> Enums.maybe_flatten()
+        |> Enums.stringify_keys()
       )
       |> Map.put("note", Text.maybe_markdown_to_html(e(user, :profile, :note, nil)) || "")
-      |> debug()
+      |> debug("prepared user for API")
     end
   end
 end
