@@ -1039,4 +1039,91 @@ defmodule Bonfire.Me.Accounts do
       {:ok, Map.put(account, :settings, nil)}
     end
   end
+
+  @doc """
+  Lists all email addresses in the database along with associated user details.
+  Returns a list of maps containing account and user information.
+
+  ## Options
+  - `:format` - Set to `:csv` to return a CSV string instead of list of maps
+
+  ## Examples
+
+      > list_all_emails()
+      [%{account_id: "...", email: "user@example.com", username: "user", ...}]
+
+      > list_all_emails(format: :csv)
+      "account_id,email,email_confirmed,username,name,summary,account_created_at,canonical_uri\\n..."
+  """
+  def list_all_emails(opts \\ []) do
+    results =
+      repo().all(Queries.list_with_emails())
+      |> Enum.map(&enrich_email_data/1)
+
+    if opts[:format] == :csv do
+      format_as_csv(results)
+    else
+      results
+    end
+  end
+
+  defp enrich_email_data(
+         %{account_id: account_id, username: username, email_confirmed_at: confirmed_at} = row
+       ) do
+    row
+    |> Map.put(:account_created_at, Bonfire.Common.DatesTimes.date_from_pointer(account_id))
+    |> Map.put(:email_confirmed, confirmed_at != nil)
+    |> Map.put(
+      :canonical_uri,
+      if username do
+        Bonfire.Common.URIs.canonical_url(%{username: username}, preload_if_needed: false)
+      end
+    )
+    |> Map.drop([:email_confirmed_at])
+  end
+
+  defp format_as_csv([]), do: ""
+
+  defp format_as_csv([first | _rest] = results) do
+    # Get headers from first map
+    headers = Map.keys(first)
+    header_row = Enum.join(headers, ",")
+
+    # Format data rows
+    data_rows =
+      Enum.map(results, fn row ->
+        headers
+        |> Enum.map(fn key ->
+          value = Map.get(row, key)
+          format_csv_value(value)
+        end)
+        |> Enum.join(",")
+      end)
+
+    [header_row | data_rows]
+    |> Enum.join("\n")
+  end
+
+  defp format_csv_value(nil), do: ""
+  defp format_csv_value(%DateTime{} = dt), do: DateTime.to_iso8601(dt)
+
+  defp format_csv_value(value) when is_binary(value) do
+    # Always quote and escape strings that contain newlines, tabs, commas, or quotes
+    if String.contains?(value, [",", "\"", "\n", "\r", "\t"]) do
+      # Replace newlines with spaces and escape quotes
+      cleaned =
+        value
+        |> String.replace("\r\n", " ")
+        |> String.replace("\n", " ")
+        |> String.replace("\r", " ")
+        |> String.replace("\t", " ")
+        |> String.replace("\"", "\"\"")
+
+      "\"#{cleaned}\""
+    else
+      value
+    end
+  end
+
+  defp format_csv_value(value), do: to_string(value)
 end

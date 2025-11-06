@@ -112,4 +112,36 @@ defmodule Bonfire.Me.Accounts.Queries do
   def count(q \\ Account) do
     select(q, [u], count(u.id))
   end
+
+  @doc """
+  Lists all accounts with their email addresses and associated user details.
+  Useful for admin purposes to see all registered emails and usernames.
+  Only includes accounts that have an email address.
+  Returns only the first created user per account (based on user ID/ULID).
+
+  ## Examples
+
+      iex> Bonfire.Me.Accounts.Queries.list_with_emails()
+      #Ecto.Query<...>
+  """
+  def list_with_emails do
+    from(a in Account,
+      join: e in assoc(a, :email),
+      left_join: ac in assoc(a, :accounted),
+      left_join: u in assoc(ac, :user),
+      left_join: c in assoc(u, :character),
+      left_join: p in assoc(u, :profile),
+      where: not is_nil(e.email_address) and e.email_address != "",
+      distinct: a.id,
+      order_by: [asc: a.id, asc: u.id],
+      select: %{
+        account_id: a.id,
+        email: e.email_address,
+        email_confirmed_at: e.confirmed_at,
+        username: c.username,
+        name: p.name,
+        summary: p.summary
+      }
+    )
+  end
 end
