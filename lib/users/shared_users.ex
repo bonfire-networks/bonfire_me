@@ -57,11 +57,14 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
 
     def add_account(%User{} = user_to_share, email_or_username, params)
         when is_binary(email_or_username) do
-      # TODO: check that the authenticated account has permission to share this user
+      # TODO: check that the authenticated account has permission to share this user?
 
       case init_shared_user(user_to_share, params) do
         %SharedUser{} = shared_user ->
-          email_or_username = String.trim(email_or_username)
+          email_or_username = 
+          email_or_username
+          |> String.trim()
+          |> String.trim("@")
 
           if email_or_username != "" do
             case Accounts.get_by_email(email_or_username) do
