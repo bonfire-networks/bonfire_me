@@ -61,10 +61,10 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
 
       case init_shared_user(user_to_share, params) do
         %SharedUser{} = shared_user ->
-          email_or_username = 
-          email_or_username
-          |> String.trim()
-          |> String.trim("@")
+          email_or_username =
+            email_or_username
+            |> String.trim()
+            |> String.trim("@")
 
           if email_or_username != "" do
             case Accounts.get_by_email(email_or_username) do
