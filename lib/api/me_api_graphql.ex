@@ -158,13 +158,32 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       field(:image, :upload)
     end
 
+    object :peered do
+      field(:id, :id)
+      field(:canonical_uri, :string)
+      field(:peer_id, :id)
+    end
+
+    object :created do
+      field(:id, :id)
+      field(:creator_id, :id)
+
+      field :creator, :any_character do
+        resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer, :creator))
+      end
+    end
+
     object :character do
       field(:username, :string)
 
+      field(:peered, :peered) do
+        resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer))
+      end
+
       field(:canonical_uri, :string) do
         resolve(fn character, _, _ ->
-          # IO.inspect(activity)
-          {:ok, Bonfire.Common.URIs.canonical_url(character)}
+          # Use preload_if_needed: false to rely on Dataloader batching
+          {:ok, Bonfire.Common.URIs.canonical_url(character, preload_if_needed: false)}
         end)
       end
     end
@@ -447,10 +466,38 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end
     end
 
+    # Use Dataloader to batch-load icon media and prevent N+1 queries
+    def icon(parent, _args, %{context: %{loader: loader}}) do
+      loader
+      |> Dataloader.load(Needle.Pointer, :icon, parent)
+      |> Helpers.on_load(fn loader ->
+        case Dataloader.get(loader, Needle.Pointer, :icon, parent) do
+          nil -> {:ok, nil}
+          %Ecto.Association.NotLoaded{} -> {:ok, nil}
+          media -> {:ok, Bonfire.Common.Media.avatar_url(media) |> URIs.based_url()}
+        end
+      end)
+    end
+
+    # Fallback for non-GraphQL contexts
     def icon(thing, _, _info) do
       {:ok, Bonfire.Common.Media.avatar_url(thing) |> URIs.based_url()}
     end
 
+    # Use Dataloader to batch-load image media and prevent N+1 queries
+    def image(parent, _args, %{context: %{loader: loader}}) do
+      loader
+      |> Dataloader.load(Needle.Pointer, :image, parent)
+      |> Helpers.on_load(fn loader ->
+        case Dataloader.get(loader, Needle.Pointer, :image, parent) do
+          nil -> {:ok, nil}
+          %Ecto.Association.NotLoaded{} -> {:ok, nil}
+          media -> {:ok, Bonfire.Common.Media.banner_url(media) |> URIs.based_url()}
+        end
+      end)
+    end
+
+    # Fallback for non-GraphQL contexts
     def image(thing, _, _info) do
       {:ok, Bonfire.Common.Media.banner_url(thing) |> URIs.based_url()}
     end

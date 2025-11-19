@@ -31,6 +31,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       username
       acct: username
       url: canonical_uri
+      peered {
+        canonical_uri
+      }
     }"
     def user_profile_query, do: @user_profile
 
@@ -62,10 +65,13 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       })
     end
 
+    # Handle nil user (can happen with old/deleted accounts in paginated results)
+    def prepare_user(nil), do: nil
+
     def prepare_user(data) do
       # TODO: we need to load settings for the user
-      user = e(data, :user, nil)
-      # |> debug("daaata")
+      # Note: data is already the user object (extracted by RestAdapter.return)
+      user = data
 
       indexable = Bonfire.Common.Extend.module_enabled?(Bonfire.Search.Indexer, user)
 
@@ -73,11 +79,16 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) !=
           true
 
+      created_at = case user[:created_at] do
+        %DateTime{} = dt -> DateTime.to_iso8601(dt)
+        _ -> DatesTimes.date_from_pointer(user) ~> DateTime.to_iso8601() || DateTime.utc_now() |> DateTime.to_iso8601()
+      end
+
       %{
         "indexable" => indexable,
         "discoverable" => discoverable,
         # ^ note some clients don't accept nil for note
-        "created_at" => DatesTimes.date_from_pointer(user) ~> DateTime.to_iso8601(),
+        "created_at" => created_at,
         "uri" => e(user, :character, :url, nil),
         "source" => %{
           # TODO: source field only on me query?
@@ -114,11 +125,16 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       }
       |> Map.merge(
         user
+        |> Enums.struct_to_map(true)  # Recursively convert Ecto structs to maps
         |> Enums.maybe_flatten()
         |> Enums.stringify_keys()
+        |> case do
+          nil -> %{}
+          map when is_map(map) -> map
+          _ -> %{}
+        end
       )
       |> Map.put("note", Text.maybe_markdown_to_html(e(user, :profile, :note, nil)) || "")
-      |> debug("prepared user for API")
     end
   end
 end
