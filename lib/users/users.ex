@@ -244,7 +244,8 @@ defmodule Bonfire.Me.Users do
       [search, User, opts],
       &none/2
     ) ||
-      search_query(search, opts) |> repo().many()
+      search_query(search, opts)
+      |> repo().many()
   end
 
   defp none(_, _), do: []
@@ -746,6 +747,13 @@ defmodule Bonfire.Me.Users do
   # end
 
   def indexing_object_format(u) do
+    u =
+      repo().maybe_preload(
+        u,
+        [:profile, character: [:peered]],
+        false
+      )
+
     %{
       "id" => u.id,
       "index_type" => Types.module_to_str(User),

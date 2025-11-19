@@ -62,34 +62,43 @@ defmodule Bonfire.Me.Users.Queries do
       iex> Bonfire.Me.Users.Queries.search("userna")
   """
   def search(text, opts \\ []) when is_binary(text) do
-    (opts[:query] || base_query())
-    |> proload([
-      # :instance_admin,
-      :character,
-      # : [:icon]
-      :profile
-    ])
-    |> or_where(
-      [profile: p, character: c],
-      ilike(p.name, ^"#{text}%") or
-        ilike(p.name, ^"% #{text}%") or
-        ilike(p.summary, ^"#{text}%") or
-        ilike(p.summary, ^"% #{text}%") or
-        ilike(c.username, ^"#{text}%") or
-        ilike(c.username, ^"% #{text}%")
-    )
-    |> prepend_order_by([profile: p, character: c], [
-      {:desc,
-       fragment(
-         "(? <% ?)::int + (? <% ?)::int + (? <% ?)::int",
-         ^text,
-         c.username,
-         ^text,
-         p.name,
-         ^text,
-         p.summary
-       )}
-    ])
+    query =
+      (opts[:query] || base_query())
+      |> proload([
+        # :instance_admin,
+        :character,
+        # : [:icon]
+        :profile
+      ])
+      |> or_where(
+        [profile: p, character: c],
+        ilike(p.name, ^"#{text}%") or
+          ilike(p.name, ^"% #{text}%") or
+          ilike(p.summary, ^"#{text}%") or
+          ilike(p.summary, ^"% #{text}%") or
+          ilike(c.username, ^"#{text}%") or
+          ilike(c.username, ^"% #{text}%")
+      )
+      |> prepend_order_by([profile: p, character: c], [
+        {:desc,
+         fragment(
+           "(? <% ?)::int + (? <% ?)::int + (? <% ?)::int",
+           ^text,
+           c.username,
+           ^text,
+           p.name,
+           ^text,
+           p.summary
+         )}
+      ])
+
+    if opts[:local_only] do
+      query
+      |> join_peered()
+      |> where([peered: p], is_nil(p.id))
+    else
+      query
+    end
   end
 
   # def search(text) when is_binary(text) do

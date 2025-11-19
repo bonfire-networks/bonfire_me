@@ -353,7 +353,8 @@ defmodule Bonfire.Me.Characters do
     %{
       # "index_type" => Types.module_to_str(Character), # no need as can be inferred later by `Enums.maybe_to_structs/1`
       "username" => obj.username,
-      "url" => character_url(obj)
+      "url" => character_url(obj),
+      "is_remote" => not is_nil(e(obj, :peered, nil))
     }
   end
 
