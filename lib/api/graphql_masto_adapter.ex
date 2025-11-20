@@ -79,10 +79,15 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) !=
           true
 
-      created_at = case user[:created_at] do
-        %DateTime{} = dt -> DateTime.to_iso8601(dt)
-        _ -> DatesTimes.date_from_pointer(user) ~> DateTime.to_iso8601() || DateTime.utc_now() |> DateTime.to_iso8601()
-      end
+      created_at =
+        case user[:created_at] do
+          %DateTime{} = dt ->
+            DateTime.to_iso8601(dt)
+
+          _ ->
+            DatesTimes.date_from_pointer(user) ~> DateTime.to_iso8601() ||
+              DateTime.utc_now() |> DateTime.to_iso8601()
+        end
 
       %{
         "indexable" => indexable,
@@ -125,7 +130,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       }
       |> Map.merge(
         user
-        |> Enums.struct_to_map(true)  # Recursively convert Ecto structs to maps
+        # Recursively convert Ecto structs to maps
+        |> Enums.struct_to_map(true)
         |> Enums.maybe_flatten()
         |> Enums.stringify_keys()
         |> case do
