@@ -55,13 +55,168 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       do: graphql(conn, :me, params) |> RestAdapter.return(:me, ..., conn, &prepare_user/1)
 
     def get_preferences(_params \\ %{}, conn) do
-      # TODO 
+      # TODO
       Phoenix.Controller.json(conn, %{
         "posting:default:visibility" => "public",
         "posting:default:sensitive" => false,
         "posting:default:language" => "en",
         "reading:expand:media" => "default",
         "reading:expand:spoilers" => false
+      })
+    end
+
+    # Mutes and Blocks endpoints
+    alias Bonfire.Boundaries.Blocks
+    alias Bonfire.API.MastoCompat.Mappers
+    alias Bonfire.API.MastoCompat.Schemas
+
+    @doc "List muted accounts for current user"
+    def mutes(_params, conn) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        # Get silenced users (Mastodon "mute" = Bonfire "silence")
+        circles = Blocks.list(:silence, current_user: current_user)
+        accounts = extract_accounts_from_circles(circles, current_user)
+        Phoenix.Controller.json(conn, accounts)
+      end
+    end
+
+    @doc "List blocked accounts for current user"
+    def blocks(_params, conn) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        # Mastodon "block" = Bonfire ghost + silence (full isolation)
+        # Get users who are BOTH ghosted AND silenced
+        ghost_circles = Blocks.list(:ghost, current_user: current_user)
+        silence_circles = Blocks.list(:silence, current_user: current_user)
+
+        ghosted_ids = extract_user_ids_from_circles(ghost_circles)
+        silenced_ids = extract_user_ids_from_circles(silence_circles)
+
+        # Only return users who are in BOTH lists (full block)
+        blocked_ids = MapSet.intersection(MapSet.new(ghosted_ids), MapSet.new(silenced_ids))
+
+        accounts =
+          ghost_circles
+          |> extract_users_from_circles()
+          |> Enum.filter(fn user -> MapSet.member?(blocked_ids, id(user)) end)
+          |> Enum.map(&Mappers.Account.from_user(&1, current_user: current_user))
+          |> Enum.reject(&is_nil/1)
+
+        Phoenix.Controller.json(conn, accounts)
+      end
+    end
+
+    @doc "Mute an account"
+    def mute_account(%{"id" => id}, conn), do: handle_block_action(conn, id, :mute)
+
+    @doc "Unmute an account"
+    def unmute_account(%{"id" => id}, conn), do: handle_block_action(conn, id, :unmute)
+
+    @doc "Block an account"
+    def block_account(%{"id" => id}, conn), do: handle_block_action(conn, id, :block)
+
+    @doc "Unblock an account"
+    def unblock_account(%{"id" => id}, conn), do: handle_block_action(conn, id, :unblock)
+
+    @doc """
+    Get relationships between the current user and given accounts.
+    Mastodon API: GET /api/v1/accounts/relationships?id[]=1&id[]=2
+    """
+    def relationships(params, conn) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        # Get list of account IDs from query params
+        # Mastodon sends as ?id[]=1&id[]=2 or ?id=1&id=2
+        ids =
+          case params do
+            %{"id" => ids} when is_list(ids) -> ids
+            %{"id" => id} when is_binary(id) -> [id]
+            _ -> []
+          end
+
+        # TODO: Check follow status when Follows module is integrated
+        relationships = Enum.map(ids, &build_relationship(current_user, &1))
+
+        Phoenix.Controller.json(conn, relationships)
+      end
+    end
+
+    defp handle_block_action(conn, target_id, action) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        result =
+          case action do
+            # Mastodon "mute" = Bonfire "silence" (user can't reach you)
+            :mute -> Blocks.block(target_id, :silence, current_user: current_user)
+            :unmute -> Blocks.unblock(target_id, :silence, current_user: current_user)
+            # Mastodon "block" = Bonfire default (both silence + ghost = full isolation)
+            :block -> Blocks.block(target_id, nil, current_user: current_user)
+            :unblock -> Blocks.unblock(target_id, nil, current_user: current_user)
+          end
+
+        case result do
+          {:ok, _} ->
+            # Query actual state after the action completes
+            relationship = build_relationship(current_user, target_id)
+            Phoenix.Controller.json(conn, relationship)
+
+          {:error, reason} ->
+            RestAdapter.error_fn({:error, reason}, conn)
+        end
+      end
+    end
+
+    defp extract_accounts_from_circles(circles, current_user) do
+      circles
+      |> extract_users_from_circles()
+      |> Enum.map(&Mappers.Account.from_user(&1, current_user: current_user))
+      |> Enum.reject(&is_nil/1)
+    end
+
+    defp extract_users_from_circles(circles) do
+      circles
+      |> Enum.flat_map(fn circle ->
+        case circle do
+          %{encircles: encircles} when is_list(encircles) ->
+            Enum.map(encircles, & &1.subject)
+
+          _ ->
+            []
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
+    end
+
+    defp extract_user_ids_from_circles(circles) do
+      circles
+      |> extract_users_from_circles()
+      |> Enum.map(&id/1)
+      |> Enum.reject(&is_nil/1)
+    end
+
+    @doc "Build a Mastodon Relationship object by querying actual state"
+    defp build_relationship(current_user, target_id) do
+      blocking = Blocks.is_blocked?(target_id, :ghost, current_user: current_user)
+      muting = Blocks.is_blocked?(target_id, :silence, current_user: current_user)
+
+      Schemas.Relationship.new(%{
+        "id" => to_string(target_id),
+        "blocking" => blocking,
+        "muting" => muting,
+        "muting_notifications" => muting
       })
     end
 
