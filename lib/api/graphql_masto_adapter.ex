@@ -263,24 +263,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           "sensitive" => false,
           "language" => ""
         },
-
         # TODO: also implement these fields:
-        "locked" => false,
-        "fields" => [],
-        "emojis" => [],
-        "bot" => false,
-        "group" => false,
-        "noindex" => false,
         "moved" => nil,
         "memorial" => nil,
-        "suspended" => false,
-        "limited" => false,
-        "last_status_at" => DateTime.utc_now() |> DateTime.to_iso8601(),
-        "statuses_count" => 1,
-        "followers_count" => 1,
-        "following_count" => 1,
-        "hide_collections" => false,
-        "roles" => [],
         "role" => nil
       }
       |> Map.merge(
@@ -290,12 +275,38 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         |> Enums.maybe_flatten()
         |> Enums.stringify_keys()
         |> case do
-          nil -> %{}
-          map when is_map(map) -> map
-          _ -> %{}
+          nil ->
+            %{}
+
+          map when is_map(map) ->
+            map
+
+          other ->
+            error(other, "Unexpected user data format in prepare_user")
+            %{}
         end
       )
       |> Map.put("note", Text.maybe_markdown_to_html(e(user, :profile, :note, nil)) || "")
+      # make sure non-nullable fields are not null
+      |> Enums.set_default_values(%{
+        "avatar" => "",
+        "header" => "",
+        # TODO: also implement any these fields still missing:
+        "locked" => false,
+        "fields" => [],
+        "emojis" => [],
+        "bot" => false,
+        "group" => false,
+        "noindex" => false,
+        "suspended" => false,
+        "limited" => false,
+        "hide_collections" => false,
+        "roles" => [],
+        "statuses_count" => 1,
+        "followers_count" => 1,
+        "following_count" => 1,
+        "last_status_at" => DateTime.utc_now() |> DateTime.to_iso8601()
+      })
     end
   end
 end
