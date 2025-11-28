@@ -42,7 +42,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         #{@user_profile}
     }}"
     def user(params, conn) do
-      user = graphql(conn, :user, debug(params))
+      user = graphql(conn, :user, params)
 
       RestAdapter.return(:user, user, conn, &prepare_user/1)
     end
@@ -65,53 +65,51 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       })
     end
 
-    # Mutes and Blocks endpoints
+    # Mutes and Blocks endpoints - using GraphQL
     alias Bonfire.Boundaries.Blocks
     alias Bonfire.API.MastoCompat.Mappers
     alias Bonfire.API.MastoCompat.Schemas
 
+    # GraphQL queries for listing muted/blocked users
+    # Helper to list restricted accounts (mutes/blocks)
+    defp list_restricted_accounts(conn, query_name, data_key) do
+      case graphql(conn, query_name, %{}) do
+        %{data: data} when is_map(data) ->
+          current_user = conn.assigns[:current_user]
+          users = Map.get(data, data_key, [])
+
+          accounts =
+            users
+            |> Enum.map(&prepare_user/1)
+            |> Enum.reject(&is_nil/1)
+            |> Enum.map(&Mappers.Account.from_user(&1, current_user: current_user))
+            |> Enum.reject(&is_nil/1)
+
+          Phoenix.Controller.json(conn, accounts)
+
+        %{errors: errors} ->
+          RestAdapter.error_fn({:error, errors}, conn)
+
+        _ ->
+          Phoenix.Controller.json(conn, [])
+      end
+    end
+
+    @graphql "query {
+      muted_users {
+        #{@user_profile}
+      }
+    }"
     @doc "List muted accounts for current user"
-    def mutes(_params, conn) do
-      current_user = conn.assigns[:current_user]
+    def mutes(_params, conn), do: list_restricted_accounts(conn, :mutes, :muted_users)
 
-      if is_nil(current_user) do
-        RestAdapter.error_fn({:error, :unauthorized}, conn)
-      else
-        # Get silenced users (Mastodon "mute" = Bonfire "silence")
-        circles = Blocks.list(:silence, current_user: current_user)
-        accounts = extract_accounts_from_circles(circles, current_user)
-        Phoenix.Controller.json(conn, accounts)
-      end
-    end
-
+    @graphql "query {
+      blocked_users {
+        #{@user_profile}
+      }
+    }"
     @doc "List blocked accounts for current user"
-    def blocks(_params, conn) do
-      current_user = conn.assigns[:current_user]
-
-      if is_nil(current_user) do
-        RestAdapter.error_fn({:error, :unauthorized}, conn)
-      else
-        # Mastodon "block" = Bonfire ghost + silence (full isolation)
-        # Get users who are BOTH ghosted AND silenced
-        ghost_circles = Blocks.list(:ghost, current_user: current_user)
-        silence_circles = Blocks.list(:silence, current_user: current_user)
-
-        ghosted_ids = extract_user_ids_from_circles(ghost_circles)
-        silenced_ids = extract_user_ids_from_circles(silence_circles)
-
-        # Only return users who are in BOTH lists (full block)
-        blocked_ids = MapSet.intersection(MapSet.new(ghosted_ids), MapSet.new(silenced_ids))
-
-        accounts =
-          ghost_circles
-          |> extract_users_from_circles()
-          |> Enum.filter(fn user -> MapSet.member?(blocked_ids, id(user)) end)
-          |> Enum.map(&Mappers.Account.from_user(&1, current_user: current_user))
-          |> Enum.reject(&is_nil/1)
-
-        Phoenix.Controller.json(conn, accounts)
-      end
-    end
+    def blocks(_params, conn), do: list_restricted_accounts(conn, :blocks, :blocked_users)
 
     @doc "Mute an account"
     def mute_account(%{"id" => id}, conn), do: handle_block_action(conn, id, :mute)
@@ -151,6 +149,43 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       end
     end
 
+    # GraphQL mutations for block/mute actions (must be public for @graphql to work)
+    @graphql "mutation ($id: ID!) {
+      block_user(id: $id) {
+        id
+      }
+    }"
+    def do_block_user(conn, id) do
+      graphql(conn, :do_block_user, %{"id" => id})
+    end
+
+    @graphql "mutation ($id: ID!) {
+      unblock_user(id: $id) {
+        id
+      }
+    }"
+    def do_unblock_user(conn, id) do
+      graphql(conn, :do_unblock_user, %{"id" => id})
+    end
+
+    @graphql "mutation ($id: ID!) {
+      mute_user(id: $id) {
+        id
+      }
+    }"
+    def do_mute_user(conn, id) do
+      graphql(conn, :do_mute_user, %{"id" => id})
+    end
+
+    @graphql "mutation ($id: ID!) {
+      unmute_user(id: $id) {
+        id
+      }
+    }"
+    def do_unmute_user(conn, id) do
+      graphql(conn, :do_unmute_user, %{"id" => id})
+    end
+
     defp handle_block_action(conn, target_id, action) do
       current_user = conn.assigns[:current_user]
 
@@ -160,51 +195,26 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         result =
           case action do
             # Mastodon "mute" = Bonfire "silence" (user can't reach you)
-            :mute -> Blocks.block(target_id, :silence, current_user: current_user)
-            :unmute -> Blocks.unblock(target_id, :silence, current_user: current_user)
-            # Mastodon "block" = Bonfire default (both silence + ghost = full isolation)
-            :block -> Blocks.block(target_id, nil, current_user: current_user)
-            :unblock -> Blocks.unblock(target_id, nil, current_user: current_user)
+            :mute -> do_mute_user(conn, target_id)
+            :unmute -> do_unmute_user(conn, target_id)
+            # Mastodon "block" = Bonfire ghost + silence (full isolation)
+            :block -> do_block_user(conn, target_id)
+            :unblock -> do_unblock_user(conn, target_id)
           end
 
         case result do
-          {:ok, _} ->
+          %{data: data} when is_map(data) ->
             # Query actual state after the action completes
             relationship = build_relationship(current_user, target_id)
             Phoenix.Controller.json(conn, relationship)
 
-          {:error, reason} ->
-            RestAdapter.error_fn({:error, reason}, conn)
-        end
-      end
-    end
-
-    defp extract_accounts_from_circles(circles, current_user) do
-      circles
-      |> extract_users_from_circles()
-      |> Enum.map(&Mappers.Account.from_user(&1, current_user: current_user))
-      |> Enum.reject(&is_nil/1)
-    end
-
-    defp extract_users_from_circles(circles) do
-      circles
-      |> Enum.flat_map(fn circle ->
-        case circle do
-          %{encircles: encircles} when is_list(encircles) ->
-            Enum.map(encircles, & &1.subject)
+          %{errors: errors} ->
+            RestAdapter.error_fn({:error, errors}, conn)
 
           _ ->
-            []
+            RestAdapter.error_fn({:error, :unexpected_response}, conn)
         end
-      end)
-      |> Enum.reject(&is_nil/1)
-    end
-
-    defp extract_user_ids_from_circles(circles) do
-      circles
-      |> extract_users_from_circles()
-      |> Enum.map(&id/1)
-      |> Enum.reject(&is_nil/1)
+      end
     end
 
     @doc "Build a Mastodon Relationship object by querying actual state"

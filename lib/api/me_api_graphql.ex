@@ -19,11 +19,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       field(:id, :id)
 
       field(:profile, :profile) do
-        resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer))
+        resolve(&resolve_profile/3)
       end
 
       field(:character, :character) do
-        resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer))
+        resolve(&resolve_character/3)
       end
 
       field(:date_created, :datetime) do
@@ -56,6 +56,19 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         arg(:paginate, :paginate)
 
         resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer))
+      end
+
+      # User stats for Mastodon API compatibility
+      field :followers_count, :integer do
+        resolve(&resolve_followers_count/3)
+      end
+
+      field :following_count, :integer do
+        resolve(&resolve_following_count/3)
+      end
+
+      field :statuses_count, :integer do
+        resolve(&resolve_statuses_count/3)
       end
     end
 
@@ -464,6 +477,105 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       else
         {:error, "Feature not available (no SharedUsers module found)"}
       end
+    end
+
+    # Resolve profile, using preloaded data if available, otherwise falling back to Dataloader
+    defp resolve_profile(%{profile: %Ecto.Association.NotLoaded{}} = parent, _args, %{
+           context: %{loader: loader}
+         }) do
+      loader
+      |> Dataloader.load(Needle.Pointer, :profile, parent)
+      |> Helpers.on_load(fn loader ->
+        {:ok, Dataloader.get(loader, Needle.Pointer, :profile, parent)}
+      end)
+    end
+
+    defp resolve_profile(%{profile: profile}, _args, _info) do
+      {:ok, profile}
+    end
+
+    defp resolve_profile(parent, _args, %{context: %{loader: loader}}) do
+      # Fallback for structs without profile field - use Dataloader
+      loader
+      |> Dataloader.load(Needle.Pointer, :profile, parent)
+      |> Helpers.on_load(fn loader ->
+        {:ok, Dataloader.get(loader, Needle.Pointer, :profile, parent)}
+      end)
+    end
+
+    # Resolve character, using preloaded data if available, otherwise falling back to Dataloader
+    defp resolve_character(%{character: %Ecto.Association.NotLoaded{}} = parent, _args, %{
+           context: %{loader: loader}
+         }) do
+      loader
+      |> Dataloader.load(Needle.Pointer, :character, parent)
+      |> Helpers.on_load(fn loader ->
+        {:ok, Dataloader.get(loader, Needle.Pointer, :character, parent)}
+      end)
+    end
+
+    defp resolve_character(%{character: character}, _args, _info) do
+      {:ok, character}
+    end
+
+    defp resolve_character(parent, _args, %{context: %{loader: loader}}) do
+      # Fallback for structs without character field - use Dataloader
+      loader
+      |> Dataloader.load(Needle.Pointer, :character, parent)
+      |> Helpers.on_load(fn loader ->
+        {:ok, Dataloader.get(loader, Needle.Pointer, :character, parent)}
+      end)
+    end
+
+    # User stats resolvers using Dataloader for EdgeTotal counts
+    defp resolve_followers_count(user, _args, %{context: %{loader: loader}}) do
+      loader
+      |> Dataloader.load(Needle.Pointer, :follow_count, user)
+      |> Helpers.on_load(fn loader ->
+        case Dataloader.get(loader, Needle.Pointer, :follow_count, user) do
+          %{object_count: count} when is_integer(count) -> {:ok, count}
+          _ -> {:ok, 0}
+        end
+      end)
+    end
+
+    defp resolve_followers_count(_user, _args, _info), do: {:ok, 0}
+
+    defp resolve_following_count(user, _args, %{context: %{loader: loader}}) do
+      loader
+      |> Dataloader.load(Needle.Pointer, :follow_count, user)
+      |> Helpers.on_load(fn loader ->
+        case Dataloader.get(loader, Needle.Pointer, :follow_count, user) do
+          %{subject_count: count} when is_integer(count) -> {:ok, count}
+          _ -> {:ok, 0}
+        end
+      end)
+    end
+
+    defp resolve_following_count(_user, _args, _info), do: {:ok, 0}
+
+    defp resolve_statuses_count(user, _args, _info) do
+      # Count posts created by this user
+      # TODO: Could be optimized with EdgeTotal in the future for better performance
+      user_id = Bonfire.Common.Types.uid(user)
+
+      count =
+        if user_id do
+          import Ecto.Query
+
+          Bonfire.Common.Repo.one(
+            from(c in Bonfire.Data.Social.Created,
+              join: p in Bonfire.Data.Social.Post,
+              on: c.id == p.id,
+              where: c.creator_id == ^user_id,
+              select: count(c.id)
+            )
+          ) || 0
+        else
+          0
+        end
+
+      {:ok, count}
     end
 
     # Use Dataloader to batch-load icon media and prevent N+1 queries
