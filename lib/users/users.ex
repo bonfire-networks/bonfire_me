@@ -90,6 +90,23 @@ defmodule Bonfire.Me.Users do
   def by_id([id], opts), do: by_id(id, opts)
 
   @doc """
+  Gets multiple users by their IDs.
+
+  ## Examples
+
+      > Bonfire.Me.Users.by_ids(["user_id1", "user_id2"])
+      [%Bonfire.Data.Identity.User{}, ...]
+  """
+  def by_ids(ids, opts \\ []) when is_list(ids) do
+    if ids == [] do
+      []
+    else
+      Queries.by_ids(ids, opts)
+      |> repo().all()
+    end
+  end
+
+  @doc """
   Gets a user by username.
 
   ## Examples

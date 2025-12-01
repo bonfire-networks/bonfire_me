@@ -479,7 +479,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end
     end
 
-    # Resolve profile, using preloaded data if available, otherwise falling back to Dataloader
+    # Resolve profile - handles preloaded data or falls back to Dataloader
     defp resolve_profile(%{profile: %Ecto.Association.NotLoaded{}} = parent, _args, %{
            context: %{loader: loader}
          }) do
@@ -490,12 +490,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end)
     end
 
-    defp resolve_profile(%{profile: profile}, _args, _info) do
+    defp resolve_profile(%{profile: profile}, _args, _info)
+         when not is_struct(profile, Ecto.Association.NotLoaded) do
       {:ok, profile}
     end
 
     defp resolve_profile(parent, _args, %{context: %{loader: loader}}) do
-      # Fallback for structs without profile field - use Dataloader
       loader
       |> Dataloader.load(Needle.Pointer, :profile, parent)
       |> Helpers.on_load(fn loader ->
@@ -503,7 +503,16 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end)
     end
 
-    # Resolve character, using preloaded data if available, otherwise falling back to Dataloader
+    defp resolve_profile(%{id: id}, _args, _info) do
+      case Bonfire.Me.Users.by_id(id) do
+        {:ok, user} -> {:ok, Map.get(user, :profile)}
+        _ -> {:ok, nil}
+      end
+    end
+
+    defp resolve_profile(_, _, _), do: {:ok, nil}
+
+    # Resolve character - handles preloaded data or falls back to Dataloader
     defp resolve_character(%{character: %Ecto.Association.NotLoaded{}} = parent, _args, %{
            context: %{loader: loader}
          }) do
@@ -514,18 +523,27 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end)
     end
 
-    defp resolve_character(%{character: character}, _args, _info) do
+    defp resolve_character(%{character: character}, _args, _info)
+         when not is_struct(character, Ecto.Association.NotLoaded) do
       {:ok, character}
     end
 
     defp resolve_character(parent, _args, %{context: %{loader: loader}}) do
-      # Fallback for structs without character field - use Dataloader
       loader
       |> Dataloader.load(Needle.Pointer, :character, parent)
       |> Helpers.on_load(fn loader ->
         {:ok, Dataloader.get(loader, Needle.Pointer, :character, parent)}
       end)
     end
+
+    defp resolve_character(%{id: id}, _args, _info) do
+      case Bonfire.Me.Users.by_id(id) do
+        {:ok, user} -> {:ok, Map.get(user, :character)}
+        _ -> {:ok, nil}
+      end
+    end
+
+    defp resolve_character(_, _, _), do: {:ok, nil}
 
     # User stats resolvers using Dataloader for EdgeTotal counts
     defp resolve_followers_count(user, _args, %{context: %{loader: loader}}) do

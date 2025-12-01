@@ -173,6 +173,18 @@ defmodule Bonfire.Me.Users.Queries do
       |> user_proloads(opts)
 
   @doc """
+  Builds a query for fetching multiple users by their IDs.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.Queries.by_ids(["id1", "id2"])
+  """
+  def by_ids(ids, opts \\ []) when is_list(ids) do
+    from(u in User, as: :user, where: u.id in ^ids)
+    |> user_proloads(opts)
+  end
+
+  @doc """
   Finds a user by username or ID.
 
   ## Examples
@@ -322,10 +334,10 @@ defmodule Bonfire.Me.Users.Queries do
 
   def user_proloads(query, _default) do
     query
-    |> proload(
+    |> proload([
       profile: [:icon],
       character: [:peered]
-    )
+    ])
   end
 
   @doc """
