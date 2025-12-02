@@ -21,18 +21,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       action: [mode: :internal]
 
     alias Bonfire.API.GraphQL.RestAdapter
-    alias Bonfire.API.MastoCompat.{Mappers, PaginationHelpers, Fragments}
+    alias Bonfire.API.MastoCompat.{Mappers, PaginationHelpers}
     alias Bonfire.API.MastoCompat.Mappers.BatchLoader
 
-    # Use shared fragment from Fragments module
-    @user_profile Fragments.user_profile()
+    # Use fragment from local MastoFragments module
+    @user_profile Bonfire.Me.API.MastoFragments.user_profile()
 
     @doc "Returns the GraphQL fragment for user profile queries"
     def user_profile_query, do: @user_profile
-
-    # ============================================
-    # Account Endpoints
-    # ============================================
 
     @graphql "query ($filter: CharacterFilters) {
       user(filter: $filter) {
@@ -51,7 +47,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @doc "Get the current user's profile (verify_credentials)"
     def me(params \\ %{}, conn) do
       graphql(conn, :me, params)
-      # Note: me { user { ... } } returns %{user: user_data}, so we extract it
       |> RestAdapter.return(:me, ..., conn, fn
         %{user: user} -> Mappers.Account.from_user(user)
         user -> Mappers.Account.from_user(user)
@@ -69,10 +64,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         "reading:expand:spoilers" => false
       })
     end
-
-    # ============================================
-    # Follow/Unfollow Actions
-    # ============================================
 
     @doc "Follow an account"
     def follow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :follow)
@@ -104,16 +95,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             RestAdapter.error_fn({:error, reason}, conn)
 
           _ ->
-            # For unfollow which may return different result types
             relationship = BoundariesAdapter.build_relationship(current_user, target_id)
             Phoenix.Controller.json(conn, relationship)
         end
       end
     end
-
-    # ============================================
-    # Followers/Following Lists
-    # ============================================
 
     @doc "List followers of an account"
     def followers(account_id, params, conn) do
@@ -160,11 +146,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       end
     end
 
-    # Transform follow edges to Mastodon accounts with batch-loaded stats
     defp map_follow_edges_to_accounts(edges, user_field, conn) do
       current_user = conn.assigns[:current_user]
 
-      # Extract users from edges
       users =
         edges
         |> Enum.map(fn edge ->
@@ -172,13 +156,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         end)
         |> Enum.reject(&is_nil/1)
 
-      # Use centralized batch loader for N+1 prevention
       BatchLoader.map_accounts(users, current_user: current_user)
     end
-
-    # ============================================
-    # Relationships
-    # ============================================
 
     @doc """
     Get relationships between the current user and given accounts.
@@ -203,10 +182,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         Phoenix.Controller.json(conn, relationships)
       end
     end
-
-    # ============================================
-    # Legacy/Deprecated - kept for backward compatibility
-    # ============================================
 
     @doc """
     Prepare user data for Mastodon API response.

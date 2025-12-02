@@ -334,10 +334,10 @@ defmodule Bonfire.Me.Users.Queries do
 
   def user_proloads(query, _default) do
     query
-    |> proload([
+    |> proload(
       profile: [:icon],
       character: [:peered]
-    ])
+    )
   end
 
   @doc """
