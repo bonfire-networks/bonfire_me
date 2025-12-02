@@ -89,14 +89,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         case result do
           {:ok, _} ->
             relationship = BoundariesAdapter.build_relationship(current_user, target_id)
-            Phoenix.Controller.json(conn, relationship)
+            RestAdapter.json(conn, relationship)
 
           {:error, reason} ->
             RestAdapter.error_fn({:error, reason}, conn)
 
           _ ->
             relationship = BoundariesAdapter.build_relationship(current_user, target_id)
-            Phoenix.Controller.json(conn, relationship)
+            RestAdapter.json(conn, relationship)
         end
       end
     end
@@ -131,14 +131,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             %{edges: edges, page_info: page_info} ->
               accounts = map_follow_edges_to_accounts(edges, user_field, conn)
               conn = PaginationHelpers.add_simple_link_headers(conn, %{}, page_info, [])
-              Phoenix.Controller.json(conn, accounts)
+              RestAdapter.json(conn, accounts)
 
             edges when is_list(edges) ->
               accounts = map_follow_edges_to_accounts(edges, user_field, conn)
-              Phoenix.Controller.json(conn, accounts)
+              RestAdapter.json(conn, accounts)
 
             _ ->
-              Phoenix.Controller.json(conn, [])
+              RestAdapter.json(conn, [])
           end
 
         _ ->
@@ -179,7 +179,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
         relationships = Enum.map(ids, &BoundariesAdapter.build_relationship(current_user, &1))
 
-        Phoenix.Controller.json(conn, relationships)
+        RestAdapter.json(conn, relationships)
       end
     end
 
