@@ -101,6 +101,79 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       end
     end
 
+    # Follow Requests endpoints
+
+    @doc "List incoming follow requests (GET /api/v1/follow_requests)"
+    def follow_requests(_params, conn), do: list_follow_requests(conn, :incoming)
+
+    @doc "List outgoing follow requests (GET /api/v1/follow_requests/outgoing)"
+    def follow_requests_outgoing(_params, conn), do: list_follow_requests(conn, :outgoing)
+
+    defp list_follow_requests(conn, direction) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        alias Bonfire.Social.Requests
+        alias Bonfire.Data.Social.Follow
+
+        requests =
+          case direction do
+            :incoming -> Requests.list_my_requesters(current_user: current_user, type: Follow)
+            :outgoing -> Requests.list_my_requested(current_user: current_user, type: Follow)
+          end
+
+        accounts =
+          requests
+          |> Enum.map(&extract_request_user(&1, direction))
+          |> Enum.map(&Mappers.Account.from_user(&1, skip_expensive_stats: true))
+          |> Enum.reject(&is_nil/1)
+
+        RestAdapter.json(conn, accounts)
+      end
+    end
+
+    defp extract_request_user(request, :incoming), do: e(request, :edge, :subject, nil)
+    defp extract_request_user(request, :outgoing), do: e(request, :edge, :object, nil)
+
+    @doc "Accept/authorize a follow request (POST /api/v1/follow_requests/:account_id/authorize)"
+    def authorize_follow_request(account_id, conn),
+      do: handle_follow_request_action(conn, account_id, :authorize)
+
+    @doc "Reject a follow request (POST /api/v1/follow_requests/:account_id/reject)"
+    def reject_follow_request(account_id, conn),
+      do: handle_follow_request_action(conn, account_id, :reject)
+
+    defp handle_follow_request_action(conn, account_id, action) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        alias Bonfire.Social.Graph.Follows
+        alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
+
+        result =
+          case action do
+            :authorize -> Follows.accept_from(account_id, current_user: current_user)
+            :reject -> Follows.reject(account_id, current_user, [])
+          end
+
+        case result do
+          {:ok, _} ->
+            relationship = BoundariesAdapter.build_relationship(current_user, account_id)
+            RestAdapter.json(conn, relationship)
+
+          {:error, :not_found} ->
+            RestAdapter.error_fn({:error, :not_found}, conn)
+
+          {:error, reason} ->
+            RestAdapter.error_fn({:error, reason}, conn)
+        end
+      end
+    end
+
     @doc "List followers of an account"
     def followers(account_id, params, conn) do
       list_follow_connections(account_id, params, conn, :followers)
