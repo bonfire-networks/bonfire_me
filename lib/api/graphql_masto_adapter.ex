@@ -13,6 +13,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     """
 
     use Bonfire.Common.Utils
+    use Bonfire.Common.Repo
     use Arrows
     import Untangle
 
@@ -21,14 +22,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       action: [mode: :internal]
 
     alias Bonfire.API.GraphQL.RestAdapter
-    alias Bonfire.API.MastoCompat.{Mappers, PaginationHelpers}
+    alias Bonfire.API.MastoCompat.{Mappers, PaginationHelpers, Fragments}
     alias Bonfire.API.MastoCompat.Mappers.BatchLoader
 
-    # Use fragment from local MastoFragments module
-    @user_profile Bonfire.Me.API.MastoFragments.user_profile()
-
-    @doc "Returns the GraphQL fragment for user profile queries"
-    def user_profile_query, do: @user_profile
+    # Use centralized fragments from bonfire_api_graphql
+    @user_profile Fragments.user_profile()
 
     @graphql "query ($filter: CharacterFilters) {
       user(filter: $filter) {
@@ -257,14 +255,170 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     end
 
     @doc """
-    Prepare user data for Mastodon API response.
-
-    DEPRECATED: Use `Mappers.Account.from_user/2` directly instead.
-    This function is kept for backward compatibility with code that
-    still calls MeAdapter.prepare_user.
+    Lookup an account by webfinger address.
+    Mastodon API: GET /api/v1/accounts/lookup?acct=username or acct=username@domain
     """
-    def prepare_user(nil), do: nil
-    def prepare_user(nil, _opts), do: nil
-    def prepare_user(user, opts \\ []), do: Mappers.Account.from_user(user, opts)
+    def lookup_account(params, conn) do
+      case lookup_by_acct(params["acct"]) do
+        {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user))
+        _ -> RestAdapter.error_fn({:error, :not_found}, conn)
+      end
+    end
+
+    defp lookup_by_acct(nil), do: {:error, :not_found}
+    defp lookup_by_acct(""), do: {:error, :not_found}
+
+    defp lookup_by_acct(acct) do
+      acct = String.trim_leading(acct, "@")
+
+      case String.split(acct, "@", parts: 2) do
+        [username, domain] -> lookup_by_acct(username, domain)
+        [username] -> Bonfire.Me.Users.by_username(username)
+      end
+    end
+
+    defp lookup_by_acct(username, domain) do
+      if domain == Bonfire.Common.URIs.base_domain() do
+        Bonfire.Me.Users.by_username(username)
+      else
+        fetch_remote_user("#{username}@#{domain}")
+      end
+    end
+
+    defp fetch_remote_user(webfinger) do
+      if module_enabled?(ActivityPub.Actor) do
+        with {:ok, actor} <- ActivityPub.Actor.fetch_by_username(webfinger),
+             pointer_id when not is_nil(pointer_id) <- e(actor, :pointer_id, nil) do
+          Bonfire.Me.Users.by_id(pointer_id)
+        else
+          _ -> {:error, :not_found}
+        end
+      else
+        {:error, :not_found}
+      end
+    end
+
+    @doc """
+    Search for accounts by username or display name.
+    Mastodon API: GET /api/v1/accounts/search?q=query
+    """
+    def search_accounts(params, conn) do
+      current_user = conn.assigns[:current_user]
+      query = params["q"] || ""
+      limit = PaginationHelpers.validate_limit(params["limit"] || 10, max: 40)
+
+      if String.trim(query) == "" do
+        RestAdapter.json(conn, [])
+      else
+        users =
+          case Bonfire.Me.Users.search(query, limit: limit, current_user: current_user) do
+            users when is_list(users) ->
+              users
+
+            %{edges: edges} when is_list(edges) ->
+              Enum.map(edges, &e(&1, :edge, nil)) |> Enum.reject(&is_nil/1)
+
+            _ ->
+              []
+          end
+
+        accounts =
+          users
+          |> repo().maybe_preload([:profile, :character])
+          |> BatchLoader.map_accounts(current_user: current_user)
+
+        RestAdapter.json(conn, accounts)
+      end
+    end
+
+    @doc """
+    Get suggested accounts to follow.
+
+    Mastodon API v2: GET /api/v2/suggestions
+
+    Returns accounts from the curated "Suggested Profiles" circle maintained by admins/mods.
+    Falls back to discoverable users from the local instance if the circle is empty.
+
+    ## Parameters
+
+    - `limit` - Maximum number of suggestions to return (default: 40, max: 80)
+
+    See: https://docs.joinmastodon.org/methods/suggestions/#v2
+    """
+    def suggestions(params, conn) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        limit = parse_limit(params, default: 40, max: 80)
+
+        # Get users from the suggested profiles circle (curated by admins)
+        users =
+          get_suggested_profiles(current_user, limit)
+          |> exclude_current_user(current_user)
+
+        suggestions =
+          Mappers.Suggestion.from_users(users,
+            source: "staff",
+            sources: ["featured"],
+            skip_expensive_stats: true
+          )
+
+        RestAdapter.json(conn, suggestions)
+      end
+    end
+
+    defp parse_limit(params, opts) do
+      default = Keyword.get(opts, :default, 40)
+      max = Keyword.get(opts, :max, 80)
+
+      case params do
+        %{"limit" => limit} when is_binary(limit) ->
+          case Integer.parse(limit) do
+            {n, _} -> min(max(n, 1), max)
+            :error -> default
+          end
+
+        %{"limit" => limit} when is_integer(limit) ->
+          min(max(limit, 1), max)
+
+        _ ->
+          default
+      end
+    end
+
+    defp get_suggested_profiles(current_user, limit) do
+      alias Bonfire.Boundaries.Circles
+      alias Bonfire.Boundaries.Scaffold.Instance
+      alias Bonfire.Common.Needles
+
+      # Get members from the suggested profiles circle (curated by admins)
+      circle_id = Instance.suggested_profiles_circle()
+
+      # list_members preloads subject: [:character, :profile, :named]
+      case Circles.list_members(circle_id, current_user: current_user, limit: limit) do
+        %{edges: members} when is_list(members) and length(members) > 0 ->
+          members
+          |> Enum.map(&e(&1, :subject, nil))
+          |> Enum.reject(&is_nil/1)
+          # Convert Needle.Pointer to actual User structs
+          |> Enum.map(&Needles.follow!(&1, []))
+          |> Enum.reject(&is_nil/1)
+
+        _ ->
+          []
+      end
+    end
+
+    defp exclude_current_user(users, current_user) when is_list(users) do
+      current_user_id = uid(current_user)
+
+      Enum.reject(users, fn user ->
+        uid(user) == current_user_id
+      end)
+    end
+
+    defp exclude_current_user(users, _), do: users
   end
 end

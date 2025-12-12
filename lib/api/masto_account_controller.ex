@@ -1,0 +1,58 @@
+if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
+  defmodule Bonfire.Me.Web.MastoAccountController do
+    @moduledoc "Mastodon-compatible Account endpoints (users, profiles, relationships)"
+
+    use Bonfire.UI.Common.Web, :controller
+
+    alias Bonfire.Me.API.GraphQLMasto.Adapter
+    alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
+
+    def show(conn, %{"id" => "verify_credentials"} = _params), do: Adapter.me(conn)
+
+    def show(conn, %{"id" => id} = _params),
+      do: Adapter.user(%{"filter" => %{"id" => id}}, conn)
+
+    def show(conn, params), do: Adapter.user(params, conn)
+
+    def verify_credentials(conn, params), do: Adapter.me(params, conn)
+
+    def show_preferences(conn, params), do: Adapter.get_preferences(params, conn)
+
+    # Mutes and Blocks endpoints (delegated to Boundaries extension)
+    def mutes(conn, params), do: BoundariesAdapter.mutes(params, conn)
+    def blocks(conn, params), do: BoundariesAdapter.blocks(params, conn)
+
+    # Account relationships
+    def relationships(conn, params), do: Adapter.relationships(params, conn)
+
+    # Account search
+    def search(conn, params), do: Adapter.search_accounts(params, conn)
+
+    # Account lookup by webfinger address
+    def lookup(conn, params), do: Adapter.lookup_account(params, conn)
+
+    # Followers and following lists
+    def followers(conn, %{"id" => id} = params), do: Adapter.followers(id, params, conn)
+    def following(conn, %{"id" => id} = params), do: Adapter.following(id, params, conn)
+
+    def follow(conn, %{"id" => id}), do: Adapter.follow_account(%{"id" => id}, conn)
+    def unfollow(conn, %{"id" => id}), do: Adapter.unfollow_account(%{"id" => id}, conn)
+    def mute(conn, %{"id" => id}), do: BoundariesAdapter.mute_account(%{"id" => id}, conn)
+    def unmute(conn, %{"id" => id}), do: BoundariesAdapter.unmute_account(%{"id" => id}, conn)
+    def block(conn, %{"id" => id}), do: BoundariesAdapter.block_account(%{"id" => id}, conn)
+    def unblock(conn, %{"id" => id}), do: BoundariesAdapter.unblock_account(%{"id" => id}, conn)
+
+    # Follow request endpoints
+    def follow_requests(conn, params), do: Adapter.follow_requests(params, conn)
+    def follow_requests_outgoing(conn, params), do: Adapter.follow_requests_outgoing(params, conn)
+
+    def authorize_follow_request(conn, %{"account_id" => id}),
+      do: Adapter.authorize_follow_request(id, conn)
+
+    def reject_follow_request(conn, %{"account_id" => id}),
+      do: Adapter.reject_follow_request(id, conn)
+
+    # Suggestions endpoint (v2)
+    def suggestions(conn, params), do: Adapter.suggestions(params, conn)
+  end
+end
