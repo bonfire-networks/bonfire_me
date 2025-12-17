@@ -63,6 +63,80 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       })
     end
 
+    @doc """
+    Update the authenticated user's profile.
+    Mastodon API: PATCH /api/v1/accounts/update_credentials
+    """
+    def update_credentials(params, conn) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        profile_params = build_profile_params(params)
+
+        with {:ok, image_params} <- handle_image_uploads(current_user, params),
+             merged_params <- merge_profile_and_images(profile_params, image_params),
+             {:ok, updated_user} <- Bonfire.Me.Users.update(current_user, merged_params) do
+          case Bonfire.Me.Users.by_id(updated_user.id) do
+            {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user))
+            _ -> RestAdapter.json(conn, Mappers.Account.from_user(updated_user))
+          end
+        else
+          {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
+        end
+      end
+    end
+
+    defp build_profile_params(params) do
+      profile =
+        %{}
+        |> maybe_put_param("name", params["display_name"])
+        |> maybe_put_param("summary", params["note"])
+
+      %{"profile" => profile}
+    end
+
+    defp maybe_put_param(map, _key, nil), do: map
+    defp maybe_put_param(map, _key, ""), do: map
+    defp maybe_put_param(map, key, value), do: Map.put(map, key, value)
+
+    defp handle_image_uploads(user, params) do
+      avatar_result = maybe_upload_image(user, params["avatar"], :icon)
+      header_result = maybe_upload_image(user, params["header"], :image)
+
+      with {:ok, avatar_media} <- avatar_result,
+           {:ok, header_media} <- header_result do
+        image_params =
+          %{}
+          |> maybe_put_media_id(:icon_id, avatar_media)
+          |> maybe_put_media_id(:image_id, header_media)
+
+        {:ok, image_params}
+      end
+    end
+
+    defp maybe_upload_image(_user, nil, _type), do: {:ok, nil}
+    defp maybe_upload_image(_user, "", _type), do: {:ok, nil}
+
+    defp maybe_upload_image(user, %Plug.Upload{} = upload, :icon) do
+      Bonfire.Files.IconUploader.upload(user, upload, %{})
+    end
+
+    defp maybe_upload_image(user, %Plug.Upload{} = upload, :image) do
+      Bonfire.Files.BannerUploader.upload(user, upload, %{})
+    end
+
+    defp maybe_put_media_id(map, _key, nil), do: map
+    defp maybe_put_media_id(map, key, %{id: id}), do: Map.put(map, key, id)
+    defp maybe_put_media_id(map, _key, _), do: map
+
+    defp merge_profile_and_images(profile_params, image_params) do
+      profile = Map.get(profile_params, "profile", %{})
+      updated_profile = Map.merge(profile, image_params)
+      Map.put(profile_params, "profile", updated_profile)
+    end
+
     @doc "Follow an account"
     def follow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :follow)
 
