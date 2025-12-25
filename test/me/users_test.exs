@@ -106,7 +106,8 @@ defmodule Bonfire.Me.UsersTest do
     # first user is automatically admin (but not in test env), so we change env for the sake of the test
     Process.put([:bonfire, :env], :prod)
     on_exit(fn -> Process.delete([:bonfire, :env]) end)
-    assert {:ok, account} = Accounts.signup(signup_form())
+    # explicitly set is_first_account? to bypass the count check which can be affected by other async tests
+    assert {:ok, account} = Accounts.signup(signup_form(), is_first_account?: true)
     assert Accounts.is_admin?(account)
     attrs = create_user_form()
     assert {:ok, user} = Users.create(attrs, account)

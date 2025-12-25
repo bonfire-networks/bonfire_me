@@ -190,10 +190,21 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         alias Bonfire.Social.Requests
         alias Bonfire.Data.Social.Follow
 
+        # Preload the user profile/character based on direction
+        # Use :subject/:object_profile to get the user's profile and character loaded
+        preload =
+          case direction do
+            :incoming -> :subject
+            :outgoing -> :object_profile
+          end
+
         requests =
           case direction do
-            :incoming -> Requests.list_my_requesters(current_user: current_user, type: Follow)
-            :outgoing -> Requests.list_my_requested(current_user: current_user, type: Follow)
+            :incoming ->
+              Requests.list_my_requesters(current_user: current_user, type: Follow, preload: preload)
+
+            :outgoing ->
+              Requests.list_my_requested(current_user: current_user, type: Follow, preload: preload)
           end
 
         accounts =
