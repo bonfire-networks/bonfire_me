@@ -53,9 +53,14 @@ defmodule Bonfire.Me.AccountsTest do
                account.credential.password_hash
              )
 
+      # clear caches just in case
+      Bonfire.Me.Fake.clear_caches()
+
       attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs)
       assert account.email.email_address == attrs.email.email_address
+
+      # FIXME!
       assert account.email.confirm_token
       assert account.email.confirm_until
       assert nil == account.email.confirmed_at
