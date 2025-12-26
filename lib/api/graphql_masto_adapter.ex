@@ -201,10 +201,18 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         requests =
           case direction do
             :incoming ->
-              Requests.list_my_requesters(current_user: current_user, type: Follow, preload: preload)
+              Requests.list_my_requesters(
+                current_user: current_user,
+                type: Follow,
+                preload: preload
+              )
 
             :outgoing ->
-              Requests.list_my_requested(current_user: current_user, type: Follow, preload: preload)
+              Requests.list_my_requested(
+                current_user: current_user,
+                type: Follow,
+                preload: preload
+              )
           end
 
         accounts =
