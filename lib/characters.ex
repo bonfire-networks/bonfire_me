@@ -154,7 +154,8 @@ defmodule Bonfire.Me.Characters do
       {:ok, %Bonfire.Data.Identity.Character{}}
   """
   def update(%Character{} = character, attrs) do
-    repo().update(changeset(character, attrs, :update))
+    changeset(character, attrs, :update)
+    |> repo().update()
   end
 
   def changeset(char \\ %Character{}, params, _profile \\ :local) do
@@ -166,7 +167,7 @@ defmodule Bonfire.Me.Characters do
 
       :loaded ->
         # , :outbox, :inbox, :notifications]
-        char = repo().maybe_preload(char, [:actor])
+        char = repo().maybe_preload(char, [:actor, :extra_info])
 
         params
         |> Enums.input_to_atoms()
@@ -185,6 +186,9 @@ defmodule Bonfire.Me.Characters do
     |> Changeset.update_change(:username, &clean_username/1)
     |> Changeset.validate_format(:username, username_regex())
     |> Changesets.cast_assoc(:actor)
+    |> Needle.Changesets.cast_assoc(:extra_info,
+      with: &Bonfire.Data.Identity.ExtraInfo.changeset/2
+    )
   end
 
   def remote_changeset(changeset, params) do
@@ -197,13 +201,15 @@ defmodule Bonfire.Me.Characters do
       |> Character.changeset(params, :update)
       |> Changeset.cast_assoc(:feed)
       |> Changeset.cast_assoc(:follow_count)
-      |> Changeset.cast_assoc(:actor)
     else
       # insert
       changeset
       |> Character.changeset(params, :hash)
-      |> Changeset.cast_assoc(:actor)
     end
+    |> Changeset.cast_assoc(:actor)
+    |> Needle.Changesets.cast_assoc(:extra_info,
+      with: &Bonfire.Data.Identity.ExtraInfo.changeset/2
+    )
     |> debug("FIXME: why is actor not being cast?")
 
     # |> info()

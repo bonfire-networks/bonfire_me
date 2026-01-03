@@ -720,7 +720,7 @@ defmodule Bonfire.Me.Users do
   end
 
   def changeset(:update, user, params, _extra) do
-    user = repo().preload(user, [:profile, character: [:actor]])
+    user = repo().preload(user, [:profile, :extra_info, character: [:actor]])
 
     # Ecto doesn't liked mixed keys so we convert them all to strings
     # TODO: use atoms instead?
@@ -754,6 +754,9 @@ defmodule Bonfire.Me.Users do
     # |> info()
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
     |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    |> Needle.Changesets.cast_assoc(:extra_info,
+      with: &Bonfire.Data.Identity.ExtraInfo.changeset/2
+    )
 
     # |> debug("users update changeset")
   end
