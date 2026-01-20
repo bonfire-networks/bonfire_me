@@ -513,5 +513,147 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     end
 
     defp exclude_current_user(users, _), do: users
+
+    @doc """
+    Create a new account via Mastodon API signup.
+
+    Requires an app token (client credentials) in the Authorization header.
+    Returns a user access token on success.
+    """
+    def signup(params, conn) do
+      with {:ok, oauth_client} <- authorize_app_token(conn),
+           {:ok, account_params, user_params} <- validate_signup_params(params),
+           {:ok, account} <- Bonfire.Me.Accounts.signup(account_params, must_confirm?: true),
+           {:ok, user} <- Bonfire.Me.Users.create(user_params, account),
+           {:ok, token} <- generate_user_token(user, oauth_client) do
+        RestAdapter.json(conn, format_token_response(token))
+      else
+        {:error, :unauthorized} ->
+          masto_error(conn, 401, "The access token is invalid")
+
+        {:error, :missing_params, missing} ->
+          masto_error(conn, 422, "Validation failed: #{Enum.join(missing, ", ")} required")
+
+        {:error, :agreement_required} ->
+          masto_error(conn, 422, "Validation failed: agreement must be accepted")
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          masto_error(conn, 422, "Validation failed: #{Bonfire.Common.Errors.error_msg(changeset)}")
+
+        {:error, reason} ->
+          error(reason, "Signup failed")
+          masto_error(conn, 422, "Could not create account")
+
+        :error ->
+          masto_error(conn, 422, "Could not create account")
+      end
+    end
+
+    @doc """
+    Resend confirmation email.
+
+    Mastodon API: POST /api/v1/emails/confirmations
+
+    Only works for the app that created the account (verified by token).
+    Returns empty response on success.
+    """
+    def resend_confirmation(_params, conn) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        masto_error(conn, 401, "The access token is invalid")
+      else
+        with {:ok, account} <- get_user_account(current_user),
+             true <- is_nil(account.email.confirmed_at) || {:error, :already_confirmed},
+             {:ok, _, _} <-
+               Bonfire.Me.Accounts.request_confirm_email(%{email: account.email.email_address}, []) do
+          conn
+          |> Plug.Conn.put_status(200)
+          |> Phoenix.Controller.json(%{})
+        else
+          {:error, :already_confirmed} ->
+            masto_error(conn, 403, "This method is only available while the e-mail is awaiting confirmation")
+
+          _ ->
+            masto_error(conn, 422, "Could not resend confirmation email")
+        end
+      end
+    end
+
+    defp masto_error(conn, status, message) do
+      conn
+      |> Plug.Conn.put_status(status)
+      |> Phoenix.Controller.json(%{"error" => message})
+    end
+
+    defp get_user_account(user) do
+      account_id = e(user, :account, :id, nil) || e(user, :accounted, :account_id, nil)
+
+      with account_id when is_binary(account_id) <- account_id,
+           {:ok, account} <-
+             Bonfire.Me.Accounts.Queries.login_by_account_id(account_id)
+             |> Bonfire.Common.Repo.single() do
+        {:ok, account}
+      else
+        _ -> {:error, :account_not_found}
+      end
+    end
+
+    defp authorize_app_token(conn) do
+      with [authorization_header] <- Plug.Conn.get_req_header(conn, "authorization"),
+           [_, bearer] <- Regex.run(~r/[B|b]earer (.+)/, authorization_header),
+           {:ok, token} <- Boruta.Oauth.Authorization.AccessToken.authorize(value: bearer),
+           %{id: _} = client <- token.client do
+        {:ok, client}
+      else
+        _ -> {:error, :unauthorized}
+      end
+    end
+
+    defp validate_signup_params(params) do
+      required = ["username", "email", "password", "agreement"]
+      missing = Enum.filter(required, &is_nil(params[&1]))
+
+      cond do
+        missing != [] ->
+          {:error, :missing_params, missing}
+
+        params["agreement"] not in [true, "true", "1"] ->
+          {:error, :agreement_required}
+
+        true ->
+          account_params = %{
+            email: %{email_address: params["email"]},
+            credential: %{password: params["password"]}
+          }
+
+          user_params = %{
+            profile: %{name: params["username"]},
+            character: %{username: params["username"]}
+          }
+
+          {:ok, account_params, user_params}
+      end
+    end
+
+    defp generate_user_token(user, oauth_client) do
+      Boruta.Ecto.AccessTokens.create(
+        %{client: oauth_client, sub: user.id, scope: "read write follow push"},
+        refresh_token: true
+      )
+    end
+
+    defp format_token_response(token) do
+      base = %{
+        "access_token" => token.value,
+        "token_type" => "Bearer",
+        "scope" => token.scope,
+        "created_at" => System.system_time(:second)
+      }
+
+      if token.refresh_token,
+        do: Map.put(base, "refresh_token", token.refresh_token),
+        else: base
+    end
   end
 end
