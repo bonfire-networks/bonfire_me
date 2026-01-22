@@ -538,7 +538,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           masto_error(conn, 422, "Validation failed: agreement must be accepted")
 
         {:error, %Ecto.Changeset{} = changeset} ->
-          masto_error(conn, 422, "Validation failed: #{Bonfire.Common.Errors.error_msg(changeset)}")
+          masto_error(
+            conn,
+            422,
+            "Validation failed: #{Bonfire.Common.Errors.error_msg(changeset)}"
+          )
 
         {:error, reason} ->
           error(reason, "Signup failed")
@@ -566,13 +570,20 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         with {:ok, account} <- get_user_account(current_user),
              true <- is_nil(account.email.confirmed_at) || {:error, :already_confirmed},
              {:ok, _, _} <-
-               Bonfire.Me.Accounts.request_confirm_email(%{email: account.email.email_address}, []) do
+               Bonfire.Me.Accounts.request_confirm_email(
+                 %{email: account.email.email_address},
+                 []
+               ) do
           conn
           |> Plug.Conn.put_status(200)
           |> Phoenix.Controller.json(%{})
         else
           {:error, :already_confirmed} ->
-            masto_error(conn, 403, "This method is only available while the e-mail is awaiting confirmation")
+            masto_error(
+              conn,
+              403,
+              "This method is only available while the e-mail is awaiting confirmation"
+            )
 
           _ ->
             masto_error(conn, 422, "Could not resend confirmation email")
