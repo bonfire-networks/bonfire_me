@@ -523,7 +523,13 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     def signup(params, conn) do
       with {:ok, oauth_client} <- authorize_app_token(conn),
            {:ok, account_params, user_params} <- validate_signup_params(params),
-           {:ok, account} <- Bonfire.Me.Accounts.signup(account_params, must_confirm?: true),
+           # Get first redirect_uri from OAuth client for deep-linking back to app after email confirmation
+           redirect_uri <- List.first(oauth_client.redirect_uris || []),
+           {:ok, account} <-
+             Bonfire.Me.Accounts.signup(account_params,
+               must_confirm?: true,
+               redirect_uri: redirect_uri
+             ),
            {:ok, user} <- Bonfire.Me.Users.create(user_params, account),
            {:ok, token} <- generate_user_token(user, oauth_client) do
         RestAdapter.json(conn, format_token_response(token))

@@ -40,7 +40,7 @@ defmodule Bonfire.Me.Mails do
     case opts[:confirm_action] do
       :forgot_password -> forgot_password(account)
       :login -> forgot_password(account)
-      _ -> signup_confirm_email(account)
+      _ -> signup_confirm_email(account, opts)
     end
   end
 
@@ -50,17 +50,27 @@ defmodule Bonfire.Me.Mails do
   ## Parameters
 
     - `account`: The `%Account{}` struct for the user.
+    - `opts`: Options including `:redirect_uri` for deep-linking back to mobile apps after confirmation.
 
   ## Examples
 
       iex> Bonfire.Me.Mails.signup_confirm_email(%Account{email: %{confirm_token: "token"}})
+      iex> Bonfire.Me.Mails.signup_confirm_email(%Account{email: %{confirm_token: "token"}}, redirect_uri: "myapp://callback")
   """
-  def signup_confirm_email(%Account{} = account) do
+  def signup_confirm_email(%Account{} = account, opts \\ []) do
     confirm_token = e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
       app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
-      url = url_path(Bonfire.UI.Me.ConfirmEmailController, [:show, confirm_token])
+      # Construct URL directly since url_path helper doesn't work well with resources routes
+      base_url = "#{Bonfire.Common.URIs.base_url()}/signup/email/confirm/#{confirm_token}"
+
+      # Add redirect_uri as query param if provided (for mobile app deep-linking)
+      url =
+        case opts[:redirect_uri] do
+          nil -> base_url
+          redirect_uri -> "#{base_url}?redirect_uri=#{URI.encode_www_form(redirect_uri)}"
+        end
 
       if Config.env() != :test or
            System.get_env("PHX_SERVER") == "yes",
