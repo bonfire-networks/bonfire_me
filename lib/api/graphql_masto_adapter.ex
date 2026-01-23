@@ -21,7 +21,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       schema: Bonfire.API.GraphQL.Schema,
       action: [mode: :internal]
 
-alias Bonfire.API.GraphQL.RestAdapter
+    alias Bonfire.API.GraphQL.RestAdapter
     alias Bonfire.API.MastoCompat.{Mappers, PaginationHelpers, Fragments}
     alias Bonfire.API.MastoCompat.Mappers.BatchLoader
     alias Bonfire.Social.Graph.Follows
