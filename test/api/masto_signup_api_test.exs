@@ -24,12 +24,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       # Create OAuth client using ClientApps.new which handles all the setup
       client_id = Faker.UUID.v4()
 
-      # Use a valid HTTP redirect URI (Boruta rejects URN URIs like urn:ietf:wg:oauth:2.0:oob)
       {:ok, ecto_client} =
         ClientApps.new(%{
           id: client_id,
           name: "test-signup-app",
-          redirect_uris: ["http://localhost:4000/oauth/callback"]
+          redirect_uris: [
+            "myapp://callback"
+            # "http://localhost:4002/oauth/callback"
+          ]
         })
 
       # Convert Ecto client to OAuth client for token creation

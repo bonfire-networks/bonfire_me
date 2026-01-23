@@ -91,7 +91,7 @@ defmodule Bonfire.Me.Mails do
 
       # |> put_html_layout({EmailView, "confirm_email.html"})
       # |> put_text_layout({EmailView, "confirm_email.text"})
-      # |> debug()
+      # |> debug("signup_confirm_email mail")
     else
       error("No confirmation token")
     end
