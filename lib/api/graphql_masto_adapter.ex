@@ -21,9 +21,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       schema: Bonfire.API.GraphQL.Schema,
       action: [mode: :internal]
 
-    alias Bonfire.API.GraphQL.RestAdapter
+alias Bonfire.API.GraphQL.RestAdapter
     alias Bonfire.API.MastoCompat.{Mappers, PaginationHelpers, Fragments}
     alias Bonfire.API.MastoCompat.Mappers.BatchLoader
+    alias Bonfire.Social.Graph.Follows
+    alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
 
     # Use centralized fragments from bonfire_api_graphql
     @user_profile Fragments.user_profile()
@@ -143,15 +145,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @doc "Unfollow an account"
     def unfollow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :unfollow)
 
-    defp handle_follow_action(conn, target_id, action) do
-      current_user = conn.assigns[:current_user]
-
-      if is_nil(current_user) do
-        RestAdapter.error_fn({:error, :unauthorized}, conn)
-      else
-        alias Bonfire.Social.Graph.Follows
-        alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
-
+defp handle_follow_action(conn, target_id, action) do
+      RestAdapter.with_current_user(conn, fn current_user ->
         result =
           case action do
             :follow -> Follows.follow(current_user, target_id, [])
@@ -170,7 +165,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             relationship = BoundariesAdapter.build_relationship(current_user, target_id)
             RestAdapter.json(conn, relationship)
         end
-      end
+      end)
     end
 
     # Follow Requests endpoints
@@ -181,12 +176,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @doc "List outgoing follow requests (GET /api/v1/follow_requests/outgoing)"
     def follow_requests_outgoing(_params, conn), do: list_follow_requests(conn, :outgoing)
 
-    defp list_follow_requests(conn, direction) do
-      current_user = conn.assigns[:current_user]
-
-      if is_nil(current_user) do
-        RestAdapter.error_fn({:error, :unauthorized}, conn)
-      else
+defp list_follow_requests(conn, direction) do
+      RestAdapter.with_current_user(conn, fn current_user ->
         alias Bonfire.Social.Requests
         alias Bonfire.Data.Social.Follow
 
@@ -222,7 +213,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           |> Enum.reject(&is_nil/1)
 
         RestAdapter.json(conn, accounts)
-      end
+      end)
     end
 
     defp extract_request_user(request, :incoming), do: e(request, :edge, :subject, nil)
@@ -236,15 +227,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     def reject_follow_request(account_id, conn),
       do: handle_follow_request_action(conn, account_id, :reject)
 
-    defp handle_follow_request_action(conn, account_id, action) do
-      current_user = conn.assigns[:current_user]
-
-      if is_nil(current_user) do
-        RestAdapter.error_fn({:error, :unauthorized}, conn)
-      else
-        alias Bonfire.Social.Graph.Follows
-        alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
-
+defp handle_follow_request_action(conn, account_id, action) do
+      RestAdapter.with_current_user(conn, fn current_user ->
         result =
           case action do
             :authorize -> Follows.accept_from(account_id, current_user: current_user)
@@ -262,7 +246,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           {:error, reason} ->
             RestAdapter.error_fn({:error, reason}, conn)
         end
-      end
+      end)
     end
 
     @doc "List followers of an account"
@@ -275,9 +259,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       list_follow_connections(account_id, params, conn, :following)
     end
 
-    defp list_follow_connections(account_id, params, conn, direction) do
-      alias Bonfire.Social.Graph.Follows
-
+defp list_follow_connections(account_id, params, conn, direction) do
       limit = PaginationHelpers.validate_limit(params["limit"])
       pagination_opts = PaginationHelpers.build_pagination_opts(params, limit) |> Map.new()
 
@@ -340,8 +322,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             _ -> []
           end
 
-        alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
-        relationships = Enum.map(ids, &BoundariesAdapter.build_relationship(current_user, &1))
+relationships = Enum.map(ids, &BoundariesAdapter.build_relationship(current_user, &1))
 
         RestAdapter.json(conn, relationships)
       end
@@ -444,7 +425,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       if is_nil(current_user) do
         RestAdapter.error_fn({:error, :unauthorized}, conn)
       else
-        limit = parse_limit(params, default: 40, max: 80)
+limit = PaginationHelpers.validate_limit(params["limit"], default: 40, max: 80)
 
         # Get users from the suggested profiles circle (curated by admins)
         users =
@@ -462,26 +443,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       end
     end
 
-    defp parse_limit(params, opts) do
-      default = Keyword.get(opts, :default, 40)
-      max = Keyword.get(opts, :max, 80)
-
-      case params do
-        %{"limit" => limit} when is_binary(limit) ->
-          case Integer.parse(limit) do
-            {n, _} -> min(max(n, 1), max)
-            :error -> default
-          end
-
-        %{"limit" => limit} when is_integer(limit) ->
-          min(max(limit, 1), max)
-
-        _ ->
-          default
-      end
-    end
-
-    defp get_suggested_profiles(current_user, limit) do
+defp get_suggested_profiles(current_user, limit) do
       alias Bonfire.Boundaries.Circles
       alias Bonfire.Boundaries.Scaffold.Instance
       alias Bonfire.Common.Needles
@@ -671,6 +633,127 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       if token.refresh_token,
         do: Map.put(base, "refresh_token", token.refresh_token),
         else: base
+    end
+
+    # Profile image deletion endpoints
+
+    @doc "Delete the authenticated user's avatar. Mastodon API: DELETE /api/v1/profile/avatar"
+    def delete_avatar(_params, conn), do: delete_profile_image(conn, :icon_id)
+
+    @doc "Delete the authenticated user's header/banner. Mastodon API: DELETE /api/v1/profile/header"
+    def delete_header(_params, conn), do: delete_profile_image(conn, :image_id)
+
+    defp delete_profile_image(conn, field) do
+      RestAdapter.with_current_user(conn, fn user ->
+        with {:ok, updated} <- Bonfire.Me.Users.update(user, %{"profile" => %{field => nil}}) do
+          reload_and_return_user(conn, updated)
+        else
+          {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
+        end
+      end)
+    end
+
+    @doc """
+    Delete the authenticated user's account.
+    Mastodon API: POST /api/v1/accounts/delete
+
+    Requires password confirmation. Queues the account for async deletion.
+    """
+    def delete_account(%{"password" => password}, conn) when is_binary(password) do
+      RestAdapter.with_current_user(conn, fn user ->
+        with {:ok, _} <- Bonfire.Me.Accounts.login_valid?(user, password),
+             {:ok, _} <- Bonfire.Me.Users.enqueue_delete(user) do
+          Plug.Conn.send_resp(conn, 200, "")
+        else
+          {:error, _} -> RestAdapter.error_fn({:error, :forbidden}, conn)
+        end
+      end)
+    end
+
+    def delete_account(_params, conn) do
+      RestAdapter.error_fn({:error, "Password is required"}, conn)
+    end
+
+    @doc """
+    Set up an account alias for migration.
+    Mastodon API: POST /api/v1/accounts/alias
+
+    Adds the specified account(s) to the alsoKnownAs field of the current user's
+    ActivityPub actor. This is required before the target account can perform
+    a Move activity.
+
+    Params:
+    - `also_known_as_uris`: Array of ActivityPub actor URIs
+    """
+    def alias_account(%{"also_known_as_uris" => uris}, conn) when is_list(uris) do
+      RestAdapter.with_current_user(conn, fn user ->
+        with :ok <- ensure_federation_enabled(),
+             {:ok, actor} <- ActivityPub.Actor.get_cached(pointer: user.id),
+             new_aliases <- merge_aliases(actor, uris),
+             updated_data <- Map.put(actor.data, "alsoKnownAs", new_aliases),
+             {:ok, _} <- ActivityPub.Actor.update_actor(actor.ap_id, updated_data, false, true) do
+          reload_and_return_user(conn, user)
+        else
+          {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
+        end
+      end)
+    end
+
+    def alias_account(_params, conn) do
+      RestAdapter.error_fn({:error, "also_known_as_uris parameter is required"}, conn)
+    end
+
+    @doc """
+    Move the account to another account on a different instance.
+    Mastodon API: POST /api/v1/accounts/move
+
+    Params:
+    - `moved_to_account`: The ActivityPub URI of the target account
+    - `password`: Current password for verification
+
+    Preconditions:
+    - Target account must have this account in its alsoKnownAs field
+    - Password verification required
+    """
+    def move_account(%{"moved_to_account" => target_uri, "password" => password}, conn)
+        when is_binary(target_uri) and is_binary(password) do
+      RestAdapter.with_current_user(conn, fn user ->
+        with {:ok, _} <- Bonfire.Me.Accounts.login_valid?(user, password),
+             :ok <- ensure_federation_enabled(),
+             {:ok, origin_actor} <- ActivityPub.Actor.get_cached(pointer: user.id),
+             {:ok, target_actor} <- ActivityPub.Actor.get_cached_or_fetch(ap_id: target_uri),
+             {:ok, _} <- ActivityPub.move(origin_actor, target_actor, true) do
+          reload_and_return_user(conn, user)
+        else
+          {:error, :not_in_also_known_as} ->
+            RestAdapter.error_fn({:error, "Target account must list this account in alsoKnownAs"}, conn)
+
+          {:error, _} ->
+            RestAdapter.error_fn({:error, :forbidden}, conn)
+        end
+      end)
+    end
+
+    def move_account(_params, conn) do
+      RestAdapter.error_fn({:error, "moved_to_account and password parameters are required"}, conn)
+    end
+
+    # Helper functions
+
+    defp reload_and_return_user(conn, user) do
+      case Bonfire.Me.Users.by_id(user.id) do
+        {:ok, reloaded} -> RestAdapter.json(conn, Mappers.Account.from_user(reloaded))
+        _ -> RestAdapter.json(conn, Mappers.Account.from_user(user))
+      end
+    end
+
+    defp ensure_federation_enabled do
+      if module_enabled?(ActivityPub.Actor), do: :ok, else: {:error, "Federation is not enabled"}
+    end
+
+    defp merge_aliases(actor, uris) do
+      existing = e(actor, :data, "alsoKnownAs", []) || []
+      Enum.uniq(existing ++ uris)
     end
   end
 end
