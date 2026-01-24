@@ -145,7 +145,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @doc "Unfollow an account"
     def unfollow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :unfollow)
 
-defp handle_follow_action(conn, target_id, action) do
+    defp handle_follow_action(conn, target_id, action) do
       RestAdapter.with_current_user(conn, fn current_user ->
         result =
           case action do
@@ -176,7 +176,7 @@ defp handle_follow_action(conn, target_id, action) do
     @doc "List outgoing follow requests (GET /api/v1/follow_requests/outgoing)"
     def follow_requests_outgoing(_params, conn), do: list_follow_requests(conn, :outgoing)
 
-defp list_follow_requests(conn, direction) do
+    defp list_follow_requests(conn, direction) do
       RestAdapter.with_current_user(conn, fn current_user ->
         alias Bonfire.Social.Requests
         alias Bonfire.Data.Social.Follow
@@ -227,7 +227,7 @@ defp list_follow_requests(conn, direction) do
     def reject_follow_request(account_id, conn),
       do: handle_follow_request_action(conn, account_id, :reject)
 
-defp handle_follow_request_action(conn, account_id, action) do
+    defp handle_follow_request_action(conn, account_id, action) do
       RestAdapter.with_current_user(conn, fn current_user ->
         result =
           case action do
@@ -259,7 +259,7 @@ defp handle_follow_request_action(conn, account_id, action) do
       list_follow_connections(account_id, params, conn, :following)
     end
 
-defp list_follow_connections(account_id, params, conn, direction) do
+    defp list_follow_connections(account_id, params, conn, direction) do
       limit = PaginationHelpers.validate_limit(params["limit"])
       pagination_opts = PaginationHelpers.build_pagination_opts(params, limit) |> Map.new()
 
@@ -322,7 +322,7 @@ defp list_follow_connections(account_id, params, conn, direction) do
             _ -> []
           end
 
-relationships = Enum.map(ids, &BoundariesAdapter.build_relationship(current_user, &1))
+        relationships = Enum.map(ids, &BoundariesAdapter.build_relationship(current_user, &1))
 
         RestAdapter.json(conn, relationships)
       end
@@ -425,7 +425,7 @@ relationships = Enum.map(ids, &BoundariesAdapter.build_relationship(current_user
       if is_nil(current_user) do
         RestAdapter.error_fn({:error, :unauthorized}, conn)
       else
-limit = PaginationHelpers.validate_limit(params["limit"], default: 40, max: 80)
+        limit = PaginationHelpers.validate_limit(params["limit"], default: 40, max: 80)
 
         # Get users from the suggested profiles circle (curated by admins)
         users =
@@ -443,7 +443,7 @@ limit = PaginationHelpers.validate_limit(params["limit"], default: 40, max: 80)
       end
     end
 
-defp get_suggested_profiles(current_user, limit) do
+    defp get_suggested_profiles(current_user, limit) do
       alias Bonfire.Boundaries.Circles
       alias Bonfire.Boundaries.Scaffold.Instance
       alias Bonfire.Common.Needles
@@ -726,7 +726,10 @@ defp get_suggested_profiles(current_user, limit) do
           reload_and_return_user(conn, user)
         else
           {:error, :not_in_also_known_as} ->
-            RestAdapter.error_fn({:error, "Target account must list this account in alsoKnownAs"}, conn)
+            RestAdapter.error_fn(
+              {:error, "Target account must list this account in alsoKnownAs"},
+              conn
+            )
 
           {:error, _} ->
             RestAdapter.error_fn({:error, :forbidden}, conn)
@@ -735,7 +738,10 @@ defp get_suggested_profiles(current_user, limit) do
     end
 
     def move_account(_params, conn) do
-      RestAdapter.error_fn({:error, "moved_to_account and password parameters are required"}, conn)
+      RestAdapter.error_fn(
+        {:error, "moved_to_account and password parameters are required"},
+        conn
+      )
     end
 
     # Helper functions
