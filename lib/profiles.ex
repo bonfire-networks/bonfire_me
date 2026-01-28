@@ -13,6 +13,7 @@ defmodule Bonfire.Me.Profiles do
 
   use Bonfire.Common.E
   use Bonfire.Common.Config
+  import Untangle
   alias Bonfire.Common.Types
   alias Bonfire.Data.Social.Profile
   alias Ecto.Changeset
@@ -39,7 +40,8 @@ defmodule Bonfire.Me.Profiles do
   def changeset_simple(profile \\ %Profile{}, params) do
     profile
     |> Profile.changeset(params)
-    |> EctoSparkles.SanitiseStrings.clean_html()
+    |> EctoSparkles.SanitiseStrings.strip_all_tags(decode_entities: true, except: [:summary])
+    |> EctoSparkles.SanitiseStrings.clean_html(except: [:name, :website, :location])
   end
 
   def spam_check!(text, context) do
@@ -92,4 +94,45 @@ defmodule Bonfire.Me.Profiles do
   end
 
   def indexing_object_format(_), do: nil
+
+  @doc """
+  Temporary function:
+  Fixes HTML entities in a profile name by username.
+
+  Re-processes the profile through the changeset to decode any HTML entities.
+
+  ## Examples
+
+      > Bonfire.Me.Profiles.fix_profile_name("username")
+      {:ok, %User{}}
+  """
+  def fix_profile_name(username) when is_binary(username) do
+    with {:ok, user} <- Bonfire.Me.Users.by_username(username) do
+      user = repo().preload(user, [:profile])
+      name = e(user, :profile, :name, nil)
+
+      if name && String.contains?(name, "&") do
+        debug(name, "fixing name")
+
+        # Decode entities first so Ecto sees it as a change
+        decoded_name = HtmlEntities.decode(name)
+
+        changeset =
+          changeset_simple(user.profile, %{name: decoded_name})
+          |> debug("changeset prepared for")
+
+        case repo().update(changeset) do
+          {:ok, _profile} ->
+            debug(decoded_name, "updated profile name to")
+            {:ok, user}
+
+          error ->
+            error
+        end
+      else
+        debug(username, "no changes needed for user")
+        {:ok, user}
+      end
+    end
+  end
 end
