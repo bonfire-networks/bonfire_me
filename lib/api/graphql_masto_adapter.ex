@@ -23,6 +23,21 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     alias Bonfire.API.GraphQL.RestAdapter
     alias Bonfire.API.MastoCompat.{Mappers, PaginationHelpers, Fragments}
+
+    # Custom pipeline to set up context with dataloader
+    def absinthe_pipeline(schema, opts) do
+      context = Keyword.get(opts, :context, %{})
+
+      context_with_loader =
+        if Map.has_key?(context, :loader) do
+          context
+        else
+          schema.context(context)
+        end
+
+      AbsintheClient.default_pipeline(schema, Keyword.put(opts, :context, context_with_loader))
+    end
+
     alias Bonfire.API.MastoCompat.Mappers.BatchLoader
     alias Bonfire.Social.Graph.Follows
     alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
@@ -30,11 +45,21 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     # Use centralized fragments from bonfire_api_graphql
     @user_profile Fragments.user_profile()
 
+    @doc "Get a user profile by ID (direct DB lookup for full data)"
+    # TODO: refactor to use GraphQL once Dataloader properly resolves
+    # Needle mixins (follow_count) and profile media (icon, image)
+    def user(%{"filter" => %{"id" => id}}, conn) do
+      case Bonfire.Me.Users.by_id(id, preload: :profile) do
+        {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user))
+        _ -> RestAdapter.error_fn({:error, :not_found}, conn)
+      end
+    end
+
     @graphql "query ($filter: CharacterFilters) {
       user(filter: $filter) {
         #{@user_profile}
     }}"
-    @doc "Get a user profile by filter (id, username, etc)"
+    @doc "Get a user profile by filter (fallback to GraphQL for non-id filters)"
     def user(params, conn) do
       graphql(conn, :user, params)
       |> RestAdapter.return(:user, ..., conn, &Mappers.Account.from_user/1)
