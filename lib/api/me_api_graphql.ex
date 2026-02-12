@@ -596,7 +596,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       {:ok, count}
     end
 
-    # Use Dataloader to batch-load icon media and prevent N+1 queries
+    def icon(%{icon: icon}, _args, _info)
+        when not is_nil(icon) and not is_struct(icon, Ecto.Association.NotLoaded) do
+      {:ok, Bonfire.Common.Media.avatar_url(icon) |> URIs.based_url()}
+    end
+
     def icon(parent, _args, %{context: %{loader: loader}}) do
       loader
       |> Dataloader.load(Needle.Pointer, :icon, parent)
@@ -609,12 +613,15 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end)
     end
 
-    # Fallback for non-GraphQL contexts
     def icon(thing, _, _info) do
       {:ok, Bonfire.Common.Media.avatar_url(thing) |> URIs.based_url()}
     end
 
-    # Use Dataloader to batch-load image media and prevent N+1 queries
+    def image(%{image: image}, _args, _info)
+        when not is_nil(image) and not is_struct(image, Ecto.Association.NotLoaded) do
+      {:ok, Bonfire.Common.Media.banner_url(image) |> URIs.based_url()}
+    end
+
     def image(parent, _args, %{context: %{loader: loader}}) do
       loader
       |> Dataloader.load(Needle.Pointer, :image, parent)
