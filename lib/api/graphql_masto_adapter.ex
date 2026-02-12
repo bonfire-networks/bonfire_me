@@ -354,6 +354,83 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     end
 
     @doc """
+    Get familiar followers for given account IDs.
+    Returns accounts that the current user follows AND who also follow each target.
+    Mastodon API: GET /api/v1/accounts/familiar_followers?id[]=1&id[]=2
+    """
+    def familiar_followers(params, conn) do
+      current_user = conn.assigns[:current_user]
+
+      if is_nil(current_user) do
+        RestAdapter.error_fn({:error, :unauthorized}, conn)
+      else
+        target_ids =
+          case params do
+            %{"id" => ids} when is_list(ids) -> ids
+            %{"id" => id} when is_binary(id) -> [id]
+            _ -> []
+          end
+
+        # Get all user IDs that the current user follows (once, for all targets)
+        my_following_ids =
+          case Follows.list_followed(current_user,
+                 paginate?: false,
+                 type: Bonfire.Data.Identity.User
+               ) do
+            %{edges: edges} when is_list(edges) ->
+              Enum.map(edges, &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1))
+              |> Enum.reject(&is_nil/1)
+
+            edges when is_list(edges) ->
+              Enum.map(edges, &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1))
+              |> Enum.reject(&is_nil/1)
+
+            _ ->
+              []
+          end
+
+        results =
+          if my_following_ids == [] do
+            Enum.map(target_ids, fn id -> %{"id" => id, "accounts" => []} end)
+          else
+            Enum.map(target_ids, fn target_id ->
+              familiar_ids =
+                Bonfire.Social.Edges.batch_subjects_exist?(
+                  Bonfire.Data.Social.Follow,
+                  target_id,
+                  my_following_ids
+                )
+
+              familiar_users =
+                if MapSet.size(familiar_ids) > 0 do
+                  familiar_ids
+                  |> MapSet.to_list()
+                  |> Enum.take(10)
+                  |> Enum.flat_map(fn fid ->
+                    case Bonfire.Me.Users.by_id(fid, preload: :profile) do
+                      {:ok, user} -> [user]
+                      _ -> []
+                    end
+                  end)
+                else
+                  []
+                end
+
+              accounts =
+                BatchLoader.map_accounts(familiar_users,
+                  current_user: current_user,
+                  skip_expensive_stats: true
+                )
+
+              %{"id" => target_id, "accounts" => accounts}
+            end)
+          end
+
+        RestAdapter.json(conn, results)
+      end
+    end
+
+    @doc """
     Lookup an account by webfinger address.
     Mastodon API: GET /api/v1/accounts/lookup?acct=username or acct=username@domain
     """
