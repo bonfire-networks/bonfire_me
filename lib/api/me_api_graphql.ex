@@ -606,9 +606,15 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       |> Dataloader.load(Needle.Pointer, :icon, parent)
       |> Helpers.on_load(fn loader ->
         case Dataloader.get(loader, Needle.Pointer, :icon, parent) do
-          nil -> {:ok, nil}
-          %Ecto.Association.NotLoaded{} -> {:ok, nil}
-          media -> {:ok, Bonfire.Common.Media.avatar_url(media) |> URIs.based_url()}
+          nil ->
+            # Fallback: generate URL from icon_id when boundary checks filter out Media
+            {:ok, Bonfire.Common.Media.avatar_url(parent) |> URIs.based_url()}
+
+          %Ecto.Association.NotLoaded{} ->
+            {:ok, Bonfire.Common.Media.avatar_url(parent) |> URIs.based_url()}
+
+          media ->
+            {:ok, Bonfire.Common.Media.avatar_url(media) |> URIs.based_url()}
         end
       end)
     end
@@ -627,9 +633,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       |> Dataloader.load(Needle.Pointer, :image, parent)
       |> Helpers.on_load(fn loader ->
         case Dataloader.get(loader, Needle.Pointer, :image, parent) do
-          nil -> {:ok, nil}
-          %Ecto.Association.NotLoaded{} -> {:ok, nil}
-          media -> {:ok, Bonfire.Common.Media.banner_url(media) |> URIs.based_url()}
+          nil ->
+            {:ok, Bonfire.Common.Media.banner_url(parent) |> URIs.based_url()}
+
+          %Ecto.Association.NotLoaded{} ->
+            {:ok, Bonfire.Common.Media.banner_url(parent) |> URIs.based_url()}
+
+          media ->
+            {:ok, Bonfire.Common.Media.banner_url(media) |> URIs.based_url()}
         end
       end)
     end
