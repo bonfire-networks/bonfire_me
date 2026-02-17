@@ -378,11 +378,17 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
                  type: Bonfire.Data.Identity.User
                ) do
             %{edges: edges} when is_list(edges) ->
-              Enum.map(edges, &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1))
+              Enum.map(
+                edges,
+                &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1)
+              )
               |> Enum.reject(&is_nil/1)
 
             edges when is_list(edges) ->
-              Enum.map(edges, &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1))
+              Enum.map(
+                edges,
+                &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1)
+              )
               |> Enum.reject(&is_nil/1)
 
             _ ->
