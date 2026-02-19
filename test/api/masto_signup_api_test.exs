@@ -82,6 +82,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         assert Map.has_key?(response, "created_at")
       end
 
+      # TODO: is this the desired behaviour? or do we want to be able to authenticate but block performing certain actions?
       test "returns 403 on verify_credentials for unconfirmed account", %{
         conn: conn,
         app_token: app_token

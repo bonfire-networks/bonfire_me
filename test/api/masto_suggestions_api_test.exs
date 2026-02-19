@@ -190,7 +190,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           |> get("/api/v2/suggestions")
           |> json_response(401)
 
-        assert response["error"] == "Unauthorized"
+        assert response["error"] == "You need to login first."
       end
     end
   end
