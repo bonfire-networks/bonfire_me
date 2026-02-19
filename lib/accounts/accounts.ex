@@ -764,12 +764,34 @@ defmodule Bonfire.Me.Accounts do
 
     invite = opts[:invite]
 
-    (not is_nil(invite) and
-       invite == special_invite) or
-      (opts[:is_first_account?] == true or
-         opts[:skip_invite_check] == true or !instance_is_invite_only?() or
-         (Types.is_uid?(invite) and
-            redeemable_invite?(invite)))
+    cond do
+      not is_nil(invite) and invite == special_invite ->
+        true
+
+      opts[:is_first_account?] == true ->
+        true
+
+      opts[:skip_invite_check] == true ->
+        true
+
+      !instance_is_invite_only?() ->
+        true
+
+      Types.is_uid?(invite) and redeemable_invite?(invite) ->
+        true
+
+      is_nil(invite) ->
+        warn(opts, "Signup denied: instance is invite-only and no invite was provided, with opts")
+        false
+
+      true ->
+        warn(
+          invite,
+          "Signup denied: instance is invite-only and the provided invite is not valid"
+        )
+
+        false
+    end
   end
 
   def redeemable_invite?(nil), do: false
@@ -916,10 +938,11 @@ defmodule Bonfire.Me.Accounts do
     # Cache the result to avoid repeated COUNT queries during tests
     case ProcessTree.get(:is_first_account_cached) do
       false ->
+        flood("is_first_account_cached was cached as false")
         false
 
       _nil_or_true ->
-        result = count() < 1
+        result = count() |> flood("number of accounts") < 1
         Process.put(:is_first_account_cached, result)
         result
     end
