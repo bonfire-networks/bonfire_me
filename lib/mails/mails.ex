@@ -118,7 +118,7 @@ defmodule Bonfire.Me.Mails do
         |> Keyword.get(:forgot_password_email, [])
 
       app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
-      url = url_path(Bonfire.UI.Me.ForgotPasswordController, confirm_token)
+      url = url_path(Bonfire.UI.Me.ForgotPasswordController) <> "/" <> confirm_token
 
       if Config.env() != :test or
            System.get_env("PHX_SERVER") == "yes",
