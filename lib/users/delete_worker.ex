@@ -20,7 +20,8 @@ defmodule Bonfire.Me.DeleteWorker do
     enqueue([queue: :deletion], %{"ids" => Types.uids(ids)})
   end
 
-  defp enqueue(spec, worker_args \\ []), do: Oban.insert(job(spec, worker_args))
+  defp enqueue(spec, worker_args \\ []),
+    do: Bonfire.Common.TestInstanceRepo.oban_insert(job(spec, worker_args))
 
   defp job(spec, worker_args \\ []), do: new(worker_args, spec)
 

@@ -808,7 +808,7 @@ defmodule Bonfire.Me.Users do
 
   def is_first_user? do
     # Cache the result to avoid repeated COUNT queries during tests
-    case Process.get(:is_first_user_cached) do
+    case ProcessTree.get(:is_first_user_cached) do
       false ->
         false
 
