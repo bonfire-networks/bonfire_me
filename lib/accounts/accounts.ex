@@ -967,19 +967,12 @@ defmodule Bonfire.Me.Accounts do
   def update_is_admin(%Account{} = account, true, user) do
     instance_admin = %{
       is_instance_admin: true,
-      user: user
+      user_id: uid(user)
     }
 
     account
-    |> repo().preload(instance_admin: [:user])
-    |> debug()
-    # |> Changeset.cast(
-    #   %{instance_admin: instance_admin},
-    #   []
-    # )
-    # |> Changeset.cast_assoc(:instance_admin)
+    |> repo().preload(:instance_admin)
     |> Changesets.put_assoc(:instance_admin, instance_admin)
-    |> debug()
     |> repo().update()
   end
 
