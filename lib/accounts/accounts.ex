@@ -72,6 +72,12 @@ defmodule Bonfire.Me.Accounts do
   def get_by_email(email) when is_binary(email),
     do: repo().one(Queries.by_email(email))
 
+  @doc """
+  Returns the account associated with a given username, or nil if not found.
+  """
+  def get_by_username(username) when is_binary(username),
+    do: repo().maybe_one(Queries.login_by_username(username))
+
   @type changeset_name :: :change_password | :confirm_email | :login | :signup
 
   @doc """
@@ -222,7 +228,11 @@ defmodule Bonfire.Me.Accounts do
       :must_confirm?,
       !opts[:is_first_account?] and
         !opts[:open_id_provider] and
-        opts[:invite] != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
+        if invite = opts[:invite] do
+          invite != System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")
+        else
+          true
+        end
       # Config.env() != :test
     )
     |> debug("signup opts")

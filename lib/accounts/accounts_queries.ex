@@ -74,7 +74,7 @@ defmodule Bonfire.Me.Accounts.Queries do
   def login_by_email(email) when is_binary(email) do
     from(a in Account,
       join: e in assoc(a, :email),
-      join: c in assoc(a, :credential),
+      left_join: c in assoc(a, :credential),
       where: e.email_address == ^email,
       preload: [email: e, credential: c]
     )
@@ -85,12 +85,12 @@ defmodule Bonfire.Me.Accounts.Queries do
   """
   def login_by_username(username) when is_binary(username) do
     from(a in Account,
-      join: c in assoc(a, :credential),
-      join: e in assoc(a, :email),
+      left_join: c in assoc(a, :credential),
+      left_join: e in assoc(a, :email),
       join: ac in assoc(a, :accounted),
       join: u in assoc(ac, :user),
       join: ch in assoc(u, :character),
-      join: p in assoc(u, :profile),
+      left_join: p in assoc(u, :profile),
       where: ch.username == ^username,
       preload: [
         email: e,
