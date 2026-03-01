@@ -948,11 +948,11 @@ defmodule Bonfire.Me.Accounts do
     # Cache the result to avoid repeated COUNT queries during tests
     case ProcessTree.get(:is_first_account_cached) do
       false ->
-        flood("is_first_account_cached was cached as false")
+        debug("is_first_account_cached was cached as false")
         false
 
       _nil_or_true ->
-        result = count() |> flood("number of accounts") < 1
+        result = count() |> debug("number of accounts") < 1
         Process.put(:is_first_account_cached, result)
         result
     end
