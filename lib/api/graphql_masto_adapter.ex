@@ -71,11 +71,18 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       }}"
     @doc "Get the current user's profile (verify_credentials)"
     def me(params \\ %{}, conn) do
-      graphql(conn, :me, params)
-      |> RestAdapter.return(:me, ..., conn, fn
-        %{user: user} -> Mappers.Account.from_user(user)
-        user -> Mappers.Account.from_user(user)
-      end)
+      # Mastodon returns 403 for unconfirmed accounts on verify_credentials
+      confirmed_conn = Bonfire.API.GraphQL.Plugs.RequireConfirmed.call(conn, [])
+
+      if confirmed_conn.halted do
+        confirmed_conn
+      else
+        graphql(conn, :me, params)
+        |> RestAdapter.return(:me, ..., conn, fn
+          %{user: user} -> Mappers.Account.from_user(user)
+          user -> Mappers.Account.from_user(user)
+        end)
+      end
     end
 
     @doc "Get user preferences"
