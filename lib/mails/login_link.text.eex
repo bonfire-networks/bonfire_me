@@ -1,0 +1,5 @@
+Sign in to <%= @app_name %>
+
+Click this link to sign in: <%= @confirm_url %>
+
+No password needed — the link will log you in directly. If you didn't request this, you can ignore this email.

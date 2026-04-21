@@ -1,0 +1,5 @@
+<h3>Sign in to <%= @app_name %></h3>
+
+Click <a href="<%= @confirm_url %>">this link</a> to sign in.
+
+<p>No password needed — the link will log you in directly. If you didn't request this, you can ignore this email.</p>

@@ -39,7 +39,7 @@ defmodule Bonfire.Me.Mails do
   def confirm_email(account, opts \\ []) do
     case opts[:confirm_action] do
       :forgot_password -> forgot_password(account)
-      :login -> forgot_password(account)
+      :login -> login_link(account)
       _ -> signup_confirm_email(account, opts)
     end
   end
@@ -110,28 +110,59 @@ defmodule Bonfire.Me.Mails do
       :ok
   """
   def forgot_password(%Account{} = account) do
+    confirm_token_email(account,
+      template: :forgot_password,
+      conf_key: :forgot_password_email,
+      log_label: "Reset link",
+      default_subject: l("Reset your password")
+    )
+  end
+
+  @doc """
+  Sends a passwordless magic-link sign-in email.
+
+  Used when an account is provisioned or requests a login via a flow that
+  doesn't involve setting a password (e.g. gated mode). Shares the same
+  confirm-token plumbing as `forgot_password/1` but with its own subject
+  and template that frames the link as a sign-in, not a reset.
+
+  ## Examples
+
+      iex> Bonfire.Me.Mails.login_link(%Account{email: %{confirm_token: "token"}})
+      :ok
+  """
+  def login_link(%Account{} = account) do
+    confirm_token_email(account,
+      template: :login_link,
+      conf_key: :login_link_email,
+      log_label: "Login link",
+      default_subject: l("Sign in")
+    )
+  end
+
+  defp confirm_token_email(%Account{} = account, opts) do
     confirm_token = e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
       conf =
         Config.get(__MODULE__, [])
-        |> Keyword.get(:forgot_password_email, [])
+        |> Keyword.get(opts[:conf_key], [])
 
       app_name = Utils.maybe_apply(Bonfire.Application, :name, [])
       url = url_path(Bonfire.UI.Me.ForgotPasswordController) <> "/" <> confirm_token
 
       if Config.env() != :test or
            System.get_env("PHX_SERVER") == "yes",
-         do: warn("Reset link: #{url}")
+         do: warn("#{opts[:log_label]}: #{url}")
 
       mailer().new()
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
       |> mailer().subject(
-        Keyword.get(conf, :subject, "#{app_name} - #{l("Reset your password")}")
+        Keyword.get(conf, :subject, "#{app_name} - #{opts[:default_subject]}")
       )
-      |> render(:forgot_password)
+      |> render(opts[:template])
     else
       error(l("No confirmation token"))
     end
