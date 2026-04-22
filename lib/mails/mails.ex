@@ -159,9 +159,7 @@ defmodule Bonfire.Me.Mails do
       |> assign(:current_account, account)
       |> assign(:confirm_url, url)
       |> assign(:app_name, app_name)
-      |> mailer().subject(
-        Keyword.get(conf, :subject, "#{app_name} - #{opts[:default_subject]}")
-      )
+      |> mailer().subject(Keyword.get(conf, :subject, "#{app_name} - #{opts[:default_subject]}"))
       |> render(opts[:template])
     else
       error(l("No confirmation token"))
