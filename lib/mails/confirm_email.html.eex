@@ -1,3 +1,0 @@
-<h3>Welcome to <%= @app_name %>!</h3>
-
-Please confirm your email by <a href="<%= @confirm_url %>">clicking here</a> and you can get started setting up a user profile.

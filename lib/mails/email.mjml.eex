@@ -1,0 +1,53 @@
+<mjml>
+  <mj-head>
+    <mj-preview><%= @intro %></mj-preview>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="1.6" color="<%= @theme.body_text %>" padding="0" />
+      <mj-section padding="0" />
+    </mj-attributes>
+    <mj-style inline="inline">
+      a { color: <%= @theme.primary %>; }
+      .muted { color: <%= @theme.muted %>; font-size: 13px; line-height: 1.6; }
+      .muted a { color: <%= @theme.muted %>; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="<%= @theme.body_bg %>" width="600px">
+    <mj-section
+      full-width="full-width"
+      background-color="<%= @theme.primary %>"
+      padding="64px 24px"
+    >
+      <mj-column>
+        <mj-text
+          align="center"
+          color="<%= @theme.primary_content %>"
+          font-size="56px"
+          font-weight="800"
+          line-height="1.1"
+          padding="0"
+        >
+          <%= @app_name %>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <%= @inner_content %>
+
+    <%= if @logo_url do %>
+    <mj-section padding="32px 32px 8px">
+      <mj-column>
+        <mj-image src="<%= @logo_url %>" alt="" width="120px" align="left" padding="0" />
+      </mj-column>
+    </mj-section>
+    <% end %>
+
+    <mj-section padding="<%= if @logo_url, do: "8px 32px 40px", else: "32px 32px 40px" %>">
+      <mj-column>
+        <mj-text css-class="muted">
+          <%= @disclaimer %>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

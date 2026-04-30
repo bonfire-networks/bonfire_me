@@ -1,0 +1,28 @@
+<mj-section padding="40px 32px 0">
+  <mj-column>
+    <mj-text font-size="18px" font-weight="700" line-height="1.3" padding-bottom="6px">
+      <%= @heading %>
+    </mj-text>
+    <mj-text padding-bottom="24px">
+      <%= @intro %>
+    </mj-text>
+    <mj-button
+      href="<%= @confirm_url %>"
+      align="left"
+      background-color="<%= @theme.body_bg %>"
+      color="<%= @theme.primary %>"
+      border="1px solid <%= @theme.primary %>"
+      border-radius="999px"
+      font-weight="600"
+      font-size="15px"
+      inner-padding="12px 28px"
+      padding="0"
+    >
+      <%= @cta %>
+    </mj-button>
+    <mj-text padding-top="32px">
+      <span style="font-weight:600;"><%= @paste_hint %></span><br />
+      <a href="<%= @confirm_url %>" style="word-break: break-all;"><%= @confirm_url %></a>
+    </mj-text>
+  </mj-column>
+</mj-section>

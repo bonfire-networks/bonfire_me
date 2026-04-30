@@ -1,0 +1,5 @@
+<%= @heading %>
+
+<%= @intro %>
+
+<%= @cta %>: <%= @confirm_url %>

@@ -1,3 +1,0 @@
-Welcome to <%= @app_name %>!
-
-Please confirm your email by visiting <%= @confirm_url %> in your browser and you can get started setting up a user profile.

@@ -1,0 +1,7 @@
+<%= @app_name %>
+--
+
+<%= @inner_content %>
+
+--
+<%= @disclaimer %>

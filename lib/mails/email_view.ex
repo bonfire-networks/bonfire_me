@@ -1,3 +1,5 @@
 defmodule Bonfire.Me.Mails.EmailView do
-  use Bamboo.View, path: "lib/mails"
+  @moduledoc "Phoenix view backing `Bonfire.Me.Mails` templates."
+
+  use Phoenix.View, root: "lib/mails", path: "", namespace: Bonfire.Me.Mails
 end
