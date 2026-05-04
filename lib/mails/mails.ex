@@ -148,8 +148,7 @@ defmodule Bonfire.Me.Mails do
       heading: l("Reset your password"),
       intro: l("Click the button below to choose a new password."),
       cta: l("Reset password"),
-      disclaimer:
-        l("If you didn't request a password reset, you can safely ignore this email.")
+      disclaimer: l("If you didn't request a password reset, you can safely ignore this email.")
     )
   end
 
