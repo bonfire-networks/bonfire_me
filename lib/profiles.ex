@@ -72,6 +72,22 @@ defmodule Bonfire.Me.Profiles do
     })
   end
 
+  @doc """
+  Unlinks the user's avatar (`:icon`) or banner (`:banner`) by setting the
+  corresponding `*_id` to `nil`. Does not delete the underlying `Bonfire.Files.Media` row.
+  """
+  def unset_profile_image(kind, %{} = user) when kind in [:icon, :banner] do
+    user = repo().maybe_preload(user, :profile)
+    field = if kind == :icon, do: :icon_id, else: :image_id
+
+    # short-circuit if already unset, to avoid triggering spam_check, search re-index, federation
+    if e(user, :profile, field, nil) do
+      Bonfire.Me.Users.update(user, %{"profile" => %{to_string(field) => nil}})
+    else
+      {:ok, user}
+    end
+  end
+
   def indexing_object_format(%{profile: obj}), do: indexing_object_format(obj)
 
   def indexing_object_format(%{summary: _} = obj) do
