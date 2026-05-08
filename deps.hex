@@ -1,4 +1,4 @@
-faker = "~> 0.14" # fake data generation
+faker_fork = "~> 0.19" # fake data generation
 telemetry = "~> 1.1"
 telemetry_metrics = "~> 1.0"
 telemetry_poller = "~> 1.1"

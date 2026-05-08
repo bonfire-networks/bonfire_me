@@ -37,7 +37,7 @@ defmodule Bonfire.Me.MixProject do
           {:bonfire_files,
            git: "https://github.com/bonfire-networks/bonfire_files",
            optional: true, runtime: false, only: if(System.get_env("CI"), do: [], else: [:test, :prod])},
-          {:absinthe, "~> 1.7", optional: true},
+          {:absinthe, "~> 1.10", optional: true},
           {:nimble_totp, "~> 1.0.0", optional: true},
           {:eqrcode, "~> 0.2.1", optional: true}
         ])
