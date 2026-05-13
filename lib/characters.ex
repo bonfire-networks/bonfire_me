@@ -139,10 +139,12 @@ defmodule Bonfire.Me.Characters do
       iex> Bonfire.Me.Characters.clean_username("invalid username!")
       "invalid_username"
   """
-  def clean_username(username) do
-    Regex.replace(username_forbidden(), username, "_")
-    |> String.slice(0..(@username_max_length - 1))
-    |> String.trim("_")
+  def clean_username(username, dirty_replacement \\ "_") do
+    replaced =
+      Regex.replace(username_forbidden(), username, dirty_replacement)
+      |> String.slice(0..(@username_max_length - 1))
+
+    if dirty_replacement == "", do: replaced, else: String.trim(replaced, dirty_replacement)
   end
 
   @doc """
