@@ -27,4 +27,17 @@ defmodule Bonfire.Me.MailsTest do
       assert email.html_body =~ body_bg
     end
   end
+
+  describe "registration_hint/1" do
+    @signup_url "https://example.com/signup"
+
+    test "renders both bodies and a subject" do
+      email = Mails.registration_hint(@signup_url)
+
+      assert is_binary(email.subject) and email.subject != ""
+      assert email.html_body =~ "<!doctype html"
+      assert email.html_body =~ @signup_url
+      assert email.text_body =~ @signup_url
+    end
+  end
 end

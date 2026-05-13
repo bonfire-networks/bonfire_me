@@ -211,6 +211,32 @@ defmodule Bonfire.Me.Mails do
     end
   end
 
+  @doc """
+  Builds a "how to get access" email for an unrecognised address in gated-login mode.
+
+  Reuses the standard CTA-button template; `confirm_url` points to the instance's
+  `external_signup_url` rather than a confirm token.
+  """
+  def registration_hint(signup_url) when is_binary(signup_url) and signup_url != "" do
+    app_name = Bonfire.Mailer.app_name()
+
+    new()
+    |> subject("#{app_name} - #{l("How to get access")}")
+    |> render_body(
+      :confirm_action,
+      Map.merge(branding_assigns(), %{
+        app_name: app_name,
+        heading: l("Get access to %{app_name}", app_name: app_name),
+        intro: l("To get access, sign up via the link below."),
+        cta: l("Sign up"),
+        confirm_url: signup_url,
+        paste_hint: l("Or paste this link into your browser:"),
+        disclaimer: l("If you didn't request this, you can safely ignore this email.")
+      })
+    )
+    |> mjmlify_html()
+  end
+
   defp mjmlify_html(%{html_body: mjml} = email) when is_binary(mjml) do
     case Mjml.to_html(mjml) do
       {:ok, html} ->
