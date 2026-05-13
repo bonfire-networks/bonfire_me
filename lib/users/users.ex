@@ -386,12 +386,18 @@ defmodule Bonfire.Me.Users do
         user
       end
 
-    if make_admin? do
-      make_admin(user)
-      ~> after_mutation()
-    else
-      after_mutation(user)
-    end
+    result =
+      if make_admin? do
+        make_admin(user)
+        ~> after_mutation()
+      else
+        after_mutation(user)
+      end
+
+    Bonfire.Common.Settings.get([Bonfire.Me.Users, :after_signup_hooks], [], scope: :instance)
+    |> Enum.each(fn {mod, fun, args} -> maybe_apply(mod, fun, [user | args]) end)
+
+    result
   end
 
   defp after_mutation(%{} = user, previous_user \\ nil) do
