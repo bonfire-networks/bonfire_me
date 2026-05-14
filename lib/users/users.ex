@@ -394,7 +394,7 @@ defmodule Bonfire.Me.Users do
         after_mutation(user)
       end
 
-    Bonfire.Common.Settings.get([Bonfire.Me.Users, :after_signup_hooks], [], scope: :instance)
+    Config.get([Bonfire.Me.Users, :after_signup_hooks], [])
     |> Enum.each(fn {mod, fun, args} -> maybe_apply(mod, fun, [user | args]) end)
 
     result
