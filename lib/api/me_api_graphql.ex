@@ -241,6 +241,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     object :me_mutations do
       @desc "Register a new account. Returns the created `account_id`"
       field :signup, :string do
+        meta(rate_limit: :forms)
         arg(:email, non_null(:string))
         arg(:password, non_null(:string))
 
@@ -260,6 +261,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       @desc "Request a new confirmation email"
       field :request_confirm_email, :string do
+        meta(rate_limit: :forms)
         arg(:email, non_null(:string))
 
         resolve(&request_confirm_email/2)
@@ -267,6 +269,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       @desc "Confirm email address using a token generated upon `signup` or with `request_confirm_email` and emailed to the user."
       field :confirm_email, :me do
+        meta(rate_limit: :forms)
         arg(:token, non_null(:string))
 
         resolve(&confirm_email/2)
