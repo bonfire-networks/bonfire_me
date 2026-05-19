@@ -90,7 +90,10 @@ defmodule Bonfire.Me.Profiles do
 
   def indexing_object_format(%{profile: obj}), do: indexing_object_format(obj)
 
-  def indexing_object_format(%{summary: _} = obj) do
+  def indexing_object_format(%{name: _} = obj), do: indexing_object_format_fields(obj)
+  def indexing_object_format(%{summary: _} = obj), do: indexing_object_format_fields(obj)
+
+  defp indexing_object_format_fields(obj) do
     obj = repo().maybe_preload(obj, [:icon, :image])
 
     icon = Bonfire.Files.IconUploader.remote_url(e(obj, :icon, nil))
