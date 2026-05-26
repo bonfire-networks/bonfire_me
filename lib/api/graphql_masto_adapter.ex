@@ -79,8 +79,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       else
         graphql(conn, :me, params)
         |> RestAdapter.return(:me, ..., conn, fn
-          %{user: user} -> Mappers.Account.from_user(user)
-          user -> Mappers.Account.from_user(user)
+          %{user: user} -> Mappers.Account.from_user(user, include_source: true)
+          user -> Mappers.Account.from_user(user, include_source: true)
         end)
       end
     end
@@ -113,8 +113,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
              merged_params <- merge_profile_and_images(profile_params, image_params),
              {:ok, updated_user} <- Bonfire.Me.Users.update(current_user, merged_params) do
           case Bonfire.Me.Users.by_id(updated_user.id) do
-            {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user))
-            _ -> RestAdapter.json(conn, Mappers.Account.from_user(updated_user))
+            {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
+            _ -> RestAdapter.json(conn, Mappers.Account.from_user(updated_user, include_source: true))
           end
         else
           {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
@@ -213,34 +213,33 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         alias Bonfire.Social.Requests
         alias Bonfire.Data.Social.Follow
 
-        # Preload the user profile/character based on direction
-        # Use :subject/:object_profile to get the user's profile and character loaded
-        preload =
-          case direction do
-            :incoming -> :subject
-            :outgoing -> :object_profile
-          end
-
         requests =
           case direction do
             :incoming ->
               Requests.list_my_requesters(
                 current_user: current_user,
-                type: Follow,
-                preload: preload
+                type: Follow
               )
 
             :outgoing ->
               Requests.list_my_requested(
                 current_user: current_user,
-                type: Follow,
-                preload: preload
+                type: Follow
               )
           end
+          |> repo().maybe_preload(edge: [:subject, :object])
+
+        users_by_id =
+          requests
+          |> Enum.map(&extract_request_user_id(&1, direction))
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
+          |> Bonfire.Me.Users.by_ids(preload: :profile)
+          |> Map.new(&{&1.id, &1})
 
         accounts =
           requests
-          |> Enum.map(&extract_request_user(&1, direction))
+          |> Enum.map(&Map.get(users_by_id, extract_request_user_id(&1, direction)))
           |> Enum.map(&Mappers.Account.from_user(&1, skip_expensive_stats: true))
           |> Enum.reject(&is_nil/1)
 
@@ -248,8 +247,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       end)
     end
 
-    defp extract_request_user(request, :incoming), do: e(request, :edge, :subject, nil)
-    defp extract_request_user(request, :outgoing), do: e(request, :edge, :object, nil)
+    defp extract_request_user_id(request, :incoming), do: e(request, :edge, :subject_id, nil)
+    defp extract_request_user_id(request, :outgoing), do: e(request, :edge, :object_id, nil)
 
     @doc "Accept/authorize a follow request (POST /api/v1/follow_requests/:account_id/authorize)"
     def authorize_follow_request(account_id, conn),
@@ -863,8 +862,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     defp reload_and_return_user(conn, user) do
       case Bonfire.Me.Users.by_id(user.id) do
-        {:ok, reloaded} -> RestAdapter.json(conn, Mappers.Account.from_user(reloaded))
-        _ -> RestAdapter.json(conn, Mappers.Account.from_user(user))
+        {:ok, reloaded} -> RestAdapter.json(conn, Mappers.Account.from_user(reloaded, include_source: true))
+        _ -> RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
       end
     end
 

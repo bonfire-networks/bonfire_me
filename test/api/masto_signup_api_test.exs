@@ -253,6 +253,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           |> json_response(200)
 
         assert lookup_response["username"] == params["username"]
+        refute Map.has_key?(lookup_response, "source")
       end
     end
   end
