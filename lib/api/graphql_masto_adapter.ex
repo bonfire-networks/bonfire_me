@@ -113,8 +113,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
              merged_params <- merge_profile_and_images(profile_params, image_params),
              {:ok, updated_user} <- Bonfire.Me.Users.update(current_user, merged_params) do
           case Bonfire.Me.Users.by_id(updated_user.id) do
-            {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
-            _ -> RestAdapter.json(conn, Mappers.Account.from_user(updated_user, include_source: true))
+            {:ok, user} ->
+              RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
+
+            _ ->
+              RestAdapter.json(
+                conn,
+                Mappers.Account.from_user(updated_user, include_source: true)
+              )
           end
         else
           {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
@@ -862,8 +868,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     defp reload_and_return_user(conn, user) do
       case Bonfire.Me.Users.by_id(user.id) do
-        {:ok, reloaded} -> RestAdapter.json(conn, Mappers.Account.from_user(reloaded, include_source: true))
-        _ -> RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
+        {:ok, reloaded} ->
+          RestAdapter.json(conn, Mappers.Account.from_user(reloaded, include_source: true))
+
+        _ ->
+          RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
       end
     end
 
