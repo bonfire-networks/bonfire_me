@@ -1021,6 +1021,14 @@ defmodule Bonfire.Me.Accounts do
   def is_admin?(%{current_user: %{instance_admin: nil}}),
     do: false
 
+  def is_admin?(%Bonfire.Data.Identity.User{
+        account: %{instance_admin: %{is_instance_admin: val}}
+      }),
+      do: val
+
+  def is_admin?(%Bonfire.Data.Identity.User{account: %{instance_admin: nil}}),
+    do: false
+
   def is_admin?(%{account: %{instance_admin: %{is_instance_admin: val}}}),
     do: val
 
