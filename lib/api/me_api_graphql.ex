@@ -548,32 +548,35 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
     defp resolve_character(_, _, _), do: {:ok, nil}
 
-    # User stats resolvers using Dataloader for EdgeTotal counts
-    defp resolve_followers_count(user, _args, %{context: %{loader: loader}}) do
-      loader
-      |> Dataloader.load(Needle.Pointer, :follow_count, user)
-      |> Helpers.on_load(fn loader ->
-        case Dataloader.get(loader, Needle.Pointer, :follow_count, user) do
-          %{object_count: count} when is_integer(count) -> {:ok, count}
-          _ -> {:ok, 0}
-        end
-      end)
-    end
+    # `follow_count` is an EdgeTotal aggregate, not an Ecto association on User, so loading it via
+    # the Needle.Pointer dataloader raises "Valid association follow_count not found". Hence the
+    # `:follow_counts` Dataloader.KV source. object_count = followers, subject_count = following.
+    defp resolve_followers_count(user, _args, %{context: %{loader: loader}}),
+      do: load_follow_count(loader, user, :object_count)
 
     defp resolve_followers_count(_user, _args, _info), do: {:ok, 0}
 
-    defp resolve_following_count(user, _args, %{context: %{loader: loader}}) do
-      loader
-      |> Dataloader.load(Needle.Pointer, :follow_count, user)
-      |> Helpers.on_load(fn loader ->
-        case Dataloader.get(loader, Needle.Pointer, :follow_count, user) do
-          %{subject_count: count} when is_integer(count) -> {:ok, count}
-          _ -> {:ok, 0}
-        end
-      end)
-    end
+    defp resolve_following_count(user, _args, %{context: %{loader: loader}}),
+      do: load_follow_count(loader, user, :subject_count)
 
     defp resolve_following_count(_user, _args, _info), do: {:ok, 0}
+
+    defp load_follow_count(loader, user, field) do
+      case Bonfire.Common.Types.uid(user) do
+        nil ->
+          {:ok, 0}
+
+        user_id ->
+          loader
+          |> Dataloader.load(:follow_counts, :counts, user_id)
+          |> Helpers.on_load(fn loader ->
+            case Dataloader.get(loader, :follow_counts, :counts, user_id) do
+              %{^field => count} when is_integer(count) -> {:ok, count}
+              _ -> {:ok, 0}
+            end
+          end)
+      end
+    end
 
     defp resolve_statuses_count(user, _args, _info) do
       # Count posts created by this user
