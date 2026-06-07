@@ -70,6 +70,18 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       field :statuses_count, :integer do
         resolve(&resolve_statuses_count/3)
       end
+
+      field :relationship, :relationship do
+        arg(:with, non_null(:id))
+        resolve(&Bonfire.Social.Graph.API.GraphQL.relationship/3)
+      end
+
+      field :groups, :categories_page do
+        arg(:type, :string)
+        arg(:limit, :integer)
+        arg(:after, :string)
+        resolve(&Bonfire.Classify.GraphQL.CategoryResolver.user_groups/3)
+      end
     end
 
     object :me do
