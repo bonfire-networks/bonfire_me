@@ -49,11 +49,22 @@ defmodule Bonfire.Me.Users do
       %Bonfire.Data.Identity.User{}
   """
   def get_current(nil), do: nil
-  def get_current(id) when is_binary(id), do: repo().maybe_one(Queries.current(id))
+
+  def get_current(id) when is_binary(id),
+    do: repo().maybe_one(Queries.current(id)) |> mark_as_local()
+
   def get_current(nil, _), do: nil
 
   def get_current(id, account_id) when is_binary(id),
-    do: repo().maybe_one(Queries.current(id, account_id))
+    do: repo().maybe_one(Queries.current(id, account_id)) |> mark_as_local()
+
+  # A session user is always local (remote actors cannot log in), so mark
+  # `peered` as loaded-and-absent — exactly what a query preload would return —
+  # rather than leaving it NotLoaded, which would make `is_local?(current_user)`
+  # (run by Boundaries.Queries on every boundarised query to pick the :local vs
+  # :activity_pub circle) re-preload it per query (N+1).
+  defp mark_as_local(%User{} = user), do: %{user | peered: nil}
+  defp mark_as_local(other), do: other
 
   @doc """
   Fetches the current user by ID.
@@ -405,7 +416,32 @@ defmodule Bonfire.Me.Users do
 
     maybe_index_user(user, previous_user)
 
+    invalidate_cached_current(user)
+
     {:ok, user}
+  end
+
+  @doc """
+  Key under which the fully-preloaded current user (as loaded by `get_current/2`)
+  may be cached. Centralised here so mutation paths can invalidate it.
+  """
+  def current_user_cache_key(user_or_id), do: "current_user:#{uid(user_or_id)}"
+
+  @doc "Drops the cached current-user (see `Bonfire.UI.Me.LivePlugs.LoadCurrentUser`) after a mutation that affects it."
+  def invalidate_cached_current(user_or_id) do
+    if id = uid(user_or_id), do: Bonfire.Common.Cache.remove(current_user_cache_key(id))
+  end
+
+  @doc "Drops the cached current-user of every user of an account (eg. when account-level settings change)."
+  def invalidate_cached_current_for_account(account_or_id) do
+    if account_id = uid(account_or_id) do
+      ids_by_account(account_id)
+      |> Enum.each(&invalidate_cached_current/1)
+    end
+  rescue
+    e ->
+      error(e, "Could not invalidate cached current_user for account")
+      nil
   end
 
   defp get_attr(changeset, assoc, key) do
