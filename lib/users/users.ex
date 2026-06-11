@@ -567,7 +567,9 @@ defmodule Bonfire.Me.Users do
     # TO CHECK: deletion of user's edges (likes/follows/etc), and boundaries (circles/ACLs/etc)
     # TO CHECK: deletion of user's objects (based on caretaker) and activities
 
-    user = repo().maybe_preload(user, profile: [:icon, :image])
+    # also preload `character.peered` so the federation act's `is_local?(current_user)` (this user
+    # is passed as `current_user` below) classifies its locality without an on-demand (raising) preload
+    user = repo().maybe_preload(user, profile: [:icon, :image], character: [:peered])
 
     # user = repo().maybe_preload(user, assocs)
     Bonfire.Common.Utils.maybe_apply(
