@@ -51,20 +51,12 @@ defmodule Bonfire.Me.Users do
   def get_current(nil), do: nil
 
   def get_current(id) when is_binary(id),
-    do: repo().maybe_one(Queries.current(id)) |> mark_as_local()
+    do: repo().maybe_one(Queries.current(id)) |> Characters.mark_as(:local)
 
   def get_current(nil, _), do: nil
 
   def get_current(id, account_id) when is_binary(id),
-    do: repo().maybe_one(Queries.current(id, account_id)) |> mark_as_local()
-
-  # A session user is always local (remote actors cannot log in), so mark
-  # `peered` as loaded-and-absent — exactly what a query preload would return —
-  # rather than leaving it NotLoaded, which would make `is_local?(current_user)`
-  # (run by Boundaries.Queries on every boundarised query to pick the :local vs
-  # :activity_pub circle) re-preload it per query (N+1).
-  defp mark_as_local(%User{} = user), do: %{user | peered: nil}
-  defp mark_as_local(other), do: other
+    do: repo().maybe_one(Queries.current(id, account_id)) |> Characters.mark_as(:local)
 
   @doc """
   Fetches the current user by ID.
@@ -358,6 +350,14 @@ defmodule Bonfire.Me.Users do
       to_options(opts)
       |> debug("opts")
 
+    # mark locality before the boundary/category ops below, so their `is_local?` checks classify
+    # without an N+1 preload. remote creation also runs through here (same signal as `make_admin?`
+    # above) — those resolve their actual `:peered`; a plain signup user is local.
+    user =
+      if opts == :remote or clean_opts[:local] == false,
+        do: Characters.mark_as(user, :remote),
+        else: Characters.mark_as(user, :local)
+
     if module = maybe_module(Bonfire.Boundaries.Scaffold.Users),
       do: module.create_default_boundaries(user, opts)
 
@@ -413,33 +413,33 @@ defmodule Bonfire.Me.Users do
 
     maybe_index_user(user, previous_user)
 
-    invalidate_cached_current(user)
+    # invalidate_cached_current(user)
 
     {:ok, user}
   end
 
-  @doc """
-  Key under which the fully-preloaded current user (as loaded by `get_current/2`)
-  may be cached. Centralised here so mutation paths can invalidate it.
-  """
-  def current_user_cache_key(user_or_id), do: "current_user:#{uid(user_or_id)}"
+  # @doc """
+  # Key under which the fully-preloaded current user (as loaded by `get_current/2`)
+  # may be cached. Centralised here so mutation paths can invalidate it.
+  # """
+  # def current_user_cache_key(user_or_id), do: "current_user:#{uid(user_or_id)}"
 
-  @doc "Drops the cached current-user (see `Bonfire.UI.Me.LivePlugs.LoadCurrentUser`) after a mutation that affects it."
-  def invalidate_cached_current(user_or_id) do
-    if id = uid(user_or_id), do: Bonfire.Common.Cache.remove(current_user_cache_key(id))
-  end
+  # @doc "Drops the cached current-user (see `Bonfire.UI.Me.LivePlugs.LoadCurrentUser`) after a mutation that affects it."
+  # def invalidate_cached_current(user_or_id) do
+  #   if id = uid(user_or_id), do: Bonfire.Common.Cache.remove(current_user_cache_key(id))
+  # end
 
-  @doc "Drops the cached current-user of every user of an account (eg. when account-level settings change)."
-  def invalidate_cached_current_for_account(account_or_id) do
-    if account_id = uid(account_or_id) do
-      ids_by_account(account_id)
-      |> Enum.each(&invalidate_cached_current/1)
-    end
-  rescue
-    e ->
-      error(e, "Could not invalidate cached current_user for account")
-      nil
-  end
+  # @doc "Drops the cached current-user of every user of an account (eg. when account-level settings change)."
+  # def invalidate_cached_current_for_account(account_or_id) do
+  #   if account_id = uid(account_or_id) do
+  #     ids_by_account(account_id)
+  #     |> Enum.each(&invalidate_cached_current/1)
+  #   end
+  # rescue
+  #   e ->
+  #     error(e, "Could not invalidate cached current_user for account")
+  #     nil
+  # end
 
   defp get_attr(changeset, assoc, key) do
     ed(changeset, :changes, assoc, :changes, key, nil)
@@ -534,7 +534,7 @@ defmodule Bonfire.Me.Users do
 
   def enqueue_delete(user) when is_binary(user) do
     enqueue_delete(
-      get_current(user) ||
+      by_username(user) ||
         Bonfire.Boundaries.load_pointer(user, include_deleted: true, skip_boundary_check: true)
     )
   end

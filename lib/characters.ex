@@ -34,6 +34,40 @@ defmodule Bonfire.Me.Characters do
   defp username_regex, do: ~r(^[a-z0-9_]{2,63}$)i
 
   @doc """
+  Marks a character's (or character-holder's, e.g. a User's) locality so `is_local?/1` can
+  classify it without a DB round-trip.
+
+  Sets `:peered` to what a query preload would return: `nil` for `:local` (local actors have no
+  `Peered` row), or the preloaded `Peered` row for `:remote`/`:activity_pub` (so the
+  peer/instance/canonical_uri info is available downstream). Use this at any source that
+  loads/creates a character whose locality is already known (the session user, local fixtures, a
+  remote actor just fetched/created), so `Boundaries.Queries` can pick the `:local` vs
+  `:activity_pub` circle without an N+1 preload.
+  """
+  # handle result tuples so callers can pipe a `{:ok, thing}` straight through (preserving the
+  # `{:ok, …}`/`{:error, …}`/`nil` shape) instead of unwrapping with `~>`
+  def mark_as({:ok, thing}, locality), do: {:ok, mark_as(thing, locality)}
+  def mark_as({:error, _} = error, _locality), do: error
+  def mark_as(nil, _locality), do: nil
+
+  def mark_as(%{character: %{peered: _}} = object, :local),
+    do: put_in(object.character.peered, nil)
+
+  def mark_as(%{peered: _} = object, :local), do: %{object | peered: nil}
+
+  def mark_as(%{character: %{peered: _}} = object, remote)
+      when remote in [:remote, :activity_pub],
+      do: repo().maybe_preload(object, character: :peered)
+
+  def mark_as(%{peered: _} = object, remote) when remote in [:remote, :activity_pub],
+    do: repo().maybe_preload(object, :peered)
+
+  def mark_as(other, locality) do
+    other
+    |> warn("Can't mark object with #{locality} locality")
+  end
+
+  @doc """
   Retrieves a character by username.
 
   ## Examples
@@ -263,14 +297,19 @@ defmodule Bonfire.Me.Characters do
   def display_username(
         %{username: username} = character,
         always_include_domain,
-        _,
+        is_local?,
         prefix
       )
       when not is_nil(username) do
     display_username(
       username,
       always_include_domain,
-      if(always_include_domain, do: is_local?(character)),
+      # use the caller-provided locality when given (lets a caller that already knows the
+      # locality — e.g. from the post object whose `peered` is loaded — avoid an `is_local?`
+      # check that would need the character's own `peered` preloaded); else classify the character
+      if(always_include_domain,
+        do: if(is_nil(is_local?), do: is_local?(character), else: is_local?)
+      ),
       prefix || character_mention_prefix(character)
     )
   end
@@ -293,13 +332,16 @@ defmodule Bonfire.Me.Characters do
   def display_username(
         %{character: _} = thing,
         always_include_domain,
-        _,
+        is_local?,
         prefix
       ) do
     display_username(
       Map.get(thing, :character),
       always_include_domain,
-      if(always_include_domain, do: is_local?(thing)),
+      # honor caller-provided locality (see the `%{username: …}` clause above), else classify
+      if(always_include_domain,
+        do: if(is_nil(is_local?), do: is_local?(thing), else: is_local?)
+      ),
       prefix || character_mention_prefix(thing)
     )
   end

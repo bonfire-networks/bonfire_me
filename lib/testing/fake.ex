@@ -4,6 +4,7 @@ defmodule Bonfire.Me.Fake do
   alias Bonfire.Data.Identity.Account
   # alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
+  alias Bonfire.Me.Characters
 
   # import Bonfire.Common.Simulation
   import Bonfire.Me.Fake.Helpers
@@ -39,6 +40,7 @@ defmodule Bonfire.Me.Fake do
              account,
              opts_or_extra ++ [repo_insert_fun: insert_fun]
            ) do
+      # already marked local by `Users.after_creation` during make_user
       user
       |> Map.put(:account, account)
     else
@@ -52,6 +54,7 @@ defmodule Bonfire.Me.Fake do
         case Users.by_username!(custom_username) do
           %{} = user ->
             user
+            |> Characters.mark_as(:local)
             |> Map.put(:account, account)
 
           _ ->
