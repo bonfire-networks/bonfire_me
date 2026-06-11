@@ -192,7 +192,7 @@ defmodule Bonfire.Me.Users do
     do: Queries.by_account(account_id, opts) |> repo().pluck(:id)
 
   @doc """
-  Gets a user by username or user ID and account ID, useful for switch-user functionality. 
+  Gets a user by username or user ID and account ID, useful for switch-user functionality.
 
   Will throw an error if any of the account's users is blocked instance-wide by admins.
 
@@ -219,7 +219,7 @@ defmodule Bonfire.Me.Users do
   ## Examples
 
       > Bonfire.Me.Users.is_active?(user)
-        
+
   """
   def is_active?(user), do: !Bonfire.Boundaries.Blocks.is_blocked?(user, :ghost, :instance_wide)
 
@@ -234,7 +234,7 @@ defmodule Bonfire.Me.Users do
       iex> Bonfire.Me.Users.check_active(user)
       {:ok, %Bonfire.Data.Identity.User{}}
   """
-  # Enum.map(users, &check_active/1) 
+  # Enum.map(users, &check_active/1)
   def check_active(users) when is_list(users),
     do: Bonfire.Boundaries.Blocks.reject_blocked(users, :ghost, :instance_wide)
 
@@ -266,17 +266,14 @@ defmodule Bonfire.Me.Users do
       # TEMP: to speed things up
       |> Keyword.put_new(:skip_boundary_check, true)
 
-    Utils.maybe_apply(
-      Bonfire.Search,
-      :search_by_type,
-      [search, User, opts],
-      &none/2
-    ) ||
-      search_query(search, opts)
-      |> repo().many()
+    case Utils.maybe_apply(Bonfire.Search, :search_by_type, [search, User, opts], &none/2) do
+      results when is_list(results) and results != [] -> results
+      _ -> search_query(search, opts) |> repo().many()
+    end
+    |> repo().maybe_preload([:profile, :character])
   end
 
-  defp none(_, _), do: []
+  defp none(_, _), do: nil
 
   @doc """
   Query for searching for users.

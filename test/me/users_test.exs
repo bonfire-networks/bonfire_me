@@ -153,4 +153,27 @@ defmodule Bonfire.Me.UsersTest do
       refute Bonfire.Social.Seen.last_date(account_id, user_id)
     end
   end
+
+  describe "search/2" do
+    test "falls back to a DB query when the search index returns no results" do
+      name = "searchablefallback#{System.unique_integer([:positive])}"
+      user = Fake.fake_user!(%{}, %{name: name})
+
+      results = Users.search(name)
+
+      assert is_list(results)
+      assert Enum.any?(results, &(Bonfire.Common.Enums.id(&1) == user.id))
+    end
+
+    test "returns results with profile and character preloaded" do
+      name = "searchablepreload#{System.unique_integer([:positive])}"
+      user = Fake.fake_user!(%{}, %{name: name})
+
+      result = Users.search(name) |> Enum.find(&(Bonfire.Common.Enums.id(&1) == user.id))
+
+      assert result
+      assert e(result, :profile, :name, nil) == name
+      assert e(result, :character, :username, nil)
+    end
+  end
 end
