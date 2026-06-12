@@ -209,7 +209,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         # Batch-load `:peered` via Dataloader (only when the parent query didn't already
         # bring it) so locality can be classified without an on-demand (raising) preload.
         resolve(fn
-          %{peered: %Ecto.Association.NotLoaded{}} = character, args, resolution ->
+          # struct match: Dataloader assoc-loading needs an Ecto schema; plain
+          # maps fall through to the direct call below
+          %{__struct__: _, peered: %Ecto.Association.NotLoaded{}} = character, args, resolution ->
             Absinthe.Resolution.Helpers.dataloader(
               Needle.Pointer,
               :peered,
