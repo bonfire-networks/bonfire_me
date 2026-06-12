@@ -206,9 +206,20 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end
 
       field(:canonical_uri, :string) do
-        resolve(fn character, _, _ ->
-          # Use preload_if_needed: false to rely on Dataloader batching
-          {:ok, Bonfire.Common.URIs.canonical_url(character, preload_if_needed: false)}
+        # Batch-load `:peered` via Dataloader (only when the parent query didn't already
+        # bring it) so locality can be classified without an on-demand (raising) preload.
+        resolve(fn
+          %{peered: %Ecto.Association.NotLoaded{}} = character, args, resolution ->
+            Absinthe.Resolution.Helpers.dataloader(
+              Needle.Pointer,
+              :peered,
+              callback: fn peered, character, _args ->
+                character_canonical_uri(Map.put(character, :peered, peered))
+              end
+            ).(character, args, resolution)
+
+          character, _args, _resolution ->
+            character_canonical_uri(character)
         end)
       end
     end
@@ -324,6 +335,10 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
         resolve(&add_team_member/2)
       end
+    end
+
+    defp character_canonical_uri(character) do
+      {:ok, Bonfire.Common.URIs.canonical_url(character, preload_if_needed: false)}
     end
 
     defp list_users(_, filters, info) do
