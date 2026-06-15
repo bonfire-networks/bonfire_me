@@ -32,8 +32,8 @@ defmodule Bonfire.Me.Users.Reindex do
     # ULID string rather than the DataMigration default (a raw 16-byte UUID binary), which
     # Needle.UID rejects in the runner's `where id > ^first_id`.
     %DataMigration.Config{
-      batch_size: 100,
-      throttle_ms: 0,
+      batch_size: 50,
+      throttle_ms: 2000,
       repo: Bonfire.Common.Repo,
       first_id: "00000000000000000000000000"
     }
