@@ -830,15 +830,24 @@ defmodule Bonfire.Me.Users do
   def maybe_index_user(object, previous) when is_map(object) do
     # check discovery settings
     user = repo().maybe_preload(previous || object, :settings)
-
-    if Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) do
-      maybe_apply(Bonfire.Search, :maybe_index, [object, "private", user], user)
-    else
-      maybe_apply(Bonfire.Search, :maybe_index, [object, "public", user], user)
-    end
+    boundary = if search_index_for(user) == :closed, do: "private", else: "public"
+    maybe_apply(Bonfire.Search, :maybe_index, [object, boundary, user], user)
   end
 
   def maybe_index_user(_other, _), do: nil
+
+  @doc """
+  Returns which search index a user should be indexed into — `:closed` if they opted out
+  of discovery (the `undiscoverable` setting), otherwise `:public`. Shared by per-user
+  indexing (`maybe_index_user/1`) and batched reindexing (`Bonfire.Me.Users.ReindexLocal`).
+  """
+  def search_index_for(user) do
+    user = repo().maybe_preload(user, :settings)
+
+    if Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user),
+      do: :closed,
+      else: :public
+  end
 
   def count(show \\ :local), do: repo().one(Queries.count(show))
 
