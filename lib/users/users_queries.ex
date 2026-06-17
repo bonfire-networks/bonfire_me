@@ -316,8 +316,9 @@ defmodule Bonfire.Me.Users.Queries do
   end
 
   def user_proloads(query, :minimal) do
+    # `character.peered` for locality (reused by :local/:locals/:admins/:current, incl. current_user)
     proload(query, [
-      :character,
+      character: [:peered],
       profile: [:icon]
     ])
   end
