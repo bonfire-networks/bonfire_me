@@ -114,6 +114,11 @@ defmodule Bonfire.Me.Integration do
       } ->
         indexing_format_creator(Bonfire.Me.Users.by_id(subject_id))
 
+      # the `created` mixin carries `creator_id` directly (e.g. when reindexing an object loaded with
+      # `:created` but no activity) — the index only needs the id, so no need to load the user
+      %{created: %{creator_id: creator_id}} when is_binary(creator_id) ->
+        indexing_format_creator(%{id: creator_id})
+
       _ ->
         warn("could not find a creator")
         debug(object)
