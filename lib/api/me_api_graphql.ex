@@ -15,6 +15,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
     import_types(Absinthe.Plug.Types)
 
+    # Relay connection type for paginated user lists (followers / following / requests).
+    connection(node_type: :user)
+
     object :user do
       field(:id, :id)
 
@@ -45,10 +48,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end
 
       field :user_activities, list_of(:activity) do
-        # TODO
         arg(:paginate, :paginate)
 
-        resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer))
+        resolve(&user_activities/3)
       end
 
       field :boost_activities, list_of(:activity) do
@@ -60,11 +62,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       # User stats for Mastodon API compatibility
       field :followers_count, :integer do
-        resolve(&resolve_followers_count/3)
+        resolve(&Bonfire.Social.Graph.API.GraphQL.followers_count/3)
       end
 
       field :following_count, :integer do
-        resolve(&resolve_following_count/3)
+        resolve(&Bonfire.Social.Graph.API.GraphQL.following_count/3)
       end
 
       field :statuses_count, :integer do
@@ -81,6 +83,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         arg(:limit, :integer)
         arg(:after, :string)
         resolve(&Bonfire.Classify.GraphQL.CategoryResolver.user_groups/3)
+      end
+
+      connection field :followers, node_type: :user do
+        resolve(&Bonfire.Social.Graph.API.GraphQL.followers/3)
+      end
+
+      connection field :following, node_type: :user do
+        resolve(&Bonfire.Social.Graph.API.GraphQL.following/3)
       end
     end
 
@@ -114,7 +124,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         # field :my_feed, list_of(:activity) do
         # resolve(&Bonfire.Social.API.GraphQL.my_feed/3)
         resolve(fn _parent, args, info ->
-          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:my, args, info])
+          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:activities, :my, args, info])
         end)
       end
 
@@ -122,7 +132,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         # field :user_notifications, list_of(:activity) do
         # resolve(&Bonfire.Social.API.GraphQL.my_notifications/3)
         resolve(fn _parent, args, info ->
-          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:notifications, args, info])
+          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:activities, :notifications, args, info])
         end)
       end
 
@@ -130,8 +140,16 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         # field :flags_for_moderation, list_of(:activity) do
         # resolve(&Bonfire.Social.API.GraphQL.all_flags/3)
         resolve(fn _parent, args, info ->
-          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:flags, args, info])
+          maybe_apply(Bonfire.Social.API.GraphQL, :feed, [:activities, :my_flags, args, info])
         end)
+      end
+
+      connection field :follow_requests, node_type: :user do
+        resolve(&Bonfire.Social.Graph.API.GraphQL.follow_requests/3)
+      end
+
+      connection field :follow_requests_outgoing, node_type: :user do
+        resolve(&Bonfire.Social.Graph.API.GraphQL.follow_requests_outgoing/3)
       end
 
       field :like_activities, list_of(:activity) do
@@ -155,6 +173,63 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         resolve(Absinthe.Resolution.Helpers.dataloader(Needle.Pointer))
       end
     end
+
+    defp user_activities(%{id: user_id} = user, args, info) do
+      outbox_id =
+        maybe_apply(Bonfire.Social.Feeds, :feed_id, [:outbox, user]) ||
+          maybe_apply(Bonfire.Social.Feeds, :feed_id, [:outbox, user_id])
+
+      feed_name_or_ids =
+        case outbox_id do
+          id when is_binary(id) -> [id]
+          _ -> :user_activities
+        end
+
+      feed_args =
+        args
+        |> relay_args_from_legacy_paginate()
+        |> maybe_put_subject_filter(user_id, feed_name_or_ids)
+
+      case maybe_apply(Bonfire.Social.API.GraphQL, :feed, [
+             :activities,
+             feed_name_or_ids,
+             feed_args,
+             info
+           ]) do
+        {:ok, %{edges: edges}} when is_list(edges) ->
+          {:ok, edges |> Enum.map(&Map.get(&1, :node)) |> Enum.reject(&is_nil/1)}
+
+        nil ->
+          {:ok, []}
+
+        other ->
+          other
+      end
+    end
+
+    defp relay_args_from_legacy_paginate(%{paginate: paginate} = args) when is_map(paginate) do
+      args
+      |> Map.delete(:paginate)
+      |> maybe_put_relay_limit(paginate[:limit])
+    end
+
+    defp relay_args_from_legacy_paginate(args), do: args
+
+    defp maybe_put_relay_limit(args, limit) when is_integer(limit) and limit > 0,
+      do: Map.put_new(args, :first, limit)
+
+    defp maybe_put_relay_limit(args, _limit), do: args
+
+    defp maybe_put_subject_filter(args, user_id, :user_activities) do
+      filter =
+        args
+        |> Map.get(:filter, %{})
+        |> Map.put_new(:subjects, [user_id])
+
+      Map.put(args, :filter, filter)
+    end
+
+    defp maybe_put_subject_filter(args, _user_id, _feed_ids), do: args
 
     object :profile do
       field(:name, :string)
@@ -362,7 +437,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     defp get_user(%User{} = parent, _args, _info) do
-      # debug(parent: parent)
       {:ok, parent}
     end
 
@@ -416,7 +490,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         credential: %{password: args[:password]}
       }
 
-      # |> IO.inspect
       with {:ok, account} <- Accounts.signup(params, invite: args[:invite_code]) do
         {:ok, Map.get(account, :id)}
       end
@@ -428,7 +501,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       if account do
         with {:ok, user} <- Users.create(args, account),
              {:ok, uploaded} <- maybe_upload(user, args[:images], info) do
-          # |> debug("updated")
           Bonfire.Me.Users.update(user, %{"profile" => uploaded})
         end
       else
@@ -474,7 +546,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       if user do
         with {:ok, uploaded} <- maybe_upload(user, args[:images], info) do
-          # |> debug("args") # TODO: clean up
           args =
             Map.put(
               args,
@@ -482,7 +553,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
               Map.merge(Map.get(args, :profile, %{}), uploaded)
             )
 
-          # |> debug("updated")
           Bonfire.Me.Users.update(user, args, GraphQL.current_account(info))
         end
       else
@@ -577,36 +647,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
     defp resolve_character(_, _, _), do: {:ok, nil}
 
-    # `follow_count` is an EdgeTotal aggregate, not an Ecto association on User, so loading it via
-    # the Needle.Pointer dataloader raises "Valid association follow_count not found". Hence the
-    # `:follow_counts` Dataloader.KV source. object_count = followers, subject_count = following.
-    defp resolve_followers_count(user, _args, %{context: %{loader: loader}}),
-      do: load_follow_count(loader, user, :object_count)
-
-    defp resolve_followers_count(_user, _args, _info), do: {:ok, 0}
-
-    defp resolve_following_count(user, _args, %{context: %{loader: loader}}),
-      do: load_follow_count(loader, user, :subject_count)
-
-    defp resolve_following_count(_user, _args, _info), do: {:ok, 0}
-
-    defp load_follow_count(loader, user, field) do
-      case Bonfire.Common.Types.uid(user) do
-        nil ->
-          {:ok, 0}
-
-        user_id ->
-          loader
-          |> Dataloader.load(:follow_counts, :counts, user_id)
-          |> Helpers.on_load(fn loader ->
-            case Dataloader.get(loader, :follow_counts, :counts, user_id) do
-              %{^field => count} when is_integer(count) -> {:ok, count}
-              _ -> {:ok, 0}
-            end
-          end)
-      end
-    end
-
     defp resolve_statuses_count(user, _args, _info) do
       # Count posts created by this user
       # TODO: Could be optimized with EdgeTotal in the future for better performance
@@ -687,12 +727,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
     def maybe_upload(user, changes, info) do
       if module = maybe_module(Bonfire.Files.GraphQL, user) do
-        debug("API - attempt to upload")
         module.upload(user, changes, info)
       else
         error("API upload via GraphQL is not implemented")
         {:ok, %{}}
       end
     end
+
   end
 end
