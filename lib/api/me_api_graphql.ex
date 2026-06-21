@@ -448,9 +448,10 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       # dump(info)
       case GraphQL.current_user(info) || GraphQL.current_account(info) do
         nil ->
-          raise(Bonfire.Fail.Auth, :needs_login)
+          # return an error tuple (Absinthe resolvers must not raise) — the
+          # collapse_errors middleware turns this into a "log in" GraphQL error
+          GraphQL.not_logged_in()
 
-        # {:error, :needs_login}
         me ->
           {:ok, me}
       end
