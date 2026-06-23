@@ -549,8 +549,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
         # Get users from the suggested profiles circle (curated by admins)
         users =
-          get_suggested_profiles(current_user, limit)
+          get_suggested_profiles()
           |> exclude_current_user(current_user)
+          |> Enum.take(limit)
 
         suggestions =
           Mappers.Suggestion.from_users(users,
@@ -563,27 +564,15 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       end
     end
 
-    defp get_suggested_profiles(current_user, limit) do
+    defp get_suggested_profiles do
       alias Bonfire.Boundaries.Circles
-      alias Bonfire.Boundaries.Scaffold.Instance
       alias Bonfire.Common.Needles
 
-      # Get members from the suggested profiles circle (curated by admins)
-      circle_id = Instance.suggested_profiles_circle()
-
-      # list_members preloads subject: [:character, :profile, :named]
-      case Circles.list_members(circle_id, current_user: current_user, limit: limit) do
-        %{edges: members} when is_list(members) and length(members) > 0 ->
-          members
-          |> Enum.map(&e(&1, :subject, nil))
-          |> Enum.reject(&is_nil/1)
-          # Convert Needle.Pointer to actual User structs
-          |> Enum.map(&Needles.follow!(&1, []))
-          |> Enum.reject(&is_nil/1)
-
-        _ ->
-          []
-      end
+      # shared cached curated list (see `Circles.list_suggested_profiles/0`); subjects come
+      # preloaded — convert the Needle.Pointer subjects to actual User structs for the mapper
+      Circles.list_suggested_profiles()
+      |> Enum.map(&Needles.follow!(&1, []))
+      |> Enum.reject(&is_nil/1)
     end
 
     defp exclude_current_user(users, current_user) when is_list(users) do
