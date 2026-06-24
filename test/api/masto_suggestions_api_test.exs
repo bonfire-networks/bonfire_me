@@ -20,6 +20,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @moduletag :masto_api
 
     setup do
+      # the curated list is globally cached (6h); reset it so each test sees fresh DB state
+      # (the global cache is not reverted by the SQL sandbox)
+      Circles.list_suggested_profiles(cache: :reset)
+      on_exit(fn -> Circles.list_suggested_profiles(cache: :reset) end)
+
       account = Fake.fake_account!()
       user = Fake.fake_user!(account)
 
