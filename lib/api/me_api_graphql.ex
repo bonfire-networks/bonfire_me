@@ -129,6 +129,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end
 
       connection field :notifications, node_type: :activity do
+        arg(:filter, :feed_filters)
+
         # field :user_notifications, list_of(:activity) do
         # resolve(&Bonfire.Social.API.GraphQL.my_notifications/3)
         resolve(fn _parent, args, info ->
