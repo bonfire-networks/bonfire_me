@@ -5,7 +5,7 @@ defmodule Bonfire.Me.Integration do
   # alias Bonfire.Common.Enums
   import Untangle
 
-  declare_extension("Users, accounts and profiles",
+  declare_extension(l("Users, accounts and profiles"),
     icon: "carbon:user-avatar",
     emoji: "🧑🏼",
     description:
