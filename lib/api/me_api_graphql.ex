@@ -406,13 +406,21 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       @desc "Share the current user identity with a team member. This will give them full access to the currently authenticated user identity. Warning: anyone you add will have full access over this user identity, meaning they can post as this user, read private messages, etc."
       field :add_team_member, :string do
-        @desc "Who to add (they need to be an existing user on this instance)"
-        arg(:username_or_email, non_null(:string))
+        @desc "Who to add (by their username; they need to be an existing user on this instance)"
+        arg(:username, non_null(:string))
 
         @desc "What to call this team (eg. Organisation, Team, etc)"
         arg(:label, non_null(:string))
 
         resolve(&add_team_member/2)
+      end
+
+      @desc "Remove a team member's access to the current shared user identity. Only an account already linked to the shared user may do this."
+      field :remove_team_member, :string do
+        @desc "Who to remove (by their username or ID on this instance)"
+        arg(:username, non_null(:string))
+
+        resolve(&remove_team_member/2)
       end
     end
 
@@ -563,7 +571,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       end
     end
 
-    defp add_team_member(%{username_or_email: username_or_email} = args, info) do
+    defp add_team_member(%{username: username} = args, info) do
       user = GraphQL.current_user(info)
 
       if module = maybe_module(Bonfire.Me.SharedUsers, user) do
@@ -571,9 +579,26 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
           with %{} = _shared_user <-
                  module.add_account(
                    user,
-                   username_or_email,
+                   username,
                    Enums.stringify_keys(args, true)
                  ) do
+            :ok
+          end
+        else
+          {:error, "Not authenticated"}
+        end
+      else
+        {:error, "Feature not available (no SharedUsers module found)"}
+      end
+    end
+
+    defp remove_team_member(%{username: username}, info) do
+      user = GraphQL.current_user(info)
+
+      if module = maybe_module(Bonfire.Me.SharedUsers, user) do
+        if user do
+          with {:ok, _shared_user} <-
+                 module.remove_user(user, username, current_user: user) do
             :ok
           end
         else

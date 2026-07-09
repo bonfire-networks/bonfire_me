@@ -394,6 +394,9 @@ defmodule Bonfire.Me.Users do
         user
       end
 
+    # promote to a shared user (organisation) up front when requested, so it federates as `Organization` from its first federation; done before `after_mutation` so the returned struct carries the `:shared_user` mixin. Pass `clean_opts` so the creator (the acting user from the creation context) is recorded as the first co-manager.
+    maybe_make_shared_user(user, clean_opts[:shared_user_label], clean_opts)
+
     result =
       if make_admin? do
         make_admin(user)
@@ -408,8 +411,20 @@ defmodule Bonfire.Me.Users do
     result
   end
 
+  # `label` is nil for a personal profile (no-op) or a string (possibly empty, defaulted downstream) for an organisation. `init_shared_user` creates the `Bonfire.Data.SharedUser` mixin and records the creator (resolved from `opts`) as first co-manager; the mutated mixin is picked up by the `:shared_user` preload in `after_mutation`.
+  defp maybe_make_shared_user(user, label, opts) when is_binary(label) do
+    maybe_apply(
+      Bonfire.Me.SharedUsers,
+      :init_shared_user,
+      [user, if(label == "", do: %{}, else: %{"label" => label}), opts]
+    )
+  end
+
+  defp maybe_make_shared_user(_user, _label, _opts), do: nil
+
   defp after_mutation(%{} = user, previous_user \\ nil) do
-    user = repo().maybe_preload(user, [:character, :profile])
+    # preload what actor formatting needs after a mutation: profile, the character with its :peered (locality lives on character.peered), and :shared_user so `format_actor` can classify the actor type (Person vs Organization)
+    user = repo().maybe_preload(user, [:profile, :shared_user, character: [:peered]])
 
     maybe_index_user(user, previous_user)
 
@@ -653,10 +668,16 @@ defmodule Bonfire.Me.Users do
   end
 
   def format_actor(user) do
+    # a shared user (a team/organisation account) federates as an Organization, everyone else as a Person
+    type =
+      if Bonfire.Common.URIs.shared_user?(user),
+        do: "Organization",
+        else: "Person"
+
     Bonfire.Common.Utils.maybe_apply(
       Bonfire.Federate.ActivityPub.AdapterUtils,
       :format_actor,
-      [user, "Person"]
+      [user, type]
     )
   end
 
@@ -710,7 +731,7 @@ defmodule Bonfire.Me.Users do
     # check that we can still create more users for this account
     if Config.get(
          [Bonfire.Me.Users, :max_per_account],
-         4
+         6
        ) <= length(existing_users_for_account),
        do:
          throw(
@@ -900,17 +921,26 @@ defmodule Bonfire.Me.Users do
         service_character_username,
         bio \\ nil
       ) do
-    with {:ok, user} <- Bonfire.Me.Users.by_id(service_character_id) do
-      user
-    else
-      {:error, :not_found} ->
-        create_service_character(service_character_username, %{
-          id: service_character_id,
-          summary: bio,
-          website: nil,
-          location: nil
-        })
-    end
+    service_char =
+      with {:ok, user} <- Bonfire.Me.Users.by_id(service_character_id) do
+        user
+      else
+        {:error, :not_found} ->
+          create_service_character(service_character_username, %{
+            id: service_character_id,
+            summary: bio,
+            website: nil,
+            location: nil
+          })
+      end
+
+    # the service actor is a known singleton and never a shared user, and it's loaded here rather than via `get_character` (which preloads `:shared_user`), so mark it not-shared in-memory to classify it without a DB preload
+    Bonfire.Common.Utils.maybe_apply(
+      Bonfire.Me.SharedUsers,
+      :mark_not_shared,
+      [service_char],
+      fallback_return: service_char
+    )
   end
 
   defp create_service_character(service_character_username, data) do

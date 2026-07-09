@@ -5,7 +5,6 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     alias Bonfire.Data.Identity.Account
     alias Bonfire.Data.Identity.User
 
-    alias Bonfire.Me.Accounts
     alias Bonfire.Me.Users
 
     use Bonfire.Common.Utils
@@ -14,9 +13,16 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     alias Ecto.Changeset
     import Ecto.Query
 
+    # the co-manager join table; each link is one row: (shared_user_id, account_id, user_id)
+    @caretaker_join "bonfire_data_shared_user_accounts"
+
     # temporary until these are implemented elsewhere
     @behaviour Bonfire.Federate.ActivityPub.FederationModules
     def federation_module, do: ["Organization", "Service", "Application"]
+
+    @doc "Marks a user in-memory as NOT a shared user, by setting its `:shared_user` assoc to a loaded `nil`. Lets code that classifies a known-never-shared actor (e.g. the service/instance actor) skip a DB preload of the assoc."
+    def mark_not_shared(%User{} = user), do: %{user | shared_user: nil}
+    def mark_not_shared(other), do: other
 
     def add_accounts(
           shared_user_or_username,
@@ -41,54 +47,34 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
         emails_or_usernames,
         &add_account(shared_user_or_username, &1, params)
       )
-      # FIXME
-      |> List.first()
-    end
-
-    def add_account(shared_user_or_username, email_or_username, params \\ %{})
-
-    def add_account(username_to_share, email, params)
-        when is_binary(username_to_share) do
-      with {:ok, shared_user} <- Users.by_username(username_to_share) do
-        repo().maybe_preload(shared_user, :shared_user)
-        |> add_account(email, params)
+      |> Enum.split_with(&match?({:ok, _}, &1))
+      # all adds target the same shared user, so surface the first error if any, otherwise return that shared user
+      |> case do
+        {[_ | _] = oks, []} -> List.last(oks)
+        {_, [error | _]} -> error
+        {[], []} -> {:ok, shared_user_or_username}
       end
     end
 
-    def add_account(%User{} = user_to_share, email_or_username, params)
-        when is_binary(email_or_username) do
-      # TODO: check that the authenticated account has permission to share this user?
+    # `params` is the creation data for a not-yet-shared user (e.g. its `label`); `opts` carries behaviour options, notably the acting identity for the permission check (`current_account:` or `current_user:`).
+    def add_account(shared_user_or_username, email_or_username, params \\ %{}, opts \\ [])
 
-      case init_shared_user(user_to_share, params) do
+    def add_account(username_to_share, email_or_username, params, opts)
+        when is_binary(username_to_share) do
+      with {:ok, user} <- Users.by_username(username_to_share) do
+        add_account(repo().maybe_preload(user, :shared_user), email_or_username, params, opts)
+      end
+    end
+
+    def add_account(%User{} = user_to_share, username, params, opts)
+        when is_binary(username) do
+      # pass `opts` so `init_shared_user` can record the acting user as the creator/first co-manager
+      case init_shared_user(user_to_share, params, opts) do
         %SharedUser{} = shared_user ->
-          email_or_username =
-            email_or_username
-            |> String.trim()
-            |> String.trim("@")
-
-          if email_or_username != "" do
-            case Accounts.get_by_email(email_or_username) do
-              %Account{} = account ->
-                do_add_account(shared_user, account)
-
-              _ ->
-                case Users.by_username(email_or_username)
-                     |> repo().maybe_preload(accounted: :account) do
-                  {:ok, %{accounted: %{account: %Account{} = account}}} ->
-                    do_add_account(shared_user, account)
-
-                  _e ->
-                    error(
-                      email_or_username,
-                      l(
-                        "Could not find an existing account on this instance with that email or username."
-                      )
-                    )
-                end
-            end
+          if authorized_to_manage?(user_to_share, Utils.current_account(opts)) do
+            add_resolved_user(shared_user, username)
           else
-            info("No accounts to add were specified")
-            {:ok, shared_user}
+            error(username, l("You are not authorized to manage this shared user."))
           end
 
         other ->
@@ -96,36 +82,196 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
       end
     end
 
-    defp do_add_account(
-           %{shared_user: shared_user} = _user,
-           %Account{} = account
-         ) do
-      do_add_account(shared_user, account)
+    # Co-managers are invited by username, which identifies exactly one user. An email identifies an account that can own several users, so inviting by email would leak (and grant a display identity to) the account's other personas; hence username only.
+    defp add_resolved_user(shared_user, username) do
+      case username |> String.trim() |> String.trim("@") do
+        "" ->
+          info("No user to add was specified")
+          {:ok, shared_user}
+
+        username ->
+          case find_user(username) do
+            %User{} = user ->
+              do_add_account(shared_user, user)
+
+            _ ->
+              error(
+                username,
+                l("Could not find a user with that username on this instance.")
+              )
+          end
+      end
     end
 
-    # FIXME
-    defp do_add_account(%SharedUser{} = shared_user, %Account{} = account) do
-      # debug(account: account)
-      repo().update(changeset(:add_account, shared_user, account))
-    rescue
-      e in Ecto.ConstraintError ->
-        warn(e)
-        {:ok, shared_user}
+    @doc "Removes a co-manager identified by their user id or username; unlinks their whole account. The human-facing/GraphQL entry point; the roster's Remove button uses `remove_account/3` directly (it already holds the account id, so no lookup)."
+    def remove_user(shared_user_or_username, user_id_or_username, opts \\ [])
+
+    def remove_user(username_to_share, user_id_or_username, opts)
+        when is_binary(username_to_share) do
+      with {:ok, user} <- Users.by_username(username_to_share) do
+        remove_user(user, user_id_or_username, opts)
+      end
     end
 
-    def init_shared_user(%User{} = user, params \\ %{}) do
-      user = repo().maybe_preload(user, :shared_user)
-      shared_user = e(user, :shared_user, nil)
+    def remove_user(%User{} = shared, user_id_or_username, opts)
+        when is_binary(user_id_or_username) do
+      with %User{} = to_remove <- find_user(user_id_or_username) || :not_found,
+           account_id when is_binary(account_id) <-
+             e(to_remove, :accounted, :account, :id, nil) || :not_found do
+        remove_account(shared, account_id, opts)
+      else
+        _ -> error(user_id_or_username, l("Could not find that team member to remove."))
+      end
+    end
 
-      if shared_user do
+    @doc "Removes a co-manager by their account id (unlinks the whole account). `opts[:current_account]`/`opts[:current_user]` is the acting identity, whose account must itself be linked."
+    def remove_account(%User{} = shared, account_id, opts \\ []) when is_binary(account_id) do
+      # force-reload in case the passed struct predates this user becoming shared
+      shared = repo().maybe_preload(shared, :shared_user, force: true)
+
+      with %SharedUser{} = shared_user <- e(shared, :shared_user, nil) || :not_shared,
+           true <- authorized_to_manage?(shared, Utils.current_account(opts)) || :unauthorized,
+           # a shared user must always keep at least one account managing it
+           true <- length(list_accounts(shared)) > 1 || :last_one do
+        do_remove_account(shared_user, account_id)
+      else
+        :not_shared ->
+          error(account_id, l("This is not a shared user."))
+
+        :unauthorized ->
+          error(account_id, l("You are not authorized to manage this shared user."))
+
+        :last_one ->
+          error(account_id, l("You can't remove the only team member managing this profile."))
+
+        _ ->
+          error(account_id, l("Could not remove that team member."))
+      end
+    end
+
+    @doc "Lists the accounts currently linked to (co-managing) a shared user. Account-level: used for the permission check, not for display."
+    def list_accounts(%User{} = user) do
+      repo().maybe_preload(user, :caretaker_accounts)
+      |> e(:caretaker_accounts, [])
+    end
+
+    def list_accounts(_), do: []
+
+    @doc "Lists the specific users co-managing a shared user (the roster's display identities: the invited users and the creator). Excludes each account's other personas, so nothing leaks. Preloads `:accounted` so the roster can offer account-level removal without a lookup."
+    def list_linked_users(%User{} = user) do
+      repo().maybe_preload(user, caretaker_users: [:character, :profile, :accounted])
+      |> e(:caretaker_users, [])
+    end
+
+    def list_linked_users(_), do: []
+
+    @doc "Whether the given account co-manages the shared user via an account-only link (no specific user recorded), so it isn't among `list_linked_users`. One cheap existence check; the UI uses it to show a \"You\" row for the current account."
+    def account_linked?(%User{} = user, account) do
+      with shared_user_id when is_binary(shared_user_id) <- uid(user),
+           account_id when is_binary(account_id) <- uid(account) do
+        from(j in @caretaker_join,
+          where:
+            j.shared_user_id == type(^shared_user_id, Needle.ULID) and
+              j.account_id == type(^account_id, Needle.ULID)
+        )
+        |> repo().exists?()
+      else
+        _ -> false
+      end
+    end
+
+    # Any account already linked to the shared user may manage it. A nil acting account (a trusted/internal caller that didn't pass `current_account:`) is allowed, so existing callers keep working.
+    defp authorized_to_manage?(_user, nil), do: true
+
+    defp authorized_to_manage?(user, %Account{} = acting) do
+      Enum.any?(list_accounts(user), &(&1.id == acting.id))
+    end
+
+    defp authorized_to_manage?(_user, _), do: false
+
+    # Resolve a user id or username to an existing local user (with its account preloaded), or nil. For invites we get a username; for removals the roster already holds the user, so the UI passes its id. Deliberately not email: an email is account-level and can map to several users.
+    defp find_user(id_or_username) do
+      id_or_username = id_or_username |> String.trim() |> String.trim("@")
+
+      lookup =
+        if Bonfire.Common.Types.is_ulid?(id_or_username),
+          do: Users.by_id(id_or_username),
+          else: Users.by_username(id_or_username)
+
+      case lookup |> repo().maybe_preload(accounted: :account) do
+        {:ok, %User{} = user} -> user
+        _ -> nil
+      end
+    end
+
+    # The link is a single row in the join table, so add/remove it directly rather than syncing the whole many-to-many set (no full-set preload, no `on_replace`). `on_conflict: :nothing` (backed by the unique index) makes add idempotent.
+    defp do_add_account(%{shared_user: %SharedUser{} = shared_user} = _user, addable),
+      do: do_add_account(shared_user, addable)
+
+    # an invited (or creating) user: record both its account (for account-level access) and the user itself (the display identity)
+    defp do_add_account(%SharedUser{} = shared_user, %User{} = user) do
+      user = repo().maybe_preload(user, accounted: :account)
+
+      case e(user, :accounted, :account, nil) do
+        %Account{} = account -> insert_caretaker(shared_user, account, user.id)
+        _ -> error(user, l("That user has no account on this instance."))
+      end
+    end
+
+    # a link with no specific user (fallback when the acting/creating user is unknown)
+    defp do_add_account(%SharedUser{} = shared_user, %Account{} = account),
+      do: insert_caretaker(shared_user, account, nil)
+
+    defp insert_caretaker(%SharedUser{} = shared_user, %Account{} = account, user_id) do
+      # the join table is schemaless here, so dump the ULIDs to the binary the pointer columns store. `on_conflict: :nothing` (backed by the unique index on shared_user_id+account_id) keeps add idempotent and one row per account.
+      row =
+        %{shared_user_id: dump_uid(shared_user.id), account_id: dump_uid(account.id)}
+        |> maybe_put_uid(:user_id, user_id)
+
+      repo().insert_all(@caretaker_join, [row], on_conflict: :nothing)
+
+      {:ok, shared_user}
+    end
+
+    defp maybe_put_uid(row, _key, nil), do: row
+    defp maybe_put_uid(row, key, id), do: Map.put(row, key, dump_uid(id))
+
+    # removal is account-level: delete the single join row for this shared user + account id
+    defp do_remove_account(%SharedUser{} = shared_user, account_id) when is_binary(account_id) do
+      repo().delete_all(
+        from(j in @caretaker_join,
+          where:
+            j.shared_user_id == type(^shared_user.id, Needle.ULID) and
+              j.account_id == type(^account_id, Needle.ULID)
+        )
+      )
+
+      {:ok, shared_user}
+    end
+
+    defp dump_uid(id) do
+      {:ok, bin} = Needle.ULID.dump(Needle.ULID.cast!(id))
+      bin
+    end
+
+    # `opts` carries the acting identity (`current_user:`/`current_account:`) so we can record the creator as the first co-manager.
+    def init_shared_user(%User{} = user, params \\ %{}, opts \\ []) do
+      # force-reload so a stale struct (e.g. loaded before this user became shared) doesn't make us re-create the mixin and hit a duplicate-pkey error
+      user = repo().maybe_preload(user, :shared_user, force: true)
+
+      if shared_user = e(user, :shared_user, nil) do
         # TODO: update label if a different one was supplied
         shared_user
       else
         with {:ok, user} <-
                make_shared_user(user, params)
-               |> repo().maybe_preload(:shared_user) do
-          # add myself
-          do_add_account(user, Utils.current_account(user))
+               # also load `accounted: :account` so we can resolve the creating account as a fallback (a freshly-created user handed in from the create-user controller carries no session account otherwise)
+               |> repo().maybe_preload([:shared_user, accounted: :account]) do
+          # record the creator as the first co-manager: prefer the persona explicitly chosen at creation (`:shared_user_creator`), then the acting user, so the roster shows a real person; fall back to just the creating account when no user is known
+          case opts[:shared_user_creator] || Utils.current_user(opts) do
+            %User{} = creator -> do_add_account(user, creator)
+            _ -> do_add_account(user, Utils.current_account(opts) || Utils.current_account(user))
+          end
 
           Map.get(user, :shared_user)
         end
@@ -155,15 +301,6 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
       |> Changeset.cast_assoc(:shared_user,
         with: &Bonfire.Data.SharedUser.changeset/2
       )
-    end
-
-    defp changeset(:add_account, shared_user, %Account{} = account) do
-      shared_user
-      # only update the user<>account association in question
-      |> Map.put(:caretaker_accounts, [])
-      # |> debug()
-      |> SharedUser.changeset(%{})
-      |> Changeset.put_assoc(:caretaker_accounts, [account])
     end
 
     defp user_preloads do
