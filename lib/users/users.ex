@@ -828,13 +828,20 @@ defmodule Bonfire.Me.Users do
   #   Changeset.put_assoc(changeset, :character, %{id: user_id})
   # end
 
-  def indexing_object_format(u) do
+  def indexing_object_format(u, opts \\ []) do
     u =
-      repo().maybe_preload(
-        u,
-        [:profile, character: [:peered]],
-        false
-      )
+      if Keyword.get(opts, :preload_if_needed) == false do
+        # caller says the assocs are already materialised (e.g. a hand-built user whose bare-map
+        # `character` has no loadable `:peered`) — skip the preload rather than choke on a
+        # non-struct assoc; `:peered` is only read via `e/3` below (for `is_remote`).
+        u
+      else
+        repo().maybe_preload(
+          u,
+          [:profile, character: [:peered]],
+          Keyword.merge([follow_pointers: false], opts)
+        )
+      end
 
     %{
       "id" => u.id,
