@@ -3,3 +3,12 @@
 <%= @intro %>
 
 <%= @cta %>: <%= @confirm_url %>
+<%= @paste_hint %>
+<%= @confirm_url %>
+<%= if assigns[:signoff] do %>
+
+<%= @disclaimer %>
+
+<%= assigns[:signoff] %>
+<%= assigns[:signature] %>
+<% end %>

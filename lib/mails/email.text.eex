@@ -4,4 +4,4 @@
 <%= @inner_content %>
 
 ---
-<%= @disclaimer %>
+<%= if !assigns[:signoff], do: @disclaimer %>

@@ -36,35 +36,9 @@ defmodule Bonfire.Me.Mails do
 
     %{
       theme: Map.new(theme),
-      logo_url: logo_url(),
       paste_hint: l("Or paste this link into your browser:")
     }
   end
-
-  # Email clients refuse to fetch images on non-standard ports as an
-  # anti-SSRF measure, so we drop the logo when the resolved URL isn't
-  # publicly fetchable (e.g. localhost:4000 in dev).
-  defp logo_url do
-    with raw when is_binary(raw) and raw != "" <-
-           Config.get([:ui, :auth, :logo], nil) ||
-             Config.get([:ui, :theme, :instance_icon], nil),
-         absolute = Bonfire.Common.URIs.based_url(raw),
-         true <- public_url?(absolute) do
-      absolute
-    else
-      _ -> nil
-    end
-  end
-
-  defp public_url?(url) when is_binary(url) do
-    case URI.parse(url) do
-      %URI{host: h, scheme: "http", port: 80} when is_binary(h) and h != "" -> true
-      %URI{host: h, scheme: "https", port: 443} when is_binary(h) and h != "" -> true
-      _ -> false
-    end
-  end
-
-  defp public_url?(_), do: false
 
   @doc """
   Sends a confirmation email based on the specified action.
@@ -162,19 +136,42 @@ defmodule Bonfire.Me.Mails do
   """
   def login_link(%Account{} = account) do
     app_name = Bonfire.Mailer.app_name()
+    first_name = first_name(account)
 
     confirm_token_email(account,
       conf_key: :login_link_email,
       log_label: "Login link",
-      default_subject: l("Sign in"),
-      heading: l("Sign in to %{app_name}", app_name: app_name),
+      default_subject: l("Your login link for %{app_name}", app_name: app_name),
+      heading:
+        if(first_name,
+          do: l("Hello %{first_name},", first_name: first_name),
+          else: l("Hello,")
+        ),
       intro:
         l(
-          "Click the button below to sign in. No password needed — the link will log you in directly."
+          "Click the following link to sign in to %{app_name}:",
+          app_name: app_name
         ),
       cta: l("Sign in"),
-      disclaimer: l("If you didn't request this, you can safely ignore this email.")
+      disclaimer:
+        l(
+          "For security reasons, this link expires after 24 hours. If you didn't request this login, you can simply ignore this email."
+        ),
+      signoff: l("See you soon!"),
+      signature: l("Your %{app_name} team", app_name: app_name),
+      paste_hint: l("You can also copy this URL and paste it into your browser:")
     )
+  end
+
+  defp first_name(account) do
+    account
+    |> e(:accounted, [])
+    |> List.wrap()
+    |> Enum.find_value(&e(&1, :user, :profile, :name, nil))
+    |> case do
+      name when is_binary(name) -> name |> String.trim() |> String.split() |> List.first()
+      _ -> nil
+    end
   end
 
   defp confirm_token_email(%Account{} = account, opts) do
@@ -202,7 +199,10 @@ defmodule Bonfire.Me.Mails do
           heading: opts[:heading],
           intro: opts[:intro],
           cta: opts[:cta],
-          disclaimer: opts[:disclaimer]
+          disclaimer: opts[:disclaimer],
+          signoff: opts[:signoff],
+          signature: opts[:signature],
+          paste_hint: opts[:paste_hint] || l("Or paste this link into your browser:")
         })
       )
       |> mjmlify_html()

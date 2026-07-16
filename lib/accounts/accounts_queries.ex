@@ -36,6 +36,7 @@ defmodule Bonfire.Me.Accounts.Queries do
       where: e.email_address == ^email,
       preload: [email: e]
     )
+    |> proload(accounted: [user: :profile])
   end
 
   @doc """

@@ -12,17 +12,17 @@
       .muted a { color: <%= @theme.muted %>; }
     </mj-style>
   </mj-head>
-  <mj-body background-color="<%= @theme.body_bg %>" width="600px">
+  <mj-body background-color="<%= @theme.body_bg %>" width="560px">
     <mj-section
       full-width="full-width"
       background-color="<%= @theme.primary %>"
-      padding="64px 24px"
+      padding="48px 32px"
     >
       <mj-column>
         <mj-text
           align="center"
           color="<%= @theme.primary_content %>"
-          font-size="56px"
+          font-size="48px"
           font-weight="800"
           line-height="1.1"
           padding="0"
@@ -34,18 +34,10 @@
 
     <%= @inner_content %>
 
-    <%= if @logo_url do %>
-    <mj-section padding="32px 32px 8px">
-      <mj-column>
-        <mj-image src="<%= @logo_url %>" alt="" width="120px" align="left" padding="0" />
-      </mj-column>
-    </mj-section>
-    <% end %>
-
-    <mj-section padding="<%= if @logo_url, do: "8px 32px 40px", else: "32px 32px 40px" %>">
+    <mj-section padding="40px 48px 48px">
       <mj-column>
         <mj-text css-class="muted">
-          <%= @disclaimer %>
+          <%= if !assigns[:signoff], do: @disclaimer %>
         </mj-text>
       </mj-column>
     </mj-section>

@@ -40,4 +40,52 @@ defmodule Bonfire.Me.MailsTest do
       assert email.text_body =~ @signup_url
     end
   end
+
+  describe "login_link/1" do
+    test "renders the complete localized magic-link message" do
+      email = Mails.login_link(@account)
+
+      assert email.subject =~ "Your login link for"
+      assert email.text_body =~ "Hello,"
+      assert email.text_body =~ "Click the following link to sign in to"
+      assert email.text_body =~ "this link expires after 24 hours"
+      assert email.text_body =~ "See you soon!"
+      assert email.text_body =~ "You can also copy this URL and paste it into your browser:"
+    end
+
+    test "uses the configured instance name" do
+      Process.put([:bonfire, :ui, :theme, :instance_name], "Jacobin.social")
+
+      email = Mails.login_link(@account)
+
+      assert email.subject == "Jacobin.social - Your login link for Jacobin.social"
+      assert email.text_body =~ "sign in to Jacobin.social"
+      assert email.text_body =~ "Your Jacobin.social team"
+    end
+
+    test "renders text branding without configured images" do
+      Process.put([:bonfire, :ui, :auth, :project_branding_image], "/images/project-brand.png")
+      Process.put([:bonfire, :ui, :auth, :logo], "/images/footer-logo.png")
+      Process.put([:bonfire, :ui, :theme, :instance_name], "Jacobin.social")
+
+      email = Mails.login_link(@account)
+
+      assert email.html_body =~ "Jacobin.social"
+      refute email.html_body =~ "/images/project-brand.png"
+      refute email.html_body =~ "/images/footer-logo.png"
+      refute email.html_body =~ "<img"
+      assert email.attachments == []
+    end
+
+    test "places the copyable URL before the expiry and sign-off" do
+      email = Mails.login_link(@account)
+
+      {url_position, _} = :binary.match(email.text_body, "You can also copy this URL")
+      {expiry_position, _} = :binary.match(email.text_body, "this link expires after 24 hours")
+      {signoff_position, _} = :binary.match(email.text_body, "See you soon!")
+
+      assert url_position < expiry_position
+      assert expiry_position < signoff_position
+    end
+  end
 end
