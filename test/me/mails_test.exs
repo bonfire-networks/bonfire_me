@@ -28,6 +28,30 @@ defmodule Bonfire.Me.MailsTest do
     end
   end
 
+  describe "go destination in links" do
+    @go "/write/article-123"
+    @encoded_go URI.encode_www_form(@go)
+
+    test "login_link/2 embeds the go destination in the confirm URL" do
+      email = Mails.login_link(@account, go: @go)
+
+      assert email.text_body =~ "go=" <> @encoded_go
+      assert email.html_body =~ "go=" <> @encoded_go
+    end
+
+    test "signup_confirm_email/2 embeds the go destination in the confirm URL" do
+      email = Mails.signup_confirm_email(@account, go: @go)
+
+      assert email.text_body =~ "go=" <> @encoded_go
+      assert email.html_body =~ "go=" <> @encoded_go
+    end
+
+    test "login_link/1 without go has no go param" do
+      email = Mails.login_link(@account)
+      refute email.text_body =~ "go="
+    end
+  end
+
   describe "registration_hint/1" do
     @signup_url "https://example.com/signup"
 

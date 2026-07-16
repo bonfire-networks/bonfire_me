@@ -57,8 +57,8 @@ defmodule Bonfire.Me.Mails do
   """
   def confirm_email(account, opts \\ []) do
     case opts[:confirm_action] do
-      :forgot_password -> forgot_password(account)
-      :login -> login_link(account)
+      :forgot_password -> forgot_password(account, opts)
+      :login -> login_link(account, opts)
       _ -> signup_confirm_email(account, opts)
     end
   end
@@ -79,10 +79,7 @@ defmodule Bonfire.Me.Mails do
       base_url = "#{Bonfire.Common.URIs.base_url()}/signup/email/confirm/#{confirm_token}"
 
       url =
-        case opts[:redirect_uri] do
-          nil -> base_url
-          redirect_uri -> "#{base_url}?redirect_uri=#{URI.encode_www_form(redirect_uri)}"
-        end
+        append_query(base_url, go: opts[:go], redirect_uri: opts[:redirect_uri])
 
       if Config.env() != :test or System.get_env("PHX_SERVER") == "yes",
         do: warn("Email confirmation link: #{url}")
@@ -114,7 +111,7 @@ defmodule Bonfire.Me.Mails do
   @doc """
   Sends a password reset email.
   """
-  def forgot_password(%Account{} = account) do
+  def forgot_password(%Account{} = account, opts \\ []) do
     confirm_token_email(account,
       conf_key: :forgot_password_email,
       log_label: "Reset link",
@@ -122,7 +119,8 @@ defmodule Bonfire.Me.Mails do
       heading: l("Reset your password"),
       intro: l("Click the button below to choose a new password."),
       cta: l("Reset password"),
-      disclaimer: l("If you didn't request a password reset, you can safely ignore this email.")
+      disclaimer: l("If you didn't request a password reset, you can safely ignore this email."),
+      go: opts[:go]
     )
   end
 
@@ -134,7 +132,7 @@ defmodule Bonfire.Me.Mails do
   confirm-token plumbing as `forgot_password/1` but with its own subject
   and template that frames the link as a sign-in, not a reset.
   """
-  def login_link(%Account{} = account) do
+  def login_link(%Account{} = account, opts \\ []) do
     app_name = Bonfire.Mailer.app_name()
     first_name = first_name(account)
 
@@ -183,7 +181,10 @@ defmodule Bonfire.Me.Mails do
         |> Keyword.get(opts[:conf_key], [])
 
       app_name = Bonfire.Mailer.app_name()
-      url = url_path(Bonfire.UI.Me.ForgotPasswordController) <> "/" <> confirm_token
+
+      url =
+        (url_path(Bonfire.UI.Me.ForgotPasswordController) <> "/" <> confirm_token)
+        |> append_query(go: opts[:go])
 
       if Config.env() != :test or System.get_env("PHX_SERVER") == "yes",
         do: warn("#{opts[:log_label]}: #{url}")
@@ -235,6 +236,18 @@ defmodule Bonfire.Me.Mails do
       })
     )
     |> mjmlify_html()
+  end
+
+  # Append the given params as a query string, keeping only present binary values
+  # and URL-encoding them. `go` (the intended post-auth destination) and
+  # `redirect_uri` (mobile deep-link) ride along in the confirm/login link.
+  defp append_query(url, params) do
+    query =
+      params
+      |> Enum.filter(fn {_k, v} -> is_binary(v) and v != "" end)
+      |> Enum.map_join("&", fn {k, v} -> "#{k}=#{URI.encode_www_form(v)}" end)
+
+    if query == "", do: url, else: url <> "?" <> query
   end
 
   defp mjmlify_html(%{html_body: mjml} = email) when is_binary(mjml) do
