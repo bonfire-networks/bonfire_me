@@ -157,7 +157,8 @@ defmodule Bonfire.Me.Mails do
         ),
       signoff: l("See you soon!"),
       signature: l("Your %{app_name} team", app_name: app_name),
-      paste_hint: l("You can also copy this URL and paste it into your browser:")
+      paste_hint: l("You can also copy this URL and paste it into your browser:"),
+      go: opts[:go]
     )
   end
 
