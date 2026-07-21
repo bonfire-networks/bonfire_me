@@ -101,13 +101,21 @@ defmodule Bonfire.Me.MailsTest do
       assert email.attachments == []
     end
 
-    test "uses a custom sign-off signature when configured" do
-      Process.put([:bonfire, :ui, :auth, :email_signature], "Deine Jacobin-Redaktion")
+    test "per-instance config overrides the copy" do
+      Process.put([:bonfire, Bonfire.Me.Mails],
+        login_link_email: [
+          subject: "Dein Login-Link für Jacobin.social",
+          signature: "Deine Jacobin-Redaktion"
+        ]
+      )
 
       email = Mails.login_link(@account)
 
+      assert email.subject == "Dein Login-Link für Jacobin.social"
       assert email.text_body =~ "Deine Jacobin-Redaktion"
       refute email.text_body =~ "team"
+      # unset keys still fall back to the extension's own copy
+      assert email.text_body =~ "See you soon!"
     end
 
     test "places the copyable URL before the expiry and sign-off" do
@@ -123,14 +131,14 @@ defmodule Bonfire.Me.MailsTest do
   end
 
   describe "signup_confirm_email/1" do
-    test "renders the complete subscription-confirmed message" do
+    test "renders the generic signup message in the shared layout" do
       email = Mails.signup_confirm_email(@account)
 
-      assert email.subject =~ "Your subscription is confirmed"
+      assert email.subject =~ "Confirm your email"
       assert email.text_body =~ "Hello,"
-      assert email.text_body =~ "thanks for subscribing to"
-      assert email.text_body =~ "Our system is passwordless"
-      assert email.text_body =~ "Get access"
+      assert email.text_body =~ "thanks for signing up to"
+      assert email.text_body =~ "confirm your email and get started"
+      assert email.text_body =~ "Confirm email"
       assert email.text_body =~ "See you soon!"
       assert email.text_body =~ "You can also copy this URL and paste it into your browser:"
     end
@@ -147,15 +155,49 @@ defmodule Bonfire.Me.MailsTest do
       refute email.text_body =~ "Hello,"
     end
 
-    test "uses the configured instance name and signature" do
+    test "uses the configured instance name" do
       Process.put([:bonfire, :ui, :theme, :instance_name], "Jacobin.social")
-      Process.put([:bonfire, :ui, :auth, :email_signature], "Deine Jacobin-Redaktion")
 
       email = Mails.signup_confirm_email(@account)
 
-      assert email.text_body =~ "thanks for subscribing to Jacobin.social"
-      assert email.text_body =~ "get access to Jacobin.social"
-      assert email.text_body =~ "Deine Jacobin-Redaktion"
+      assert email.subject == "Jacobin.social - Confirm your email"
+      assert email.text_body =~ "thanks for signing up to Jacobin.social"
+      assert email.text_body =~ "Your Jacobin.social team"
+    end
+
+    test "per-instance config overrides the copy" do
+      Process.put([:bonfire, :ui, :theme, :instance_name], "Jacobin.social")
+
+      Process.put([:bonfire, Bonfire.Me.Mails],
+        confirm_email: [
+          subject: "Dein Abo ist hiermit bestätigt",
+          intro: "danke für dein Abonnement bei Jacobin.",
+          cta: "Zugang erhalten",
+          signoff: "Bis bald!"
+        ]
+      )
+
+      email = Mails.signup_confirm_email(@account)
+
+      # an override replaces the whole subject, app_name prefix included
+      assert email.subject == "Dein Abo ist hiermit bestätigt"
+      assert email.text_body =~ "danke für dein Abonnement bei Jacobin."
+      assert email.text_body =~ "Zugang erhalten"
+      assert email.text_body =~ "Bis bald!"
+      # unset keys still fall back to the extension's own copy
+      assert email.text_body =~ "confirm your email and get started"
+      refute email.text_body =~ "thanks for signing up"
+    end
+
+    test "overrides are used as written, without %{} interpolation" do
+      Process.put([:bonfire, :ui, :theme, :instance_name], "Jacobin.social")
+      Process.put([:bonfire, Bonfire.Me.Mails], confirm_email: [cta: "Zugang erhalten"])
+
+      email = Mails.signup_confirm_email(@account)
+
+      # the untouched default still interpolates
+      assert email.text_body =~ "thanks for signing up to Jacobin.social"
+      refute email.text_body =~ "%{"
     end
   end
 end

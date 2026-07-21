@@ -85,36 +85,29 @@ defmodule Bonfire.Me.Mails do
       if Config.env() != :test or System.get_env("PHX_SERVER") == "yes",
         do: warn("Email confirmation link: #{url}")
 
-      conf =
-        Config.get(__MODULE__, [])
-        |> Keyword.get(:confirm_email, [])
+      copy =
+        copy(:confirm_email,
+          subject: "#{app_name} - " <> l("Confirm your email"),
+          intro: l("thanks for signing up to %{app_name}.", app_name: app_name),
+          intro_2: l("Just click the following link to confirm your email and get started:"),
+          cta: l("Confirm email"),
+          disclaimer: l("If you didn't sign up, you can safely ignore this email."),
+          signoff: l("See you soon!"),
+          signature: l("Your %{app_name} team", app_name: app_name),
+          paste_hint: l("You can also copy this URL and paste it into your browser:")
+        )
 
       new()
-      |> subject(
-        Keyword.get(conf, :subject, "#{app_name} - " <> l("Your subscription is confirmed"))
-      )
+      |> subject(copy.subject)
       |> render_body(
         :confirm_action,
-        Map.merge(branding_assigns(), %{
+        branding_assigns()
+        |> Map.merge(copy)
+        |> Map.merge(%{
           current_account: account,
           confirm_url: url,
           app_name: app_name,
-          heading: greeting(first_name),
-          intro:
-            l(
-              "thanks for subscribing to %{app_name}. You're supporting independent, critical journalism.",
-              app_name: app_name
-            ),
-          intro_2:
-            l(
-              "Our system is passwordless. Just click the following link to get access to %{app_name}:",
-              app_name: app_name
-            ),
-          cta: l("Get access"),
-          disclaimer: l("If you didn't sign up, you can safely ignore this email."),
-          signoff: l("See you soon!"),
-          signature: signature(app_name),
-          paste_hint: l("You can also copy this URL and paste it into your browser:")
+          heading: greeting(first_name)
         })
       )
       |> mjmlify_html()
@@ -127,15 +120,20 @@ defmodule Bonfire.Me.Mails do
   Sends a password reset email.
   """
   def forgot_password(%Account{} = account, opts \\ []) do
+    app_name = Bonfire.Mailer.app_name()
+
     confirm_token_email(account,
-      conf_key: :forgot_password_email,
       log_label: "Reset link",
-      default_subject: l("Reset your password"),
       heading: l("Reset your password"),
-      intro: l("Click the button below to choose a new password."),
-      cta: l("Reset password"),
-      disclaimer: l("If you didn't request a password reset, you can safely ignore this email."),
-      go: opts[:go]
+      go: opts[:go],
+      copy:
+        copy(:forgot_password_email,
+          subject: "#{app_name} - " <> l("Reset your password"),
+          intro: l("Click the button below to choose a new password."),
+          cta: l("Reset password"),
+          disclaimer:
+            l("If you didn't request a password reset, you can safely ignore this email.")
+        )
     )
   end
 
@@ -149,28 +147,43 @@ defmodule Bonfire.Me.Mails do
   """
   def login_link(%Account{} = account, opts \\ []) do
     app_name = Bonfire.Mailer.app_name()
-    first_name = first_name(account)
 
     confirm_token_email(account,
-      conf_key: :login_link_email,
       log_label: "Login link",
-      default_subject: l("Your login link for %{app_name}", app_name: app_name),
-      heading: greeting(first_name),
-      intro:
-        l(
-          "Click the following link to sign in to %{app_name}:",
-          app_name: app_name
-        ),
-      cta: l("Sign in"),
-      disclaimer:
-        l(
-          "For security reasons, this link expires after 24 hours. If you didn't request this login, you can simply ignore this email."
-        ),
-      signoff: l("See you soon!"),
-      signature: signature(app_name),
-      paste_hint: l("You can also copy this URL and paste it into your browser:"),
-      go: opts[:go]
+      heading: greeting(first_name(account)),
+      go: opts[:go],
+      copy:
+        copy(:login_link_email,
+          subject: "#{app_name} - " <> l("Your login link for %{app_name}", app_name: app_name),
+          intro: l("Click the following link to sign in to %{app_name}:", app_name: app_name),
+          cta: l("Sign in"),
+          disclaimer:
+            l(
+              "For security reasons, this link expires after 24 hours. If you didn't request this login, you can simply ignore this email."
+            ),
+          signoff: l("See you soon!"),
+          signature: l("Your %{app_name} team", app_name: app_name),
+          paste_hint: l("You can also copy this URL and paste it into your browser:")
+        )
     )
+  end
+
+  # The copy for one email: this extension's translated defaults, with any
+  # per-instance overrides merged over them. A flavour can replace as many or
+  # as few lines as it likes, e.g. in `config/jacobin.exs`:
+  #
+  #     config :bonfire, Bonfire.Me.Mails,
+  #       confirm_email: [subject: "Dein Abo ist hiermit bestätigt", ...]
+  #
+  # Overrides are used as written — `mix gettext.extract` can't see strings
+  # that live in config, so they never reach translators. Write them in the
+  # language the instance sends, and spell out names rather than relying on
+  # the `%{app_name}` interpolation the defaults use.
+  defp copy(conf_key, defaults) do
+    Config.get(__MODULE__, [])
+    |> Keyword.get(conf_key, [])
+    |> then(&Keyword.merge(defaults, &1))
+    |> Map.new()
   end
 
   # Greeting line, personalised when we know the recipient's first name.
@@ -178,16 +191,6 @@ defmodule Bonfire.Me.Mails do
     do: l("Hello %{first_name},", first_name: first_name)
 
   defp greeting(_), do: l("Hello,")
-
-  # Sign-off name under the greeting. Instances that don't call themselves a
-  # "team" (e.g. an editorial desk) can override this verbatim in config, in
-  # which case it is used as-is rather than translated.
-  defp signature(app_name) do
-    case Config.get([:ui, :auth, :email_signature]) do
-      custom when is_binary(custom) and custom != "" -> custom
-      _ -> l("Your %{app_name} team", app_name: app_name)
-    end
-  end
 
   defp first_name(account) do
     account
@@ -204,11 +207,8 @@ defmodule Bonfire.Me.Mails do
     confirm_token = e(account, :email, :confirm_token, nil)
 
     if is_binary(confirm_token) do
-      conf =
-        Config.get(__MODULE__, [])
-        |> Keyword.get(opts[:conf_key], [])
-
       app_name = Bonfire.Mailer.app_name()
+      copy = opts[:copy]
 
       url =
         (url_path(Bonfire.UI.Me.ForgotPasswordController) <> "/" <> confirm_token)
@@ -218,20 +218,16 @@ defmodule Bonfire.Me.Mails do
         do: warn("#{opts[:log_label]}: #{url}")
 
       new()
-      |> subject(Keyword.get(conf, :subject, "#{app_name} - #{opts[:default_subject]}"))
+      |> subject(copy.subject)
       |> render_body(
         :confirm_action,
-        Map.merge(branding_assigns(), %{
+        branding_assigns()
+        |> Map.merge(copy)
+        |> Map.merge(%{
           current_account: account,
           confirm_url: url,
           app_name: app_name,
-          heading: opts[:heading],
-          intro: opts[:intro],
-          cta: opts[:cta],
-          disclaimer: opts[:disclaimer],
-          signoff: opts[:signoff],
-          signature: opts[:signature],
-          paste_hint: opts[:paste_hint] || l("Or paste this link into your browser:")
+          heading: opts[:heading]
         })
       )
       |> mjmlify_html()

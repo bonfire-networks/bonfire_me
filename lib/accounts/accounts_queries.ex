@@ -30,13 +30,24 @@ defmodule Bonfire.Me.Accounts.Queries do
       iex> Bonfire.Me.Accounts.Queries.by_email("example@example.com")
       #Ecto.Query<...>
   """
+  # Emails are matched case-insensitively (case-variant lookups used to silently miss — or split — accounts). Storage is untouched and may still hold rows differing only in case, so `matching_account_id/1` picks exactly one (preferring an exact match) in a subquery — the pick must NOT be a `limit` on this query itself, whose join-preloads would then be truncated to a single row.
   def by_email(email) when is_binary(email) do
     from(a in Account,
       join: e in assoc(a, :email),
-      where: e.email_address == ^email,
+      where: a.id == subquery(matching_account_id(email)),
       preload: [email: e]
     )
     |> proload(accounted: [user: :profile])
+  end
+
+  # The email mixin's id IS the account id (Needle mixin), so this selects the account.
+  defp matching_account_id(email) do
+    from(e in Bonfire.Data.Identity.Email,
+      where: fragment("lower(?)", e.email_address) == ^String.downcase(email),
+      order_by: [desc: fragment("? = ?", e.email_address, ^email)],
+      limit: 1,
+      select: e.id
+    )
   end
 
   @doc """
@@ -72,11 +83,12 @@ defmodule Bonfire.Me.Accounts.Queries do
   @doc """
   Find an account by email address, preloading email and credential information.
   """
+  # Case-insensitive with exact-match preference, like `by_email/1`.
   def login_by_email(email) when is_binary(email) do
     from(a in Account,
       join: e in assoc(a, :email),
       left_join: c in assoc(a, :credential),
-      where: e.email_address == ^email,
+      where: a.id == subquery(matching_account_id(email)),
       preload: [email: e, credential: c]
     )
   end

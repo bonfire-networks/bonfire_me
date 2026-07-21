@@ -223,6 +223,43 @@ defmodule Bonfire.Me.AccountsTest do
     end
   end
 
+  describe "get_by_email" do
+    test "finds the account regardless of the case typed" do
+      attrs = signup_form()
+      email = attrs.email.email_address
+      assert {:ok, account} = Accounts.signup(attrs, must_confirm?: false)
+
+      assert Accounts.get_by_email(email).id == account.id
+      assert Accounts.get_by_email(String.upcase(email)).id == account.id
+    end
+
+    test "preloads ALL of the account's profiles, not just one" do
+      # `by_email` join-preloads `accounted` (a has_many), and `login_response/1`
+      # pattern-matches a single-element list to log someone straight in — so
+      # truncating the join would silently skip the profile switcher and pick an
+      # arbitrary profile for multi-profile accounts.
+      attrs = signup_form()
+      email = attrs.email.email_address
+      assert {:ok, account} = Accounts.signup(attrs, must_confirm?: false)
+
+      {:ok, _} =
+        Bonfire.Me.Users.create(
+          %{profile: %{name: "First"}, character: %{username: "acc_first_zz"}},
+          account
+        )
+
+      {:ok, _} =
+        Bonfire.Me.Users.create(
+          %{profile: %{name: "Second"}, character: %{username: "acc_second_zz"}},
+          account
+        )
+
+      found = Accounts.get_by_email(email)
+      assert found.id == account.id
+      assert length(found.accounted) == 2
+    end
+  end
+
   test "deletion works" do
     Oban.Testing.with_testing_mode(:inline, fn ->
       assert {:ok, account} = Accounts.signup(signup_form())
