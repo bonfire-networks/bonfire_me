@@ -338,6 +338,13 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
+  @doc "Whether the account has a password set (passwordless / magic-link accounts have no credential row, so this is false for them)."
+  def account_has_password?(nil), do: false
+
+  def account_has_password?(account) do
+    not is_nil(e(repo().preload(account, :credential), :credential, :password_hash, nil))
+  end
+
   defp login_query(%{email: email}) when is_binary(email),
     do: Queries.login_by_email(email)
 
