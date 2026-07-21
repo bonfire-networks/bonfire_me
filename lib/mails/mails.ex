@@ -76,6 +76,7 @@ defmodule Bonfire.Me.Mails do
 
     if is_binary(confirm_token) do
       app_name = Bonfire.Mailer.app_name()
+      first_name = first_name(account)
       base_url = "#{Bonfire.Common.URIs.base_url()}/signup/email/confirm/#{confirm_token}"
 
       url =
@@ -89,17 +90,31 @@ defmodule Bonfire.Me.Mails do
         |> Keyword.get(:confirm_email, [])
 
       new()
-      |> subject(Keyword.get(conf, :subject, "#{app_name} - " <> l("Confirm your email")))
+      |> subject(
+        Keyword.get(conf, :subject, "#{app_name} - " <> l("Your subscription is confirmed"))
+      )
       |> render_body(
         :confirm_action,
         Map.merge(branding_assigns(), %{
           current_account: account,
           confirm_url: url,
           app_name: app_name,
-          heading: l("Welcome to %{app_name}", app_name: app_name),
-          intro: l("Confirm your email to finish setting up your account."),
-          cta: l("Confirm email"),
-          disclaimer: l("If you didn't sign up, you can safely ignore this email.")
+          heading: greeting(first_name),
+          intro:
+            l(
+              "thanks for subscribing to %{app_name}. You're supporting independent, critical journalism.",
+              app_name: app_name
+            ),
+          intro_2:
+            l(
+              "Our system is passwordless. Just click the following link to get access to %{app_name}:",
+              app_name: app_name
+            ),
+          cta: l("Get access"),
+          disclaimer: l("If you didn't sign up, you can safely ignore this email."),
+          signoff: l("See you soon!"),
+          signature: signature(app_name),
+          paste_hint: l("You can also copy this URL and paste it into your browser:")
         })
       )
       |> mjmlify_html()
@@ -140,11 +155,7 @@ defmodule Bonfire.Me.Mails do
       conf_key: :login_link_email,
       log_label: "Login link",
       default_subject: l("Your login link for %{app_name}", app_name: app_name),
-      heading:
-        if(first_name,
-          do: l("Hello %{first_name},", first_name: first_name),
-          else: l("Hello,")
-        ),
+      heading: greeting(first_name),
       intro:
         l(
           "Click the following link to sign in to %{app_name}:",
@@ -156,10 +167,26 @@ defmodule Bonfire.Me.Mails do
           "For security reasons, this link expires after 24 hours. If you didn't request this login, you can simply ignore this email."
         ),
       signoff: l("See you soon!"),
-      signature: l("Your %{app_name} team", app_name: app_name),
+      signature: signature(app_name),
       paste_hint: l("You can also copy this URL and paste it into your browser:"),
       go: opts[:go]
     )
+  end
+
+  # Greeting line, personalised when we know the recipient's first name.
+  defp greeting(first_name) when is_binary(first_name),
+    do: l("Hello %{first_name},", first_name: first_name)
+
+  defp greeting(_), do: l("Hello,")
+
+  # Sign-off name under the greeting. Instances that don't call themselves a
+  # "team" (e.g. an editorial desk) can override this verbatim in config, in
+  # which case it is used as-is rather than translated.
+  defp signature(app_name) do
+    case Config.get([:ui, :auth, :email_signature]) do
+      custom when is_binary(custom) and custom != "" -> custom
+      _ -> l("Your %{app_name} team", app_name: app_name)
+    end
   end
 
   defp first_name(account) do

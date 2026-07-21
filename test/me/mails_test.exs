@@ -101,6 +101,15 @@ defmodule Bonfire.Me.MailsTest do
       assert email.attachments == []
     end
 
+    test "uses a custom sign-off signature when configured" do
+      Process.put([:bonfire, :ui, :auth, :email_signature], "Deine Jacobin-Redaktion")
+
+      email = Mails.login_link(@account)
+
+      assert email.text_body =~ "Deine Jacobin-Redaktion"
+      refute email.text_body =~ "team"
+    end
+
     test "places the copyable URL before the expiry and sign-off" do
       email = Mails.login_link(@account)
 
@@ -110,6 +119,43 @@ defmodule Bonfire.Me.MailsTest do
 
       assert url_position < expiry_position
       assert expiry_position < signoff_position
+    end
+  end
+
+  describe "signup_confirm_email/1" do
+    test "renders the complete subscription-confirmed message" do
+      email = Mails.signup_confirm_email(@account)
+
+      assert email.subject =~ "Your subscription is confirmed"
+      assert email.text_body =~ "Hello,"
+      assert email.text_body =~ "thanks for subscribing to"
+      assert email.text_body =~ "Our system is passwordless"
+      assert email.text_body =~ "Get access"
+      assert email.text_body =~ "See you soon!"
+      assert email.text_body =~ "You can also copy this URL and paste it into your browser:"
+    end
+
+    test "greets the user by first name when known" do
+      account = %Account{
+        @account
+        | accounted: [%{user: %{profile: %{name: "Rosa Luxemburg"}}}]
+      }
+
+      email = Mails.signup_confirm_email(account)
+
+      assert email.text_body =~ "Hello Rosa,"
+      refute email.text_body =~ "Hello,"
+    end
+
+    test "uses the configured instance name and signature" do
+      Process.put([:bonfire, :ui, :theme, :instance_name], "Jacobin.social")
+      Process.put([:bonfire, :ui, :auth, :email_signature], "Deine Jacobin-Redaktion")
+
+      email = Mails.signup_confirm_email(@account)
+
+      assert email.text_body =~ "thanks for subscribing to Jacobin.social"
+      assert email.text_body =~ "get access to Jacobin.social"
+      assert email.text_body =~ "Deine Jacobin-Redaktion"
     end
   end
 end

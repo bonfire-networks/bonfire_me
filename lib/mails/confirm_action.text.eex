@@ -1,6 +1,9 @@
 <%= @heading %>
 
 <%= @intro %>
+<%= if assigns[:intro_2] do %>
+<%= assigns[:intro_2] %>
+<% end %>
 
 <%= @cta %>: <%= @confirm_url %>
 <%= @paste_hint %>

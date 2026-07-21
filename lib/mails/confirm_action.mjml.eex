@@ -3,9 +3,14 @@
     <mj-text font-size="18px" font-weight="700" line-height="1.3" padding-bottom="6px">
       <%= @heading %>
     </mj-text>
-    <mj-text padding-bottom="24px">
+    <mj-text padding-bottom="<%= if assigns[:intro_2], do: "12px", else: "24px" %>">
       <%= @intro %>
     </mj-text>
+    <%= if assigns[:intro_2] do %>
+    <mj-text padding-bottom="24px">
+      <%= assigns[:intro_2] %>
+    </mj-text>
+    <% end %>
     <mj-button
       href="<%= @confirm_url %>"
       align="left"
