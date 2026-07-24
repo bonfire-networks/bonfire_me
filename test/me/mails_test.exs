@@ -7,6 +7,13 @@ defmodule Bonfire.Me.MailsTest do
 
   @account %Account{email: %{confirm_token: "tok-#{System.unique_integer([:positive])}"}}
 
+  setup do
+    # Most tests exercise the extension defaults independently of the active flavour.
+    # Individual override tests replace this process-local value explicitly.
+    Process.put([:bonfire, Bonfire.Me.Mails], [])
+    :ok
+  end
+
   for fun <- [:login_link, :forgot_password, :signup_confirm_email] do
     test "#{fun}/1 renders both bodies and a subject" do
       email = apply(Mails, unquote(fun), [@account])
@@ -62,6 +69,22 @@ defmodule Bonfire.Me.MailsTest do
       assert email.html_body =~ "<!doctype html"
       assert email.html_body =~ @signup_url
       assert email.text_body =~ @signup_url
+    end
+
+    test "renders its safety disclaimer without requiring a sign-off" do
+      email = Mails.registration_hint(@signup_url)
+
+      assert email.text_body =~ "If you didn't request this"
+      assert email.html_body =~ "If you didn't request this"
+    end
+  end
+
+  describe "forgot_password/1" do
+    test "renders its safety disclaimer without requiring a sign-off" do
+      email = Mails.forgot_password(@account)
+
+      assert email.text_body =~ "If you didn't request a password reset"
+      assert email.html_body =~ "If you didn't request a password reset"
     end
   end
 

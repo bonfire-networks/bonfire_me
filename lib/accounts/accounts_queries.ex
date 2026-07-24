@@ -44,7 +44,7 @@ defmodule Bonfire.Me.Accounts.Queries do
   defp matching_account_id(email) do
     from(e in Bonfire.Data.Identity.Email,
       where: fragment("lower(?)", e.email_address) == ^String.downcase(email),
-      order_by: [desc: fragment("? = ?", e.email_address, ^email)],
+      order_by: [desc: fragment("? = ?", e.email_address, ^email), asc: e.id],
       limit: 1,
       select: e.id
     )

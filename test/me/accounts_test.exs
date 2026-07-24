@@ -192,6 +192,17 @@ defmodule Bonfire.Me.AccountsTest do
                })
     end
 
+    test "by: :email is case-insensitive" do
+      attrs = signup_form()
+      assert {:ok, %{id: account_id}} = Accounts.signup(attrs, must_confirm?: false)
+
+      assert {:ok, %{id: ^account_id}, nil} =
+               Accounts.login(%{
+                 email_or_username: String.upcase(attrs.email.email_address),
+                 password: attrs.credential.password
+               })
+    end
+
     test "by: :email, must_confirm?: true on signup but must_confirm?: false on login" do
       attrs = signup_form()
       assert {:ok, %{id: account_id} = account} = Accounts.signup(attrs, must_confirm?: true)

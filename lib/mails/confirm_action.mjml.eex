@@ -29,10 +29,12 @@
       <span style="font-weight:600;"><%= @paste_hint %></span><br />
       <a href="<%= @confirm_url %>" style="word-break: break-all;"><%= @confirm_url %></a>
     </mj-text>
-    <%= if assigns[:signoff] do %>
+    <%= if assigns[:disclaimer] do %>
     <mj-text padding-top="40px">
       <%= @disclaimer %>
     </mj-text>
+    <% end %>
+    <%= if assigns[:signoff] do %>
     <mj-text padding-top="24px">
       <%= assigns[:signoff] %><br />
       <%= assigns[:signature] %>

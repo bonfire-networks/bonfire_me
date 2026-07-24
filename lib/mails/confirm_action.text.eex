@@ -8,9 +8,11 @@
 <%= @cta %>: <%= @confirm_url %>
 <%= @paste_hint %>
 <%= @confirm_url %>
-<%= if assigns[:signoff] do %>
+<%= if assigns[:disclaimer] do %>
 
 <%= @disclaimer %>
+<% end %>
+<%= if assigns[:signoff] do %>
 
 <%= assigns[:signoff] %>
 <%= assigns[:signature] %>

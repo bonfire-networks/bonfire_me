@@ -180,7 +180,7 @@ defmodule Bonfire.Me.Mails do
   # language the instance sends, and spell out names rather than relying on
   # the `%{app_name}` interpolation the defaults use.
   defp copy(conf_key, defaults) do
-    Config.get(__MODULE__, [])
+    Config.get([:bonfire, __MODULE__], [])
     |> Keyword.get(conf_key, [])
     |> then(&Keyword.merge(defaults, &1))
     |> Map.new()
