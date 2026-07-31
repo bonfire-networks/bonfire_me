@@ -187,6 +187,26 @@ defmodule Bonfire.Me.SharedUsersTest do
       refute member_account.id in (SharedUsers.list_accounts(org) |> Enum.map(& &1.id))
     end
 
+    test "by_account works for an account that co-manages a shared user (regression: m2m preload must not crash)" do
+      account_a = Fake.fake_account!()
+      org = Fake.fake_user!(account_a)
+
+      account_b = Fake.fake_account!()
+      user_b = Fake.fake_user!(account_b)
+
+      # link account_b as a co-manager of `org`, so account_b's `shared_users` assoc is populated
+      assert {:ok, _} =
+               SharedUsers.add_account(org, "@" <> user_b.character.username, %{},
+                 current_account: account_a
+               )
+
+      # by_account must combine account_b's own users + the shared users it co-manages, without
+      # crashing on the `shared_users` many_to_many preload (was: `++` on an unloaded assoc)
+      ids = SharedUsers.by_account(account_b) |> Enum.map(& &1.id)
+      assert user_b.id in ids
+      assert org.id in ids
+    end
+
     test "the persona chosen at creation is linked as the org's first co-manager (not another of the account's personas)" do
       account = Fake.fake_account!()
       chosen = Fake.fake_user!(account)

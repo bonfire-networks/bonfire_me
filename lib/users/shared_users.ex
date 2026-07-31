@@ -317,7 +317,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
       # FIXME: should this call Accounts.by_account instead?
 
       Enum.uniq_by(
-        Map.get(account, :users, []) ++ Map.get(account, :shared_users, []),
+        e(account, :users, []) ++ e(account, :shared_users, []),
         &id/1
       )
     end
