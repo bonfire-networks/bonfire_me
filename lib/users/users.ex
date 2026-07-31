@@ -245,6 +245,116 @@ defmodule Bonfire.Me.Users do
   def check_active!(other), do: other
 
   @doc """
+  Resolves a user id or (`@`-optional, with or without a leading `@`) username to an existing LOCAL user, or `nil`. A `name@domain` handle is local only when `domain` is this instance's own; a remote domain (or an email address) is rejected. Resolution only — does NOT preload the account (that is an `Accounts` concern; use `Accounts.preload_account/1` if you need it). Shared by the shared-user invite flow and the profile-transfer target resolution.
+  """
+  def local_by_id_or_username(id_or_username) do
+    id_or_username = id_or_username |> to_string() |> String.trim() |> String.trim_leading("@")
+
+    cond do
+      id_or_username == "" ->
+        nil
+
+      # a remaining "@" is a `name@domain` handle: LOCAL only when the domain is ours, otherwise a
+      # remote actor (or an email) — reject
+      String.contains?(id_or_username, "@") ->
+        case String.split(id_or_username, "@") do
+          [name, domain] when name != "" ->
+            if local_domain?(domain), do: from_ok(by_username(name)), else: nil
+
+          _ ->
+            nil
+        end
+
+      Bonfire.Common.Types.is_ulid?(id_or_username) ->
+        from_ok(by_id(id_or_username))
+
+      true ->
+        from_ok(by_username(id_or_username))
+    end
+  end
+
+  # whether `domain` is this instance's own domain (so a `name@domain` handle is a local user, not remote)
+  defp local_domain?(domain) do
+    domain = domain |> to_string() |> String.trim() |> String.downcase()
+    local = Bonfire.Common.URIs.base_domain() |> to_string() |> String.downcase()
+    local_host = local |> String.split(":") |> List.first()
+    domain != "" and domain in [local, local_host]
+  end
+
+  @doc """
+  Throws if `account` is already at its `max_per_account` cap of user profiles, unless `opts[:skip_max_per_account]` is set. Returns the list of the account's existing user ids (so callers can reuse it, e.g. for `check_active!`).
+  """
+  def check_max_per_account!(account, opts \\ []) do
+    existing_users_for_account = ids_by_account(account)
+
+    if !opts[:skip_max_per_account] and
+         Config.get([Bonfire.Me.Users, :max_per_account], 6) <=
+           length(existing_users_for_account),
+       do:
+         throw(
+           "You have reached the maximum number of user profiles you can create. Please contact your instance admins."
+         )
+
+    existing_users_for_account
+  end
+
+  @doc """
+  Transfers a user profile from its current account to `target_account` by re-pointing its single (1:1) `Accounted` row. Does NOT touch the `shared_user` mixin, so the profile stays a Person (no Organisation conversion).
+
+  ## Options
+  - `:skip_max_per_account` — bypass the target account's `max_per_account` cap (e.g. for admin transfers).
+  - `:transfer_admin` — when the profile carries instance-admin, ALSO grant admin to the destination account. Default: admin is only revoked from the source and never carried over (a moved profile must not silently keep admin powers under the new account).
+  """
+  def transfer_to_account(user, target_account, opts \\ []) do
+    uid = id(user)
+    tid = id(target_account)
+
+    # does this profile carry instance-admin? (account-level flag + admin-circle membership). Checked
+    # BEFORE the move (against the SOURCE account) so we can reconcile admin, never carrying it over.
+    user = repo().maybe_preload(user, accounted: [account: :instance_admin])
+
+    source_account = e(user, :accounted, :account, nil)
+    was_admin? = Bonfire.Me.Accounts.is_admin?(source_account)
+
+    # capacity + active guards against the TARGET account (cap overridable via opts)
+    check_max_per_account!(target_account, opts)
+    check_active!(ids_by_account(target_account))
+
+    cond do
+      # transferring the admin permission: demote the source now (clears its flag + removes the user from
+      # the admin circle); the destination is granted after the move, below
+      was_admin? and opts[:transfer_admin] ->
+        revoke_admin(user)
+
+      # keeping the source admin, but this moved profile was its DISPLAYED admin user — drop that
+      # now-foreign link (the user no longer belongs to the source account)
+      was_admin? and e(source_account, :instance_admin, :user_id, nil) == uid ->
+        Bonfire.Me.Accounts.update_is_admin(source_account, true, nil)
+
+      true ->
+        :ok
+    end
+
+    case repo().update_all(
+           Ecto.Query.from(a in Bonfire.Data.Identity.Accounted, where: a.id == ^uid),
+           set: [account_id: tid]
+         ) do
+      {1, _} ->
+        user = repo().preload(user, [accounted: [:account]], force: true)
+
+        # optionally hand the admin permission to the DESTINATION account (grants + adds to admin circle)
+        if was_admin? and opts[:transfer_admin], do: make_admin(user)
+        {:ok, repo().preload(user, [accounted: [:account]], force: true)}
+
+      {0, _} ->
+        error(user, "Cannot transfer: this profile has no account link (Accounted row)")
+
+      other ->
+        error(other, "Unexpected result while transferring the profile")
+    end
+  end
+
+  @doc """
   Searches for users.
 
   ## Examples
@@ -726,17 +836,8 @@ defmodule Bonfire.Me.Users do
   end
 
   def changeset(:create, user, params, %Account{} = account) do
-    existing_users_for_account = ids_by_account(account)
-
     # check that we can still create more users for this account
-    if Config.get(
-         [Bonfire.Me.Users, :max_per_account],
-         6
-       ) <= length(existing_users_for_account),
-       do:
-         throw(
-           "You have reached the maximum number of user profiles you can create. Please contact your instance admins."
-         )
+    existing_users_for_account = check_max_per_account!(account)
 
     # check that none of the account's users have been disabled by instance admin - FIXME: can we do it without querying the full list of users?
     check_active!(existing_users_for_account)

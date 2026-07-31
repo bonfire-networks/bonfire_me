@@ -6,6 +6,18 @@ defmodule Bonfire.Me.UsersTest do
   alias Bonfire.Me.Accounts
   alias Bonfire.Me.Users
   alias Bonfire.Me.Characters
+  alias Bonfire.Data.Identity.Account
+
+  defp admin_account?(account_id) do
+    Account |> repo().get!(account_id) |> repo().preload(:instance_admin) |> Accounts.is_admin?()
+  end
+
+  defp admin_display_user_id(account_id) do
+    Account
+    |> repo().get!(account_id)
+    |> repo().preload(:instance_admin)
+    |> e(:instance_admin, :user_id, nil)
+  end
 
   alias Bonfire.Files
   alias Bonfire.Files.IconUploader
@@ -151,6 +163,108 @@ defmodule Bonfire.Me.UsersTest do
 
       refute Bonfire.Social.Seen.last_date(account_id, account_id)
       refute Bonfire.Social.Seen.last_date(account_id, user_id)
+    end
+  end
+
+  describe "transfer_to_account/3" do
+    test "moves the profile from one account to another, and it stays a Person (no Organisation conversion)" do
+      assert {:ok, account_a} = Accounts.signup(signup_form())
+      assert {:ok, account_b} = Accounts.signup(signup_form())
+      assert {:ok, user} = Users.create(create_user_form(), account_a)
+
+      # precondition: owned by A, not B
+      assert Enum.any?(Users.by_account(account_a), &(&1.id == user.id))
+      refute Enum.any?(Users.by_account(account_b), &(&1.id == user.id))
+      refute Bonfire.Common.URIs.shared_user?(user)
+
+      assert {:ok, _} = Users.transfer_to_account(user, account_b)
+
+      # now owned by B, no longer by A
+      refute Enum.any?(Users.by_account(account_a), &(&1.id == user.id))
+      assert Enum.any?(Users.by_account(account_b), &(&1.id == user.id))
+      # still a Person — transfer never touches the shared_user mixin
+      refute Bonfire.Common.URIs.shared_user?(repo().preload(user, :shared_user, force: true))
+    end
+
+    test "enforces the target account's max_per_account by default" do
+      Process.put([:bonfire_me, Bonfire.Me.Users, :max_per_account], 1)
+      on_exit(fn -> Process.delete([:bonfire_me, Bonfire.Me.Users, :max_per_account]) end)
+
+      assert {:ok, account_a} = Accounts.signup(signup_form())
+      assert {:ok, account_b} = Accounts.signup(signup_form())
+      # fill B to its cap of 1
+      assert {:ok, _b_user} = Users.create(create_user_form(), account_b)
+      assert {:ok, user} = Users.create(create_user_form(), account_a)
+
+      assert catch_throw(Users.transfer_to_account(user, account_b))
+      # unchanged: still owned by A
+      assert Enum.any?(Users.by_account(account_a), &(&1.id == user.id))
+    end
+
+    test "an admin profile: by default the source keeps admin, the moved profile is no longer admin, and the stale display-user link is cleared" do
+      assert {:ok, account_a} = Accounts.signup(signup_form())
+      assert {:ok, user} = Users.create(create_user_form(), account_a)
+      assert {:ok, user} = Users.make_admin(user)
+      assert admin_account?(account_a.id)
+      assert admin_display_user_id(account_a.id) == user.id
+
+      assert {:ok, account_b} = Accounts.signup(signup_form())
+      refute admin_account?(account_b.id)
+
+      assert {:ok, _moved} = Users.transfer_to_account(user, account_b)
+
+      # source stays admin, but its now-foreign displayed-admin link is cleared
+      assert admin_account?(account_a.id)
+      assert admin_display_user_id(account_a.id) == nil
+      # destination is not admin → the moved profile is no longer admin
+      refute admin_account?(account_b.id)
+    end
+
+    test "an admin profile with transfer_admin: demotes the source and grants the destination" do
+      assert {:ok, account_a} = Accounts.signup(signup_form())
+      assert {:ok, user} = Users.create(create_user_form(), account_a)
+      assert {:ok, user} = Users.make_admin(user)
+      assert {:ok, account_b} = Accounts.signup(signup_form())
+
+      assert {:ok, _moved} = Users.transfer_to_account(user, account_b, transfer_admin: true)
+
+      refute admin_account?(account_a.id)
+      assert admin_account?(account_b.id)
+    end
+
+    test "bypasses max_per_account when skip_max_per_account is passed (admin override)" do
+      Process.put([:bonfire_me, Bonfire.Me.Users, :max_per_account], 1)
+      on_exit(fn -> Process.delete([:bonfire_me, Bonfire.Me.Users, :max_per_account]) end)
+
+      assert {:ok, account_a} = Accounts.signup(signup_form())
+      assert {:ok, account_b} = Accounts.signup(signup_form())
+      assert {:ok, _b_user} = Users.create(create_user_form(), account_b)
+      assert {:ok, user} = Users.create(create_user_form(), account_a)
+
+      assert {:ok, _} = Users.transfer_to_account(user, account_b, skip_max_per_account: true)
+      assert Enum.any?(Users.by_account(account_b), &(&1.id == user.id))
+    end
+  end
+
+  describe "local_by_id_or_username/1" do
+    test "resolves a local user by bare username, @username, id, and name@local-domain" do
+      assert {:ok, account} = Accounts.signup(signup_form())
+      assert {:ok, user} = Users.create(create_user_form(), account)
+      username = user.character.username
+      local = Bonfire.Common.URIs.base_domain()
+
+      for input <- [username, "@" <> username, user.id, "#{username}@#{local}"] do
+        assert %{id: uid} = Users.local_by_id_or_username(input),
+               "expected to resolve #{inspect(input)}"
+
+        assert uid == user.id
+      end
+    end
+
+    test "rejects a remote handle, an email, and an unknown username" do
+      refute Users.local_by_id_or_username("nobody_#{System.unique_integer([:positive])}")
+      refute Users.local_by_id_or_username("someone@remote.example.social")
+      refute Users.local_by_id_or_username("someone@example.com")
     end
   end
 

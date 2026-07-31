@@ -78,6 +78,44 @@ defmodule Bonfire.Me.Accounts do
   def get_by_username(username) when is_binary(username),
     do: repo().maybe_one(Queries.login_by_username(username))
 
+  @doc "Preloads a user's (or list of users') `accounted: :account` association. Account preloading lives in `Accounts`; user-resolution lives in `Users`."
+  def preload_account(user_or_users), do: repo().maybe_preload(user_or_users, accounted: :account)
+
+  @doc """
+  Resolves a user id or a (`@`-optional) local username to `{account, user}`, or `nil` — the account being the owning account of that specific persona. Local only (remote/email rejected). User-resolution is delegated to `Bonfire.Me.Users.local_by_id_or_username/1`; the account is preloaded here.
+  """
+  def by_id_or_username(input) when is_binary(input) do
+    case Bonfire.Me.Users.local_by_id_or_username(input) do
+      %{} = user ->
+        user = preload_account(user)
+        {e(user, :accounted, :account, nil), user}
+
+      _ ->
+        nil
+    end
+  end
+
+  @doc """
+  Like `by_id_or_username/1` but also accepts an **email** (→ `{account, nil}`, account-level with no specific persona). Resolves to `{account, user_or_nil}` or `nil`. Local only (a remote `name@domain` handle, or an email with no local account, is rejected).
+  """
+  def by_id_email_or_username(input) when is_binary(input) do
+    case String.trim(input) do
+      "" ->
+        nil
+
+      trimmed ->
+        # an email address has an "@" that isn't the leading char (a leading "@" is a username handle)
+        if String.contains?(trimmed, "@") and not String.starts_with?(trimmed, "@") do
+          case get_by_email(trimmed) do
+            %{} = account -> {account, nil}
+            _ -> nil
+          end
+        else
+          by_id_or_username(trimmed)
+        end
+    end
+  end
+
   @type changeset_name :: :change_password | :confirm_email | :login | :signup
 
   @doc """

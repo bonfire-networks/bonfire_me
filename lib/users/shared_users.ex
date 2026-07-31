@@ -90,7 +90,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
           {:ok, shared_user}
 
         username ->
-          case find_user(username) do
+          case Users.local_by_id_or_username(username) do
             %User{} = user ->
               do_add_account(shared_user, user)
 
@@ -115,7 +115,11 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
 
     def remove_user(%User{} = shared, user_id_or_username, opts)
         when is_binary(user_id_or_username) do
-      with %User{} = to_remove <- find_user(user_id_or_username) || :not_found,
+      with %User{} = to_remove <-
+             Bonfire.Me.Accounts.preload_account(
+               Users.local_by_id_or_username(user_id_or_username)
+             ) ||
+               :not_found,
            account_id when is_binary(account_id) <-
              e(to_remove, :accounted, :account, :id, nil) || :not_found do
         remove_account(shared, account_id, opts)
@@ -189,28 +193,13 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
 
     defp authorized_to_manage?(_user, _), do: false
 
-    # Resolve a user id or username to an existing local user (with its account preloaded), or nil. For invites we get a username; for removals the roster already holds the user, so the UI passes its id. Deliberately not email: an email is account-level and can map to several users.
-    defp find_user(id_or_username) do
-      id_or_username = id_or_username |> String.trim() |> String.trim("@")
-
-      lookup =
-        if Bonfire.Common.Types.is_ulid?(id_or_username),
-          do: Users.by_id(id_or_username),
-          else: Users.by_username(id_or_username)
-
-      case lookup |> repo().maybe_preload(accounted: :account) do
-        {:ok, %User{} = user} -> user
-        _ -> nil
-      end
-    end
-
     # The link is a single row in the join table, so add/remove it directly rather than syncing the whole many-to-many set (no full-set preload, no `on_replace`). `on_conflict: :nothing` (backed by the unique index) makes add idempotent.
     defp do_add_account(%{shared_user: %SharedUser{} = shared_user} = _user, addable),
       do: do_add_account(shared_user, addable)
 
     # an invited (or creating) user: record both its account (for account-level access) and the user itself (the display identity)
     defp do_add_account(%SharedUser{} = shared_user, %User{} = user) do
-      user = repo().maybe_preload(user, accounted: :account)
+      user = Bonfire.Me.Accounts.preload_account(user)
 
       case e(user, :accounted, :account, nil) do
         %Account{} = account -> insert_caretaker(shared_user, account, user.id)

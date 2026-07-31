@@ -4,6 +4,7 @@ defmodule Bonfire.Me.AccountsTest do
   alias Bonfire.Data.Identity.Credential
   alias Bonfire.Me.Fake
   alias Bonfire.Me.Accounts
+  alias Bonfire.Me.Users
 
   setup do
     Bonfire.Me.Fake.clear_caches()
@@ -282,5 +283,42 @@ defmodule Bonfire.Me.AccountsTest do
 
       refute Accounts.get_current(Enums.id(account))
     end)
+  end
+
+  describe "target resolvers (by_id_or_username / by_id_email_or_username)" do
+    test "by_id_or_username resolves id/username → {account, user}; rejects email and remote" do
+      assert {:ok, account} = Accounts.signup(signup_form())
+      assert {:ok, user} = Users.create(create_user_form(), account)
+
+      for input <- [user.character.username, "@" <> user.character.username, user.id] do
+        assert {%{id: aid}, %{id: uid}} = Accounts.by_id_or_username(input),
+               "expected to resolve #{inspect(input)}"
+
+        assert aid == account.id
+        assert uid == user.id
+      end
+
+      # an email is account-level, not a persona — rejected here; so is a remote handle
+      account = repo().preload(account, :email)
+      assert Accounts.by_id_or_username(account.email.email_address) == nil
+      assert Accounts.by_id_or_username("someone@remote.example.social") == nil
+    end
+
+    test "by_id_email_or_username also accepts an email → {account, nil}" do
+      assert {:ok, account} = Accounts.signup(signup_form())
+      account = repo().preload(account, :email)
+      assert {:ok, user} = Users.create(create_user_form(), account)
+
+      assert {%{id: aid}, nil} = Accounts.by_id_email_or_username(account.email.email_address)
+      assert aid == account.id
+
+      assert {%{id: aid2}, %{id: uid}} =
+               Accounts.by_id_email_or_username("@" <> user.character.username)
+
+      assert aid2 == account.id
+      assert uid == user.id
+
+      assert Accounts.by_id_email_or_username("someone@remote.example.social") == nil
+    end
   end
 end
