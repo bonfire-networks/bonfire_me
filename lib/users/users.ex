@@ -484,25 +484,10 @@ defmodule Bonfire.Me.Users do
     end
 
     user =
-      if not is_nil(clean_opts[:undiscoverable]),
-        do:
-          Bonfire.Common.Settings.put(
-            [Bonfire.Me.Users, :undiscoverable],
-            clean_opts[:undiscoverable],
-            current_user: user
-          )
-          |> current_user(),
-        else: user
-
-    user =
-      if clean_opts[:unindexable] do
-        Bonfire.Common.Settings.put([Bonfire.Search.Indexer, :modularity], :disabled,
-          current_user: user
-        )
-        |> current_user()
-      else
-        user
-      end
+      put_privacy_settings(user,
+        undiscoverable: clean_opts[:undiscoverable],
+        unindexable: clean_opts[:unindexable]
+      )
 
     # promote to a shared user (organisation) up front when requested, so it federates as `Organization` from its first federation; done before `after_mutation` so the returned struct carries the `:shared_user` mixin. Pass `clean_opts` so the creator (the acting user from the creation context) is recorded as the first co-manager.
     maybe_make_shared_user(user, clean_opts[:shared_user_label], clean_opts)
@@ -976,6 +961,40 @@ defmodule Bonfire.Me.Users do
     if Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user),
       do: :closed,
       else: :public
+  end
+
+  @doc """
+  Saves a user's discoverability and search-indexing choices as settings, and returns the updated user.
+
+  Used both when a local account is created (from the signup form's toggles) and when a remote actor is first seen (from their `discoverable` / `indexable` ActivityPub properties), so a remote author's opt-out is honoured by the same consent check in `Bonfire.Search.maybe_index/3` that applies to local ones.
+
+  Both options are optional; `nil` leaves the corresponding setting untouched.
+
+  ## Examples
+
+      > put_privacy_settings(user, undiscoverable: true, unindexable: false)
+      %Bonfire.Data.Identity.User{}
+  """
+  def put_privacy_settings(user, opts) do
+    user =
+      if not is_nil(opts[:undiscoverable]),
+        do:
+          Bonfire.Common.Settings.put(
+            [Bonfire.Me.Users, :undiscoverable],
+            opts[:undiscoverable],
+            current_user: user
+          )
+          |> current_user(),
+        else: user
+
+    if opts[:unindexable] do
+      Bonfire.Common.Settings.put([Bonfire.Search.Indexer, :modularity], :disabled,
+        current_user: user
+      )
+      |> current_user()
+    else
+      user
+    end
   end
 
   def count(show \\ :local), do: repo().one(Queries.count(show))
