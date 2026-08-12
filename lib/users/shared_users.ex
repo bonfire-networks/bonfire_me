@@ -299,7 +299,43 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     defp user_preload_query(opts) do
       from(u in User)
       |> Bonfire.Me.Users.Queries.maybe_exclude_user_id(opts)
-      |> Bonfire.Me.Users.Queries.user_proloads(opts[:preload_type] || :local)
+      |> Bonfire.Me.Users.Queries.user_proloads(opts[:preload_type] || :minimal)
+    end
+
+    # WIP: testing a theory for the switch-user crash, where prod hit `ERROR 53100 (disk_full) could not resize shared memory segment`.
+    # Postgres allocates that segment in `/dev/shm` (64MB by default under Docker) for a PARALLEL query, and Ecto issues the two preloads below CONCURRENTLY, so there are two possible ways to stop needing it. 
+    # `PG_NO_PARALLEL_ACCOUNT_USERS` in env picks which to apply:
+    #   1 = issue the two preloads serially (one query at a time, each still free to go parallel)
+    #   2 = force a serial PLAN, so no query allocates a segment at all
+    #   3 (or true/yes) = both
+    defp no_parallel_account_users do
+      case System.get_env("PG_NO_PARALLEL_ACCOUNT_USERS") do
+        "1" -> {_serial_preloads? = true, _serial_plan? = false}
+        "2" -> {false, true}
+        both when both in ["3", "true", "yes"] -> {true, true}
+        _ -> {false, false}
+      end
+    end
+
+    defp preload_account_users(account, preload_spec) do
+      {serial_preloads?, serial_plan?} = no_parallel_account_users()
+
+      opts =
+        [follow_pointers: false] ++
+          if serial_preloads?, do: [in_parallel: false], else: []
+
+      if serial_plan? do
+        repo().transaction(fn ->
+          repo().query!("SET LOCAL max_parallel_workers_per_gather = 0")
+          repo().maybe_preload(account, preload_spec, opts)
+        end)
+        |> case do
+          {:ok, preloaded} -> preloaded
+          other -> error(other, "could not preload the account's users") && account
+        end
+      else
+        repo().maybe_preload(account, preload_spec, opts)
+      end
     end
 
     def by_account(%Account{} = account, opts \\ []) do
@@ -311,7 +347,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
         |> debug("preload_spec")
 
       account =
-        repo().maybe_preload(account, preload_spec, false)
+        preload_account_users(account, preload_spec)
         |> debug("preloaded")
 
       # FIXME: should this call Accounts.by_account instead?
