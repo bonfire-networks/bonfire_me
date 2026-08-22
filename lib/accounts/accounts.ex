@@ -228,9 +228,21 @@ defmodule Bonfire.Me.Accounts do
   def signup(params_or_changeset, opts \\ [])
 
   def signup(params, opts) when not is_struct(params) do
+    signup_email =
+      case params do
+        %{email: %{email_address: email}} when is_binary(email) -> email
+        %{"email" => %{"email_address" => email}} when is_binary(email) -> email
+        %{openid_email: email} when is_binary(email) -> email
+        %{"openid_email" => email} when is_binary(email) -> email
+        _ -> nil
+      end
+
     signup(
       changeset(:signup, params, opts) |> info("changeset"),
-      to_options(opts) |> Keyword.put(:params, params)
+      opts
+      |> to_options()
+      |> Keyword.put(:params, params)
+      |> Keyword.put(:signup_email, signup_email)
     )
   end
 
@@ -239,7 +251,9 @@ defmodule Bonfire.Me.Accounts do
       do_signup(cs, opts)
     else
       # avoid checking out txn
-      error(cs)
+      cs
+      |> error()
+      |> resolve_existing_signup(opts)
     end
   end
 
@@ -281,7 +295,6 @@ defmodule Bonfire.Me.Accounts do
 
     make_admin? = Config.env() != :test and opts[:is_first_account?]
 
-    # revert if email send fails
     repo().transact_with(fn ->
       cs_or_params
       |> Changesets.put_assoc(:instance_admin, %{
@@ -291,9 +304,26 @@ defmodule Bonfire.Me.Accounts do
       |> repo().insert()
     end)
     |> debug("attempted to insert account")
+    |> resolve_existing_signup(opts)
     ~> maybe_redeem_invite(opts)
     ~> maybe_send_confirm_email(opts)
   end
+
+  defp resolve_existing_signup({:error, _reason} = fallback, opts) do
+    case opts[:signup_email] do
+      email when is_binary(email) ->
+        case get_by_email(email) do
+          %{email: %{confirmed_at: nil}} -> {:error, :email_confirmation_required}
+          %Account{} -> {:error, :taken}
+          _ -> fallback
+        end
+
+      _ ->
+        fallback
+    end
+  end
+
+  defp resolve_existing_signup(result, _opts), do: result
 
   ### login
 
@@ -645,16 +675,17 @@ defmodule Bonfire.Me.Accounts do
               |> mailer_response(account)
 
             _ ->
-              {:error, :email_missing}
+              error(account, "Could not load the signup email address")
+              {:error, :confirmation_email_failed}
           end
       end
     else
       error(
         mail,
-        "No mailer module available. Missing configuration value: [:bonfire, :mailer_module]. Skipping sending of email confirmation"
+        "No mailer module available. Missing configuration value: [:bonfire, :mailer_module]. Could not send the signup confirmation email"
       )
 
-      {:ok, account}
+      {:error, :confirmation_email_failed}
     end
   end
 
@@ -973,10 +1004,15 @@ defmodule Bonfire.Me.Accounts do
     #  we ignore mailer timeouts to avoid blocking the signup
     do: {:ok, account}
 
-  defp mailer_response({:error, error}, _) when is_atom(error),
-    do: {:error, error}
+  defp mailer_response({:error, reason}, _) do
+    error(reason, "Could not send signup confirmation email")
+    {:error, :confirmation_email_failed}
+  end
 
-  defp mailer_response(_, _), do: {:error, :email}
+  defp mailer_response(response, _) do
+    error(response, "Unexpected signup confirmation email response")
+    {:error, :confirmation_email_failed}
+  end
 
   @doc """
   Counts the number of accounts.

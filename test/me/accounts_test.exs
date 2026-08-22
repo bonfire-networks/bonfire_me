@@ -72,7 +72,7 @@ defmodule Bonfire.Me.AccountsTest do
              )
     end
 
-    test "email: :exists" do
+    test "email: :exists and is awaiting confirmation" do
       attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs, must_confirm?: true)
       assert account.email.email_address == attrs.email.email_address
@@ -82,8 +82,15 @@ defmodule Bonfire.Me.AccountsTest do
                account.credential.password_hash
              )
 
-      assert {:error, changeset} = Accounts.signup(attrs)
-      assert changeset.changes.email.errors[:email_address]
+      assert {:error, :email_confirmation_required} = Accounts.signup(attrs)
+    end
+
+    test "email: :exists and is already confirmed" do
+      attrs = signup_form()
+      assert {:ok, account} = Accounts.signup(attrs, must_confirm?: true)
+      assert {:ok, _account} = Accounts.confirm_email(account)
+
+      assert {:error, :taken} = Accounts.signup(attrs)
     end
   end
 
