@@ -763,17 +763,28 @@ defmodule Bonfire.Me.Users do
   end
 
   def format_actor(user) do
-    # a shared user (a team/organisation account) federates as an Organization, everyone else as a Person
-    type =
-      if Bonfire.Common.URIs.shared_user?(user),
-        do: "Organization",
-        else: "Person"
+    type = shared_user_actor_type(user) || "Person"
 
     Bonfire.Common.Utils.maybe_apply(
       Bonfire.Federate.ActivityPub.AdapterUtils,
       :format_actor,
       [user, type]
     )
+  end
+
+  # A remote non-Person actor stores the AS2 type it arrived as in its label, so emit that back. Any other label is a local team's own wording ("Team", "Collective"…) rather than an AS2 type, so those federate as Organization. Returns nil for a user that isn't shared at all.
+  defp shared_user_actor_type(user) do
+    if Bonfire.Common.URIs.shared_user?(user) do
+      case e(repo().maybe_preload(user, :shared_user), :shared_user, :label, nil) do
+        label when is_binary(label) ->
+          if label in Bonfire.Me.SharedUsers.federation_module(),
+            do: label,
+            else: "Organization"
+
+        _ ->
+          "Organization"
+      end
+    end
   end
 
   ## Adapter callbacks

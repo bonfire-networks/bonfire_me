@@ -16,9 +16,29 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     # the co-manager join table; each link is one row: (shared_user_id, account_id, user_id)
     @caretaker_join "bonfire_data_shared_user_accounts"
 
+    @behaviour Bonfire.Common.ContextModule
+    # SharedUser is a mixin rather than a pointable, so it isn't in the schema-keyed registry: declare ourselves here, otherwise `ContextModule.maybe_apply/4` can't resolve this module and silently falls back to the generic function
+    def context_module, do: __MODULE__
+    def schema_module, do: SharedUser
+
     # temporary until these are implemented elsewhere
     @behaviour Bonfire.Federate.ActivityPub.FederationModules
     def federation_module, do: ["Organization", "Service", "Application"]
+
+    @doc "Labels a remote non-`Person` actor with the AS2 type it arrived as, which is our record of what it actually is: it round-trips back out as the same type, and gives the UI something to show. Called (in place of `Users.create_remote/2`) for the types in `federation_module/0`; `opts[:actor_type]` carries the type, since picking this module discarded which of them it was."
+    def create_remote(params, opts \\ []) do
+      with {:ok, user} <- Users.create_remote(params, opts) do
+        case opts[:actor_type] do
+          type when is_binary(type) ->
+            init_shared_user(user, type, opts)
+            {:ok, repo().maybe_preload(user, :shared_user, force: true)}
+
+          _ ->
+            # no type to record: still a valid remote user, just not a shared one
+            {:ok, user}
+        end
+      end
+    end
 
     @doc "Marks a user in-memory as NOT a shared user, by setting its `:shared_user` assoc to a loaded `nil`. Lets code that classifies a known-never-shared actor (e.g. the service/instance actor) skip a DB preload of the assoc."
     def mark_not_shared(%User{} = user), do: %{user | shared_user: nil}
@@ -66,8 +86,20 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
       end
     end
 
-    def add_account(%User{} = user_to_share, username, params, opts)
-        when is_binary(username) do
+    def add_account(%User{} = user_to_share, email_or_username, params, opts) do
+      # a remote identity is controlled by its origin instance and we can never publish as it, so it must not become locally co-manageable, whoever is asking, and before we look at who is being added
+      if remote?(user_to_share) do
+        error(
+          user_to_share,
+          l("This identity belongs to another instance, so it cannot be shared here.")
+        )
+      else
+        do_add_account_to(user_to_share, email_or_username, params, opts)
+      end
+    end
+
+    defp do_add_account_to(%User{} = user_to_share, username, params, opts)
+         when is_binary(username) do
       # pass `opts` so `init_shared_user` can record the acting user as the creator/first co-manager
       case init_shared_user(user_to_share, params, opts) do
         %SharedUser{} = shared_user ->
@@ -81,6 +113,12 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
           error(other, "Could not turn this user identity into a shared user")
       end
     end
+
+    defp do_add_account_to(_user_to_share, other, _params, _opts),
+      do: error(other, l("Please specify the username of the person to add."))
+
+    # a remote actor lives on another instance. When the federation extension is unavailable there are no remote actors, so anything unresolved counts as local.
+    defp remote?(user), do: Bonfire.Me.Integration.is_local?(user) == false
 
     # Co-managers are invited by username, which identifies exactly one user. An email identifies an account that can own several users, so inviting by email would leak (and grant a display identity to) the account's other personas; hence username only.
     defp add_resolved_user(shared_user, username) do
@@ -211,6 +249,9 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     defp do_add_account(%SharedUser{} = shared_user, %Account{} = account),
       do: insert_caretaker(shared_user, account, nil)
 
+    # no account at all: a REMOTE actor (there is no local account to link, and never will be), or an internal caller with no session. The mixin still records what kind of actor this is, while being co-managed is a separate, local-only concern, so skip the link rather than failing.
+    defp do_add_account(_shared_user, nil), do: {:ok, nil}
+
     defp insert_caretaker(%SharedUser{} = shared_user, %Account{} = account, user_id) do
       # the join table is schemaless here, so dump the ULIDs to the binary the pointer columns store. `on_conflict: :nothing` (backed by the unique index on shared_user_id+account_id) keeps add idempotent and one row per account.
       row =
@@ -273,7 +314,7 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
     defp changeset(:make_shared_user, %User{} = user, params) do
       params =
         params
-        |> e("shared_user", params)
+        |> normalise_params()
         # default label for shared users, do not localise here as it is a DB and schema level classification
         |> Map.put_new(
           "label",
@@ -291,6 +332,11 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
         with: &Bonfire.Data.SharedUser.changeset/2
       )
     end
+
+    # the label is the only field callers usually care about (an incoming AP actor type, say), so accept it on its own
+    defp normalise_params(label) when is_binary(label), do: %{"label" => label}
+    defp normalise_params(params) when is_map(params), do: e(params, "shared_user", params)
+    defp normalise_params(_), do: %{}
 
     defp user_preloads do
       [:shared_user, :character, profile: [:icon]]
