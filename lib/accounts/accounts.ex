@@ -488,9 +488,11 @@ defmodule Bonfire.Me.Accounts do
     # check if any other user on this account is blocked (TODO: optimise, eg by only fetching user ids)
     Users.by_account!(account)
 
-    # OK now we now we can sign in, so we record the 'last seen' date/time
-    maybe_apply(Bonfire.Social.Seen, :mark_seen, [user || account, account, [upsert: true]])
-    |> debug("recorded last_login")
+    # OK now we can sign in, so record the 'last seen' date/time per-profile, so the USER goes in the object.
+    if user,
+      do:
+        maybe_apply(Bonfire.Social.Seen, :mark_seen, [account, user, [upsert: true]])
+        |> debug("recorded last_login")
 
     {:ok, account, user}
   end

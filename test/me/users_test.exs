@@ -148,9 +148,10 @@ defmodule Bonfire.Me.UsersTest do
       attrs_u = create_user_form()
       assert {:ok, %{id: user_id} = user} = Users.create(attrs_u, account)
 
+      # last-seen is recorded per-profile as subject=account, object=user (see issue #2220)
+      refute Bonfire.Social.Seen.last_date(account_id, user_id)
       refute Bonfire.Social.Seen.last_date(user_id, account_id)
       refute Bonfire.Social.Seen.last_date(account_id, account_id)
-      refute Bonfire.Social.Seen.last_date(account_id, user_id)
 
       assert {:ok, %{id: account_id}, %{id: user_id}} =
                Accounts.login(%{
@@ -158,11 +159,11 @@ defmodule Bonfire.Me.UsersTest do
                  password: attrs.credential.password
                })
 
-      last_datetime = Bonfire.Social.Seen.last_date(user_id, account_id)
+      last_datetime = Bonfire.Social.Seen.last_date(account_id, user_id)
       assert DateTime.to_date(last_datetime) == Date.utc_today()
 
+      refute Bonfire.Social.Seen.last_date(user_id, account_id)
       refute Bonfire.Social.Seen.last_date(account_id, account_id)
-      refute Bonfire.Social.Seen.last_date(account_id, user_id)
     end
   end
 
