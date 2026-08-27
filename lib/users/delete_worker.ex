@@ -29,19 +29,37 @@ defmodule Bonfire.Me.DeleteWorker do
     delete_now(ids)
   end
 
-  def delete_now(ids) do
-    main =
-      Bonfire.Boundaries.load_pointers(ids, skip_boundary_check: true, include_deleted: true)
-      |> debug("main")
-      |> delete_structs_now()
+  def delete_now(ids, opts \\ [skip_boundary_check: true]) do
+    Bonfire.Boundaries.load_pointers(ids, opts ++ [include_deleted: true])
+    |> debug("main")
+    |> delete_structs_now(opts)
+    |> verify_deleted(ids)
   end
 
-  def delete_structs_now(structs) do
+  # opts are threaded on rather than being applied only to the load above: whatever authorisation the caller established has to reach the nested deletes too, or a boundarised preload mid-sweep silently returns nothing and those objects are never deleted
+  def delete_structs_now(structs, opts \\ [skip_boundary_check: true]) do
     Bonfire.Common.Utils.maybe_apply(
       Bonfire.Social.Objects,
       :do_delete,
-      [structs, federate_inline: true],
+      [structs, opts ++ [federate_inline: true]],
       fallback_return: {:error, "Missing required module: Bonfire.Social.Objects"}
     )
+  end
+
+  # A deletion that didn't actually delete must not report success: the caller has no other signal,
+  # and downstream a `Delete` would be federated for something still present locally (or, worse,
+  # not federated at all while the caller believes it was). Verified by reloading rather than
+  # trusting the return value, since the sweep can partially fail without erroring.
+  defp verify_deleted(result, ids) do
+    case Bonfire.Boundaries.load_pointers(ids, skip_boundary_check: true, include_deleted: false) do
+      [] ->
+        result
+
+      survivors ->
+        error(
+          Types.uids(survivors),
+          "Deletion did not complete: these objects still exist afterwards"
+        )
+    end
   end
 end
