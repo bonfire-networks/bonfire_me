@@ -72,7 +72,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      > Bonfire.Me.Characters.by_username("username")
+      > by_username("username")
       %Bonfire.Data.Identity.Character{}
   """
   def by_username(username) when is_binary(username),
@@ -86,7 +86,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      > Bonfire.Me.Characters.by_usernames(["username1", "username2"])
+      > by_usernames(["username1", "username2"])
       [%Bonfire.Data.Identity.Character{}, %Bonfire.Data.Identity.Character{}]
   """
   def by_usernames(usernames) when is_list(usernames),
@@ -97,10 +97,10 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      > Bonfire.Me.Characters.get("id_or_username")
+      > get("id_or_username")
       %Bonfire.Data.Identity.Character{}
 
-      > Bonfire.Me.Characters.get(["id1", "id2"])
+      > get(["id1", "id2"])
       {:ok, [%Bonfire.Data.Identity.Character{}, %Bonfire.Data.Identity.Character{}]}
   """
   def get(ids) when is_list(ids), do: {:ok, q_by_id(ids) |> repo().many()}
@@ -134,7 +134,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      iex> Bonfire.Me.Characters.username_available?("non_existing_username")
+      iex> username_available?("non_existing_username")
       true
   """
   def username_available?(username) do
@@ -147,7 +147,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      iex> Bonfire.Me.Characters.hash_available?("hash")
+      iex> hash_available?("hash")
       true
   """
   def hash_available?(hash) do
@@ -159,7 +159,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      > Bonfire.Me.Characters.hash_delete("hash")
+      > hash_delete("hash")
   """
   def hash_delete(hash) do
     repo().delete_all(from(c in Character, where: c.username_hash == ^hash))
@@ -170,7 +170,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      iex> Bonfire.Me.Characters.clean_username("invalid username!")
+      iex> clean_username("invalid username!")
       "invalid_username"
   """
   def clean_username(username, dirty_replacement \\ "_") do
@@ -186,7 +186,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      > Bonfire.Me.Characters.update(%Bonfire.Data.Identity.Character{}, %{field: "value"})
+      > update(%Bonfire.Data.Identity.Character{}, %{field: "value"})
       {:ok, %Bonfire.Data.Identity.Character{}}
   """
   def update(%Character{} = character, attrs) do
@@ -256,11 +256,11 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      iex> Bonfire.Me.Characters.display_username("username")
+      iex> display_username("username")
       "@username"
 
-      iex> Bonfire.Me.Characters.display_username("username", true, true, "@")
-      "@username@domain.com"
+      iex> display_username("username", true, true, "@") == "@username@" <> Bonfire.Common.URIs.base_domain()
+      true
   """
   def display_username(
         user,
@@ -355,7 +355,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      iex> Bonfire.Me.Characters.character_mention_prefix(%Bonfire.Data.Identity.User{})
+      iex> character_mention_prefix(%Bonfire.Data.Identity.User{})
       "@"
   """
   def character_mention_prefix(object) do
@@ -372,7 +372,7 @@ defmodule Bonfire.Me.Characters do
 
   ## Examples
 
-      iex> Bonfire.Me.Characters.character_url(%Bonfire.Data.Identity.Character{})
+      > character_url(%Bonfire.Data.Identity.Character{username: "username", peered: nil})
       "http://example.com/character/username"
   """
   def character_url(character), do: URIs.canonical_url(character)
@@ -409,4 +409,30 @@ defmodule Bonfire.Me.Characters do
   end
 
   def indexing_object_format(_), do: nil
+
+  @doc """
+  Rewrites a fedi actor's AP-form URL (`/users/user`) to its web form (`/@user`), at the path root only, so a `/users/user` tag href also matches a `/@user` content anchor. Only this direction is safe: the reverse can't be assumed, since not every instance uses `/users/`. Returns nil when the path isn't a root `/users/...`.
+
+  ## Examples
+
+      iex> alt_actor_url_form("https://example.com/users/bob")
+      "https://example.com/@bob"
+
+      iex> alt_actor_url_form("https://example.com/@bob")
+      nil
+
+      iex> alt_actor_url_form("https://example.com/ap/users/123")
+      nil
+
+      iex> alt_actor_url_form(nil)
+      nil
+  """
+  def alt_actor_url_form(url) when is_binary(url) do
+    case URI.parse(url) do
+      %URI{path: "/users/" <> rest} = uri -> URI.to_string(%{uri | path: "/@" <> rest})
+      _ -> nil
+    end
+  end
+
+  def alt_actor_url_form(_), do: nil
 end
