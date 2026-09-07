@@ -40,6 +40,25 @@ defmodule Bonfire.Me.Mails do
     }
   end
 
+  @doc "Builds a verification email without reusing or altering the signup/reset token."
+  def verification_link(account, url, action_title) do
+    app_name = Bonfire.Mailer.app_name()
+    new()
+    |> subject(l("Verify your account to continue"))
+    |> render_body(:confirm_action,
+      branding_assigns()
+      |> Map.merge(%{
+        current_account: account, confirm_url: url, app_name: app_name,
+        heading: l("Verify it’s you"),
+        intro: l("You requested: %{action}.", action: action_title),
+        intro_2: l("This link expires in 10 minutes. Open it in any browser to verify there, then review and confirm your action."),
+        cta: l("Review verification request"),
+        disclaimer: l("If you did not request this, ignore this email. Opening the link does not perform the action."),
+        signoff: l("Thank you"), signature: app_name
+      }))
+    |> mjmlify_html()
+  end
+
   @doc """
   Sends a confirmation email based on the specified action.
 

@@ -432,12 +432,16 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp login_check_password(%Account{} = account, form, changeset) do
-    if Credential.check_password(
-         form.password,
-         e(account, :credential, :password_hash, nil)
-       ),
-       do: {:ok, account},
-       else: {:error, Changeset.add_error(changeset, :form, "no_match")}
+    case e(account, :credential, :password_hash, nil) do
+      hash when is_binary(hash) ->
+        if Credential.check_password(form.password, hash),
+          do: {:ok, account},
+          else: {:error, Changeset.add_error(changeset, :form, "no_match")}
+
+      _ ->
+        Credential.dummy_check()
+        {:error, Changeset.add_error(changeset, :form, "no_match")}
+    end
   end
 
   defp login_maybe_check_second_factor(%Account{} = account, changeset, opts) do
