@@ -7,7 +7,10 @@ defmodule Bonfire.Me.SensitiveActions.DeleteAccount do
   def describe(_context) do
     %{
       title: l("Delete your account"),
-      description: l("This deletes all your profiles, posts and other data from this server. This action cannot be undone."),
+      description:
+        l(
+          "This deletes all your profiles, posts and other data from this server. This action cannot be undone."
+        ),
       success: %{
         title: l("Account deletion requested"),
         description: l("Your account and its data have been queued for deletion.")
@@ -16,9 +19,8 @@ defmodule Bonfire.Me.SensitiveActions.DeleteAccount do
   end
 
   @impl true
-  def authorize(%{account: %{id: id}, pending: %{account_id: id, target_id: id}}), do: :ok
-  def authorize(_), do: {:error, :not_allowed}
+  def execute(%{account: account}), do: Bonfire.Me.DeleteWorker.enqueue_delete(account)
 
   @impl true
-  def execute(%{account: account}), do: Bonfire.Me.DeleteWorker.enqueue_delete(account)
+  def factors, do: :any
 end

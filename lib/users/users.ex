@@ -53,10 +53,19 @@ defmodule Bonfire.Me.Users do
   def get_current(id) when is_binary(id),
     do: repo().maybe_one(Queries.current(id)) |> Characters.mark_as(:local)
 
-  def get_current(nil, _), do: nil
-
+  # NOTE: account_id only selects which account context gets preloaded (SharedUser disambiguation); it does NOT check membership. Use `get_in_account/2` when the pairing comes from untrusted input.
   def get_current(id, account_id) when is_binary(id),
-    do: repo().maybe_one(Queries.current(id, account_id)) |> Characters.mark_as(:local)
+    do: repo().maybe_one(Queries.current(id, Types.uid(account_id))) |> Characters.mark_as(:local)
+
+  def get_current(_, _), do: nil
+
+  @doc "Like `get_current/2`, but only returns the user when the account actually has access to it: its own user, or a shared user it caretakes. Use for user/account pairings from untrusted input (e.g. URL params); the session's pairing was already validated when written."
+  def get_in_account(id, account_id) when is_binary(id) and is_binary(account_id),
+    do:
+      repo().maybe_one(Queries.current_in_account(id, Types.uid(account_id)))
+      |> Characters.mark_as(:local)
+
+  def get_in_account(_, _), do: nil
 
   @doc """
   Fetches the current user by ID.

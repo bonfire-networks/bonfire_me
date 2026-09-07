@@ -158,6 +158,29 @@ defmodule Bonfire.Me.Users.Queries do
 
   def current(user_id, _), do: current(user_id)
 
+  @doc "Like `current/2` but only matching when the account actually has access to the user: their own accounted row, or a caretaker-account link when acting as a shared user (the switch-user list includes those via `SharedUsers.by_account`). `current/2` is a loader whose account join merely selects the preloaded context; use this for user/account pairings that come from untrusted input."
+  def current_in_account(user_id, account_id) when is_binary(account_id) do
+    current(user_id, account_id)
+    |> scope_to_account(account_id)
+  end
+
+  defp scope_to_account(query, account_id) do
+    if maybe_module(Bonfire.Me.SharedUsers) do
+      query
+      |> reusable_join(:left, [user], su in assoc(user, :shared_user), as: :shared_user)
+      |> reusable_join(:left, [shared_user: su], ca in assoc(su, :caretaker_accounts),
+        as: :caretaker_account,
+        on: ca.id == ^account_id
+      )
+      |> where(
+        [accounted: accounted, caretaker_account: ca],
+        not is_nil(accounted.id) or not is_nil(ca.id)
+      )
+    else
+      where(query, [accounted: accounted], not is_nil(accounted.id))
+    end
+  end
+
   def base_by_id(id) when is_binary(id), do: from(u in User, as: :user, where: u.id == ^id)
 
   @doc """

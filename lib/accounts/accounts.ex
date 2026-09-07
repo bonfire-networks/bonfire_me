@@ -413,6 +413,14 @@ defmodule Bonfire.Me.Accounts do
     not is_nil(e(repo().preload(account, :credential), :credential, :password_hash, nil))
   end
 
+  @doc "Whether this instance only offers passwordless (magic-link) login. Kept under the historical :bonfire_ui_me config key for compatibility."
+  def passwordless_only? do
+    Bonfire.Common.Config.get(
+      [:bonfire_ui_me, :login, :passwordless_only],
+      false
+    ) in [true, "true", "1", "yes"]
+  end
+
   defp login_query(%{email: email}) when is_binary(email),
     do: Queries.login_by_email(email)
 

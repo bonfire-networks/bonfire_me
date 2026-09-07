@@ -291,4 +291,32 @@ defmodule Bonfire.Me.UsersTest do
       assert e(result, :character, :username, nil)
     end
   end
+
+  describe "get_in_account/2 membership scoping" do
+    test "returns a user belonging to the account" do
+      account = Fake.fake_account!()
+      me = Fake.fake_user!(account)
+
+      assert %{id: id} = Users.get_in_account(me.id, account.id)
+      assert id == me.id
+    end
+
+    test "returns nil for a user of a different account" do
+      account = Fake.fake_account!()
+      other = Fake.fake_user!(Fake.fake_account!())
+
+      assert is_nil(Users.get_in_account(other.id, account.id))
+    end
+
+    test "returns a shared user for a caretaker account" do
+      account_a = Fake.fake_account!()
+      org = Fake.fake_user!(account_a)
+      account_b = Fake.fake_account!()
+      user_b = Fake.fake_user!(account_b)
+      {:ok, _} = Bonfire.Me.SharedUsers.add_account(org, "@" <> user_b.character.username)
+
+      assert %{id: id} = Users.get_in_account(org.id, account_b.id)
+      assert id == org.id
+    end
+  end
 end

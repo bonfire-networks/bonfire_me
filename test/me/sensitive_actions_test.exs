@@ -1,154 +1,148 @@
 defmodule Bonfire.Me.SensitiveActionsTest do
+  @moduledoc """
+  Factor-based sudo domain logic: action resolution by Behaviour adoption, requirement resolution to the top-n available factors, per-factor freshness, and challenge selection.
+  """
   use Bonfire.Me.DataCase, async: false
-  use Repatch.ExUnit
   import Bonfire.Me.Fake
-  alias Bonfire.Me.SensitiveActions, as: Actions
+  import Ecto.Query
+  alias Bonfire.Me.SensitiveActions
+  alias Bonfire.Me.SensitiveActions.DeleteAccount
   alias Bonfire.Data.Identity.Credential
+  alias Bonfire.Common.Config
   doctest Bonfire.Me.SensitiveActions
 
-  test "cleanup removes expired unused and consumed requests while preserving active ones" do
+  defp passwordless_account! do
     account = fake_account!()
-    {:ok, expired} = Actions.create(account, "delete_account")
-    {:ok, {expired, _, _token}} = Actions.issue_email(expired.id, account.id)
-    {:ok, consumed} = Actions.create(account, "delete_account")
-    {:ok, _} = Actions.cancel(consumed.id, nil, account.id)
-    {:ok, active} = Actions.create(account, "delete_account")
-    {:ok, {_, _, token}} = Actions.issue_email(active.id, account.id)
+    Bonfire.Common.Repo.delete_all(from(c in Credential, where: c.id == ^account.id))
+    # reload so the deleted credential is not still sitting preloaded on the struct
+    account = Bonfire.Common.Repo.get!(Bonfire.Data.Identity.Account, account.id)
+    # the precondition the degrade tests rely on
+    refute Bonfire.Me.Accounts.account_has_password?(account)
+    account
+  end
 
-    for pending <- [expired, consumed] do
-      pending
-      |> Ecto.Changeset.change(expires_at: DateTime.add(DateTime.utc_now(), -1))
-      |> repo().update!()
+  defp put_config(key_path, value) do
+    orig = Config.get(key_path)
+    Config.put(key_path, value)
+    on_exit(fn -> Config.put(key_path, orig) end)
+  end
+
+  describe "resolve/1" do
+    test "rejects an unknown module name" do
+      assert {:error, :unknown_action} = SensitiveActions.resolve("Not.A.Real.Module")
     end
 
-    assert :ok = Oban.Testing.perform_job(Bonfire.Me.SensitiveActions.PruneWorker, %{}, [])
-    refute repo().get(Bonfire.Data.Identity.PendingAction, expired.id)
-    refute repo().get(Bonfire.Data.Identity.PendingAction, consumed.id)
-    assert {:ok, _} = Actions.fetch(active.id)
-    assert {:ok, _} = Actions.redeem(active.id, token, nil)
-    assert {:ok, 0} = Actions.prune_expired()
+    test "rejects an existing module that does not adopt the Action behaviour" do
+      assert {:error, :unknown_action} = SensitiveActions.resolve("Elixir.Bonfire.Me.Accounts")
+    end
+
+    test "resolves an Action adopter by module name (positive control)" do
+      assert {:ok, DeleteAccount} =
+               SensitiveActions.resolve("Elixir.Bonfire.Me.SensitiveActions.DeleteAccount")
+    end
+
+    test "rejects the old registry key" do
+      assert {:error, :unknown_action} = SensitiveActions.resolve("delete_account")
+    end
   end
 
-  test "email proof is single-use and does not execute the pending action" do
-    account = fake_account!()
-    {:ok, pending} = Actions.create(account, "delete_account")
-    {:ok, {_, _, token}} = Actions.issue_email(pending.id, account.id)
-    assert {:ok, proof} = Actions.redeem(pending.id, token, nil)
-    assert Actions.fresh?(proof, pending, nil)
-    assert {:ok, _} = Actions.fetch(pending.id)
-    assert {:error, :invalid_link} = Actions.redeem(pending.id, token, nil)
-    refute Actions.fresh?(nil, pending, account.id)
+  describe "available_factors/1" do
+    test "a password account has password and email, in strength order" do
+      assert SensitiveActions.available_factors(fake_account!()) == [:password, :email]
+    end
+
+    test "a passwordless account has only email" do
+      assert SensitiveActions.available_factors(passwordless_account!()) == [:email]
+    end
+
+    test "the strength order is the universe: [:email] config removes password entirely" do
+      put_config([SensitiveActions, :factor_strength], [:email])
+      assert SensitiveActions.available_factors(fake_account!()) == [:email]
+    end
+
+    test "a gated (passwordless-only) instance never offers the password factor, hash or no hash" do
+      Process.put([:bonfire_ui_me, :login, :passwordless_only], true)
+      assert SensitiveActions.available_factors(fake_account!()) == [:email]
+    end
   end
 
-  test "a different signed-in account cannot redeem a link or consume it" do
-    account = fake_account!()
-    other = fake_account!()
-    {:ok, pending} = Actions.create(account, "delete_account")
-    {:ok, {_, _, token}} = Actions.issue_email(pending.id, account.id)
-    assert {:error, :invalid_link} = Actions.redeem(pending.id, token, other.id)
-    assert {:ok, _} = Actions.redeem(pending.id, token, nil)
+  describe "required/2" do
+    test ":any resolves to the single strongest available factor" do
+      assert SensitiveActions.required(DeleteAccount, fake_account!()) == [:password]
+    end
+
+    test ":any degrades to email for a passwordless account" do
+      assert SensitiveActions.required(DeleteAccount, passwordless_account!()) == [:email]
+    end
+
+    test "a per-module :sudo_factors override beats factors/0" do
+      put_config([DeleteAccount, :sudo_factors], {:any, 2})
+      assert SensitiveActions.required(DeleteAccount, fake_account!()) == [:password, :email]
+    end
+
+    test "{:any, 2} caps at what a passwordless account has available" do
+      put_config([DeleteAccount, :sudo_factors], {:any, 2})
+      assert SensitiveActions.required(DeleteAccount, passwordless_account!()) == [:email]
+    end
+
+    test ":all requires every available factor" do
+      put_config([DeleteAccount, :sudo_factors], :all)
+      assert SensitiveActions.required(DeleteAccount, fake_account!()) == [:password, :email]
+    end
+
+    test "an explicit list keeps only available factors, in strength order" do
+      put_config([DeleteAccount, :sudo_factors], [:password, :email])
+      assert SensitiveActions.required(DeleteAccount, passwordless_account!()) == [:email]
+    end
+
+    test "factor_strength [:email] makes every requirement email-only" do
+      put_config([SensitiveActions, :factor_strength], [:email])
+      assert SensitiveActions.required(DeleteAccount, fake_account!()) == [:email]
+    end
   end
 
-  test "proof expires at five minutes and cannot authorize a different account" do
-    account = fake_account!()
-    other = fake_account!()
-    {:ok, pending} = Actions.create(account, "delete_account")
-    proof = %{"account_id" => account.id, "pending_id" => pending.id, "at" => 1000}
-    assert Actions.fresh?(proof, pending, nil, 1299)
-    refute Actions.fresh?(proof, pending, nil, 1300)
-    refute Actions.fresh?(proof, pending, nil, 999)
-    refute Actions.fresh?(proof, pending, other.id, 1001)
-    refute Actions.fresh?(proof, %{pending | id: Ecto.UUID.generate()}, nil, 1001)
-  end
+  describe "fresh?/2, stamp/2 and next_challenge/2" do
+    test "nothing required is always met" do
+      assert SensitiveActions.fresh?(%{}, []) == true
+    end
 
-  test "confirmation requires proof and executes only once" do
-    Oban.Testing.with_testing_mode(:manual, fn ->
-      account = fake_account!()
-      {:ok, pending} = Actions.create(account, "delete_account")
-      assert {:error, :needs_reauth} = Actions.confirm(pending.id, nil, account.id)
-      {:ok, {_, _, token}} = Actions.issue_email(pending.id, account.id)
-      {:ok, proof} = Actions.redeem(pending.id, token, nil)
-      assert {:ok, %Oban.Job{}} = Actions.confirm(pending.id, proof, nil)
-      assert {:error, :expired} = Actions.confirm(pending.id, proof, nil)
-    end)
-  end
+    test "an empty factors map meets nothing" do
+      assert SensitiveActions.fresh?(%{}, [:password]) == false
+    end
 
-  test "changed targets are rejected at confirmation" do
-    account = fake_account!()
-    {:ok, pending} = Actions.create(account, "delete_account")
-    {:ok, {_, _, token}} = Actions.issue_email(pending.id, account.id)
-    {:ok, proof} = Actions.redeem(pending.id, token, nil)
-    pending |> Ecto.Changeset.change(target_id: "different-target") |> repo().update!()
-    assert {:error, :not_allowed} = Actions.confirm(pending.id, proof, nil)
-  end
+    test "a stamped factor is fresh" do
+      factors = SensitiveActions.stamp(%{}, :password)
+      assert SensitiveActions.fresh?(factors, [:password]) == true
+    end
 
-  test "expired links and cancelled intents cannot be used" do
-    account = fake_account!()
-    {:ok, pending} = Actions.create(account, "delete_account")
-    {:ok, {pending, _, token}} = Actions.issue_email(pending.id, account.id)
-    pending |> Ecto.Changeset.change(token_expires_at: DateTime.add(DateTime.utc_now(), -1)) |> repo().update!()
-    assert {:error, :invalid_link} = Actions.redeem(pending.id, token, nil)
-    assert {:ok, _} = Actions.cancel(pending.id, nil, account.id)
-    assert {:error, :expired} = Actions.fetch(pending.id)
-  end
+    test "a stale factor is not fresh" do
+      stale = System.system_time(:millisecond) - to_timeout(hour: 1)
+      assert SensitiveActions.fresh?(%{password: stale}, [:password]) == false
+    end
 
-  test "passwordless accounts reject password verification without crashing" do
-    account = fake_account!()
-    repo().delete_all(from c in Credential, where: c.id == ^account.id)
-    {:ok, pending} = Actions.create(account, "delete_account")
-    assert {:error, :invalid_credentials} = Actions.verify_password(pending.id, account.id, "made-up")
-  end
+    test "a future timestamp fails closed" do
+      future = System.system_time(:millisecond) + to_timeout(hour: 1)
+      assert SensitiveActions.fresh?(%{password: future}, [:password]) == false
+    end
 
-  test "resending invalidates the previous link and changing email invalidates the replacement" do
-    account = fake_account!()
-    {:ok, pending} = Actions.create(account, "delete_account")
-    {:ok, {_, _, first}} = Actions.issue_email(pending.id, account.id)
-    {:ok, {_, _, replacement}} = Actions.issue_email(pending.id, account.id)
-    assert {:error, :invalid_link} = Actions.redeem(pending.id, first, nil)
-    account.email
-    |> Ecto.Changeset.change(email_address: "changed-#{System.unique_integer([:positive])}@example.com")
-    |> repo().update!()
-    assert {:error, :invalid_link} = Actions.redeem(pending.id, replacement, nil)
-  end
+    test "a fresh weaker factor does not substitute for the required one" do
+      factors = SensitiveActions.stamp(%{}, :email)
+      assert SensitiveActions.fresh?(factors, [:password]) == false
+    end
 
-  test "redeeming and cancelling discard the no-longer-needed email proof metadata" do
-    account = fake_account!()
-    {:ok, pending} = Actions.create(account, "delete_account")
-    {:ok, {_, _, token}} = Actions.issue_email(pending.id, account.id)
-    {:ok, _} = Actions.redeem(pending.id, token, nil)
-    stored = repo().get!(Bonfire.Data.Identity.PendingAction, pending.id)
-    assert is_nil(stored.email_address)
-    assert is_nil(stored.token_hash)
-    assert is_nil(stored.token_expires_at)
+    test "stamp merges without clobbering other factors" do
+      factors = SensitiveActions.stamp(%{email: 123}, :password)
+      assert factors[:email] == 123
+      assert is_integer(factors[:password])
+    end
 
-    {:ok, _} = Actions.issue_email(pending.id, account.id)
-    {:ok, _} = Actions.cancel(pending.id, nil, account.id)
-    stored = repo().get!(Bonfire.Data.Identity.PendingAction, pending.id)
-    assert is_nil(stored.email_address)
-    assert is_nil(stored.token_hash)
-    assert is_nil(stored.token_expires_at)
-  end
+    test "next_challenge picks the strongest required factor not yet fresh" do
+      now = System.system_time(:millisecond)
+      assert SensitiveActions.next_challenge(%{}, [:password, :email]) == :password
+      assert SensitiveActions.next_challenge(%{password: now}, [:password, :email]) == :email
 
-  test "execution failure rolls back both the queued job and consumption" do
-    Oban.Testing.with_testing_mode(:manual, fn ->
-      account = fake_account!()
-      {:ok, pending} = Actions.create(account, "delete_account")
-      {:ok, {_, _, token}} = Actions.issue_email(pending.id, account.id)
-      {:ok, proof} = Actions.redeem(pending.id, token, nil)
-      before_count = repo().aggregate(Oban.Job, :count)
-      Repatch.patch(Bonfire.Me.SensitiveActions.DeleteAccount, :execute, fn context ->
-        {:ok, _} = Bonfire.Me.DeleteWorker.enqueue_delete(context.account)
-        {:error, :simulated_failure_after_enqueue}
-      end)
-      assert {:error, :simulated_failure_after_enqueue} = Actions.confirm(pending.id, proof, nil)
-      assert repo().aggregate(Oban.Job, :count) == before_count
-      assert {:ok, _} = Actions.fetch(pending.id)
-    end)
-  end
-
-  test "unknown actions and malformed identifiers fail closed" do
-    assert {:error, :unknown_action} = Actions.resolve("Elixir.System")
-    assert {:error, :expired} = Actions.fetch("bad")
-    assert {:error, :expired} = Actions.confirm("bad", nil, nil)
+      assert SensitiveActions.next_challenge(%{password: now, email: now}, [:password, :email]) ==
+               :met
+    end
   end
 end

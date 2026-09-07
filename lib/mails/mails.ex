@@ -40,25 +40,6 @@ defmodule Bonfire.Me.Mails do
     }
   end
 
-  @doc "Builds a verification email without reusing or altering the signup/reset token."
-  def verification_link(account, url, action_title) do
-    app_name = Bonfire.Mailer.app_name()
-    new()
-    |> subject(l("Verify your account to continue"))
-    |> render_body(:confirm_action,
-      branding_assigns()
-      |> Map.merge(%{
-        current_account: account, confirm_url: url, app_name: app_name,
-        heading: l("Verify it’s you"),
-        intro: l("You requested: %{action}.", action: action_title),
-        intro_2: l("This link expires in 10 minutes. Open it in any browser to verify there, then review and confirm your action."),
-        cta: l("Review verification request"),
-        disclaimer: l("If you did not request this, ignore this email. Opening the link does not perform the action."),
-        signoff: l("Thank you"), signature: app_name
-      }))
-    |> mjmlify_html()
-  end
-
   @doc """
   Sends a confirmation email based on the specified action.
 
@@ -139,22 +120,48 @@ defmodule Bonfire.Me.Mails do
   Sends a password reset email.
   """
   def forgot_password(%Account{} = account, opts \\ []) do
-    app_name = Bonfire.Mailer.app_name()
-
     confirm_token_email(account,
       log_label: "Reset link",
-      heading: l("Reset your password"),
+      heading: heading_for(opts, l("Reset your password")),
       go: opts[:go],
-      copy:
-        copy(:forgot_password_email,
-          subject: "#{app_name} - " <> l("Reset your password"),
-          intro: l("Click the button below to choose a new password."),
-          cta: l("Reset password"),
-          disclaimer:
-            l("If you didn't request a password reset, you can safely ignore this email.")
-        )
+      as_user: opts[:as_user],
+      copy: copy(:forgot_password_email, forgot_password_copy(opts))
     )
   end
+
+  defp forgot_password_copy(opts) do
+    app_name = Bonfire.Mailer.app_name()
+
+    [
+      subject: "#{app_name} - " <> l("Reset your password"),
+      intro: l("Click the button below to choose a new password."),
+      cta: l("Reset password"),
+      disclaimer: l("If you didn't request a password reset, you can safely ignore this email.")
+    ]
+    |> maybe_sudo_copy(opts, l("Click the button below to choose a new password and continue."))
+  end
+
+  # a mail sent as sudo verification keeps a generic inbox-glanceable subject/heading; the intent is named in the body only
+  defp maybe_sudo_copy(base, opts, continue_line) do
+    case opts[:sudo_intent] do
+      nil ->
+        base
+
+      intent ->
+        Keyword.merge(base,
+          subject: "#{Bonfire.Mailer.app_name()} - " <> confirm_its_you(),
+          intro:
+            l("This link verifies you to: %{action}.", action: intent) <> " " <> continue_line,
+          cta: l("Continue"),
+          disclaimer: l("If you didn't request this, you can safely ignore this email.")
+        )
+    end
+  end
+
+  defp heading_for(opts, default),
+    do: if(opts[:sudo_intent], do: confirm_its_you(), else: default)
+
+  defp confirm_its_you, do: l("Confirm it's you")
 
   @doc """
   Sends a passwordless magic-link sign-in email.
@@ -165,26 +172,31 @@ defmodule Bonfire.Me.Mails do
   and template that frames the link as a sign-in, not a reset.
   """
   def login_link(%Account{} = account, opts \\ []) do
-    app_name = Bonfire.Mailer.app_name()
-
     confirm_token_email(account,
       log_label: "Login link",
       heading: greeting(first_name(account)),
       go: opts[:go],
-      copy:
-        copy(:login_link_email,
-          subject: "#{app_name} - " <> l("Your login link for %{app_name}", app_name: app_name),
-          intro: l("Click the following link to sign in to %{app_name}:", app_name: app_name),
-          cta: l("Sign in"),
-          disclaimer:
-            l(
-              "For security reasons, this link expires after 24 hours. If you didn't request this login, you can simply ignore this email."
-            ),
-          signoff: l("See you soon!"),
-          signature: l("Your %{app_name} team", app_name: app_name),
-          paste_hint: l("You can also copy this URL and paste it into your browser:")
-        )
+      as_user: opts[:as_user],
+      copy: copy(:login_link_email, login_link_copy(opts))
     )
+  end
+
+  defp login_link_copy(opts) do
+    app_name = Bonfire.Mailer.app_name()
+
+    [
+      subject: "#{app_name} - " <> l("Your login link for %{app_name}", app_name: app_name),
+      intro: l("Click the following link to sign in to %{app_name}:", app_name: app_name),
+      cta: l("Sign in"),
+      disclaimer:
+        l(
+          "For security reasons, this link expires after 24 hours. If you didn't request this login, you can simply ignore this email."
+        ),
+      signoff: l("See you soon!"),
+      signature: l("Your %{app_name} team", app_name: app_name),
+      paste_hint: l("You can also copy this URL and paste it into your browser:")
+    ]
+    |> maybe_sudo_copy(opts, l("Click the following link to sign in and continue:"))
   end
 
   # The copy for one email: this extension's translated defaults, with any
@@ -231,7 +243,7 @@ defmodule Bonfire.Me.Mails do
 
       url =
         (url_path(Bonfire.UI.Me.ForgotPasswordController) <> "/" <> confirm_token)
-        |> append_query(go: opts[:go])
+        |> append_query(go: opts[:go], as_user: opts[:as_user])
 
       if Config.env() != :test or System.get_env("PHX_SERVER") == "yes",
         do: warn("#{opts[:log_label]}: #{url}")
