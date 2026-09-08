@@ -158,6 +158,12 @@ defmodule Bonfire.Me.Users.Queries do
 
   def current(user_id, _), do: current(user_id)
 
+  @doc "Loads a profile only for its owning account; shared-profile caretakers are not owners."
+  def current_owned_by_account(user_id, account_id) do
+    current(user_id, account_id)
+    |> where([accounted: accounted], not is_nil(accounted.id))
+  end
+
   @doc "Like `current/2` but only matching when the account actually has access to the user: their own accounted row, or a caretaker-account link when acting as a shared user (the switch-user list includes those via `SharedUsers.by_account`). `current/2` is a loader whose account join merely selects the preloaded context; use this for user/account pairings that come from untrusted input."
   def current_in_account(user_id, account_id) when is_binary(account_id) do
     current(user_id, account_id)

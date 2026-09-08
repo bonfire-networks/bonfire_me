@@ -59,6 +59,18 @@ defmodule Bonfire.Me.Users do
 
   def get_current(_, _), do: nil
 
+  @doc "Loads a profile for an owner-only operation. Unlike `get_in_account/2`, caretaker access to a shared profile does not qualify. Missing or malformed identifiers return nil."
+  def get_owned_by_account(user_id, account_id) do
+    with user_id when is_binary(user_id) <- Types.uid(user_id),
+         account_id when is_binary(account_id) <- Types.uid(account_id) do
+      Queries.current_owned_by_account(user_id, account_id)
+      |> repo().maybe_one()
+      |> Characters.mark_as(:local)
+    else
+      _ -> nil
+    end
+  end
+
   @doc "Like `get_current/2`, but only returns the user when the account actually has access to it: its own user, or a shared user it caretakes. Use for user/account pairings from untrusted input (e.g. URL params); the session's pairing was already validated when written."
   def get_in_account(id, account_id) when is_binary(id) and is_binary(account_id),
     do:
