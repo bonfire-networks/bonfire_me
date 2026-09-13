@@ -28,7 +28,7 @@ if Application.compile_env(:bonfire_me, :modularity) != :disabled do
     def followers(conn, %{"id" => id} = params), do: Adapter.followers(id, params, conn)
     def following(conn, %{"id" => id} = params), do: Adapter.following(id, params, conn)
 
-    def follow(conn, %{"id" => id}), do: Adapter.follow_account(%{"id" => id}, conn)
+    def follow(conn, %{"id" => _} = params), do: Adapter.follow_account(params, conn)
     def unfollow(conn, %{"id" => id}), do: Adapter.unfollow_account(%{"id" => id}, conn)
     def mute(conn, %{"id" => id}), do: BoundariesAdapter.mute_account(%{"id" => id}, conn)
     def unmute(conn, %{"id" => id}), do: BoundariesAdapter.unmute_account(%{"id" => id}, conn)

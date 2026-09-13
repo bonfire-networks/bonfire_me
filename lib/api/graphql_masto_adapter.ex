@@ -177,33 +177,53 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       Map.put(profile_params, "profile", updated_profile)
     end
 
-    @doc "Follow an account"
+    @doc "Follow an account through GraphQL; per-author post notifications are unsupported."
+    def follow_account(%{"id" => _id, "notify" => notify}, conn)
+        when notify in [true, "true", "1", 1] do
+      RestAdapter.with_current_user(conn, fn _current_user ->
+        conn
+        |> Plug.Conn.put_status(:unprocessable_entity)
+        |> RestAdapter.json(%{"error" => "Notifications for every post by an author are not supported"})
+      end)
+    end
+
     def follow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :follow)
 
-    @doc "Unfollow an account"
+    @doc "Unfollow an account through GraphQL."
     def unfollow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :unfollow)
 
     defp handle_follow_action(conn, target_id, action) do
       RestAdapter.with_current_user(conn, fn current_user ->
-        result =
-          case action do
-            :follow -> Follows.follow(current_user, target_id, [])
-            :unfollow -> Follows.unfollow(current_user, target_id, [])
-          end
-
-        case result do
-          {:ok, _} ->
-            relationship = BoundariesAdapter.build_relationship(current_user, target_id)
-            RestAdapter.json(conn, relationship)
-
-          {:error, reason} ->
-            RestAdapter.error_fn({:error, reason}, conn)
-
-          _ ->
-            relationship = BoundariesAdapter.build_relationship(current_user, target_id)
-            RestAdapter.json(conn, relationship)
+        query = if action == :follow,
+          do: "mutation($id: String!) { follow(id: $id) { id } }",
+          else: "mutation($id: String!) { unfollow(id: $id) }"
+        variables = %{"id" => target_id}
+        case Absinthe.run(query, Bonfire.API.GraphQL.Schema, variables: variables,
+               context: Bonfire.API.GraphQL.Schema.context(%{current_user: current_user})) do
+          {:ok, %{errors: errors}} -> RestAdapter.error_fn(errors, conn)
+          {:ok, %{data: _}} ->
+            case read_relationship(current_user, target_id) do
+              {:ok, relationship} -> RestAdapter.json(conn, relationship)
+              {:error, error} -> RestAdapter.error_fn(error, conn)
+            end
+          {:error, error} -> RestAdapter.error_fn(error, conn)
         end
       end)
+    end
+
+    defp read_relationship(user, target_id) do
+      query = "query($id: ID!, $target: ID!) { user(filter: {id: $id}) { relationship(with: $target) { following followed requested ghosting silencing } } }"
+      case Absinthe.run(query, Bonfire.API.GraphQL.Schema, variables: %{"id" => user.id, "target" => target_id},
+             context: Bonfire.API.GraphQL.Schema.context(%{current_user: user})) do
+        {:ok, %{data: %{"user" => %{"relationship" => relationship}}}} when is_map(relationship) ->
+          {:ok, Bonfire.API.MastoCompat.Schemas.Relationship.new(%{"id" => target_id,
+            "following" => relationship["following"], "followed_by" => relationship["followed"],
+            "requested" => relationship["requested"], "blocking" => relationship["ghosting"],
+            "muting" => relationship["silencing"], "muting_notifications" => relationship["silencing"],
+            "notifying" => false})}
+        {:ok, %{errors: errors}} -> {:error, errors}
+        _ -> {:error, :not_found}
+      end
     end
 
     # Follow Requests endpoints
@@ -359,7 +379,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             _ -> []
           end
 
-        relationships = Enum.map(ids, &BoundariesAdapter.build_relationship(current_user, &1))
+        relationships = Enum.flat_map(ids, fn id ->
+          case read_relationship(current_user, id) do
+            {:ok, relationship} -> [relationship]
+            _ -> []
+          end
+        end)
 
         RestAdapter.json(conn, relationships)
       end
