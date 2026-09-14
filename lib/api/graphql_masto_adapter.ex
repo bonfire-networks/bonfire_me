@@ -204,9 +204,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           {:ok, %{data: _}} ->
             case read_relationship(current_user, target_id) do
               {:ok, relationship} -> RestAdapter.json(conn, relationship)
-              {:error, error} -> RestAdapter.error_fn(error, conn)
+              {:error, error} -> RestAdapter.error_fn({:error, error}, conn)
             end
-          {:error, error} -> RestAdapter.error_fn(error, conn)
+          {:error, error} -> RestAdapter.error_fn({:error, error}, conn)
         end
       end)
     end
