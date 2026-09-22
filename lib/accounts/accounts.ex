@@ -199,7 +199,10 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp maybe_cast_credential(cs, params, opts) do
-    if is_tuple(opts[:open_id_provider]) and !params[:password] do
+    if (is_tuple(opts[:open_id_provider]) or opts[:passwordless] == true) and
+         is_nil(params[:password]) do
+      # OAuth or passwordless (magic-link) signup: credential-less account. Keyed on an explicit opt,
+      # not the params, because the classic form leaving the password blank posts identical params.
       cs
     else
       cs
@@ -418,7 +421,8 @@ defmodule Bonfire.Me.Accounts do
     Bonfire.Common.Config.get(
       [:bonfire_ui_me, :login, :passwordless_only],
       false
-    ) in [true, "true", "1", "yes"]
+    ) in [true, "true", "1", "yes"] or
+      signup_domain_gate_active?()
   end
 
   defp login_query(%{email: email}) when is_binary(email),
@@ -844,8 +848,40 @@ defmodule Bonfire.Me.Accounts do
 
   """
   def instance_is_invite_only? do
-    Config.env() != :test and
-      Config.get(:invite_only, true)
+    # the domain allowlist also closes open signups: passwordless only hides the signup form, but the classic /signup endpoint stays open unless invite-only gates it
+    signup_domain_gate_active?() or
+      (Config.env() != :test and Config.get(:invite_only, true))
+  end
+
+  @doc "The instance's allowed email domains for signup. Empty means no restriction. Values are normalized (downcased, trimmed) where they are set (`SIGNUP_ALLOWED_EMAIL_DOMAINS`, or the instance setting once the admin UI lands), not on read. Set via env for now."
+  def allowed_email_domains do
+    Config.get([__MODULE__, :allowed_email_domains], []) |> List.wrap()
+  end
+
+  @doc "Whether the email-domain signup gate is on (any allowed domains are configured)."
+  def signup_domain_gate_active?, do: allowed_email_domains() != []
+
+  @doc "Whether the email address is on an allowed domain (exact, case-insensitive)."
+  def email_on_allowed_domain?(email) when is_binary(email) do
+    case Bonfire.Common.Text.email_domain(email) do
+      nil -> false
+      domain -> domain in allowed_email_domains()
+    end
+  end
+
+  def email_on_allowed_domain?(_), do: false
+
+  @doc """
+  Provisions a passwordless account for `email` (no credential; the person signs in by magic link and can set a password later)..
+
+  Sends no confirmation email because they get a magic link email instead; and bypasses invite links since joining using a allowed domain or Ghost integration means they're welcome.
+  """
+  def provision_passwordless_account(email) when is_binary(email) and email != "" do
+    signup(%{email: %{email_address: email}},
+      passwordless: true,
+      must_confirm?: false,
+      skip_invite_check: true
+    )
   end
 
   @doc """

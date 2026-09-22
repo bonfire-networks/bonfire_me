@@ -11,6 +11,37 @@ defmodule Bonfire.Me.AccountsTest do
     :ok
   end
 
+  describe "signup email domain gate" do
+    test "no allowed domains by default, so the gate is inactive" do
+      assert Accounts.allowed_email_domains() == []
+      refute Accounts.signup_domain_gate_active?()
+    end
+
+    test "configuring domains activates the gate" do
+      Process.put([:bonfire_me, Accounts, :allowed_email_domains], ["example.com"])
+      assert Accounts.signup_domain_gate_active?()
+    end
+
+    test "email_on_allowed_domain? matches exactly and case-insensitively" do
+      Process.put([:bonfire_me, Accounts, :allowed_email_domains], ["example.com"])
+      assert Accounts.email_on_allowed_domain?("alice@example.com")
+      assert Accounts.email_on_allowed_domain?("Alice@Example.COM")
+      refute Accounts.email_on_allowed_domain?("alice@other.com")
+      refute Accounts.email_on_allowed_domain?("not-an-email")
+    end
+
+    test "off-list email is not allowed even when the gate is active" do
+      Process.put([:bonfire_me, Accounts, :allowed_email_domains], ["example.com"])
+      refute Accounts.email_on_allowed_domain?("alice@evil.test")
+    end
+
+    test "enabling the domain gate also enables passwordless_only?" do
+      refute Accounts.passwordless_only?()
+      Process.put([:bonfire_me, Accounts, :allowed_email_domains], ["example.com"])
+      assert Accounts.passwordless_only?()
+    end
+  end
+
   describe "signup" do
     test "email: :valid, with must_confirm?: true" do
       attrs = signup_form()
