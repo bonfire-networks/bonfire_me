@@ -54,7 +54,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       assert Enum.all?(nodes, &(get_in(&1, ["verb", "verb"]) in ["Like", "like"]))
     end
 
-    test "me.notifications supports notification type filters for mentions", %{
+    test "me.notifications filters by Bonfire's notification categories, here Mentions", %{
       me: me,
       other: other,
       follower: follower
@@ -74,7 +74,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         Absinthe.run(
           ~S|query {
             me {
-              notifications(first: 10, filter: {notificationTypes: ["mention"]}) {
+              notifications(first: 10, filter: {notificationCategories: ["mention"]}) {
                 edges {
                   node {
                     id
@@ -106,12 +106,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
              )
     end
 
-    test "me.notifications rejects unsupported notification type filters", %{me: me} do
+    test "me.notifications refuses a notification category that does not exist", %{me: me} do
       {:ok, result} =
         Absinthe.run(
           ~S|query {
             me {
-              notifications(first: 10, filter: {notificationTypes: ["not_a_notification"]}) {
+              notifications(first: 10, filter: {notificationCategories: ["not_a_notification"]}) {
                 edges { node { id } }
               }
             }

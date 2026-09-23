@@ -42,6 +42,96 @@ defmodule Bonfire.Me.AccountsTest do
     end
   end
 
+  defp email_at(domain), do: "u#{System.unique_integer([:positive])}@#{domain}"
+  defp form_at(domain), do: signup_form() |> put_in([:email, :email_address], email_at(domain))
+
+  defp oauth_signup(email, provider),
+    do:
+      Accounts.signup(%{openid_email: email},
+        open_id_provider: {provider, "cache_key"},
+        must_confirm?: false
+      )
+
+  defp allow_domains(list), do: Process.put([:bonfire_me, Accounts, :allowed_email_domains], list)
+
+  defp trust_providers(list),
+    do: Process.put([:bonfire_me, Accounts, :trusted_signup_providers], list)
+
+  defp refused?({:error, %Ecto.Changeset{errors: errors}}),
+    do: match?({"signup_not_allowed", _}, errors[:form])
+
+  defp refused?(_), do: false
+
+  describe "signup credentials (who may sign up)" do
+    setup do
+      # an existing account, so the first-account bypass doesn't wave every signup through
+      Fake.fake_account!()
+      :ok
+    end
+
+    test "domains only: an on-domain form or OAuth signup is allowed" do
+      allow_domains(["example.com"])
+
+      assert {:ok, _} = Accounts.signup(form_at("example.com"), must_confirm?: false)
+      assert {:ok, _} = oauth_signup(email_at("example.com"), :github)
+    end
+
+    test "domains only: an off-domain form or OAuth signup is refused" do
+      allow_domains(["example.com"])
+
+      assert refused?(Accounts.signup(form_at("other.test"), must_confirm?: false))
+      assert refused?(oauth_signup(email_at("other.test"), :github))
+    end
+
+    test "providers only: a trusted provider signs up from any domain" do
+      trust_providers([:github])
+
+      assert {:ok, _} = oauth_signup(email_at("anywhere.test"), :github)
+    end
+
+    test "providers only: an untrusted provider and the local form are refused" do
+      trust_providers([:github])
+
+      assert refused?(oauth_signup(email_at("anywhere.test"), :gitlab))
+      assert refused?(Accounts.signup(form_at("anywhere.test"), must_confirm?: false))
+    end
+
+    test "both: a trusted provider skips the domain check, an untrusted one does not" do
+      allow_domains(["example.com"])
+      trust_providers([:github])
+
+      assert {:ok, _} = oauth_signup(email_at("anywhere.test"), :github)
+      assert {:ok, _} = oauth_signup(email_at("example.com"), :gitlab)
+      assert refused?(oauth_signup(email_at("anywhere.test"), :gitlab))
+    end
+
+    test "trusted providers as saved by the per-provider toggles (a map with disabled entries)" do
+      trust_providers(%{github: true, gitlab: false})
+
+      assert {:ok, _} = oauth_signup(email_at("anywhere.test"), :github)
+      assert refused?(oauth_signup(email_at("anywhere.test"), :gitlab))
+    end
+
+    test "trusting a provider switches on passwordless and SSO-first login; adding domains keeps email login up front" do
+      refute Accounts.passwordless_only?()
+      refute Accounts.sso_first_login?()
+
+      trust_providers([:github])
+      assert Accounts.passwordless_only?()
+      assert Accounts.sso_first_login?()
+
+      allow_domains(["example.com"])
+      assert Accounts.passwordless_only?()
+      refute Accounts.sso_first_login?()
+    end
+
+    test "the magic-link provisioning path (skip_invite_check) bypasses the rule" do
+      trust_providers([:github])
+
+      assert {:ok, _} = Accounts.provision_passwordless_account(email_at("anywhere.test"))
+    end
+  end
+
   describe "signup" do
     test "email: :valid, with must_confirm?: true" do
       attrs = signup_form()

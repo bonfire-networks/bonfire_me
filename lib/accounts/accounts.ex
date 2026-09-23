@@ -188,6 +188,28 @@ defmodule Bonfire.Me.Accounts do
       required: true,
       with: &Email.changeset(&1, &2, opts)
     )
+    |> validate_signup_credentials(params, opts)
+  end
+
+  # With allowed domains or trusted SSO providers configured, a new account must satisfy one of them (see `satisfies_signup_credential?/2`). Invites, the first account, and internal provisioning (`skip_invite_check`) are exempt.
+  defp validate_signup_credentials(changeset, params, opts) do
+    if signup_credentials_active?() and not signup_credentials_exempt?(opts) and
+         not satisfies_signup_credential?(
+           e(params, :email, :email_address, nil),
+           opts[:open_id_provider]
+         ) do
+      Changeset.add_error(changeset, :form, "signup_not_allowed")
+    else
+      changeset
+    end
+  end
+
+  defp signup_credentials_exempt?(opts) do
+    invite = opts[:invite]
+
+    opts[:is_first_account?] == true or opts[:skip_invite_check] == true or
+      (not is_nil(invite) and invite == System.get_env("INVITE_KEY_EMAIL_CONFIRMATION_BYPASS")) or
+      (Types.is_uid?(invite) and redeemable_invite?(invite))
   end
 
   defp signup_changeset(params, opts) do
@@ -422,8 +444,12 @@ defmodule Bonfire.Me.Accounts do
       [:bonfire_ui_me, :login, :passwordless_only],
       false
     ) in [true, "true", "1", "yes"] or
-      signup_domain_gate_active?()
+      signup_credentials_active?()
   end
+
+  @doc "Whether the login page should lead with the sign-in services and fold the email login behind \"Use email instead\": when trusted SSO providers are the only way to create an account (no allowed email domains, since those make the email link a main signup path)."
+  def sso_first_login?,
+    do: trusted_signup_providers() != [] and not signup_domain_gate_active?()
 
   defp login_query(%{email: email}) when is_binary(email),
     do: Queries.login_by_email(email)
@@ -853,7 +879,7 @@ defmodule Bonfire.Me.Accounts do
       (Config.env() != :test and Config.get(:invite_only, true))
   end
 
-  @doc "The instance's allowed email domains for signup. Empty means no restriction. Values are normalized (downcased, trimmed) where they are set (`SIGNUP_ALLOWED_EMAIL_DOMAINS`, or the instance setting once the admin UI lands), not on read. Set via env for now."
+  @doc "The instance's allowed email domains for signup (an instance setting). Empty means no restriction. Values are normalized (downcased, leading `@` dropped) where they are set, not on read."
   def allowed_email_domains do
     Config.get([__MODULE__, :allowed_email_domains], []) |> List.wrap()
   end
@@ -870,6 +896,37 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def email_on_allowed_domain?(_), do: false
+
+  @doc "SSO providers trusted for signup: they may create accounts without an allowed email domain. Empty means none is trusted. Accepts a list, or a map of provider => enabled (as saved by per-provider checkboxes)."
+  def trusted_signup_providers do
+    (Config.get([__MODULE__, :trusted_signup_providers], []) || [])
+    |> Enum.flat_map(fn
+      # a map or keyword list of provider => enabled, as saved by the per-provider toggles
+      {provider, enabled} ->
+        if enabled in [true, "true", "1", "on"], do: [to_string(provider)], else: []
+
+      provider ->
+        [to_string(provider)]
+    end)
+  end
+
+  @doc "Whether any signup credential is configured (allowed domains or trusted SSO providers). When one is, a new account must satisfy one of them (see `satisfies_signup_credential?/2`), unless invited."
+  def signup_credentials_active?,
+    do: signup_domain_gate_active?() or trusted_signup_providers() != []
+
+  @doc "Whether a signup satisfies an active credential: the email is on an allowed domain, or it came through a trusted SSO provider. `open_id_provider` is the `{provider, cache_key}` the OAuth flow puts in opts, or nil."
+  def satisfies_signup_credential?(email, open_id_provider) do
+    (signup_domain_gate_active?() and email_on_allowed_domain?(email)) or
+      trusted_signup_provider?(open_id_provider)
+  end
+
+  defp trusted_signup_provider?(nil), do: false
+  defp trusted_signup_provider?({provider, _cache_key}), do: trusted_signup_provider?(provider)
+
+  defp trusted_signup_provider?(provider) when is_atom(provider) or is_binary(provider),
+    do: to_string(provider) in trusted_signup_providers()
+
+  defp trusted_signup_provider?(_), do: false
 
   @doc """
   Provisions a passwordless account for `email` (no credential; the person signs in by magic link and can set a password later)..
@@ -906,6 +963,10 @@ defmodule Bonfire.Me.Accounts do
         true
 
       opts[:skip_invite_check] == true ->
+        true
+
+      # with allowed domains or trusted SSO providers configured, a qualifying signup doesn't need an invite; `validate_signup_credentials/3` refuses the rest
+      signup_credentials_active?() ->
         true
 
       !instance_is_invite_only?() ->
