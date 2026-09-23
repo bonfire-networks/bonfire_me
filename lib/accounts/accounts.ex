@@ -116,6 +116,26 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
+  @doc """
+  Where a sign-in link for what someone typed in the login field goes: an email (or blank) input is returned as typed, whether or not it has an account, so the link request still answers the same for everyone and the email format check still applies; a (`@`-optional) local username resolves to its account's email, or `nil` if there is none. Never show the result to the person who typed a username, since it would reveal that account's email.
+  """
+  def email_for_sign_in_link(input) when is_binary(input) do
+    trimmed = String.trim(input)
+
+    # same email-vs-handle rule as `by_id_email_or_username/1`: a leading "@" is a username handle
+    if trimmed == "" or (String.contains?(trimmed, "@") and not String.starts_with?(trimmed, "@")) do
+      trimmed
+    else
+      case by_id_or_username(trimmed) do
+        {%{} = account, _user} ->
+          e(repo().maybe_preload(account, :email), :email, :email_address, nil)
+
+        _ ->
+          nil
+      end
+    end
+  end
+
   @type changeset_name :: :change_password | :confirm_email | :login | :signup
 
   @doc """

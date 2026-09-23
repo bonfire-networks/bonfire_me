@@ -448,5 +448,21 @@ defmodule Bonfire.Me.AccountsTest do
 
       assert Accounts.by_id_email_or_username("someone@remote.example.social") == nil
     end
+
+    test "email_for_sign_in_link keeps an email as typed, and resolves a username to its account's email" do
+      assert {:ok, account} = Accounts.signup(signup_form())
+      account = repo().preload(account, :email)
+      assert {:ok, user} = Users.create(create_user_form(), account)
+      address = account.email.email_address
+
+      assert Accounts.email_for_sign_in_link(" #{address} ") == address
+      # an email with no account is kept too, so the link request answers the same for everyone
+      assert Accounts.email_for_sign_in_link("nobody@example.local") == "nobody@example.local"
+
+      assert Accounts.email_for_sign_in_link(user.character.username) == address
+      assert Accounts.email_for_sign_in_link("@" <> user.character.username) == address
+
+      assert Accounts.email_for_sign_in_link("nobody#{System.unique_integer([:positive])}") == nil
+    end
   end
 end
