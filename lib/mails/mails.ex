@@ -18,24 +18,15 @@ defmodule Bonfire.Me.Mails do
   use Bonfire.Common.Config
   alias Bonfire.Data.Identity.Account
 
-  # Runtime backstop in case `[:ui, :auth, :email_theme]` config is partial
-  # or unset. Instance-level Settings overrides are mirrored into OTP env
-  # at boot, so `Config.get/2` already sees them.
-  @default_email_theme [
-    primary: "#e63946",
-    primary_content: "#ffffff",
-    body_bg: "#fff7f7",
-    body_text: "#1f1f1f",
-    muted: "#6b6b6b"
-  ]
-
   def mailer, do: Config.get(:mailer_module)
 
   defp branding_assigns do
-    theme = Keyword.merge(@default_email_theme, Config.get([:ui, :auth, :email_theme], []))
-
     %{
-      theme: Map.new(theme),
+      # the same colours as every other email, defaults included; asked rather than called, since this extension does not depend on the one that draws emails
+      theme:
+        Bonfire.Common.Utils.maybe_apply(Bonfire.UI.Common.Email.Basic, :theme, [],
+          fallback_return: Map.new(Config.get([:ui, :auth, :email_theme], []))
+        ),
       paste_hint: l("Or paste this link into your browser:")
     }
   end
