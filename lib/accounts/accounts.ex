@@ -894,8 +894,8 @@ defmodule Bonfire.Me.Accounts do
 
   """
   def instance_is_invite_only? do
-    # the domain allowlist also closes open signups: passwordless only hides the signup form, but the classic /signup endpoint stays open unless invite-only gates it
-    signup_domain_gate_active?() or
+    # allowed domains or trusted sign-in services also close open signups (hiding the sign-up buttons): passwordless only hides the signup form, but the classic /signup endpoint stays open unless invite-only gates it. `allow_signup?/1` checks those credentials first, so qualifying signups still go through.
+    signup_credentials_active?() or
       (Config.env() != :test and Config.get(:invite_only, true))
   end
 

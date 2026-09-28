@@ -125,6 +125,14 @@ defmodule Bonfire.Me.AccountsTest do
       refute Accounts.sso_first_login?()
     end
 
+    test "trusting a provider closes open signup (so the sign-up buttons hide), yet its signups still go through" do
+      refute Accounts.instance_is_invite_only?()
+
+      trust_providers([:github])
+      assert Accounts.instance_is_invite_only?()
+      assert {:ok, _} = oauth_signup(email_at("anywhere.test"), :github)
+    end
+
     test "the magic-link provisioning path (skip_invite_check) bypasses the rule" do
       trust_providers([:github])
 
