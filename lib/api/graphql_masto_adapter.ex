@@ -177,24 +177,18 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       Map.put(profile_params, "profile", updated_profile)
     end
 
-    @doc "Follow an account through GraphQL; per-author post notifications are unsupported."
-    def follow_account(%{"id" => _id, "notify" => notify}, conn)
-        when notify in [true, "true", "1", 1] do
-      RestAdapter.with_current_user(conn, fn _current_user ->
-        conn
-        |> Plug.Conn.put_status(:unprocessable_entity)
-        |> RestAdapter.json(%{
-          "error" => "Notifications for every post by an author are not supported"
-        })
-      end)
-    end
+    @doc "Follow an account through GraphQL. `notify` turns notifications of their posts on or off (`Bonfire.Notify.Bells`), and leaving it out leaves them as they were, as Mastodon does for an existing follow."
+    def follow_account(%{"id" => id} = params, conn),
+      do: handle_follow_action(conn, id, :follow, notify_param(params["notify"]))
 
-    def follow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :follow)
+    defp notify_param(notify) when notify in [true, "true", "1", 1], do: true
+    defp notify_param(notify) when notify in [false, "false", "0", 0], do: false
+    defp notify_param(_), do: nil
 
     @doc "Unfollow an account through GraphQL."
     def unfollow_account(%{"id" => id}, conn), do: handle_follow_action(conn, id, :unfollow)
 
-    defp handle_follow_action(conn, target_id, action) do
+    defp handle_follow_action(conn, target_id, action, notify \\ nil) do
       RestAdapter.with_current_user(conn, fn current_user ->
         query =
           if action == :follow,
@@ -211,6 +205,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             RestAdapter.error_fn(errors, conn)
 
           {:ok, %{data: _}} ->
+            maybe_set_notify(current_user, target_id, notify)
+
             case read_relationship(current_user, target_id) do
               {:ok, relationship} -> RestAdapter.json(conn, relationship)
               {:error, error} -> RestAdapter.error_fn({:error, error}, conn)
@@ -222,7 +218,27 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       end)
     end
 
-    defp read_relationship(user, target_id) do
+    # asked rather than called, since this extension doesn't depend on `bonfire_notify`
+    defp maybe_set_notify(_user, _target_id, nil), do: nil
+
+    defp maybe_set_notify(user, target_id, true),
+      do: maybe_apply(Bonfire.Notify.Bells, :enable, [user, target_id], fallback_return: nil)
+
+    defp maybe_set_notify(user, target_id, false),
+      do: maybe_apply(Bonfire.Notify.Bells, :disable, [user, target_id], fallback_return: nil)
+
+    # which of these accounts the person has notifications of their posts on for, in one query
+    defp notifying_ids(user, target_ids),
+      do:
+        maybe_apply(Bonfire.Notify.Bells, :enabled_ids, [user, target_ids], fallback_return: [])
+        |> List.wrap()
+
+    defp read_relationship(user, target_id, notifying? \\ nil)
+
+    defp read_relationship(user, target_id, nil),
+      do: read_relationship(user, target_id, target_id in notifying_ids(user, [target_id]))
+
+    defp read_relationship(user, target_id, notifying?) do
       query =
         "query($id: ID!, $target: ID!) { user(filter: {id: $id}) { relationship(with: $target) { following followed requested ghosting silencing } } }"
 
@@ -241,7 +257,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
              "blocking" => relationship["ghosting"],
              "muting" => relationship["silencing"],
              "muting_notifications" => relationship["silencing"],
-             "notifying" => false
+             "notifying" => notifying?
            })}
 
         {:ok, %{errors: errors}} ->
@@ -405,9 +421,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             _ -> []
           end
 
+        notifying_ids = notifying_ids(current_user, ids)
+
         relationships =
           Enum.flat_map(ids, fn id ->
-            case read_relationship(current_user, id) do
+            case read_relationship(current_user, id, id in notifying_ids) do
               {:ok, relationship} -> [relationship]
               _ -> []
             end
