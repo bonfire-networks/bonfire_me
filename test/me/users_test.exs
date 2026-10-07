@@ -42,6 +42,110 @@ defmodule Bonfire.Me.UsersTest do
     assert([username: {_, _}] = character.errors)
   end
 
+  test "the username hash is of the username as stored, after cleaning" do
+    assert {:ok, account} = Accounts.signup(signup_form())
+    assert {:ok, user} = Users.create(create_user_form(%{username: "a b!"}), account)
+    character = repo().preload(user, :character).character
+    assert character.username == "a_b"
+    assert character.username_hash == Bonfire.Data.Identity.Character.hash("a_b")
+  end
+
+  describe "non-ASCII usernames" do
+    test "are cleaned to ASCII unless enabled" do
+      assert {:ok, account} = Accounts.signup(signup_form())
+      assert {:ok, user} = Users.create(create_user_form(%{username: "josé"}), account)
+      assert repo().preload(user, :character).character.username == "jos"
+    end
+
+    # opt-in with the UNICODE_USERNAMES env var
+    defp enable_unicode_usernames,
+      do: Process.put([:bonfire_me, Bonfire.Me.Characters, :unicode_usernames], true)
+
+    # the profile name is set apart from the username, since names have their own minimum length
+    defp create_username(username) do
+      {:ok, account} = Accounts.signup(signup_form())
+      Users.create(create_user_form(%{username: username, name: "Test #{username}"}), account)
+    end
+
+    for username <- ["josé", "你好", "日本語"] do
+      test "#{username} is kept when enabled" do
+        enable_unicode_usernames()
+        assert {:ok, user} = create_username(unquote(username))
+        assert repo().preload(user, :character).character.username == unquote(username)
+      end
+    end
+
+    test "are stored in NFC when enabled" do
+      enable_unicode_usernames()
+
+      # nfd is "e" followed by a combining acute accent (U+0301), nfc is the precomposed "é" (U+00E9). They look identical in source, so the refute below proves they differ.
+      nfd = "josé"
+      nfc = "josé"
+      refute nfd == nfc
+
+      assert {:ok, user} = create_username(nfd)
+      assert repo().preload(user, :character).character.username == nfc
+    end
+
+    test "other characters are still cleaned when enabled" do
+      enable_unicode_usernames()
+      assert {:ok, user} = create_username("a b!")
+      assert repo().preload(user, :character).character.username == "a_b"
+    end
+
+    test "a 1-character username (李) is kept when enabled" do
+      enable_unicode_usernames()
+      assert {:ok, user} = create_username("李")
+      assert repo().preload(user, :character).character.username == "李"
+    end
+
+    test "a 1-character username is refused unless enabled" do
+      assert {:error, changeset} = create_username("a")
+      assert Keyword.has_key?(changeset.changes.character.errors, :username)
+    end
+
+    # many CJK names are 1 or 2 characters long
+    for name <- ["李", "你好"] do
+      test "a profile name of #{String.length(name)} character(s) (#{name}) is accepted when enabled" do
+        enable_unicode_usernames()
+        {:ok, account} = Accounts.signup(signup_form())
+
+        assert {:ok, user} =
+                 Users.create(
+                   create_user_form(%{username: "test_short_name", name: unquote(name)}),
+                   account
+                 )
+
+        assert repo().preload(user, :profile).profile.name == unquote(name)
+      end
+    end
+
+    test "a profile name shorter than 3 characters is refused unless enabled" do
+      {:ok, account} = Accounts.signup(signup_form())
+
+      assert {:error, changeset} =
+               Users.create(create_user_form(%{username: "test_short_name", name: "李"}), account)
+
+      assert Keyword.has_key?(changeset.changes.profile.errors, :name)
+    end
+
+    # a look-alike of an existing username would let someone impersonate its owner
+    for {existing, lookalike, why} <- [
+          {"alice", "аlice", "Cyrillic а"},
+          {"jose", "josé", "an accent"}
+        ] do
+      test "#{lookalike} is refused when #{existing} exists (#{why})" do
+        enable_unicode_usernames()
+        assert {:ok, user} = create_username(unquote(existing))
+        assert repo().preload(user, :character).character.username == unquote(existing)
+
+        assert {:error, changeset} = create_username(unquote(lookalike))
+        assert %{character: character} = changeset.changes
+        assert Keyword.has_key?(character.errors, :username_hash)
+      end
+    end
+  end
+
   test "user creation blocked when max_per_account reached" do
     Process.put(
       [:bonfire_me, Bonfire.Me.Users, :max_per_account],

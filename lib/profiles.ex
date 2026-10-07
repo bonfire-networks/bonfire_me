@@ -28,7 +28,13 @@ defmodule Bonfire.Me.Profiles do
     profile
     |> changeset_simple(params)
     |> Changeset.validate_length(:name,
-      min: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_min, 3),
+      # many CJK names are 1 or 2 characters long, so allow those where usernames can be in any script
+      min:
+        Bonfire.Common.Config.get_ext(
+          :bonfire_me,
+          :validate_name_min,
+          if(Bonfire.Me.Characters.unicode_usernames?(), do: 1, else: 3)
+        ),
       max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_name_max, 100)
     )
     |> Changeset.validate_length(:summary,

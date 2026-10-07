@@ -1,4 +1,6 @@
 activity_pub = "https://github.com/bonfire-networks/activity_pub"
+# folds look-alike characters in usernames (see `Bonfire.Me.Characters`)
+ex_confusables = "https://github.com/bonfire-networks/ex_confusables"
 bonfire_common = "https://github.com/bonfire-networks/bonfire_common"
 bonfire_epics = "https://github.com/bonfire-networks/bonfire_epics"
 bonfire_mailer = "https://github.com/bonfire-networks/bonfire_mailer"

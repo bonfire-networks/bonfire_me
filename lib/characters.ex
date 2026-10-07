@@ -30,8 +30,19 @@ defmodule Bonfire.Me.Characters do
   @username_max_length 62
 
   # Regex patterns defined as functions to comply with Erlang/OTP 28
-  defp username_forbidden, do: ~r/[^a-z0-9_]+/i
-  defp username_regex, do: ~r(^[a-z0-9_]{2,63}$)i
+  defp username_forbidden(true = _unicode?), do: ~r/[^\p{L}\p{M}\p{N}_]+/u
+  defp username_forbidden(_), do: ~r/[^a-z0-9_]+/i
+  # one character is enough in scripts like CJK, where it can be a whole name
+  defp username_regex(true = _unicode?), do: ~r/^[\p{L}\p{M}\p{N}_]{1,63}$/u
+  defp username_regex(_), do: ~r(^[a-z0-9_]{2,63}$)i
+
+  @doc "Whether local usernames may contain letters from any script, set with the `UNICODE_USERNAMES` env var."
+  def unicode_usernames? do
+    Config.get([__MODULE__, :unicode_usernames], false,
+      name: l("Unicode usernames"),
+      description: l("Allow letters from any script in usernames, not only a-z, 0-9 and _")
+    )
+  end
 
   @doc """
   Marks a character's (or character-holder's, e.g. a User's) locality so `is_local?/1` can
@@ -174,8 +185,13 @@ defmodule Bonfire.Me.Characters do
       "invalid_username"
   """
   def clean_username(username, dirty_replacement \\ "_") do
+    unicode? = unicode_usernames?()
+
+    # NFC, so the same name typed with a combining accent or a precomposed one is stored the same way
+    username = if unicode?, do: :unicode.characters_to_nfc_binary(username), else: username
+
     replaced =
-      Regex.replace(username_forbidden(), username, dirty_replacement)
+      Regex.replace(username_forbidden(unicode?), username, dirty_replacement)
       |> String.slice(0..(@username_max_length - 1))
 
     if dirty_replacement == "", do: replaced, else: String.trim(replaced, dirty_replacement)
@@ -220,11 +236,29 @@ defmodule Bonfire.Me.Characters do
   defp changeset_common(changeset) do
     changeset
     |> Changeset.update_change(:username, &clean_username/1)
-    |> Changeset.validate_format(:username, username_regex())
+    |> rehash_cleaned_username()
+    |> Changeset.validate_format(:username, username_regex(unicode_usernames?()))
     |> Changesets.cast_assoc(:actor)
     |> Needle.Changesets.cast_assoc(:extra_info,
       with: &Bonfire.Data.Identity.ExtraInfo.changeset/2
     )
+  end
+
+  # `Character.changeset(_, _, :hash)` hashes the username as given, before it is cleaned, so hash the stored one instead. A non-ASCII username is hashed after folding look-alikes (e.g. Cyrillic а, or é), so it can't impersonate an existing username. Only when a hash is being set (i.e. on insert), and only for local users: remote usernames keep a plain hash so that e.g. `jose@x` and `josé@x` can both exist.
+  defp rehash_cleaned_username(changeset) do
+    with username when is_binary(username) <- Changeset.get_change(changeset, :username),
+         hash when is_binary(hash) <- Changeset.get_change(changeset, :username_hash) do
+      Changeset.put_change(
+        changeset,
+        :username_hash,
+        if(String.match?(username, ~r/\A[[:ascii:]]*\z/),
+          do: Character.hash(username),
+          else: Character.hash(ExConfusables.normalize(username))
+        )
+      )
+    else
+      _ -> changeset
+    end
   end
 
   def remote_changeset(changeset, params) do

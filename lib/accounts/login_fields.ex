@@ -34,8 +34,10 @@ defmodule Bonfire.Me.Accounts.LoginFields do
     case Changeset.fetch_change(changeset, :email_or_username) do
       {:ok, eou} ->
         cond do
-          Regex.match?(~r(^@?[a-z][a-z0-9_]+$)i, eou) ->
-            Changeset.put_change(changeset, :username, eou)
+          # letters and digits in any script, since usernames may have them (see `Bonfire.Me.Characters.unicode_usernames?/0`)
+          Regex.match?(~r/^@?\p{L}[\p{L}\p{M}\p{N}_]*$/u, eou) ->
+            # usernames are stored in NFC
+            Changeset.put_change(changeset, :username, :unicode.characters_to_nfc_binary(eou))
 
           Regex.match?(~r(^[^@]{1,128}@[^@]{2,128}$), eou) ->
             Changeset.put_change(changeset, :email, eou)
