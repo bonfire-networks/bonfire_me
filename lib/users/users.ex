@@ -342,10 +342,9 @@ defmodule Bonfire.Me.Users do
     check_active!(ids_by_account(target_account))
 
     cond do
-      # transferring the admin permission: demote the source now (clears its flag + removes the user from
-      # the admin circle); the destination is granted after the move, below
+      # transferring the admin permission: demote the source now (clears its flag); the destination is granted after the move, below. Not `revoke_admin`: the profile stays an admin, so it keeps its admin circle row and the last-admin check does not apply.
       was_admin? and opts[:transfer_admin] ->
-        revoke_admin(user)
+        Bonfire.Me.Accounts.update_is_admin(source_account, false)
 
       # keeping the source admin, but this moved profile was its DISPLAYED admin user — drop that
       # now-foreign link (the user no longer belongs to the source account)
@@ -585,9 +584,15 @@ defmodule Bonfire.Me.Users do
   end
 
   def make_admin(%User{} = user) do
-    with {:ok, account} <- Accounts.update_is_admin(user, true) do
-      add_to_admin_circle(user)
-      {:ok, Map.put(user, :account, account)}
+    # force: a struct loaded before the profile became shared carries a stale `shared_user: nil`
+    if Bonfire.Common.URIs.shared_user?(repo().preload(user, :shared_user, force: true)) do
+      # admin powers belong to the account, and a shared profile is also used by its caretaker accounts
+      error(user, "A shared profile cannot be made an admin")
+    else
+      with {:ok, account} <- Accounts.update_is_admin(user, true) do
+        add_to_admin_circle(user)
+        {:ok, Map.put(user, :account, account)}
+      end
     end
   end
 
@@ -605,9 +610,9 @@ defmodule Bonfire.Me.Users do
   end
 
   def revoke_admin(%User{} = user) do
-    with {:ok, _account} <- Accounts.update_is_admin(user, false) do
-      remove_from_admin_circle(user)
-
+    # leave the circle first, so refusing the last admin leaves the account flag untouched
+    with :ok <- remove_from_admin_circle(user),
+         {:ok, _account} <- Accounts.update_is_admin(user, false) do
       {:ok,
        user
        |> Map.put(
@@ -618,11 +623,34 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  defp remove_from_admin_circle(user) do
-    Bonfire.Boundaries.Circles.remove_from_circles(
-      user,
-      Bonfire.Boundaries.Scaffold.Instance.admin_circle()
-    )
+  @doc "Removes the user from the admin circle, unless that would leave the circle empty."
+  def remove_from_admin_circle(user) do
+    with :ok <- check_not_last_admin(user) do
+      Bonfire.Boundaries.Circles.remove_from_circles(
+        user,
+        Bonfire.Boundaries.Scaffold.Instance.admin_circle()
+      )
+
+      :ok
+    end
+  end
+
+  @doc "Returns an error if the given users include every member of the admin circle, so removing them would leave the instance without an admin."
+  def check_not_last_admin(users) do
+    ids = Bonfire.Common.Types.uids(users)
+
+    admins =
+      Ecto.Query.from(e in Bonfire.Data.AccessControl.Encircle,
+        where: e.circle_id == ^Bonfire.Boundaries.Scaffold.Instance.admin_circle()
+      )
+
+    removing? = repo().exists?(Ecto.Query.where(admins, [e], e.subject_id in ^ids))
+    remaining? = repo().exists?(Ecto.Query.where(admins, [e], e.subject_id not in ^ids))
+
+    if removing? and not remaining?,
+      do:
+        error(ids, l("This is the last admin of the instance. Make someone else an admin first.")),
+      else: :ok
   end
 
   def get_only_in_account(%Account{id: id}) do

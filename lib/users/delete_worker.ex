@@ -17,7 +17,22 @@ defmodule Bonfire.Me.DeleteWorker do
   end
 
   def enqueue_delete(ids) do
-    enqueue([queue: :deletion], %{"ids" => Types.uids(ids)})
+    ids = Types.uids(ids)
+
+    # checked here, as every deletion is queued through this and the delete itself runs later where a refusal would reach nobody. An account's profiles are deleted with it, so they count too.
+    with :ok <- Bonfire.Me.Users.check_not_last_admin(ids ++ profile_ids_of_accounts(ids)) do
+      enqueue([queue: :deletion], %{"ids" => ids})
+    end
+  end
+
+  defp profile_ids_of_accounts(ids) do
+    require Ecto.Query
+
+    Ecto.Query.from(a in Bonfire.Data.Identity.Accounted,
+      where: a.account_id in ^ids,
+      select: a.id
+    )
+    |> repo().all()
   end
 
   defp enqueue(spec, worker_args \\ []),

@@ -293,7 +293,14 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
         # TODO: update label if a different one was supplied
         shared_user
       else
-        with {:ok, user} <-
+        # a shared profile is used by its caretaker accounts too, so it must not carry the admin or mod circles' grants. Leave them before becoming shared, so refusing the last admin leaves the profile unshared.
+        with :ok <- Users.remove_from_admin_circle(user),
+             _ <-
+               Bonfire.Boundaries.Circles.remove_from_circles(
+                 user,
+                 Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+               ),
+             {:ok, user} <-
                make_shared_user(user, params)
                # also load `accounted: :account` so we can resolve the creating account as a fallback (a freshly-created user handed in from the create-user controller carries no session account otherwise)
                |> repo().maybe_preload([:shared_user, accounted: :account]) do
