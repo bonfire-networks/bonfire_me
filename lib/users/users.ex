@@ -483,8 +483,10 @@ defmodule Bonfire.Me.Users do
     # mark locality before the boundary/category ops below, so their `is_local?` checks classify
     # without an N+1 preload. remote creation also runs through here (same signal as `make_admin?`
     # above) — those resolve their actual `:peered`; a plain signup user is local.
+    remote? = opts == :remote or clean_opts[:local] == false
+
     user =
-      if opts == :remote or clean_opts[:local] == false,
+      if remote?,
         do: Characters.mark_as(user, :remote),
         else: Characters.mark_as(user, :local)
 
@@ -520,8 +522,11 @@ defmodule Bonfire.Me.Users do
         after_mutation(user)
       end
 
-    Config.get([Bonfire.Me.Users, :after_signup_hooks], [])
-    |> Enum.each(fn {mod, fun, args} -> maybe_apply(mod, fun, [user | args]) end)
+    # someone signing up here, not a remote actor created because we fetched it (a profile looked at, someone mentioned or followed): a hook such as a group's auto-join would otherwise make members of people who never joined
+    if not remote?,
+      do:
+        Config.get([Bonfire.Me.Users, :after_signup_hooks], [])
+        |> Enum.each(fn {mod, fun, args} -> maybe_apply(mod, fun, [user | args]) end)
 
     result
   end
