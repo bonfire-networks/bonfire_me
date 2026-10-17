@@ -84,6 +84,16 @@ defmodule Bonfire.Me.Fake do
     |> fake_user!(user_attrs, opts_or_extra)
   end
 
+  @doc "Makes `user` an instance moderator (the Instance Moderators circle, which moderates the instance), short of an admin."
+  def instance_moderator!(user) do
+    Bonfire.Boundaries.Circles.add_to_circles(
+      user,
+      Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+    )
+
+    user
+  end
+
   @doc """
   Clears all cached values that can cause issues in tests.
   Call this in your test setup or teardown.
