@@ -62,6 +62,44 @@ defmodule Bonfire.Me.MailsTest do
     end
   end
 
+  describe "which page each link opens" do
+    @token @account.email.confirm_token
+
+    test "the sign-in link opens the sign-in page, not the password reset page" do
+      email = Mails.login_link(@account)
+
+      for body <- [email.text_body, email.html_body] do
+        assert body =~ "/login/email/" <> @token
+        refute body =~ "/login/forgot-password/"
+      end
+    end
+
+    test "the reset link opens the password reset page" do
+      email = Mails.forgot_password(@account)
+
+      for body <- [email.text_body, email.html_body] do
+        assert body =~ "/login/forgot-password/" <> @token
+        refute body =~ "/login/email/"
+      end
+    end
+
+    test "the signup confirmation opens the signup confirmation page" do
+      email = Mails.signup_confirm_email(@account)
+
+      for body <- [email.text_body, email.html_body] do
+        assert body =~ "/signup/email/confirm/" <> @token
+      end
+    end
+
+    test "the sudo variants of the sign-in and reset mails open the same pages" do
+      assert Mails.login_link(@account, sudo_intent: "delete your account").text_body =~
+               "/login/email/" <> @token
+
+      assert Mails.forgot_password(@account, sudo_intent: "delete your account").text_body =~
+               "/login/forgot-password/" <> @token
+    end
+  end
+
   describe "registration_hint/1" do
     @signup_url "https://example.com/signup"
 

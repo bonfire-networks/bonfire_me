@@ -80,7 +80,7 @@ defmodule Bonfire.Me.Mails do
         copy(:confirm_email,
           subject: "#{app_name} - " <> l("Confirm your email"),
           intro: l("thanks for signing up to %{app_name}.", app_name: app_name),
-          intro_2: l("Just click the following link to confirm your email and get started:"),
+          intro_2: l("Just open the following link to confirm your email and get started:"),
           cta: l("Confirm email"),
           disclaimer: l("If you didn't sign up, you can safely ignore this email."),
           signoff: l("See you soon!"),
@@ -166,6 +166,8 @@ defmodule Bonfire.Me.Mails do
     confirm_token_email(account,
       log_label: "Login link",
       heading: greeting(first_name(account)),
+      # a sign-in link has its own page, apart from the password reset one
+      link_base: Bonfire.Common.URIs.base_url() <> "/login/email",
       go: opts[:go],
       as_user: opts[:as_user],
       copy: copy(:login_link_email, login_link_copy(opts))
@@ -232,8 +234,11 @@ defmodule Bonfire.Me.Mails do
       app_name = Bonfire.Mailer.app_name()
       copy = opts[:copy]
 
+      # the page the link opens: the password reset page unless the caller names another
+      link_base = opts[:link_base] || url_path(Bonfire.UI.Me.ForgotPasswordController)
+
       url =
-        (url_path(Bonfire.UI.Me.ForgotPasswordController) <> "/" <> confirm_token)
+        (link_base <> "/" <> confirm_token)
         |> append_query(go: opts[:go], as_user: opts[:as_user])
 
       if Config.env() != :test or System.get_env("PHX_SERVER") == "yes",

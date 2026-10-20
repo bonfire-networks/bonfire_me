@@ -603,8 +603,9 @@ defmodule Bonfire.Me.Accounts do
     do: rce_check_what_to_do(account, changeset, opts)
 
   defp rce_check_what_to_do(account, changeset, opts) do
+    # reset and sign-in links deliberately get a fresh token whatever the email's state. Asking again for the SIGNUP confirmation must not: it would mail, and set back to unconfirmed, an address that is already confirmed.
     what_to_do =
-      if opts[:confirm_action] do
+      if opts[:confirm_action] && opts[:confirm_action] != :confirm_again do
         Email.should_request_or_refresh?(account.email, opts)
       else
         Email.may_request_confirm_email?(account.email, opts)
@@ -652,6 +653,18 @@ defmodule Bonfire.Me.Accounts do
   ### confirm_email
 
   @doc """
+  Whether an emailed token could be redeemed right now. Read-only, so a page can call it on a GET without using the token up.
+
+  Returns `:ok`, or `{:error, reason}` where reason is `:not_found`, `:expired`, `:already_confirmed`, `:no_expiry` or `:confirmation_disabled`.
+  """
+  def check_confirm_token(token, opts \\ []) when is_binary(token) do
+    case repo().single(Queries.by_confirm_token(token)) do
+      {:ok, %{email: %{id: _} = email}} -> Email.may_confirm?(email, opts)
+      _ -> {:error, :not_found}
+    end
+  end
+
+  @doc """
   Confirms an account's email address as valid, usually by providing a confirmation token, or directly by providing an Account.
 
   ## Examples
@@ -695,12 +708,23 @@ defmodule Bonfire.Me.Accounts do
   end
 
   defp ce(%{email: %{id: _} = email} = account, opts) do
-    if opts[:confirm_action] do
-      confirm_email(account)
-    else
-      with :ok <- Email.may_confirm?(email, opts) |> debug(),
-           do: confirm_email(account)
+    case Email.token_state(email, opts) |> debug() do
+      :fresh ->
+        redeem_email(account)
+
+      # used already, within its grace period: same result again, without extending the grace period
+      :redeemed ->
+        {:ok, account}
+
+      error ->
+        error
     end
+  end
+
+  # unlike `confirm_email(%Account{})`, this keeps the token for its grace period (see `Email.redeem/1`)
+  defp redeem_email(%Account{} = account) do
+    with {:ok, email} <- repo().update(Email.redeem(e(account, :email, nil))),
+         do: {:ok, %{account | email: email}}
   end
 
   defp ce(account, opts) do

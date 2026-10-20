@@ -276,15 +276,82 @@ defmodule Bonfire.Me.AccountsTest do
       assert {:ok, _account} = Accounts.confirm_email(account)
     end
 
-    test "with: :token" do
+    # the emailed token stays usable for a short grace period after it is first used, so a double click, a refresh or a mail scanner running first doesn't lock the person out
+    defp unconfirmed_with_token do
       attrs = signup_form()
       assert {:ok, account} = Accounts.signup(attrs, must_confirm?: true)
       assert account.email.confirm_token
+      {attrs, account, account.email.confirm_token}
+    end
 
-      assert {:ok, account} = Accounts.confirm_email(account.email.confirm_token)
+    defp end_grace(email) do
+      {:ok, _} =
+        email
+        |> Ecto.Changeset.change(confirm_until: DateTime.add(DateTime.utc_now(), -60))
+        |> repo().update()
+    end
+
+    test "with: :token confirms and keeps the token for the grace period" do
+      {_attrs, _account, token} = unconfirmed_with_token()
+
+      assert {:ok, account} = Accounts.confirm_email(token)
 
       assert account.email.confirmed_at
-      assert is_nil(account.email.confirm_token)
+      assert account.email.confirm_token == token
+      # about 5 minutes by default
+      assert DateTime.diff(account.email.confirm_until, DateTime.utc_now()) in 200..300
+    end
+
+    test "with: :token twice within the grace period works both times, without extending it" do
+      {_attrs, _account, token} = unconfirmed_with_token()
+
+      assert {:ok, first} = Accounts.confirm_email(token)
+      assert {:ok, again} = Accounts.confirm_email(token)
+
+      assert again.id == first.id
+      assert DateTime.diff(again.email.confirm_until, first.email.confirm_until) == 0
+    end
+
+    test "with: :token after the grace period says already confirmed" do
+      {_attrs, _account, token} = unconfirmed_with_token()
+      assert {:ok, account} = Accounts.confirm_email(token)
+      end_grace(account.email)
+
+      assert {:error, :already_confirmed} = Accounts.confirm_email(token)
+    end
+
+    test "with: :token past its expiry says expired" do
+      {_attrs, account, token} = unconfirmed_with_token()
+      end_grace(account.email)
+
+      assert {:error, :expired} = Accounts.confirm_email(token)
+    end
+
+    test "check_confirm_token changes nothing" do
+      {_attrs, account, token} = unconfirmed_with_token()
+
+      assert :ok = Accounts.check_confirm_token(token)
+      assert :ok = Accounts.check_confirm_token(token)
+      assert {:error, :not_found} = Accounts.check_confirm_token("nope#{token}")
+
+      email =
+        Accounts.get_by_email(account.email.email_address)
+        |> repo().preload(:email)
+        |> Map.fetch!(:email)
+
+      assert email.confirm_token == token
+      assert is_nil(email.confirmed_at)
+    end
+
+    test "a sign-in or reset link requested right after confirming gets a fresh token with its full lifetime" do
+      {attrs, _account, token} = unconfirmed_with_token()
+      assert {:ok, _} = Accounts.confirm_email(token)
+
+      assert {:ok, :refreshed, account} =
+               Accounts.request_forgot_password(%{email: attrs.email.email_address})
+
+      refute account.email.confirm_token == token
+      assert DateTime.diff(account.email.confirm_until, DateTime.utc_now(), :hour) >= 23
     end
   end
 
