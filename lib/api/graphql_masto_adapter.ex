@@ -190,10 +190,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     defp handle_follow_action(conn, target_id, action, notify \\ nil) do
       RestAdapter.with_current_user(conn, fn current_user ->
-        query =
-          if action == :follow,
-            do: "mutation($id: String!) { follow(id: $id) { id } }",
-            else: "mutation($id: String!) { unfollow(id: $id) }"
+        # the same documents `Follows.nomad/4` runs through GraphQL
+        query = Bonfire.Social.Graph.Follows.graphql_document(action)
 
         variables = %{"id" => target_id}
 
