@@ -415,6 +415,47 @@ defmodule Bonfire.Me.Users.Queries do
     from(u in User, as: :user)
     |> user_proloads(e(opts, :preload, :admins))
     |> where([instance_admin: ia], ia.is_instance_admin == true)
+    |> exclude_ids(e(opts, :exclude_ids, nil))
+  end
+
+  defp exclude_ids(query, [_ | _] = ids), do: where(query, [user: u], u.id not in ^ids)
+  defp exclude_ids(query, _), do: query
+
+  @doc """
+  Returns the query to list the users who hold `verb` for the whole instance, as `Bonfire.Boundaries.can?(user, verb, :instance)` says they do: an admin (the account flag is read before any grant), or whoever is granted the verb on the instance ACL, directly or through a circle they are in, unless they are denied it the same way. The roles of the instance (the admin and mod circles, or any other) give it by grants, so they are all covered.
+  """
+  def instance_wide(verb, opts \\ []) do
+    acl = Bonfire.Boundaries.Scaffold.Instance.instance_acl()
+    verb_id = Bonfire.Boundaries.Verbs.get_id!(verb)
+    granted = instance_wide_subjects(acl, verb_id, true)
+    denied = instance_wide_subjects(acl, verb_id, false)
+
+    from(u in User, as: :user)
+    |> user_proloads(e(opts, :preload, :admins))
+    |> where(
+      [user: u, instance_admin: ia],
+      ia.is_instance_admin == true or
+        ((u.id in subquery(granted) or
+            exists(
+              from(e in Bonfire.Data.AccessControl.Encircle,
+                where: e.subject_id == parent_as(:user).id and e.circle_id in subquery(granted)
+              )
+            )) and
+           not (u.id in subquery(denied) or
+                  exists(
+                    from(e in Bonfire.Data.AccessControl.Encircle,
+                      where:
+                        e.subject_id == parent_as(:user).id and e.circle_id in subquery(denied)
+                    )
+                  )))
+    )
+  end
+
+  defp instance_wide_subjects(acl, verb_id, value) do
+    from(g in Bonfire.Data.AccessControl.Grant,
+      where: g.acl_id == ^acl and g.verb_id == ^verb_id and g.value == ^value,
+      select: g.subject_id
+    )
   end
 
   @doc """

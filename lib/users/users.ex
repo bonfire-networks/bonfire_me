@@ -410,6 +410,45 @@ defmodule Bonfire.Me.Users do
   # def list_all(show \\ :local), do: repo().many(Queries.list(show))
   def list_admins(opts \\ []), do: repo().many(Queries.admins(opts))
 
+  @doc """
+  Lists the instance's moderators: the members of the mod circle. `make_admin/1` adds the admin circle only, so an admin is not a moderator unless added to it. An instance with no moderator (every one, until someone is added) has its admins stand in, so that what is sent to its moderators reaches someone. `opts` are those of `list_admins/1`, for that case.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.list_moderators()
+      [%Bonfire.Data.Identity.User{}, ...]
+  """
+  def list_moderators(opts \\ []) do
+    case list_mod_circle_members() do
+      [] -> list_admins(opts)
+      moderators -> moderators
+    end
+  end
+
+  @doc """
+  Lists the users who hold `verb` for the whole instance (see `Queries.instance_wide/2`): the admins, the mod circle, and anyone else the instance gave it to.
+
+  ## Examples
+
+      iex> Bonfire.Me.Users.list_instance_wide(:mediate)
+      [%Bonfire.Data.Identity.User{}, ...]
+  """
+  def list_instance_wide(verb, opts \\ []), do: repo().many(Queries.instance_wide(verb, opts))
+
+  @doc "Lists the members of the instance's mod circle and its admins, once each: the admins query leaves out the moderators already listed."
+  def list_admins_and_moderators(opts \\ []) do
+    moderators = list_mod_circle_members()
+
+    moderators ++
+      list_admins(Keyword.put(opts, :exclude_ids, Bonfire.Common.Types.uids(moderators)))
+  end
+
+  defp list_mod_circle_members,
+    do:
+      Bonfire.Boundaries.Circles.list_member_users(
+        Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+      )
+
   def list_boundarised_query(opts) do
     # Note: users who said they don't want to be publicly discoverable in settings will be filtered based on boundaries (i.e. not shown to guests)
     Queries.list(Keyword.get(opts, :show, :local))
@@ -582,23 +621,88 @@ defmodule Bonfire.Me.Users do
 
   ## instance admin
 
-  @doc "Grants a user superpowers."
-  def make_admin(username) when is_binary(username) do
+  @doc "Grants a user superpowers. With `moderator: true`, makes them an instance moderator too (`make_moderator/1`): admins are not moderators otherwise."
+  def make_admin(user_or_username, opts \\ [])
+
+  def make_admin(username, opts) when is_binary(username) do
     by_username(username)
-    ~> make_admin()
+    ~> make_admin(opts)
   end
 
-  def make_admin(%User{} = user) do
-    # force: a struct loaded before the profile became shared carries a stale `shared_user: nil`
-    if Bonfire.Common.URIs.shared_user?(repo().preload(user, :shared_user, force: true)) do
+  def make_admin(%User{} = user, opts) do
+    if shared_profile?(user) do
       # admin powers belong to the account, and a shared profile is also used by its caretaker accounts
       error(user, "A shared profile cannot be made an admin")
     else
       with {:ok, account} <- Accounts.update_is_admin(user, true) do
         add_to_admin_circle(user)
+        if opts[:moderator], do: make_moderator(user)
+        # the admins stand in for the moderators while there are none
+        refresh_declared_moderators()
         {:ok, Map.put(user, :account, account)}
       end
     end
+  end
+
+  # force: a struct loaded before the profile became shared carries a stale `shared_user: nil`
+  defp shared_profile?(%User{} = user),
+    do: Bonfire.Common.URIs.shared_user?(repo().preload(user, :shared_user, force: true))
+
+  @doc "Makes a user an instance moderator: adds them to the mod circle. Their admin powers, if they have any, are not changed."
+  def make_moderator(username) when is_binary(username) do
+    by_username(username)
+    ~> make_moderator()
+  end
+
+  def make_moderator(%User{} = user) do
+    if shared_profile?(user) do
+      # the circle's grants would go to the caretaker accounts acting as the shared profile
+      error(user, "A shared profile cannot be made a moderator")
+    else
+      with {:ok, _} <-
+             Bonfire.Boundaries.Circles.add_to_circles(
+               user,
+               Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+             ) do
+        refresh_declared_moderators()
+        {:ok, user}
+      end
+    end
+  end
+
+  # 6 hours
+  @declared_moderators_cache_ttl 1_000 * 60 * 60 * 6
+
+  @doc """
+  Lists the people the instance shows as running it: its moderators (`list_moderators/1`, so its admins while it has none), with what a list of people shown needs preloaded. Cached for 6 hours, and cleared when someone is made or revoked a moderator or an admin. Pass the standard `:cache` opt (`cache: :refresh` busts it and recomputes).
+  """
+  def list_declared_moderators(opts \\ []) do
+    Bonfire.Common.Cache.maybe_apply_cached(
+      &do_list_declared_moderators/0,
+      [],
+      Keyword.put_new(opts, :expire, @declared_moderators_cache_ttl)
+    )
+  end
+
+  defp do_list_declared_moderators,
+    do: repo().maybe_preload(list_moderators(), [:character, profile: :icon])
+
+  defp refresh_declared_moderators, do: list_declared_moderators(cache: :reset)
+
+  @doc "Takes a user out of the mod circle. Their admin powers, if they have any, are not changed."
+  def revoke_moderator(username) when is_binary(username) do
+    by_username(username)
+    ~> revoke_moderator()
+  end
+
+  def revoke_moderator(%User{} = user) do
+    Bonfire.Boundaries.Circles.remove_from_circles(
+      user,
+      Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+    )
+
+    refresh_declared_moderators()
+    {:ok, user}
   end
 
   defp add_to_admin_circle(user) do
@@ -618,6 +722,9 @@ defmodule Bonfire.Me.Users do
     # leave the circle first, so refusing the last admin leaves the account flag untouched
     with :ok <- remove_from_admin_circle(user),
          {:ok, _account} <- Accounts.update_is_admin(user, false) do
+      # the admins stand in for the moderators while there are none
+      refresh_declared_moderators()
+
       {:ok,
        user
        |> Map.put(
@@ -1111,19 +1218,25 @@ defmodule Bonfire.Me.Users do
   def get_or_create_service_character(
         service_character_id,
         service_character_username,
-        bio \\ nil
+        bio \\ nil,
+        name \\ nil
       ) do
     service_char =
       with {:ok, user} <- Bonfire.Me.Users.by_id(service_character_id) do
         user
       else
         {:error, :not_found} ->
-          create_service_character(service_character_username, %{
-            id: service_character_id,
-            summary: bio,
-            website: nil,
-            location: nil
-          })
+          create_service_character(
+            service_character_username,
+            %{
+              id: service_character_id,
+              summary: bio,
+              website: nil,
+              location: nil
+            }
+            # the display name, when it is not the username
+            |> Map.merge(if name, do: %{name: name}, else: %{})
+          )
       end
 
     # the service actor is a known singleton and never a shared user, and it's loaded here rather than via `get_character` (which preloads `:shared_user`), so mark it not-shared in-memory to classify it without a DB preload
