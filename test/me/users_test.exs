@@ -32,6 +32,38 @@ defmodule Bonfire.Me.UsersTest do
     assert attrs.profile.summary == user.profile.summary
   end
 
+  describe "a local user's bio" do
+    # a real TLD: the formatter checks it in tests too, and does not link a `.local` host
+    @bio_url "https://example.com/notes"
+
+    defp stored_bio(user) do
+      {:ok, user} = Users.by_id(user.id)
+      e(repo().maybe_preload(user, :profile), :profile, :summary, nil)
+    end
+
+    test "has its bare URLs linked when the user is created" do
+      assert {:ok, account} = Accounts.signup(signup_form())
+
+      assert {:ok, user} =
+               Users.create(create_user_form(%{summary: "Notes at #{@bio_url}"}), account)
+
+      assert stored_bio(user) =~ "](#{@bio_url})"
+    end
+
+    test "has its bare URLs linked when the bio is edited, and linked once when edited again" do
+      user = Fake.fake_user!()
+
+      assert {:ok, user} = Users.update(user, %{profile: %{summary: "Notes at #{@bio_url}"}})
+
+      linked = stored_bio(user)
+      assert linked =~ "](#{@bio_url})"
+
+      # saved again as the edit form shows it, already linked
+      assert {:ok, _} = Users.update(user, %{profile: %{summary: linked}})
+      assert stored_bio(user) == linked
+    end
+  end
+
   test "usernames must be unique" do
     assert {:ok, account} = Accounts.signup(signup_form())
     attrs = create_user_form()

@@ -24,7 +24,10 @@ defmodule Bonfire.Me.Profiles do
   @behaviour Bonfire.Common.QueryModule
   def schema_module, do: Profile
 
-  def changeset(profile \\ %Profile{}, params) do
+  @doc """
+  Casts and validates a profile. With `local: true`, for a profile of ours, a new bio gets its bare URLs, mentions and hashtags linked as a post's body does, in the format the editor of `current_user` writes (as for a post).
+  """
+  def changeset(profile \\ %Profile{}, params, opts \\ []) do
     profile
     |> changeset_simple(params)
     |> Changeset.validate_length(:name,
@@ -41,6 +44,28 @@ defmodule Bonfire.Me.Profiles do
       min: 0,
       max: Bonfire.Common.Config.get_ext(:bonfire_me, :validate_summary_max, 10240)
     )
+    # after the length check, so the limit applies to what was typed rather than to the links added
+    |> maybe_link_summary(opts)
+  end
+
+  # Only the text is kept: the people a bio mentions are not notified. A remote actor's bio arrives as HTML its server already formatted, so it is kept as sent
+  defp maybe_link_summary(changeset, opts) do
+    with true <- opts[:local] == true,
+         %Changeset{valid?: true} <- changeset,
+         summary when is_binary(summary) and summary != "" <-
+           Changeset.get_change(changeset, :summary),
+         # a group's update may be made as `:skip_boundary_check` rather than by a user
+         current_user = if(is_map(opts[:current_user]), do: opts[:current_user]),
+         {:ok, %{text: text}} when is_binary(text) <-
+           Bonfire.Common.Utils.maybe_apply(Bonfire.Social.Tags, :maybe_process, [
+             current_user,
+             summary,
+             []
+           ]) do
+      Changeset.put_change(changeset, :summary, text)
+    else
+      _ -> changeset
+    end
   end
 
   def changeset_simple(profile \\ %Profile{}, params) do

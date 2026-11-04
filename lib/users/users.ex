@@ -1014,7 +1014,7 @@ defmodule Bonfire.Me.Users do
     )
     |> Changeset.cast_assoc(:profile,
       required: true,
-      with: &Profiles.changeset/2
+      with: &Profiles.changeset(&1, &2, local: true)
     )
     |> debug("full cs")
   end
@@ -1039,7 +1039,7 @@ defmodule Bonfire.Me.Users do
     {:error, "Not authenticated"}
   end
 
-  def changeset(:update, user, params, _extra) do
+  def changeset(:update, user, params, extra) do
     user = repo().preload(user, [:profile, :extra_info, character: [:actor]])
 
     # Ecto doesn't liked mixed keys so we convert them all to strings
@@ -1073,7 +1073,14 @@ defmodule Bonfire.Me.Users do
     Ecto.Changeset.cast(user, params, [])
     # |> info()
     |> Changeset.cast_assoc(:character, with: &Characters.changeset/2)
-    |> Changeset.cast_assoc(:profile, with: &Profiles.changeset/2)
+    # `update_remote_actor/2` passes `:remote`: a remote profile comes from its server, so our length limits, meant for what people type here, don't refuse it, as on its creation
+    |> Changeset.cast_assoc(:profile,
+      with:
+        if(extra == :remote,
+          do: &Profiles.changeset_simple/2,
+          else: &Profiles.changeset(&1, &2, local: true, current_user: user)
+        )
+    )
     |> Needle.Changesets.cast_assoc(:extra_info,
       with: &Bonfire.Data.Identity.ExtraInfo.changeset/2
     )
