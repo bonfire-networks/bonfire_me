@@ -1234,6 +1234,7 @@ defmodule Bonfire.Me.Users do
       else
         {:error, :not_found} ->
           create_service_character(
+            service_character_id,
             service_character_username,
             %{
               id: service_character_id,
@@ -1253,6 +1254,22 @@ defmodule Bonfire.Me.Users do
       [service_char],
       fallback_return: service_char
     )
+  end
+
+  # The service character is made on first use, so the first requests of a new instance that arrive together can all make it at once. Its id is fixed, so only one insert gets through, and the others raise a unique violation (on its membership of the local users circle, a constraint its changeset doesn't declare). The character then stored under that id is this same one, made by the other request, so it is returned. Any other error still raises, as does a violation with no character stored after it.
+  defp create_service_character(service_character_id, service_character_username, data) do
+    create_service_character(service_character_username, data)
+  rescue
+    e in Ecto.ConstraintError ->
+      # after a failed insert, Postgres refuses every query until the transaction ends, so the character can't be read inside a caller's transaction
+      with :unique <- e.type,
+           false <- repo().in_transaction?(),
+           {:ok, user} <- by_id(service_character_id) do
+        info(e.constraint, "another request made the service character at the same time, use it")
+        user
+      else
+        _ -> reraise e, __STACKTRACE__
+      end
   end
 
   defp create_service_character(service_character_username, data) do
