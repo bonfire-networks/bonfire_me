@@ -815,8 +815,14 @@ defmodule Bonfire.Me.Users do
   def delete(user, opts \\ [])
 
   def delete(users, opts) when is_list(users) do
-    Enum.map(users, &delete(&1, opts))
-    |> List.first()
+    # Enum.map(users, &delete(&1, opts))
+    # |> List.first()
+    results = Enum.map(users, &delete(&1, opts))
+
+    case Enum.filter(results, &match?({:error, _}, &1)) do
+      [] -> {:ok, results}
+      errors -> error(errors, "Could not delete some of the users")
+    end
   end
 
   def delete(%{} = user, opts) do

@@ -19,7 +19,9 @@ defmodule Bonfire.Me.SensitiveActions.DeleteAccount do
   end
 
   @impl true
-  def execute(%{account: account}), do: Bonfire.Me.DeleteWorker.enqueue_delete(account)
+  # def execute(%{account: account}), do: Bonfire.Me.DeleteWorker.enqueue_delete(account)
+  # the account's profiles are queued with it, so each is deleted (and its deletion federated) as a user, and the job fails if any of them survives
+  def execute(%{account: account}), do: Bonfire.Me.Accounts.enqueue_delete(account)
 
   @impl true
   def factors, do: :any

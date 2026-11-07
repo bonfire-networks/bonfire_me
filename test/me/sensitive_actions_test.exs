@@ -145,4 +145,46 @@ defmodule Bonfire.Me.SensitiveActionsTest do
                :met
     end
   end
+
+  describe "DeleteAccount.execute/1" do
+    test "a profile that could not be deleted makes the account deletion fail rather than report success" do
+      account = fake_account!()
+      failing_user = fake_user!(account)
+      other_user = fake_user!(account)
+
+      # the database refuses to delete one of the two profiles, which rolls back that delete as a real constraint failure would; everything else is deleted for real. The trigger is created inside the test's transaction, so it goes away with it.
+      Ecto.Adapters.SQL.query!(
+        Bonfire.Common.Repo,
+        """
+        CREATE FUNCTION pg_temp.refuse_profile_delete() RETURNS trigger AS $$
+        BEGIN
+          RAISE EXCEPTION 'profile deletion refused for this test';
+        END;
+        $$ LANGUAGE plpgsql
+        """
+      )
+
+      Ecto.Adapters.SQL.query!(
+        Bonfire.Common.Repo,
+        """
+        CREATE TRIGGER refuse_profile_delete BEFORE DELETE ON pointers_pointer
+        FOR EACH ROW WHEN (OLD.id = '#{failing_user.id |> Needle.ULID.dump!() |> Ecto.UUID.load!()}')
+        EXECUTE FUNCTION pg_temp.refuse_profile_delete()
+        """
+      )
+
+      Oban.Testing.with_testing_mode(:inline, fn ->
+        result = DeleteAccount.execute(%{account: account})
+
+        refute match?({:ok, %Oban.Job{state: "completed"}}, result),
+               "the deletion job reported success although a profile was not deleted: #{inspect(result)}"
+      end)
+
+      assert {:ok, _} = Bonfire.Me.Users.by_id(failing_user.id),
+             "the profile whose deletion failed should still exist"
+
+      # the positive half: the deletion really ran, it is only the result that has to tell of the failure
+      assert {:error, :not_found} = Bonfire.Me.Users.by_id(other_user.id)
+    end
+  end
 end

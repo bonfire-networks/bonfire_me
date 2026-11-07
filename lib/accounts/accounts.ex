@@ -1101,38 +1101,46 @@ defmodule Bonfire.Me.Accounts do
       :ok
 
   """
-  def delete(account, _opts \\ [])
+  def delete(account, opts \\ [])
 
-  def delete(%Account{} = account, _opts) do
-    delete_users(account)
-
-    assocs = [
-      :credential,
-      :email,
-      :accounted,
-      # :users, # handled by `delete_users/1`
-      :shared_users,
-      :auth_second_factor,
-      :settings
-    ]
-
-    # account = repo().maybe_preload(account, assocs)
-    Bonfire.Common.Utils.maybe_apply(
-      Bonfire.Social.Objects,
-      :maybe_generic_delete,
-      [
-        Account,
-        account,
-        [current_account: account, delete_associations: assocs, delete_caretaken: true]
+  def delete(%Account{} = account, opts) do
+    # delete_users(account)
+    # the account is kept if any of its users could not be deleted, so the failure is reported and the deletion can be retried
+    with {:ok, _} <- delete_users(account, opts) do
+      assocs = [
+        :credential,
+        :email,
+        :accounted,
+        # :users, # handled by `delete_users/2`
+        :shared_users,
+        :auth_second_factor,
+        :settings
       ]
-    )
 
-    # repo().delete(account) # handled by Epic
+      # account = repo().maybe_preload(account, assocs)
+      Bonfire.Common.Utils.maybe_apply(
+        Bonfire.Social.Objects,
+        :maybe_generic_delete,
+        [
+          Account,
+          account,
+          # [current_account: account, delete_associations: assocs, delete_caretaken: true]
+          Keyword.merge(opts,
+            current_account: account,
+            delete_associations: assocs,
+            delete_caretaken: true
+          )
+        ]
+      )
+
+      # repo().delete(account) # handled by Epic
+    end
   end
 
-  def delete(account, _opts) do
+  def delete(account, opts) do
     with {:ok, account} <- fetch_current(account) do
-      delete(account)
+      # delete(account)
+      delete(account, opts)
     else
       _ ->
         # re-delete already deleted pointable (eg. to catch any missing assocs)
@@ -1140,13 +1148,18 @@ defmodule Bonfire.Me.Accounts do
           deleted: true,
           skip_boundary_check: true
         )
-        ~> delete()
+        # ~> delete()
+        ~> delete(opts)
     end
   end
 
-  defp delete_users(account) do
+  # defp delete_users(account) do
+  #   Users.by_account(account)
+  #   |> Users.delete()
+  # end
+  defp delete_users(account, opts) do
     Users.by_account(account)
-    |> Users.delete()
+    |> Users.delete(opts)
   end
 
   ## misc
