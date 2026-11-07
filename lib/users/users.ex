@@ -26,7 +26,7 @@ defmodule Bonfire.Me.Users do
   # alias Needle.ULID
 
   @type changeset_name :: :create
-  @type changeset_extra :: Account.t() | :remote
+  @type changeset_extra :: Account.t() | :remote | :no_account | :no_account
 
   @behaviour Bonfire.Common.ContextModule
   def schema_module, do: User
@@ -490,8 +490,8 @@ defmodule Bonfire.Me.Users do
     clean_opts = to_options(opts)
 
     make_admin? =
-      (!(opts == :remote or clean_opts[:local] == false) and Config.env() != :test and
-         is_first_user?())
+      (!(opts == :remote or clean_opts[:local] == false) and clean_opts[:make_admin?] != false and
+         Config.env() != :test and is_first_user?())
       |> debug("maybe_make_admin?")
 
     if !clean_opts[:skip_spam_check],
@@ -974,14 +974,14 @@ defmodule Bonfire.Me.Users do
   @spec changeset(
           name :: changeset_name,
           params :: map,
-          extra :: Account.t() | :remote
+          extra :: Account.t() | :remote | :no_account
         ) :: Changeset.t()
 
   @spec changeset(
           name :: changeset_name,
           user :: User.t(),
           params :: map,
-          extra :: Account.t() | :remote
+          extra :: Account.t() | :remote | :no_account
         ) :: Changeset.t()
 
   def changeset(name, user \\ %User{}, params, extra)
@@ -1023,6 +1023,24 @@ defmodule Bonfire.Me.Users do
       with: &Profiles.changeset(&1, &2, local: true)
     )
     |> debug("full cs")
+  end
+
+  # a local user that belongs to no account, such as the instance's federation bot: nobody signs in as it
+  def changeset(:create, user, params, :no_account) do
+    params
+    |> User.changeset(user, ...)
+    |> Changesets.put_assoc!(:encircles, [
+      %{circle_id: Circles.get_id!(:local)}
+    ])
+    |> Changesets.put_assoc!(:character, %{})
+    |> Changesets.cast_assoc(:character,
+      required: true,
+      with: &Characters.changeset/2
+    )
+    |> Changeset.cast_assoc(:profile,
+      required: true,
+      with: &Profiles.changeset(&1, &2, local: true)
+    )
   end
 
   def changeset(:create, user, params, :remote) do
@@ -1196,7 +1214,8 @@ defmodule Bonfire.Me.Users do
         false
 
       _nil_or_true ->
-        result = count() < 1
+        # only users with an account count: the instance's federation bot has none, and exists before anyone signs up
+        result = count(:with_account) < 1
         Process.put(:is_first_user_cached, result)
         result
     end
@@ -1278,13 +1297,28 @@ defmodule Bonfire.Me.Users do
       end
   end
 
+  # The bot belongs to no account (nobody signs in as it), so it never takes the first account or first user slot a real first signup needs, and is never made an admin.
   defp create_service_character(service_character_username, data) do
-    Bonfire.Me.Fake.fake_user!(
-      service_character_username,
-      data,
-      request_before_follow: true,
-      undiscoverable: true,
-      skip_spam_check: true
-    )
+    attrs =
+      Enum.into(data, %{name: service_character_username, username: service_character_username})
+
+    params =
+      %{
+        profile: Map.take(attrs, [:name, :summary, :website, :location]),
+        character: Map.take(attrs, [:username])
+      }
+      |> Map.merge(Map.take(attrs, [:id]))
+
+    with {:ok, user} <-
+           make_user(params, :no_account,
+             request_before_follow: true,
+             undiscoverable: true,
+             skip_spam_check: true,
+             make_admin?: false
+           ) do
+      user
+    else
+      other -> error(other, "Could not create the service character")
+    end
   end
 end

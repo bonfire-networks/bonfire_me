@@ -404,6 +404,12 @@ defmodule Bonfire.Me.Users.Queries do
     |> where([peered: p], not is_nil(p.id))
   end
 
+  # people who can sign in, not the instance's federation bot or other users with no account
+  def count(:with_account) do
+    count(nil)
+    |> join(:inner, [u], ac in assoc(u, :accounted), as: :accounted)
+  end
+
   def count(_) do
     select(User, [u], count(u.id))
   end

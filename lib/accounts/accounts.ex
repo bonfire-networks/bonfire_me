@@ -1215,10 +1215,11 @@ defmodule Bonfire.Me.Accounts do
   def update_is_admin(user_or_account, make_admin_or_revoke, user \\ nil)
 
   def update_is_admin(%User{} = user, make_admin_or_revoke, _) do
-    user
-    |> repo().preload(:account)
-    |> Map.get(:account)
-    |> update_is_admin(make_admin_or_revoke, user)
+    # admin powers belong to the account, so a user without one (such as the instance's federation bot) cannot have them
+    case user |> repo().preload(:account) |> Map.get(:account) do
+      nil -> {:error, :no_account}
+      account -> update_is_admin(account, make_admin_or_revoke, user)
+    end
   end
 
   def update_is_admin(%Account{} = account, true, user) do
