@@ -100,6 +100,45 @@ defmodule Bonfire.Me.MailsTest do
     end
   end
 
+  # With no mail backend configured, mail is sent straight to the recipient's server and often never arrives, so a self-hoster takes the link from the logs. With a backend, a live sign-in link in the logs only lets whoever reads them sign in as the person it was sent to.
+  describe "log_link?/0" do
+    test "is true while mail is sent directly (no mail backend), outside tests" do
+      Process.put([:bonfire, :env], :prod)
+      Process.put([:bonfire_mailer, Bonfire.Mailer.Swoosh, :adapter], Swoosh.Adapters.Mua)
+
+      assert Mails.log_link?()
+    end
+
+    test "is false when a mail backend is configured" do
+      Process.put([:bonfire, :env], :prod)
+      Process.put([:bonfire_mailer, Bonfire.Mailer.Swoosh, :adapter], Swoosh.Adapters.Mailgun)
+
+      refute Mails.log_link?()
+    end
+
+    test "is false in tests" do
+      Process.put([:bonfire_mailer, Bonfire.Mailer.Swoosh, :adapter], Swoosh.Adapters.Mua)
+
+      refute Mails.log_link?()
+    end
+  end
+
+  describe "the link in the log" do
+    for {label, adapter, logged?} <- [
+          {"direct sending", Swoosh.Adapters.Mua, true},
+          {"a mail backend", Swoosh.Adapters.Mailgun, false}
+        ] do
+      test "building a sign-in email with #{label} #{if logged?, do: "logs", else: "does not log"} its link" do
+        Process.put([:bonfire, :env], :prod)
+        Process.put([:bonfire_mailer, Bonfire.Mailer.Swoosh, :adapter], unquote(adapter))
+
+        log = ExUnit.CaptureLog.capture_log(fn -> Mails.login_link(@account) end)
+
+        assert log =~ @token == unquote(logged?)
+      end
+    end
+  end
+
   describe "registration_hint/1" do
     @signup_url "https://example.com/signup"
 

@@ -73,8 +73,7 @@ defmodule Bonfire.Me.Mails do
       url =
         append_query(base_url, go: opts[:go], redirect_uri: opts[:redirect_uri])
 
-      if Config.env() != :test or System.get_env("PHX_SERVER") == "yes",
-        do: warn("Email confirmation link: #{url}")
+      if log_link?(), do: warn("Email confirmation link: #{url}")
 
       copy =
         copy(:confirm_email,
@@ -227,6 +226,12 @@ defmodule Bonfire.Me.Mails do
     end
   end
 
+  @doc "Whether the full link of an email is written to the log: only while mail is sent directly (no mail backend), where it may never arrive and the log is the way to get it, and not in tests unless asked (`PHX_SERVER=yes`). With a mail backend, a live link in the logs would let whoever reads them sign in as the person it was sent to."
+  def log_link? do
+    Bonfire.Mailer.sending_directly?() and
+      (Config.env() != :test or System.get_env("PHX_SERVER") == "yes")
+  end
+
   defp confirm_token_email(%Account{} = account, opts) do
     confirm_token = e(account, :email, :confirm_token, nil)
 
@@ -241,8 +246,7 @@ defmodule Bonfire.Me.Mails do
         (link_base <> "/" <> confirm_token)
         |> append_query(go: opts[:go], as_user: opts[:as_user])
 
-      if Config.env() != :test or System.get_env("PHX_SERVER") == "yes",
-        do: warn("#{opts[:log_label]}: #{url}")
+      if log_link?(), do: warn("#{opts[:log_label]}: #{url}")
 
       new()
       |> subject(copy.subject)
