@@ -1089,6 +1089,43 @@ defmodule Bonfire.Me.Accounts do
     enqueue_delete(account)
   end
 
+  @doc "How many profiles the account of the given user holds (the set `enqueue_delete/1` deletes with the account), in one COUNT query that loads no rows. 0 when the user has no account, as a remote user."
+  def count_profiles_of_account_of(user_or_id) do
+    require Ecto.Query
+
+    case id(user_or_id) do
+      nil ->
+        0
+
+      user_id ->
+        Ecto.Query.from(a in Bonfire.Data.Identity.Accounted,
+          join: sibling in Bonfire.Data.Identity.Accounted,
+          on: sibling.account_id == a.account_id,
+          where: a.id == ^user_id,
+          select: count(sibling.id)
+        )
+        |> repo().one()
+    end
+  end
+
+  @doc "Whether the account of the given user is an instance admin, as `is_admin?/1` says of the user (the flag belongs to the account, so every profile of it has the powers), in one EXISTS query that loads nothing. False when the user has no account, as a remote user."
+  def admin_account_of?(user_or_id) do
+    require Ecto.Query
+
+    case id(user_or_id) do
+      nil ->
+        false
+
+      user_id ->
+        Ecto.Query.from(a in Bonfire.Data.Identity.Accounted,
+          join: ia in Bonfire.Data.AccessControl.InstanceAdmin,
+          on: ia.id == a.account_id,
+          where: a.id == ^user_id and ia.is_instance_admin == true
+        )
+        |> repo().exists?()
+    end
+  end
+
   @doc """
   Deletes the given account - use `enqueue_delete/1` instead.
 

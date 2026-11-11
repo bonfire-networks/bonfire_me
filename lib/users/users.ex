@@ -906,6 +906,12 @@ defmodule Bonfire.Me.Users do
 
   @doc "Creates a remote user"
   def create_remote(params, opts \\ []) do
+    # a person who declares they approve followers by hand is asked rather than followed outright
+    opts =
+      if manually_approves_followers?(opts[:remote_declarations]),
+        do: Keyword.put(opts, :request_before_follow, true),
+        else: opts
+
     with {:ok, user} <- create(changeset(:create, %User{}, params, :remote), opts) do
       # debug(user)
       # |> add_acl("public")
@@ -924,10 +930,24 @@ defmodule Bonfire.Me.Users do
 
   @doc "Updates a remote user"
   def update_remote_actor(user, params) do
-    user
+    {declarations, params} = Map.pop(params, :remote_declarations)
+
     # |> repo().reload() # to avoid stale struct errors
-    |> update(params, :remote)
+    with {:ok, _} = updated <- update(user, params, :remote) do
+      # only when declarations came with it (an update of the image alone brings none, and must not change who may follow), and a map without the flag says followable, as for groups
+      if is_map(declarations),
+        do:
+          maybe_apply(Bonfire.Boundaries.Scaffold.Users, :set_request_before_follow, [
+            user,
+            manually_approves_followers?(declarations)
+          ])
+
+      updated
+    end
   end
+
+  defp manually_approves_followers?(%{manually_approves_followers: true}), do: true
+  defp manually_approves_followers?(_), do: false
 
   def format_actor(user) do
     type = shared_user_actor_type(user) || "Person"
