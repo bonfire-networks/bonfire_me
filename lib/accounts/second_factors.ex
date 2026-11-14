@@ -74,10 +74,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
   """
   def new_qrcode(opts \\ []) do
     if enabled?(),
-      do:
-        (opts[:uri] || new_uri(opts[:secret]))
-        |> EQRCode.encode()
-        |> EQRCode.svg(width: 264)
+      do: Bonfire.Common.QRCode.svg(opts[:uri] || new_uri(opts[:secret]))
   end
 
   @doc """
