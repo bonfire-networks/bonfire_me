@@ -17,8 +17,17 @@ defmodule Bonfire.Me.DisabledTest do
       user_attrs = create_user_form()
       assert {:ok, user} = Users.create(user_attrs, account)
 
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :ghost, :instance_wide)
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :silence, :instance_wide)
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user, :ghost,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
+
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user, :silence,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
 
       assert catch_throw(
                Accounts.login(%{
@@ -39,8 +48,17 @@ defmodule Bonfire.Me.DisabledTest do
       user_attrs = create_user_form()
       assert {:ok, user} = Users.create(user_attrs, account)
 
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :ghost, :instance_wide)
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :silence, :instance_wide)
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user, :ghost,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
+
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user, :silence,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
 
       assert catch_throw(
                Accounts.login(%{
@@ -62,8 +80,17 @@ defmodule Bonfire.Me.DisabledTest do
       user_attrs = create_user_form()
       assert {:ok, user} = Users.create(user_attrs, account)
 
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :ghost, :instance_wide)
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :silence, :instance_wide)
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user, :ghost,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
+
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user, :silence,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
 
       assert catch_throw(
                Accounts.login(%{
@@ -84,8 +111,17 @@ defmodule Bonfire.Me.DisabledTest do
       user_attrs = create_user_form()
       assert {:ok, user2} = Users.create(user_attrs, account)
 
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user1, :ghost, :instance_wide)
-      {:ok, _} = Bonfire.Boundaries.Blocks.block(user1, :silence, :instance_wide)
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user1, :ghost,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
+
+      {:ok, _} =
+        Bonfire.Boundaries.Blocks.block(user1, :silence,
+          scope: :instance_wide,
+          skip_boundary_check: true
+        )
 
       assert catch_throw(
                Accounts.login(%{
@@ -105,8 +141,17 @@ defmodule Bonfire.Me.DisabledTest do
     user_attrs = create_user_form()
     assert {:ok, user} = Users.create(user_attrs, account)
 
-    {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :ghost, :instance_wide)
-    {:ok, _} = Bonfire.Boundaries.Blocks.block(user, :silence, :instance_wide)
+    {:ok, _} =
+      Bonfire.Boundaries.Blocks.block(user, :ghost,
+        scope: :instance_wide,
+        skip_boundary_check: true
+      )
+
+    {:ok, _} =
+      Bonfire.Boundaries.Blocks.block(user, :silence,
+        scope: :instance_wide,
+        skip_boundary_check: true
+      )
 
     user_attrs = create_user_form()
     assert catch_throw(Users.create(user_attrs, account)) == :inactive_user

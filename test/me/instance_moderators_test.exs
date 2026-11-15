@@ -13,7 +13,7 @@ defmodule Bonfire.Me.InstanceModeratorsTest do
   defp user_ids(users), do: Enum.map(users, & &1.id)
 
   defp admin! do
-    {:ok, admin} = Users.make_admin(Fake.fake_user!())
+    {:ok, admin} = Users.make_admin(Fake.fake_user!(), skip_boundary_check: true)
     admin
   end
 
@@ -37,11 +37,11 @@ defmodule Bonfire.Me.InstanceModeratorsTest do
     admin = admin!()
     user = Fake.fake_user!()
 
-    assert {:ok, _} = Users.make_moderator(user)
+    assert {:ok, _} = Users.make_moderator(user, skip_boundary_check: true)
     assert user.id in user_ids(Users.list_moderators())
     refute admin.id in user_ids(Users.list_moderators())
 
-    assert {:ok, _} = Users.revoke_moderator(user)
+    assert {:ok, _} = Users.revoke_moderator(user, skip_boundary_check: true)
     refute user.id in user_ids(Users.list_moderators())
     # no moderator left: the admins stand in again
     assert admin.id in user_ids(Users.list_moderators())
@@ -52,13 +52,16 @@ defmodule Bonfire.Me.InstanceModeratorsTest do
     assert {:ok, team} = Users.create(create_user_form(), account)
     SharedUsers.init_shared_user(team, %{}, current_account: account)
 
-    assert {:error, _} = Users.make_moderator(team)
+    assert {:error, _} = Users.make_moderator(team, skip_boundary_check: true)
     refute team.id in user_ids(Users.list_admins_and_moderators())
   end
 
   test "make_admin makes a moderator too when asked to, and not otherwise" do
     plain = admin!()
-    assert {:ok, also_moderator} = Users.make_admin(Fake.fake_user!(), moderator: true)
+
+    assert {:ok, also_moderator} =
+             Users.make_admin(Fake.fake_user!(), moderator: true, skip_boundary_check: true)
+
     Fake.instance_moderator!(Fake.fake_user!())
 
     moderators = user_ids(Users.list_moderators())
@@ -73,7 +76,10 @@ defmodule Bonfire.Me.InstanceModeratorsTest do
 
     defp circle_with!(members, name) do
       assert {:ok, circle} = Circles.create(Fake.fake_user!(), name)
-      for member <- members, do: assert({:ok, _} = Circles.add_to_circles(member, circle))
+
+      for member <- members,
+          do: assert({:ok, _} = Circles.add_to_circles(member, circle, skip_boundary_check: true))
+
       circle
     end
 

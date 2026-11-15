@@ -30,7 +30,7 @@ defmodule Bonfire.Me.AdminCircleSyncTest do
   defp new_admin! do
     assert {:ok, account} = Accounts.signup(signup_form())
     assert {:ok, user} = Users.create(create_user_form(), account)
-    assert {:ok, user} = Users.make_admin(user)
+    assert {:ok, user} = Users.make_admin(user, skip_boundary_check: true)
     {account, user}
   end
 
@@ -39,7 +39,7 @@ defmodule Bonfire.Me.AdminCircleSyncTest do
     assert {:ok, team} = Users.create(create_user_form(), account)
     make_shared(team, account)
 
-    assert {:error, _} = Users.make_admin(team)
+    assert {:error, _} = Users.make_admin(team, skip_boundary_check: true)
     refute admin?(team)
   end
 
@@ -47,7 +47,10 @@ defmodule Bonfire.Me.AdminCircleSyncTest do
     # another admin, so `user` is not the last one
     new_admin!()
     {account, user} = new_admin!()
-    assert {:ok, _} = Circles.add_to_circles(user, Instance.mod_circle())
+
+    assert {:ok, _} =
+             Circles.add_to_circles(user, Instance.mod_circle(), skip_boundary_check: true)
+
     # prove the positive first
     assert admin?(user)
     assert mod?(user)
@@ -63,14 +66,14 @@ defmodule Bonfire.Me.AdminCircleSyncTest do
       new_admin!()
       {_account, user} = new_admin!()
 
-      assert {:ok, _} = Users.revoke_admin(user)
+      assert {:ok, _} = Users.revoke_admin(user, skip_boundary_check: true)
       refute admin?(user)
     end
 
     test "cannot be revoked" do
       {_account, user} = new_admin!()
 
-      assert {:error, _} = Users.revoke_admin(user)
+      assert {:error, _} = Users.revoke_admin(user, skip_boundary_check: true)
       assert admin?(user)
     end
 

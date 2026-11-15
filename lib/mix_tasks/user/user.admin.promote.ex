@@ -27,7 +27,8 @@ defmodule Mix.Tasks.Bonfire.User.Admin.Promote do
         raise RuntimeError, message: "User not found"
 
       user ->
-        Users.make_admin(user)
+        # shell access: no person acts through the app
+        Users.make_admin(user, skip_boundary_check: true)
     end
   end
 

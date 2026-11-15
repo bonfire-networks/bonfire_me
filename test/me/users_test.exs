@@ -314,7 +314,7 @@ defmodule Bonfire.Me.UsersTest do
       refute Enum.any?(Users.by_account(account_b), &(&1.id == user.id))
       refute Bonfire.Common.URIs.shared_user?(user)
 
-      assert {:ok, _} = Users.transfer_to_account(user, account_b)
+      assert {:ok, _} = Users.transfer_to_account(user, account_b, skip_boundary_check: true)
 
       # now owned by B, no longer by A
       refute Enum.any?(Users.by_account(account_a), &(&1.id == user.id))
@@ -333,7 +333,7 @@ defmodule Bonfire.Me.UsersTest do
       assert {:ok, _b_user} = Users.create(create_user_form(), account_b)
       assert {:ok, user} = Users.create(create_user_form(), account_a)
 
-      assert catch_throw(Users.transfer_to_account(user, account_b))
+      assert catch_throw(Users.transfer_to_account(user, account_b, skip_boundary_check: true))
       # unchanged: still owned by A
       assert Enum.any?(Users.by_account(account_a), &(&1.id == user.id))
     end
@@ -341,14 +341,14 @@ defmodule Bonfire.Me.UsersTest do
     test "an admin profile: by default the source keeps admin, the moved profile is no longer admin, and the stale display-user link is cleared" do
       assert {:ok, account_a} = Accounts.signup(signup_form())
       assert {:ok, user} = Users.create(create_user_form(), account_a)
-      assert {:ok, user} = Users.make_admin(user)
+      assert {:ok, user} = Users.make_admin(user, skip_boundary_check: true)
       assert admin_account?(account_a.id)
       assert admin_display_user_id(account_a.id) == user.id
 
       assert {:ok, account_b} = Accounts.signup(signup_form())
       refute admin_account?(account_b.id)
 
-      assert {:ok, _moved} = Users.transfer_to_account(user, account_b)
+      assert {:ok, _moved} = Users.transfer_to_account(user, account_b, skip_boundary_check: true)
 
       # source stays admin, but its now-foreign displayed-admin link is cleared
       assert admin_account?(account_a.id)
@@ -360,10 +360,14 @@ defmodule Bonfire.Me.UsersTest do
     test "an admin profile with transfer_admin: demotes the source and grants the destination" do
       assert {:ok, account_a} = Accounts.signup(signup_form())
       assert {:ok, user} = Users.create(create_user_form(), account_a)
-      assert {:ok, user} = Users.make_admin(user)
+      assert {:ok, user} = Users.make_admin(user, skip_boundary_check: true)
       assert {:ok, account_b} = Accounts.signup(signup_form())
 
-      assert {:ok, _moved} = Users.transfer_to_account(user, account_b, transfer_admin: true)
+      assert {:ok, _moved} =
+               Users.transfer_to_account(user, account_b,
+                 transfer_admin: true,
+                 skip_boundary_check: true
+               )
 
       refute admin_account?(account_a.id)
       assert admin_account?(account_b.id)
@@ -378,7 +382,12 @@ defmodule Bonfire.Me.UsersTest do
       assert {:ok, _b_user} = Users.create(create_user_form(), account_b)
       assert {:ok, user} = Users.create(create_user_form(), account_a)
 
-      assert {:ok, _} = Users.transfer_to_account(user, account_b, skip_max_per_account: true)
+      assert {:ok, _} =
+               Users.transfer_to_account(user, account_b,
+                 skip_max_per_account: true,
+                 skip_boundary_check: true
+               )
+
       assert Enum.any?(Users.by_account(account_b), &(&1.id == user.id))
     end
   end

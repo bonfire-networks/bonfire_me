@@ -66,8 +66,8 @@ defmodule Bonfire.Me.ServiceCharacterTest do
   test "making or revoking admin on the bot is refused with an error, not a crash" do
     bot = make_bot!()
 
-    assert {:error, _} = Users.make_admin(bot)
-    assert {:error, _} = Users.revoke_admin(bot)
+    assert {:error, _} = Users.make_admin(bot, skip_boundary_check: true)
+    assert {:error, _} = Users.revoke_admin(bot, skip_boundary_check: true)
   end
 
   test "making the bot again returns the same bot and adds nothing" do

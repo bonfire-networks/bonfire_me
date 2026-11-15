@@ -87,7 +87,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
         # Add user to the suggested profiles circle
         circle_id = Instance.suggested_profiles_circle()
-        {:ok, _} = Circles.add_to_circles(suggested_user, circle_id)
+        {:ok, _} = Circles.add_to_circles(suggested_user, circle_id, skip_boundary_check: true)
 
         response =
           conn

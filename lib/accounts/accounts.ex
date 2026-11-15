@@ -240,11 +240,14 @@ defmodule Bonfire.Me.Accounts do
     |> Bonfire.Me.Accounts.SecondFactors.maybe_cast_totp_changeset(params, opts)
   end
 
+  @doc "Whether a new account may be created without a password: one coming from a sign-in service (`open_id_provider`), one provisioned for email-link sign-in (`passwordless: true`), or any signup on an instance that signs people in by email link. The signup form folds its password fields away by the same rule, and a password given anyway is still set."
+  def password_optional?(opts) do
+    is_tuple(opts[:open_id_provider]) or opts[:passwordless] == true or passwordless_only?()
+  end
+
   defp maybe_cast_credential(cs, params, opts) do
-    if (is_tuple(opts[:open_id_provider]) or opts[:passwordless] == true) and
-         is_nil(params[:password]) do
-      # OAuth or passwordless (magic-link) signup: credential-less account. Keyed on an explicit opt,
-      # not the params, because the classic form leaving the password blank posts identical params.
+    if password_optional?(opts) and not password_given?(params) do
+      # credential-less account. Keyed on the opts and the instance, not the params, because the classic form leaving the password blank posts identical params.
       cs
     else
       cs
@@ -255,6 +258,14 @@ defmodule Bonfire.Me.Accounts do
       )
     end
   end
+
+  # the form posts the password under `credential`, with string keys, and posts the folded optional fields empty
+  defp password_given?(params) do
+    (e(params, :credential, :password, nil) || e(params, "credential", "password", nil))
+    |> is_binary_and_present()
+  end
+
+  defp is_binary_and_present(value), do: is_binary(value) and String.trim(value) != ""
 
   ### signup
 

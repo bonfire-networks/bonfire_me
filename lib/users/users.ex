@@ -325,8 +325,32 @@ defmodule Bonfire.Me.Users do
   ## Options
   - `:skip_max_per_account` — bypass the target account's `max_per_account` cap (e.g. for admin transfers).
   - `:transfer_admin` — when the profile carries instance-admin, ALSO grant admin to the destination account. Default: admin is only revoked from the source and never carried over (a moved profile must not silently keep admin powers under the new account).
+  - `user` may also be a user id, and `target_account` an account's email, a local @username or a user id (standing for that user's account) (`{:error, :target_not_found}` if none matches); both are looked up only after the permission check.
+  - `:current_user` (an instance admin) or `skip_boundary_check: true` — required, else `{:error, :not_permitted}`.
   """
   def transfer_to_account(user, target_account, opts \\ []) do
+    # check first, so a refused caller learns nothing about which users and accounts exist
+    with :ok <- check_instance_admin(opts),
+         {:ok, user} <- resolve_transfer_user(user),
+         {:ok, target_account} <- resolve_transfer_target(target_account) do
+      do_transfer_to_account(user, target_account, opts)
+    end
+  end
+
+  defp resolve_transfer_user(id) when is_binary(id), do: by_id(id)
+  defp resolve_transfer_user(%User{} = user), do: {:ok, user}
+
+  # `target` may be an account, or an email, a local @username or a user id (see `Accounts.by_id_email_or_username/1`)
+  defp resolve_transfer_target(target) when is_binary(target) do
+    case Accounts.by_id_email_or_username(String.trim(target)) do
+      {%{id: _} = account, _user} -> {:ok, account}
+      _ -> {:error, :target_not_found}
+    end
+  end
+
+  defp resolve_transfer_target(%{} = account), do: {:ok, account}
+
+  defp do_transfer_to_account(user, target_account, opts) do
     uid = id(user)
     tid = id(target_account)
 
@@ -363,7 +387,7 @@ defmodule Bonfire.Me.Users do
         user = repo().preload(user, [accounted: [:account]], force: true)
 
         # optionally hand the admin permission to the DESTINATION account (grants + adds to admin circle)
-        if was_admin? and opts[:transfer_admin], do: make_admin(user)
+        if was_admin? and opts[:transfer_admin], do: do_make_admin(user, [])
         {:ok, repo().preload(user, [accounted: [:account]], force: true)}
 
       {0, _} ->
@@ -386,6 +410,7 @@ defmodule Bonfire.Me.Users do
     opts =
       to_options(opts)
       # TEMP: to speed things up
+      # TODO: drop this skip when profile boundaries are refactored: until then search shows users the searcher couldn't otherwise see
       |> Keyword.put_new(:skip_boundary_check, true)
 
     case Utils.maybe_apply(Bonfire.Search, :search_by_type, [search, User, opts], &none/2) do
@@ -555,7 +580,7 @@ defmodule Bonfire.Me.Users do
 
     result =
       if make_admin? do
-        make_admin(user)
+        do_make_admin(user, [])
         ~> after_mutation()
       else
         after_mutation(user)
@@ -621,22 +646,51 @@ defmodule Bonfire.Me.Users do
 
   ## instance admin
 
-  @doc "Grants a user superpowers. With `moderator: true`, makes them an instance moderator too (`make_moderator/1`): admins are not moderators otherwise."
+  # who may change instance admins and moderators: an instance admin acting as `current_user`, or an explicit `skip_boundary_check: true` (no person acts: mix tasks, bootstrap, repairs). A missing user is never read as "system".
+  defp check_instance_admin(opts) do
+    opts = to_options(opts)
+
+    cond do
+      opts[:skip_boundary_check] == true ->
+        :ok
+
+      acting_user = current_user(opts) ->
+        acting_user = repo().maybe_preload(acting_user, accounted: [account: :instance_admin])
+
+        if Accounts.is_admin?(e(acting_user, :accounted, :account, nil)),
+          do: :ok,
+          else: {:error, :not_permitted}
+
+      true ->
+        {:error, :not_permitted}
+    end
+  end
+
+  @doc "Grants a user superpowers. With `moderator: true`, makes them an instance moderator too (`make_moderator/2`): admins are not moderators otherwise. Needs `current_user:` (an instance admin) or `skip_boundary_check: true` in `opts`, else `{:error, :not_permitted}`."
   def make_admin(user_or_username, opts \\ [])
 
   def make_admin(username, opts) when is_binary(username) do
-    by_username(username)
-    ~> make_admin(opts)
+    # check before the lookup, so a refused caller cannot tell a missing username from an existing one
+    with :ok <- check_instance_admin(opts) do
+      by_username(username)
+      ~> do_make_admin(opts)
+    end
   end
 
   def make_admin(%User{} = user, opts) do
+    with :ok <- check_instance_admin(opts) do
+      do_make_admin(user, opts)
+    end
+  end
+
+  defp do_make_admin(%User{} = user, opts) do
     if shared_profile?(user) do
       # admin powers belong to the account, and a shared profile is also used by its caretaker accounts
       error(user, "A shared profile cannot be made an admin")
     else
       with {:ok, account} <- Accounts.update_is_admin(user, true) do
         add_to_admin_circle(user)
-        if opts[:moderator], do: make_moderator(user)
+        if opts[:moderator], do: do_make_moderator(user)
         # the admins stand in for the moderators while there are none
         refresh_declared_moderators()
         {:ok, Map.put(user, :account, account)}
@@ -648,13 +702,23 @@ defmodule Bonfire.Me.Users do
   defp shared_profile?(%User{} = user),
     do: Bonfire.Common.URIs.shared_user?(repo().preload(user, :shared_user, force: true))
 
-  @doc "Makes a user an instance moderator: adds them to the mod circle. Their admin powers, if they have any, are not changed."
-  def make_moderator(username) when is_binary(username) do
-    by_username(username)
-    ~> make_moderator()
+  @doc "Makes a user an instance moderator: adds them to the mod circle. Their admin powers, if they have any, are not changed. Needs `current_user:` (an instance admin) or `skip_boundary_check: true` in `opts`, else `{:error, :not_permitted}`."
+  def make_moderator(user_or_username, opts \\ [])
+
+  def make_moderator(username, opts) when is_binary(username) do
+    with :ok <- check_instance_admin(opts) do
+      by_username(username)
+      ~> do_make_moderator()
+    end
   end
 
-  def make_moderator(%User{} = user) do
+  def make_moderator(%User{} = user, opts) do
+    with :ok <- check_instance_admin(opts) do
+      do_make_moderator(user)
+    end
+  end
+
+  defp do_make_moderator(%User{} = user) do
     if shared_profile?(user) do
       # the circle's grants would go to the caretaker accounts acting as the shared profile
       error(user, "A shared profile cannot be made a moderator")
@@ -662,7 +726,8 @@ defmodule Bonfire.Me.Users do
       with {:ok, _} <-
              Bonfire.Boundaries.Circles.add_to_circles(
                user,
-               Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+               Bonfire.Boundaries.Scaffold.Instance.mod_circle(),
+               skip_boundary_check: true
              ) do
         refresh_declared_moderators()
         {:ok, user}
@@ -689,16 +754,27 @@ defmodule Bonfire.Me.Users do
 
   defp refresh_declared_moderators, do: list_declared_moderators(cache: :reset)
 
-  @doc "Takes a user out of the mod circle. Their admin powers, if they have any, are not changed."
-  def revoke_moderator(username) when is_binary(username) do
-    by_username(username)
-    ~> revoke_moderator()
+  @doc "Takes a user out of the mod circle. Their admin powers, if they have any, are not changed. Needs `current_user:` (an instance admin) or `skip_boundary_check: true` in `opts`, else `{:error, :not_permitted}`."
+  def revoke_moderator(user_or_username, opts \\ [])
+
+  def revoke_moderator(username, opts) when is_binary(username) do
+    with :ok <- check_instance_admin(opts) do
+      by_username(username)
+      ~> do_revoke_moderator()
+    end
   end
 
-  def revoke_moderator(%User{} = user) do
+  def revoke_moderator(%User{} = user, opts) do
+    with :ok <- check_instance_admin(opts) do
+      do_revoke_moderator(user)
+    end
+  end
+
+  defp do_revoke_moderator(%User{} = user) do
     Bonfire.Boundaries.Circles.remove_from_circles(
       user,
-      Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+      Bonfire.Boundaries.Scaffold.Instance.mod_circle(),
+      skip_boundary_check: true
     )
 
     refresh_declared_moderators()
@@ -708,17 +784,28 @@ defmodule Bonfire.Me.Users do
   defp add_to_admin_circle(user) do
     Bonfire.Boundaries.Circles.add_to_circles(
       user,
-      Bonfire.Boundaries.Scaffold.Instance.admin_circle()
+      Bonfire.Boundaries.Scaffold.Instance.admin_circle(),
+      skip_boundary_check: true
     )
   end
 
-  @doc "Revokes a user's superpowers."
-  def revoke_admin(username) when is_binary(username) do
-    by_username(username)
-    ~> revoke_admin()
+  @doc "Revokes a user's superpowers. Needs `current_user:` (an instance admin) or `skip_boundary_check: true` in `opts`, else `{:error, :not_permitted}`."
+  def revoke_admin(user_or_username, opts \\ [])
+
+  def revoke_admin(username, opts) when is_binary(username) do
+    with :ok <- check_instance_admin(opts) do
+      by_username(username)
+      ~> do_revoke_admin()
+    end
   end
 
-  def revoke_admin(%User{} = user) do
+  def revoke_admin(%User{} = user, opts) do
+    with :ok <- check_instance_admin(opts) do
+      do_revoke_admin(user)
+    end
+  end
+
+  defp do_revoke_admin(%User{} = user) do
     # leave the circle first, so refusing the last admin leaves the account flag untouched
     with :ok <- remove_from_admin_circle(user),
          {:ok, _account} <- Accounts.update_is_admin(user, false) do
@@ -735,12 +822,13 @@ defmodule Bonfire.Me.Users do
     end
   end
 
-  @doc "Removes the user from the admin circle, unless that would leave the circle empty."
+  @doc "Removes the user from the admin circle, unless that would leave the circle empty. Unchecked on purpose: it only ever drops powers (used by `revoke_admin/2` after its check, and when a profile becomes shared)."
   def remove_from_admin_circle(user) do
     with :ok <- check_not_last_admin(user) do
       Bonfire.Boundaries.Circles.remove_from_circles(
         user,
-        Bonfire.Boundaries.Scaffold.Instance.admin_circle()
+        Bonfire.Boundaries.Scaffold.Instance.admin_circle(),
+        skip_boundary_check: true
       )
 
       :ok

@@ -88,7 +88,8 @@ defmodule Bonfire.Me.Fake do
   def instance_moderator!(user) do
     Bonfire.Boundaries.Circles.add_to_circles(
       user,
-      Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+      Bonfire.Boundaries.Scaffold.Instance.mod_circle(),
+      skip_boundary_check: true
     )
 
     user

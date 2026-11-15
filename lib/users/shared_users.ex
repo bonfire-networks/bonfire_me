@@ -298,7 +298,8 @@ if Code.ensure_loaded?(Bonfire.Data.SharedUser) do
              _ <-
                Bonfire.Boundaries.Circles.remove_from_circles(
                  user,
-                 Bonfire.Boundaries.Scaffold.Instance.mod_circle()
+                 Bonfire.Boundaries.Scaffold.Instance.mod_circle(),
+                 skip_boundary_check: true
                ),
              {:ok, user} <-
                make_shared_user(user, params)

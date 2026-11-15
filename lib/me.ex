@@ -36,5 +36,5 @@ defmodule Bonfire.Me do
     end
   end
 
-  defdelegate make_admin(username), to: Bonfire.Me.Users
+  def make_admin(username, opts \\ []), do: Bonfire.Me.Users.make_admin(username, opts)
 end

@@ -11,7 +11,7 @@ defmodule Bonfire.Me.SensitiveActionsDeleteTest do
   setup do
     admin_account = fake_account!()
     admin = fake_user!(admin_account)
-    {:ok, _} = Bonfire.Me.Users.make_admin(admin)
+    {:ok, _} = Bonfire.Me.Users.make_admin(admin, skip_boundary_check: true)
 
     # the account as the controller holds it: nothing about the admin flag preloaded
     {:ok, admin_account: admin_account, admin: admin}
@@ -25,7 +25,7 @@ defmodule Bonfire.Me.SensitiveActionsDeleteTest do
   # a blocked account can't make more profiles, so any sibling must exist before this is called
   defp blocked_local_user!(account \\ fake_account!()) do
     user = fake_user!(account)
-    {:ok, _} = Blocks.block(user, :block, scope: :instance_wide)
+    {:ok, _} = Blocks.block(user, :block, scope: :instance_wide, skip_boundary_check: true)
     assert Blocks.is_blocked?(user, :ghost, :instance_wide)
     user
   end
@@ -40,7 +40,11 @@ defmodule Bonfire.Me.SensitiveActionsDeleteTest do
     on_exit(fn -> Application.put_env(:activity_pub, :instance, instance_config) end)
 
     {:ok, remote} = Bonfire.Federate.ActivityPub.Simulate.fake_remote_user()
-    if blocked?, do: {:ok, _} = Blocks.block(remote, :block, scope: :instance_wide)
+
+    if blocked?,
+      do:
+        {:ok, _} = Blocks.block(remote, :block, scope: :instance_wide, skip_boundary_check: true)
+
     remote
   end
 
@@ -93,8 +97,8 @@ defmodule Bonfire.Me.SensitiveActionsDeleteTest do
   # an admin target, blocked instance-wide: the block alone would allow the delete
   defp blocked_admin!(account \\ fake_account!()) do
     user = fake_user!(account)
-    {:ok, _} = Bonfire.Me.Users.make_admin(user)
-    {:ok, _} = Blocks.block(user, :block, scope: :instance_wide)
+    {:ok, _} = Bonfire.Me.Users.make_admin(user, skip_boundary_check: true)
+    {:ok, _} = Blocks.block(user, :block, scope: :instance_wide, skip_boundary_check: true)
     user
   end
 
@@ -116,7 +120,7 @@ defmodule Bonfire.Me.SensitiveActionsDeleteTest do
 
     test "deletes them once their admin role is revoked", %{admin_account: admin_account} do
       target = blocked_admin!()
-      {:ok, _} = Bonfire.Me.Users.revoke_admin(target)
+      {:ok, _} = Bonfire.Me.Users.revoke_admin(target, skip_boundary_check: true)
 
       assert {:ok, _} = DeleteUser.execute(%{account: admin_account, target_id: target.id})
       assert target.id in enqueued_ids()
@@ -135,7 +139,7 @@ defmodule Bonfire.Me.SensitiveActionsDeleteTest do
     test "refuses when it is a sibling profile that is the admin", %{admin_account: admin_account} do
       account = fake_account!()
       admin_sibling = fake_user!(account)
-      {:ok, _} = Bonfire.Me.Users.make_admin(admin_sibling)
+      {:ok, _} = Bonfire.Me.Users.make_admin(admin_sibling, skip_boundary_check: true)
       blocked = blocked_local_user!(account)
 
       assert {:error, _} = DeleteAccount.execute(%{account: admin_account, target_id: blocked.id})
