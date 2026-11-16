@@ -886,9 +886,14 @@ defmodule Bonfire.Me.Users do
   ## Delete
 
   def enqueue_delete(%{} = user) when is_struct(user) do
-    user
-    |> repo().maybe_preload([:character])
-    |> Bonfire.Me.DeleteWorker.enqueue_delete()
+    with {:ok, _} = queued <-
+           user
+           |> repo().maybe_preload([:character])
+           |> Bonfire.Me.DeleteWorker.enqueue_delete() do
+      # the devices using this profile go back to choosing one at once, rather than once the job has run
+      maybe_apply(Bonfire.Me.Users.LiveHandler, :deselect_user_everywhere, [id(user)])
+      queued
+    end
   end
 
   def enqueue_delete(user) when is_binary(user) do

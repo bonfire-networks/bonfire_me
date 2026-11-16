@@ -297,7 +297,8 @@ defmodule Bonfire.Me.AccountsTest do
       assert {:ok, account} = Accounts.confirm_email(token)
 
       assert account.email.confirmed_at
-      assert account.email.confirm_token == token
+      # the stored token is the hash of the emailed one
+      assert account.email.confirm_token == Bonfire.Data.Identity.Email.ConfirmToken.hash(token)
       # about 5 minutes by default
       assert DateTime.diff(account.email.confirm_until, DateTime.utc_now()) in 200..300
     end
@@ -339,7 +340,7 @@ defmodule Bonfire.Me.AccountsTest do
         |> repo().preload(:email)
         |> Map.fetch!(:email)
 
-      assert email.confirm_token == token
+      assert email.confirm_token == Bonfire.Data.Identity.Email.ConfirmToken.hash(token)
       assert is_nil(email.confirmed_at)
     end
 

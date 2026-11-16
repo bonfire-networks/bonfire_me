@@ -316,6 +316,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     object :me_queries do
       @desc "Get or lookup a user"
       field :user, :user do
+        meta(public: true)
         arg(:filter, :character_filters)
 
         resolve(&get_user/3)
@@ -323,6 +324,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       @desc "List or lookup users"
       field :users, list_of(:user) do
+        meta(public: true)
         # TODO: lookup by filters
         # arg(:filter, :character_filters)
 
@@ -343,7 +345,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     object :me_mutations do
       @desc "Register a new account. Returns the created `account_id`"
       field :signup, :string do
-        meta(rate_limit: :forms)
+        meta(public: true, rate_limit: :forms)
         arg(:email, non_null(:string))
         arg(:password, non_null(:string))
 
@@ -363,7 +365,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       @desc "Request a new confirmation email"
       field :request_confirm_email, :string do
-        meta(rate_limit: :forms)
+        meta(public: true, rate_limit: :forms)
         arg(:email, non_null(:string))
 
         resolve(&request_confirm_email/2)
@@ -371,7 +373,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       @desc "Confirm email address using a token generated upon `signup` or with `request_confirm_email` and emailed to the user."
       field :confirm_email, :me do
-        meta(rate_limit: :forms)
+        meta(public: true, rate_limit: :forms)
         arg(:token, non_null(:string))
 
         resolve(&confirm_email/2)
@@ -381,6 +383,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       @desc "Request an email to be sent to reset a forgotten password"
       field :request_reset_password, :string do
+        meta(public: true)
         arg(:email, non_null(:string))
 
         resolve(&request_forgot_password/2)

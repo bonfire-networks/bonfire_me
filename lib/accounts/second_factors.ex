@@ -284,6 +284,7 @@ defmodule Bonfire.Me.Accounts.SecondFactors do
       iex> Bonfire.Me.Accounts.SecondFactors.maybe_authenticate("account_id", %{"auth_second_factor" => %{"code" => "123456"}})
       {:ok, :valid_totp}
   """
+  # TODO: before second factors are offered to users, check them on every way in, not only password login: magic-link login, password-reset login and SSO login create a session without it (and replay a code within its window: pass `since:` to `NimbleTOTP.valid?`)
   def maybe_authenticate(account, params) do
     # debug(params)
 

@@ -682,12 +682,20 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         {:error, :agreement_required} ->
           masto_error(conn, 422, "Validation failed: agreement must be accepted")
 
+        # every invalid signup gets the same answer as any other failure, so the response doesn't tell whether an address has an account
         {:error, %Ecto.Changeset{} = changeset} ->
-          masto_error(
-            conn,
-            422,
-            "Validation failed: #{Bonfire.Common.Errors.error_msg(changeset)}"
-          )
+          debug(changeset, "Signup refused")
+          masto_error(conn, 422, "Could not create account")
+
+        # if email_taken?(changeset) do
+        #   masto_error(conn, 422, "Could not create account")
+        # else
+        #   masto_error(
+        #     conn,
+        #     422,
+        #     "Validation failed: #{Bonfire.Common.Errors.error_msg(changeset)}"
+        #   )
+        # end
 
         {:error, reason} ->
           error(reason, "Signup failed")
@@ -697,6 +705,15 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
           masto_error(conn, 422, "Could not create account")
       end
     end
+
+    # whether the changeset failed on the email address being already in use (a unique constraint error, whatever the language of its message)
+    # defp email_taken?(%Ecto.Changeset{} = changeset) do
+    #   changeset
+    #   |> Ecto.Changeset.traverse_errors(fn {_msg, opts} -> opts[:constraint] end)
+    #   |> get_in([:email, :email_address])
+    #   |> List.wrap()
+    #   |> Enum.member?(:unique)
+    # end
 
     @doc """
     Resend confirmation email.
@@ -838,11 +855,15 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     """
     def delete_account(%{"password" => password}, conn) when is_binary(password) do
       RestAdapter.with_current_user(conn, fn user ->
-        with {:ok, _} <- Bonfire.Me.Accounts.login_valid?(user, password),
+        # the password is the account's, which the user is only linked to by `accounted`
+        user = Bonfire.Common.Repo.maybe_preload(user, :accounted)
+
+        with true <- Bonfire.Me.Accounts.login_valid?(user, password),
              {:ok, _} <- Bonfire.Me.Users.enqueue_delete(user) do
           Plug.Conn.send_resp(conn, 200, "")
         else
-          {:error, _} -> RestAdapter.error_fn({:error, :forbidden}, conn)
+          false -> RestAdapter.error_fn({:error, :forbidden}, conn)
+          {:error, _} = error -> RestAdapter.error_fn(error, conn)
         end
       end)
     end

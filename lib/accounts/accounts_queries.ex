@@ -59,9 +59,15 @@ defmodule Bonfire.Me.Accounts.Queries do
       #Ecto.Query<...>
   """
   def by_confirm_token(token) when is_binary(token) do
+    prefix = Bonfire.Data.Identity.Email.ConfirmToken.prefix()
+
     from(a in Account,
       join: e in assoc(a, :email),
-      where: e.confirm_token == ^token,
+      # the field's type hashes `token`; a token stored before hashing existed (no prefix) is found by its plain value until it expires
+      where:
+        e.confirm_token == ^token or
+          (e.confirm_token == type(^token, :string) and
+             not like(e.confirm_token, ^"#{prefix}%")),
       preload: [email: e]
     )
   end

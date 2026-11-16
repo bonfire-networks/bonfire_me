@@ -610,8 +610,59 @@ defmodule Bonfire.Me.Accounts do
   defp rce_check_account(nil, _form, changeset, _opts),
     do: {:error, Changeset.add_error(changeset, :form, "not_found")}
 
-  defp rce_check_account(%Account{} = account, _form, changeset, opts),
-    do: rce_check_what_to_do(account, changeset, opts)
+  defp rce_check_account(%Account{} = account, _form, changeset, opts) do
+    if within_email_cap?(e(account, :email, :email_address, nil)) do
+      rce_check_what_to_do(account, changeset, opts)
+    else
+      # over the cap: a form error like "not_found", so the answer is the same neutral one
+      {:error, Changeset.add_error(changeset, :form, "rate_limited")}
+    end
+  end
+
+  @doc """
+  Whether another reset, sign-in or confirmation email may go to this address now. Each recipient address gets a limited number per hour (10 by default, `:bonfire, :rate_limit, :email_address`), whoever asks for them and from wherever: the per-IP throttle can't stop many IPs flooding one inbox. Counts the call, so call it once per email to send.
+  """
+  def within_email_cap?(address) when is_binary(address) do
+    maybe_apply(
+      Bonfire.UI.Common.RateLimit,
+      :check,
+      [:email_address, String.downcase(address), to_timeout(hour: 1), 10],
+      fallback_return: :ok
+    ) == :ok
+  end
+
+  def within_email_cap?(_), do: true
+
+  @doc """
+  Emails the owner of a confirmed account that someone tried to sign up with their address, and that they already have an account (with the login link). A signup page answers the same whether or not an address has an account, so this is how the owner finds out. Sends nothing if there is no such account, or if the address is over its email cap.
+  """
+  def notify_already_registered(address) when is_binary(address) do
+    with %Account{} <- get_by_email(address),
+         true <- within_email_cap?(address),
+         true <- not is_nil(mailer()) do
+      mailer().send_now(
+        Mails.already_registered(Bonfire.Common.URIs.base_url() <> "/login"),
+        address
+      )
+    else
+      _ -> :ok
+    end
+  end
+
+  def notify_already_registered(_), do: :ok
+
+  @doc """
+  Emails a fresh confirmation link to an address that signed up but never confirmed, in the background, so a second signup with that address is answered like a first one. Sends nothing if there is no such account, or if the address is over its email cap (`request_confirm_email/2` counts it).
+  """
+  def resend_signup_confirmation(address) when is_binary(address) do
+    apply_task(:start, fn ->
+      request_confirm_email(%{email: address}, confirm_action: :confirm_again)
+    end)
+
+    :ok
+  end
+
+  def resend_signup_confirmation(_), do: :ok
 
   defp rce_check_what_to_do(account, changeset, opts) do
     # reset and sign-in links deliberately get a fresh token whatever the email's state. Asking again for the SIGNUP confirmation must not: it would mail, and set back to unconfirmed, an address that is already confirmed.
@@ -634,11 +685,9 @@ defmodule Bonfire.Me.Accounts do
     end
   end
 
+  # the stored token is hashed, so the mail already sent can't be repeated: the new mail carries a fresh token
   defp resend_confirm_email(%Account{} = account, opts) do
-    with email_address when is_binary(email_address) <-
-           e(account, :email, :email_address, nil),
-         {:ok, _} <-
-           mailer().send_now(Mails.confirm_email(account, opts), email_address),
+    with {:ok, :refreshed, account} <- refresh_confirm_email(account, opts),
          do: {:ok, :resent, account}
   end
 
@@ -655,11 +704,20 @@ defmodule Bonfire.Me.Accounts do
 
   defp do_refresh_confirm_email(email, account, opts) do
     account = %{account | email: email}
+    opts = Keyword.put(opts, :must_confirm?, true)
 
-    with {:ok, _} <-
-           send_confirm_email(account, Keyword.put(opts, :must_confirm?, true)),
-         do: {:ok, :refreshed, account}
+    if async_mail?(opts) do
+      # the request doesn't wait for the mailer, so a known address takes as long as an unknown one and the answer doesn't tell them apart; a failure is logged by `send_confirm_email/2`
+      apply_task(:start, fn -> send_confirm_email(account, opts) end)
+      {:ok, :refreshed, account}
+    else
+      with {:ok, _} <- send_confirm_email(account, opts),
+           do: {:ok, :refreshed, account}
+    end
   end
+
+  # reset and sign-in links are answered the same whether or not the address has an account; the signup confirmation (`:confirm_again`) is asked for by someone who is shown the result
+  defp async_mail?(opts), do: opts[:confirm_action] not in [nil, :confirm_again]
 
   ### confirm_email
 
@@ -881,6 +939,20 @@ defmodule Bonfire.Me.Accounts do
         opts
       )
 
+  @doc """
+  Checks, without changing anything, that `params` (`"old_email"` and `"email"`) would be accepted by `change_email/3` for this account. Returns `{:ok, new_email}`, `{:error, :not_found}` when the old email is not this account's, or `{:error, changeset}`.
+  """
+  def validate_change_email(%{id: account_id}, %{"old_email" => old, "email" => new} = params) do
+    cs = changeset(:change_email, params, [])
+
+    case get_by_email(old) do
+      %Account{id: ^account_id} -> if cs.valid?, do: {:ok, new}, else: {:error, cs}
+      _ -> {:error, :not_found}
+    end
+  end
+
+  def validate_change_email(_, _), do: {:error, :not_found}
+
   defp maybe_change_email(
          %{id: account_id} = current_account,
          %Changeset{} = cs,
@@ -916,6 +988,36 @@ defmodule Bonfire.Me.Accounts do
       {:error, cs}
     end
   end
+
+  @doc """
+  Ends every session opened up to now for this account, by recording the moment in the account's settings (which are loaded with the account on every request, so checking it costs no extra query). Returns `{:ok, unix_ms}`: the caller stores that moment as its own session's start, so the session that asked for it stays signed in.
+  """
+  def revoke_other_sessions(%{id: _} = account) do
+    now = System.system_time(:millisecond)
+
+    case Bonfire.Common.Settings.put([:bonfire_me, :sessions_valid_after], now,
+           current_account: account,
+           scope: :account
+         ) do
+      {:ok, _} -> {:ok, now}
+      other -> {:error, other}
+    end
+  end
+
+  @doc """
+  Whether a session that started at `started_at` (unix ms from its cookie, nil for a session without one) was ended by `revoke_other_sessions/1`. Reads the account's already loaded settings: no query.
+  """
+  def session_revoked?(%{} = account, started_at) do
+    case e(account, :settings, :json, :bonfire_me, :sessions_valid_after, nil) do
+      valid_after when is_integer(valid_after) ->
+        not is_integer(started_at) or started_at < valid_after
+
+      _ ->
+        false
+    end
+  end
+
+  def session_revoked?(_, _), do: false
 
   ### invites
 
@@ -1089,7 +1191,14 @@ defmodule Bonfire.Me.Accounts do
       account
       |> repo().maybe_preload(:users)
 
-    Bonfire.Me.DeleteWorker.enqueue_delete([account] ++ e(account, :users, []))
+    # every device of the account is logged out at once, rather than once the job has run: the revocation ends the sessions (with or without a profile chosen) on their next request, and the broadcast disconnects their open pages. It is recorded before enqueueing, because a job that runs inline has already deleted the account (and its settings) by the time the enqueue returns.
+    revoke_other_sessions(account)
+
+    with {:ok, _} = queued <-
+           Bonfire.Me.DeleteWorker.enqueue_delete([account] ++ e(account, :users, [])) do
+      maybe_apply(Bonfire.Me.Users.LiveHandler, :force_logout_account, [id(account)])
+      queued
+    end
   end
 
   def enqueue_delete(account) when is_binary(account) do

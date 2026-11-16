@@ -293,6 +293,33 @@ defmodule Bonfire.Me.Mails do
     |> mjmlify_html()
   end
 
+  @doc """
+  Builds the email sent to the owner of an account when someone signs up with their address: they already have an account, here is where to log in. `login_url` is the instance's login page.
+  """
+  def already_registered(login_url) when is_binary(login_url) do
+    app_name = Bonfire.Mailer.app_name()
+
+    new()
+    |> subject("#{app_name} - #{l("You already have an account")}")
+    |> render_body(
+      :confirm_action,
+      Map.merge(branding_assigns(), %{
+        app_name: app_name,
+        heading: l("You already have an account"),
+        intro:
+          l(
+            "Someone, hopefully you, tried to sign up to %{app_name} with this email address, but you already have an account.",
+            app_name: app_name
+          ),
+        cta: l("Log in"),
+        confirm_url: login_url,
+        paste_hint: l("Or paste this link into your browser:"),
+        disclaimer: l("If it wasn't you, you can safely ignore this email.")
+      })
+    )
+    |> mjmlify_html()
+  end
+
   # Append the given params as a query string, keeping only present binary values
   # and URL-encoding them. `go` (the intended post-auth destination) and
   # `redirect_uri` (mobile deep-link) ride along in the confirm/login link.
