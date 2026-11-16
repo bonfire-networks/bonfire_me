@@ -343,6 +343,7 @@ defmodule Bonfire.Me.Accounts do
         end
       # Config.env() != :test
     )
+    |> Keyword.drop([:params])
     |> debug("signup opts")
   end
 
@@ -418,7 +419,7 @@ defmodule Bonfire.Me.Accounts do
   end
 
   def login(%Changeset{} = cs, opts) do
-    debug(opts)
+    debug(Keyword.drop(opts, [:params]), "login opts")
 
     case opts[:params][:openid_email] do
       nil ->
@@ -1133,7 +1134,11 @@ defmodule Bonfire.Me.Accounts do
         true
 
       is_nil(invite) ->
-        warn(opts, "Signup denied: instance is invite-only and no invite was provided, with opts")
+        warn(
+          Keyword.drop(opts, [:params]),
+          "Signup denied: instance is invite-only and no invite was provided, with opts"
+        )
+
         false
 
       true ->
