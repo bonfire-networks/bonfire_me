@@ -807,19 +807,40 @@ defmodule Bonfire.Me.Users do
 
   defp do_revoke_admin(%User{} = user) do
     # leave the circle first, so refusing the last admin leaves the account flag untouched
-    with :ok <- remove_from_admin_circle(user),
-         {:ok, _account} <- Accounts.update_is_admin(user, false) do
-      # the admins stand in for the moderators while there are none
-      refresh_declared_moderators()
+    with :ok <- remove_from_admin_circle(user) do
+      if other_admin_profile_in_account?(user) do
+        # admin powers belong to the account, which keeps them while another of its profiles is still an admin
+        refresh_declared_moderators()
+        {:ok, user}
+      else
+        with {:ok, _account} <- Accounts.update_is_admin(user, false) do
+          # the admins stand in for the moderators while there are none
+          refresh_declared_moderators()
 
-      {:ok,
-       user
-       |> Map.put(
-         :account,
-         Map.put(e(user, :account, %{}), :instance_admin, nil)
-       )
-       |> Map.put(:instance_admin, nil)}
+          {:ok,
+           user
+           |> Map.put(
+             :account,
+             Map.put(e(user, :account, %{}), :instance_admin, nil)
+           )
+           |> Map.put(:instance_admin, nil)}
+        end
+      end
     end
+  end
+
+  # whether another profile of the user's account is in the admin circle: one EXISTS query
+  defp other_admin_profile_in_account?(%User{id: user_id}) do
+    Ecto.Query.from(e in Bonfire.Data.AccessControl.Encircle,
+      join: sibling in Bonfire.Data.Identity.Accounted,
+      on: sibling.id == e.subject_id,
+      join: mine in Bonfire.Data.Identity.Accounted,
+      on: mine.account_id == sibling.account_id and mine.id == ^user_id,
+      where:
+        e.circle_id == ^Bonfire.Boundaries.Scaffold.Instance.admin_circle() and
+          e.subject_id != ^user_id
+    )
+    |> repo().exists?()
   end
 
   @doc "Removes the user from the admin circle, unless that would leave the circle empty. Unchecked on purpose: it only ever drops powers (used by `revoke_admin/2` after its check, and when a profile becomes shared)."

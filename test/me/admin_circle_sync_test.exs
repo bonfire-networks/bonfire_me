@@ -21,6 +21,9 @@ defmodule Bonfire.Me.AdminCircleSyncTest do
   defp admin?(user), do: in_circle?(user, Instance.admin_circle())
   defp mod?(user), do: in_circle?(user, Instance.mod_circle())
 
+  defp account_admin?(account),
+    do: Accounts.is_admin?(repo().preload(account, :instance_admin, force: true)) == true
+
   defp shared?(user),
     do: Bonfire.Common.URIs.shared_user?(repo().preload(user, :shared_user, force: true))
 
@@ -59,6 +62,27 @@ defmodule Bonfire.Me.AdminCircleSyncTest do
 
     refute admin?(user)
     refute mod?(user)
+  end
+
+  # admin powers belong to the account, while each profile is added to the admin circle on its own
+  test "revoking one profile keeps its account an admin while another of its profiles is still in the admin circle" do
+    # another admin, so neither profile below is the last one
+    new_admin!()
+    {account, first} = new_admin!()
+    assert {:ok, second} = Users.create(create_user_form(), account)
+    assert {:ok, _} = Users.make_admin(second, skip_boundary_check: true)
+
+    assert {:ok, _} = Users.revoke_admin(first, skip_boundary_check: true)
+
+    refute admin?(first)
+    assert admin?(second)
+    assert account_admin?(account)
+
+    # the last of its profiles to leave the circle takes the account's admin powers with it
+    assert {:ok, _} = Users.revoke_admin(second, skip_boundary_check: true)
+
+    refute admin?(second)
+    refute account_admin?(account)
   end
 
   describe "the last admin" do
