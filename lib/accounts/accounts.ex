@@ -1416,70 +1416,27 @@ defmodule Bonfire.Me.Accounts do
       true
 
   """
-  def is_admin?(%{instance_admin: %{is_instance_admin: val}}),
-    do: val
+  def is_admin?(subject) do
+    case admin_flag(subject) do
+      {:not_loaded, %Account{} = account} ->
+        warn(
+          account,
+          "You should make sure instance_admin assoc is loaded before using this function... returning false to avoid n+1 preloads and infinite loop"
+        )
 
-  def is_admin?(%{current_account: %{instance_admin: %{is_instance_admin: val}}}),
-    do: val
-
-  def is_admin?(%{current_account: %{instance_admin: nil}}),
-    do: false
-
-  def is_admin?(%{current_user: %{instance_admin: %{is_instance_admin: val}}}),
-    do: val
-
-  def is_admin?(%{current_user: %{instance_admin: nil}}),
-    do: false
-
-  def is_admin?(%Bonfire.Data.Identity.User{
-        account: %{instance_admin: %{is_instance_admin: val}}
-      }),
-      do: val
-
-  def is_admin?(%Bonfire.Data.Identity.User{account: %{instance_admin: nil}}),
-    do: false
-
-  def is_admin?(%{account: %{instance_admin: %{is_instance_admin: val}}}),
-    do: val
-
-  def is_admin?(%{account: %{instance_admin: nil}}),
-    do: false
-
-  def is_admin?(%{instance_admin: nil}),
-    do: false
-
-  def is_admin?(assigns) when is_list(assigns) or is_map(assigns) do
-    case current_user(assigns) do
-      nil ->
         false
 
-      current_user when current_user == assigns ->
+      # eg. a user whose account isn't loaded, or who has none (a remote user)
+      {:not_loaded, _} ->
         false
 
-      current_user ->
-        is_admin?(current_user)
-    end ||
-      case current_account(assigns) do
-        nil ->
-          false
-
-        current_account when current_account == assigns ->
-          warn(
-            current_account,
-            "You should make sure instance_admin assoc is loaded before using this function... returning false to avoid n+1 preloads and infinite loop"
-          )
-
-          false
-
-        current_account ->
-          is_admin?(current_account)
-      end
+      flag ->
+        flag
+    end
   end
 
-  def is_admin?(_), do: false
-
   @doc """
-  Like `is_admin?/1`, for a user or account, but one whose admin flag isn't loaded is not answered `false`: it is an error (which raises in tests, so the caller can preload it), then the flag is loaded and answered. For checks where a wrong `false` would lock an admin out, and one query is acceptable when the caller didn't preload.
+  Like `is_admin?/1`, reading the same shapes (a user, an account, a context or assigns with either), but one whose admin flag isn't loaded is not answered `false`: it is an error (which raises in tests, so the caller can preload it), then the flag is loaded and answered. For checks where a wrong `false` would lock an admin out, and one query is acceptable when the caller didn't preload.
 
   ## Examples
 
@@ -1487,24 +1444,70 @@ defmodule Bonfire.Me.Accounts do
       true
   """
   def is_admin!(subject) do
-    case loaded_admin_flag(subject) do
-      :not_loaded ->
-        err(uid(subject), "Please preload instance_admin at source to avoid n+1 queries")
-        subject |> preload_admin_flag() |> loaded_admin_flag() == true
+    case admin_flag(subject) do
+      {:not_loaded, unloaded} ->
+        err(uid(unloaded), "Please preload instance_admin at source to avoid n+1 queries")
+        unloaded |> preload_admin_flag() |> admin_flag() == true
 
       flag ->
-        flag
+        flag == true
     end
   end
 
-  # the flag as loaded (`instance_admin` with no row means not an admin), or `:not_loaded`
-  defp loaded_admin_flag(%{account: %{instance_admin: %{is_instance_admin: val}}}),
-    do: val == true
+  # The admin flag as loaded on any shape `is_admin?/1` reads (`instance_admin` with no row means not an admin), or `{:not_loaded, subject}` with the account or user to preload it on
+  defp admin_flag(%{instance_admin: %{is_instance_admin: val}}), do: val
+  defp admin_flag(%{current_account: %{instance_admin: %{is_instance_admin: val}}}), do: val
+  defp admin_flag(%{current_account: %{instance_admin: nil}}), do: false
+  defp admin_flag(%{current_user: %{instance_admin: %{is_instance_admin: val}}}), do: val
+  defp admin_flag(%{current_user: %{instance_admin: nil}}), do: false
+  defp admin_flag(%User{account: %{instance_admin: %{is_instance_admin: val}}}), do: val
+  defp admin_flag(%User{account: %{instance_admin: nil}}), do: false
+  defp admin_flag(%{account: %{instance_admin: %{is_instance_admin: val}}}), do: val
+  defp admin_flag(%{account: %{instance_admin: nil}}), do: false
+  defp admin_flag(%{instance_admin: nil}), do: false
 
-  defp loaded_admin_flag(%{account: %{instance_admin: nil}}), do: false
-  defp loaded_admin_flag(%Account{instance_admin: %{is_instance_admin: val}}), do: val == true
-  defp loaded_admin_flag(%Account{instance_admin: nil}), do: false
-  defp loaded_admin_flag(_), do: :not_loaded
+  defp admin_flag(%Account{instance_admin: %Ecto.Association.NotLoaded{}} = account),
+    do: {:not_loaded, account}
+
+  defp admin_flag(%User{account: %Account{} = account}), do: admin_flag(account)
+
+  defp admin_flag(%User{account: %Ecto.Association.NotLoaded{}} = user),
+    do: {:not_loaded, user}
+
+  defp admin_flag(assigns) when is_list(assigns) or is_map(assigns) do
+    user_flag =
+      case current_user(assigns) do
+        nil -> false
+        current_user when current_user == assigns -> false
+        current_user -> admin_flag(current_user)
+      end
+
+    account_flag =
+      case current_account(assigns) do
+        nil -> false
+        current_account when current_account == assigns -> false
+        current_account -> admin_flag(current_account)
+      end
+
+    cond do
+      user_flag not in [false, nil] and not match?({:not_loaded, _}, user_flag) ->
+        user_flag
+
+      account_flag not in [false, nil] and not match?({:not_loaded, _}, account_flag) ->
+        account_flag
+
+      match?({:not_loaded, _}, account_flag) ->
+        account_flag
+
+      match?({:not_loaded, _}, user_flag) ->
+        user_flag
+
+      true ->
+        false
+    end
+  end
+
+  defp admin_flag(_), do: false
 
   defp preload_admin_flag(%Account{} = account),
     do: repo().preload(account, :instance_admin, force: true)

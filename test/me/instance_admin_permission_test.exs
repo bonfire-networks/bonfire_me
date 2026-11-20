@@ -36,9 +36,52 @@ defmodule Bonfire.Me.InstanceAdminPermissionTest do
     test "a user whose admin flag isn't loaded is an error in tests, rather than a silent `false`" do
       admin = admin!() |> Map.put(:account, %Ecto.Association.NotLoaded{})
 
-      assert_raise RuntimeError, ~r/instance_admin isn't loaded/, fn ->
+      assert_raise RuntimeError, ~r/preload instance_admin/, fn ->
         Accounts.is_admin!(admin)
       end
+    end
+
+    # the same shapes `is_admin?/1` reads, eg. a LiveView's `@__context__`
+    test "answers from a context's current user or current account, as is_admin? does" do
+      admin = admin!() |> repo().preload([accounted: [account: :instance_admin]], force: true)
+      account = e(admin, :accounted, :account, nil)
+      admin = Map.put(admin, :account, account)
+
+      for context <- [
+            %{current_user: admin},
+            %{current_account: account},
+            %{current_user: admin, current_account: account}
+          ] do
+        assert Accounts.is_admin?(context) == true,
+               "control: is_admin? reads #{inspect(Map.keys(context))}"
+
+        assert Accounts.is_admin!(context) == true,
+               "is_admin! reads #{inspect(Map.keys(context))}"
+      end
+
+      unloaded = Map.put(admin, :account, repo().get!(Bonfire.Data.Identity.Account, account.id))
+
+      assert_raise RuntimeError, ~r/preload instance_admin/, fn ->
+        Accounts.is_admin!(%{current_user: unloaded})
+      end
+    end
+  end
+
+  test "the current user loaded for a session has their account's admin flag loaded" do
+    account = Fake.fake_account!()
+    {:ok, admin} = Users.make_admin(Fake.fake_user!(account), skip_boundary_check: true)
+
+    for {how, user} <- [
+          {"get_current/2", Users.get_current(admin.id, account.id)},
+          {"get_current/1", Users.get_current(admin.id)}
+        ] do
+      assert %Bonfire.Data.Identity.Account{} = user.account,
+             "#{how} didn't load the user's account"
+
+      refute match?(%Ecto.Association.NotLoaded{}, user.account.instance_admin),
+             "#{how} left the account's admin flag unloaded"
+
+      assert Accounts.is_admin?(user) == true, "#{how}: the admin reads as not an admin"
     end
   end
 
