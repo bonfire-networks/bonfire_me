@@ -1478,6 +1478,44 @@ defmodule Bonfire.Me.Accounts do
 
   def is_admin?(_), do: false
 
+  @doc """
+  Like `is_admin?/1`, for a user or account, but one whose admin flag isn't loaded is not answered `false`: it is an error (which raises in tests, so the caller can preload it), then the flag is loaded and answered. For checks where a wrong `false` would lock an admin out, and one query is acceptable when the caller didn't preload.
+
+  ## Examples
+
+      > is_admin!(user_with_account_loaded)
+      true
+  """
+  def is_admin!(subject) do
+    case loaded_admin_flag(subject) do
+      :not_loaded ->
+        err(uid(subject), "Please preload instance_admin at source to avoid n+1 queries")
+        subject |> preload_admin_flag() |> loaded_admin_flag() == true
+
+      flag ->
+        flag
+    end
+  end
+
+  # the flag as loaded (`instance_admin` with no row means not an admin), or `:not_loaded`
+  defp loaded_admin_flag(%{account: %{instance_admin: %{is_instance_admin: val}}}),
+    do: val == true
+
+  defp loaded_admin_flag(%{account: %{instance_admin: nil}}), do: false
+  defp loaded_admin_flag(%Account{instance_admin: %{is_instance_admin: val}}), do: val == true
+  defp loaded_admin_flag(%Account{instance_admin: nil}), do: false
+  defp loaded_admin_flag(_), do: :not_loaded
+
+  defp preload_admin_flag(%Account{} = account),
+    do: repo().preload(account, :instance_admin, force: true)
+
+  defp preload_admin_flag(%User{} = user) do
+    user = repo().preload(user, [accounted: [account: :instance_admin]], force: true)
+    Map.put(user, :account, e(user, :accounted, :account, nil))
+  end
+
+  defp preload_admin_flag(other), do: other
+
   def make_account(attrs \\ %{}, opts \\ []) do
     with {:ok, account} <- signup(attrs, opts) do
       {:ok, Map.put(account, :settings, nil)}

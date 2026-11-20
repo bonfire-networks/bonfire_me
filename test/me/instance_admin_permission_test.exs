@@ -22,6 +22,26 @@ defmodule Bonfire.Me.InstanceAdminPermissionTest do
     |> Accounts.is_admin?()
   end
 
+  describe "is_admin!/1" do
+    test "answers from the admin flag loaded with the user's account" do
+      admin = admin!() |> repo().preload([accounted: [account: :instance_admin]], force: true)
+      admin = Map.put(admin, :account, e(admin, :accounted, :account, nil))
+      user = Fake.fake_user!() |> repo().preload(accounted: [account: :instance_admin])
+      user = Map.put(user, :account, e(user, :accounted, :account, nil))
+
+      assert Accounts.is_admin!(admin) == true
+      assert Accounts.is_admin!(user) == false
+    end
+
+    test "a user whose admin flag isn't loaded is an error in tests, rather than a silent `false`" do
+      admin = admin!() |> Map.put(:account, %Ecto.Association.NotLoaded{})
+
+      assert_raise RuntimeError, ~r/instance_admin isn't loaded/, fn ->
+        Accounts.is_admin!(admin)
+      end
+    end
+  end
+
   test "an admin can make someone an admin, and revoke them (control)" do
     admin = admin!()
     target = Fake.fake_user!()
