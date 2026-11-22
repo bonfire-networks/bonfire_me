@@ -46,6 +46,8 @@ if Application.compile_env(:bonfire_me, :modularity) != :disabled do
 
     def suggestions(conn, params), do: Adapter.suggestions(params, conn)
 
+    def suggestions_v1(conn, params), do: Adapter.suggestions_v1(params, conn)
+
     def familiar_followers(conn, params), do: Adapter.familiar_followers(params, conn)
 
     def delete_avatar(conn, params), do: Adapter.delete_avatar(params, conn)

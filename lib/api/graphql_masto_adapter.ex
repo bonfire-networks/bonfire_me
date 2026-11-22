@@ -43,8 +43,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     # Use centralized fragments from bonfire_api_graphql
     @account_fields Fragments.account_fields()
-    @user_profile Fragments.user_profile()
-    @actor_fields Fragments.actor_fields()
 
     @graphql "query ($filter: CharacterFilters) {
       user(filter: $filter) {
@@ -260,7 +258,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @graphql "query ($first: Int, $after: String, $last: Int, $before: String) {
       me {
         follow_requests(first: $first, after: $after, last: $last, before: $before) {
-          edges { node { #{@user_profile} } }
+          edges { node { #{@account_fields} } }
           page_info { start_cursor end_cursor has_next_page }
         }
       }
@@ -270,7 +268,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @graphql "query ($first: Int, $after: String, $last: Int, $before: String) {
       me {
         follow_requests_outgoing(first: $first, after: $after, last: $last, before: $before) {
-          edges { node { #{@user_profile} } }
+          edges { node { #{@account_fields} } }
           page_info { start_cursor end_cursor has_next_page }
         }
       }
@@ -451,7 +449,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     """
     @graphql "query ($ids: [ID!]!) {
       me {
-        familiar_followers(ids: $ids) { id accounts { #{@user_profile} } }
+        familiar_followers(ids: $ids) { id accounts { #{@account_fields} } }
       }
     }"
     def familiar_followers_gql(params, conn), do: graphql(conn, :familiar_followers_gql, params)
@@ -537,25 +535,34 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     See: https://docs.joinmastodon.org/methods/suggestions/#v2
     """
     @graphql "query ($limit: Int) {
-      me { suggestions(limit: $limit) { #{@actor_fields} } }
+      me { suggestions(limit: $limit) { #{Fragments.author_fields()} } }
     }"
     def suggestions_gql(params, conn), do: graphql(conn, :suggestions_gql, params)
 
     def suggestions(params, conn) do
-      current_user = conn.assigns[:current_user]
+      suggested(params, conn, fn users ->
+        Mappers.Suggestion.from_users(users, source: "staff", sources: ["featured"])
+      end)
+    end
 
-      if is_nil(current_user) do
+    @doc "GET /api/v1/suggestions: the same query as v2, as plain accounts (Mastodon's v1 shape, masto-live-fixes step 3)."
+    def suggestions_v1(params, conn) do
+      suggested(params, conn, fn users ->
+        users
+        |> Enum.map(&Mappers.Account.from_user/1)
+        |> Enum.reject(&is_nil/1)
+      end)
+    end
+
+    # what both versions share: the guard, the limit and the query; `map_users` gives each its shape
+    defp suggested(params, conn, map_users) do
+      if is_nil(conn.assigns[:current_user]) do
         RestAdapter.error_fn({:error, :unauthorized}, conn)
       else
         limit = PaginationHelpers.validate_limit(params["limit"], default: 40, max: 80)
 
         suggestions_gql(%{"limit" => limit}, conn)
-        |> RestAdapter.return(:me, ..., conn, fn me ->
-          Mappers.Suggestion.from_users(me[:suggestions] || [],
-            source: "staff",
-            sources: ["featured"]
-          )
-        end)
+        |> RestAdapter.return(:me, ..., conn, fn me -> map_users.(me[:suggestions] || []) end)
       end
     end
 

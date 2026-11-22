@@ -74,6 +74,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         resolve(&Bonfire.Posts.API.StatusCountsDataloader.statuses_count/3)
       end
 
+      @desc "When the user last posted, nil if never (the date of their newest post)"
+      field :last_post_at, :datetime do
+        resolve(&Bonfire.Posts.API.StatusCountsDataloader.last_post_at/3)
+      end
+
       @desc "False when the user opted out of discovery (the `undiscoverable` setting), readable by anyone who can see the user, as in Mastodon"
       field :discoverable, :boolean do
         resolve(&resolve_discoverable/3)
