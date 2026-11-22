@@ -131,6 +131,45 @@ defmodule Bonfire.Me.Users do
   end
 
   @doc """
+  Finds a user by `username`, `@username`, `username@this-instance` or `username@remote.domain`;
+  a remote one is fetched over webfinger when ActivityPub is enabled. Used by Mastodon's
+  `/api/v1/accounts/lookup`, through GraphQL `user(filter: {username:})`.
+  """
+  def by_acct(acct) when is_binary(acct) do
+    acct = String.trim_leading(acct, "@")
+
+    case String.split(acct, "@", parts: 2) do
+      [username, domain] -> by_acct(username, domain)
+      [username] -> by_username(username)
+    end
+  end
+
+  def by_acct(_), do: {:error, :not_found}
+
+  defp by_acct("", _domain), do: {:error, :not_found}
+
+  defp by_acct(username, domain) do
+    if domain == Bonfire.Common.URIs.base_domain() do
+      by_username(username)
+    else
+      fetch_remote_by_acct("#{username}@#{domain}")
+    end
+  end
+
+  defp fetch_remote_by_acct(webfinger) do
+    if module_enabled?(ActivityPub.Actor) do
+      with {:ok, actor} <- ActivityPub.Actor.fetch_by_username(webfinger),
+           pointer_id when not is_nil(pointer_id) <- e(actor, :pointer_id, nil) do
+        by_id(pointer_id)
+      else
+        _ -> {:error, :not_found}
+      end
+    else
+      {:error, :not_found}
+    end
+  end
+
+  @doc """
   Gets a user by username.
 
   ## Examples

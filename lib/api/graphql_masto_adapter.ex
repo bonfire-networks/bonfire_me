@@ -38,28 +38,19 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       AbsintheClient.default_pipeline(schema, Keyword.put(opts, :context, context_with_loader))
     end
 
-    alias Bonfire.API.MastoCompat.Mappers.BatchLoader
     alias Bonfire.Social.Graph.Follows
     alias Bonfire.Boundaries.API.GraphQLMasto.Adapter, as: BoundariesAdapter
 
     # Use centralized fragments from bonfire_api_graphql
+    @account_fields Fragments.account_fields()
     @user_profile Fragments.user_profile()
-
-    @doc "Get a user profile by ID (direct DB lookup for full data)"
-    # TODO: refactor to use GraphQL once Dataloader properly resolves
-    # Needle mixins (follow_count) and profile media (icon, image)
-    def user(%{"filter" => %{"id" => id}}, conn) do
-      case Bonfire.Me.Users.by_id(id, preload: :profile) do
-        {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user))
-        _ -> RestAdapter.error_fn({:error, :not_found}, conn)
-      end
-    end
+    @actor_fields Fragments.actor_fields()
 
     @graphql "query ($filter: CharacterFilters) {
       user(filter: $filter) {
-        #{@user_profile}
+        #{@account_fields}
     }}"
-    @doc "Get a user profile by filter (fallback to GraphQL for non-id filters)"
+    @doc "Get a user profile by id or username (`GET /api/v1/accounts/:id`)"
     def user(params, conn) do
       graphql(conn, :user, params)
       |> RestAdapter.return(:user, ..., conn, &Mappers.Account.from_user/1)
@@ -67,7 +58,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     @graphql "query {
         me {
-         user { #{@user_profile} }
+         follow_requests_count
+         user { #{@account_fields} }
       }}"
     @doc "Get the current user's profile (verify_credentials)"
     def me(params \\ %{}, conn) do
@@ -79,8 +71,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       else
         graphql(conn, :me, params)
         |> RestAdapter.return(:me, ..., conn, fn
-          %{user: user} -> Mappers.Account.from_user(user, include_source: true)
-          user -> Mappers.Account.from_user(user, include_source: true)
+          %{user: %{} = user} = me -> own_account_json(user, me[:follow_requests_count])
+          _no_user -> nil
         end)
       end
     end
@@ -112,16 +104,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         with {:ok, image_params} <- handle_image_uploads(current_user, params),
              merged_params <- merge_profile_and_images(profile_params, image_params),
              {:ok, updated_user} <- Bonfire.Me.Users.update(current_user, merged_params) do
-          case Bonfire.Me.Users.by_id(updated_user.id) do
-            {:ok, user} ->
-              RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
-
-            _ ->
-              RestAdapter.json(
-                conn,
-                Mappers.Account.from_user(updated_user, include_source: true)
-              )
-          end
+          own_account(conn, updated_user)
         else
           {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
         end
@@ -274,47 +257,63 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     @doc "List outgoing follow requests (GET /api/v1/follow_requests/outgoing)"
     def follow_requests_outgoing(_params, conn), do: list_follow_requests(conn, :outgoing)
 
+    @graphql "query ($first: Int, $after: String, $last: Int, $before: String) {
+      me {
+        follow_requests(first: $first, after: $after, last: $last, before: $before) {
+          edges { node { #{@user_profile} } }
+          page_info { start_cursor end_cursor has_next_page }
+        }
+      }
+    }"
+    def follow_requests_gql(params, conn), do: graphql(conn, :follow_requests_gql, params)
+
+    @graphql "query ($first: Int, $after: String, $last: Int, $before: String) {
+      me {
+        follow_requests_outgoing(first: $first, after: $after, last: $last, before: $before) {
+          edges { node { #{@user_profile} } }
+          page_info { start_cursor end_cursor has_next_page }
+        }
+      }
+    }"
+    def follow_requests_outgoing_gql(params, conn),
+      do: graphql(conn, :follow_requests_outgoing_gql, params)
+
     defp list_follow_requests(conn, direction) do
-      RestAdapter.with_current_user(conn, fn current_user ->
-        alias Bonfire.Social.Requests
-        alias Bonfire.Data.Social.Follow
+      RestAdapter.with_current_user(conn, fn _current_user ->
+        # `max_id` pages on (`first`/`after`), `min_id` or `since_id` back (`last`/`before`)
+        limit = PaginationHelpers.validate_limit(conn.params["limit"])
 
-        requests =
-          case direction do
-            :incoming ->
-              Requests.list_my_requesters(
-                current_user: current_user,
-                type: Follow
-              )
+        vars =
+          case conn.params["min_id"] || conn.params["since_id"] do
+            before when is_binary(before) and before != "" ->
+              %{"last" => limit, "before" => before}
 
-            :outgoing ->
-              Requests.list_my_requested(
-                current_user: current_user,
-                type: Follow
-              )
+            _ ->
+              PaginationHelpers.maybe_add_cursor(%{"first" => limit}, conn.params, "max_id", "after")
           end
-          |> repo().maybe_preload(edge: [:subject, :object])
 
-        users_by_id =
-          requests
-          |> Enum.map(&extract_request_user_id(&1, direction))
-          |> Enum.reject(&is_nil/1)
-          |> Enum.uniq()
-          |> Bonfire.Me.Users.by_ids(preload: :profile)
-          |> Map.new(&{&1.id, &1})
+        {result, field} =
+          case direction do
+            :incoming -> {follow_requests_gql(vars, conn), :follow_requests}
+            :outgoing -> {follow_requests_outgoing_gql(vars, conn), :follow_requests_outgoing}
+          end
 
-        accounts =
-          requests
-          |> Enum.map(&Map.get(users_by_id, extract_request_user_id(&1, direction)))
-          |> Enum.map(&Mappers.Account.from_user(&1, skip_expensive_stats: true))
-          |> Enum.reject(&is_nil/1)
+        case result do
+          %{data: %{me: %{^field => %{} = connection}}} ->
+            accounts =
+              (connection[:edges] || [])
+              |> Enum.map(&Mappers.Account.from_user(&1[:node]))
+              |> Enum.reject(&is_nil/1)
 
-        RestAdapter.json(conn, accounts)
+            conn
+            |> PaginationHelpers.add_simple_link_headers(%{}, connection[:page_info], [])
+            |> RestAdapter.json(accounts)
+
+          other ->
+            graphql_error(other, conn)
+        end
       end)
     end
-
-    defp extract_request_user_id(request, :incoming), do: e(request, :edge, :subject_id, nil)
-    defp extract_request_user_id(request, :outgoing), do: e(request, :edge, :object_id, nil)
 
     @doc "Accept/authorize a follow request (POST /api/v1/follow_requests/:account_id/authorize)"
     def authorize_follow_request(account_id, conn),
@@ -356,50 +355,62 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       list_follow_connections(account_id, params, conn, :following)
     end
 
+    @graphql "query ($filter: CharacterFilters, $first: Int, $after: String, $before: String) {
+      user(filter: $filter) {
+        followers(first: $first, after: $after, before: $before) {
+          edges { node { #{@account_fields} } }
+          page_info { start_cursor end_cursor }
+        }
+      }
+    }"
+    def followers_gql(params, conn), do: graphql(conn, :followers_gql, params)
+
+    @graphql "query ($filter: CharacterFilters, $first: Int, $after: String, $before: String) {
+      user(filter: $filter) {
+        following(first: $first, after: $after, before: $before) {
+          edges { node { #{@account_fields} } }
+          page_info { start_cursor end_cursor }
+        }
+      }
+    }"
+    def following_gql(params, conn), do: graphql(conn, :following_gql, params)
+
     defp list_follow_connections(account_id, params, conn, direction) do
-      limit = PaginationHelpers.validate_limit(params["limit"])
-      pagination_opts = PaginationHelpers.build_pagination_opts(params, limit) |> Map.new()
+      # Mastodon's cursors, as `PaginationHelpers.build_pagination_opts/2` maps them, as relay args
+      vars =
+        params
+        |> PaginationHelpers.build_pagination_opts(
+          PaginationHelpers.validate_limit(params["limit"])
+        )
+        |> Enum.reduce(%{"filter" => %{"id" => account_id}}, fn
+          {:limit, limit}, vars -> Map.put(vars, "first", limit)
+          {cursor, value}, vars -> Map.put(vars, to_string(cursor), value)
+        end)
 
-      case Bonfire.Me.Users.by_id(account_id) do
-        {:ok, user} ->
-          opts = [pagination: pagination_opts, current_user: conn.assigns[:current_user]]
+      result =
+        case direction do
+          :followers -> followers_gql(vars, conn)
+          :following -> following_gql(vars, conn)
+        end
 
-          {list_fn, user_field} =
-            case direction do
-              :followers -> {&Follows.list_followers/2, :subject}
-              :following -> {&Follows.list_followed/2, :object}
-            end
+      case result do
+        %{data: %{user: %{^direction => %{} = connection}}} ->
+          accounts =
+            (connection[:edges] || [])
+            |> Enum.map(&Mappers.Account.from_user(&1[:node]))
+            |> Enum.reject(&is_nil/1)
 
-          case list_fn.(user, opts) do
-            %{edges: edges, page_info: page_info} ->
-              accounts = map_follow_edges_to_accounts(edges, user_field, conn)
-              conn = PaginationHelpers.add_simple_link_headers(conn, %{}, page_info, [])
-              RestAdapter.json(conn, accounts)
+          conn =
+            PaginationHelpers.add_simple_link_headers(conn, %{}, connection[:page_info], [])
 
-            edges when is_list(edges) ->
-              accounts = map_follow_edges_to_accounts(edges, user_field, conn)
-              RestAdapter.json(conn, accounts)
+          RestAdapter.json(conn, accounts)
 
-            _ ->
-              RestAdapter.json(conn, [])
-          end
+        %{data: %{user: %{}}} = failed ->
+          graphql_error(failed, conn)
 
         _ ->
           RestAdapter.error_fn({:error, :not_found}, conn)
       end
-    end
-
-    defp map_follow_edges_to_accounts(edges, user_field, conn) do
-      current_user = conn.assigns[:current_user]
-
-      users =
-        edges
-        |> Enum.map(fn edge ->
-          e(edge, user_field, nil) || e(edge, :edge, user_field, nil)
-        end)
-        |> Enum.reject(&is_nil/1)
-
-      BatchLoader.map_accounts(users, current_user: current_user)
     end
 
     @doc """
@@ -438,6 +449,13 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     Returns accounts that the current user follows AND who also follow each target.
     Mastodon API: GET /api/v1/accounts/familiar_followers?id[]=1&id[]=2
     """
+    @graphql "query ($ids: [ID!]!) {
+      me {
+        familiar_followers(ids: $ids) { id accounts { #{@user_profile} } }
+      }
+    }"
+    def familiar_followers_gql(params, conn), do: graphql(conn, :familiar_followers_gql, params)
+
     def familiar_followers(params, conn) do
       current_user = conn.assigns[:current_user]
 
@@ -451,145 +469,56 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
             _ -> []
           end
 
-        # Get all user IDs that the current user follows (once, for all targets)
-        my_following_ids =
-          case Follows.list_followed(current_user,
-                 paginate?: false,
-                 type: Bonfire.Data.Identity.User
-               ) do
-            %{edges: edges} when is_list(edges) ->
-              Enum.map(
-                edges,
-                &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1)
-              )
-              |> Enum.reject(&is_nil/1)
+        case familiar_followers_gql(%{"ids" => target_ids}, conn) do
+          %{data: %{me: %{familiar_followers: familiar}}} when is_list(familiar) ->
+            RestAdapter.json(conn, Enum.map(familiar, &familiar_entry/1))
 
-            edges when is_list(edges) ->
-              Enum.map(
-                edges,
-                &Bonfire.Common.Enums.id(e(&1, :edge, :object, nil) || e(&1, :object, nil) || &1)
-              )
-              |> Enum.reject(&is_nil/1)
-
-            _ ->
-              []
-          end
-
-        results =
-          if my_following_ids == [] do
-            Enum.map(target_ids, fn id -> %{"id" => id, "accounts" => []} end)
-          else
-            Enum.map(target_ids, fn target_id ->
-              familiar_ids =
-                Bonfire.Social.Edges.batch_subjects_exist?(
-                  Bonfire.Data.Social.Follow,
-                  target_id,
-                  my_following_ids
-                )
-
-              familiar_users =
-                if MapSet.size(familiar_ids) > 0 do
-                  familiar_ids
-                  |> MapSet.to_list()
-                  |> Enum.take(10)
-                  |> Enum.flat_map(fn fid ->
-                    case Bonfire.Me.Users.by_id(fid, preload: :profile) do
-                      {:ok, user} -> [user]
-                      _ -> []
-                    end
-                  end)
-                else
-                  []
-                end
-
-              accounts =
-                BatchLoader.map_accounts(familiar_users,
-                  current_user: current_user,
-                  skip_expensive_stats: true
-                )
-
-              %{"id" => target_id, "accounts" => accounts}
-            end)
-          end
-
-        RestAdapter.json(conn, results)
+          other ->
+            graphql_error(other, conn)
+        end
       end
+    end
+
+    defp familiar_entry(%{id: id} = item) do
+      %{
+        "id" => id,
+        "accounts" =>
+          (item[:accounts] || [])
+          |> Enum.map(&Mappers.Account.from_user/1)
+          |> Enum.reject(&is_nil/1)
+      }
     end
 
     @doc """
     Lookup an account by webfinger address.
     Mastodon API: GET /api/v1/accounts/lookup?acct=username or acct=username@domain
     """
-    def lookup_account(params, conn) do
-      case lookup_by_acct(params["acct"]) do
-        {:ok, user} -> RestAdapter.json(conn, Mappers.Account.from_user(user))
-        _ -> RestAdapter.error_fn({:error, :not_found}, conn)
-      end
+    def lookup_account(%{"acct" => acct}, conn) when is_binary(acct) and acct != "" do
+      user(%{"filter" => %{"username" => acct}}, conn)
     end
 
-    defp lookup_by_acct(nil), do: {:error, :not_found}
-    defp lookup_by_acct(""), do: {:error, :not_found}
-
-    defp lookup_by_acct(acct) do
-      acct = String.trim_leading(acct, "@")
-
-      case String.split(acct, "@", parts: 2) do
-        [username, domain] -> lookup_by_acct(username, domain)
-        [username] -> Bonfire.Me.Users.by_username(username)
-      end
-    end
-
-    defp lookup_by_acct(username, domain) do
-      if domain == Bonfire.Common.URIs.base_domain() do
-        Bonfire.Me.Users.by_username(username)
-      else
-        fetch_remote_user("#{username}@#{domain}")
-      end
-    end
-
-    defp fetch_remote_user(webfinger) do
-      if module_enabled?(ActivityPub.Actor) do
-        with {:ok, actor} <- ActivityPub.Actor.fetch_by_username(webfinger),
-             pointer_id when not is_nil(pointer_id) <- e(actor, :pointer_id, nil) do
-          Bonfire.Me.Users.by_id(pointer_id)
-        else
-          _ -> {:error, :not_found}
-        end
-      else
-        {:error, :not_found}
-      end
-    end
+    def lookup_account(_params, conn), do: RestAdapter.error_fn({:error, :not_found}, conn)
 
     @doc """
     Search for accounts by username or display name.
     Mastodon API: GET /api/v1/accounts/search?q=query
     """
+    @graphql "query ($query: String!, $limit: Int) {
+      search_accounts(query: $query, limit: $limit) { #{@account_fields} }
+    }"
+    def search_accounts_gql(params, conn), do: graphql(conn, :search_accounts_gql, params)
+
     def search_accounts(params, conn) do
-      current_user = conn.assigns[:current_user]
       query = params["q"] || ""
       limit = PaginationHelpers.validate_limit(params["limit"] || 10, max: 40)
 
       if String.trim(query) == "" do
         RestAdapter.json(conn, [])
       else
-        users =
-          case Bonfire.Me.Users.search(query, limit: limit, current_user: current_user) do
-            users when is_list(users) ->
-              users
-
-            %{edges: edges} when is_list(edges) ->
-              Enum.map(edges, &e(&1, :edge, nil)) |> Enum.reject(&is_nil/1)
-
-            _ ->
-              []
-          end
-
-        accounts =
-          users
-          |> repo().maybe_preload([:profile, :character])
-          |> BatchLoader.map_accounts(current_user: current_user)
-
-        RestAdapter.json(conn, accounts)
+        search_accounts_gql(%{"query" => query, "limit" => limit}, conn)
+        |> RestAdapter.return(:search_accounts, ..., conn, fn users ->
+          users |> Enum.map(&Mappers.Account.from_user/1) |> Enum.reject(&is_nil/1)
+        end)
       end
     end
 
@@ -607,6 +536,11 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     See: https://docs.joinmastodon.org/methods/suggestions/#v2
     """
+    @graphql "query ($limit: Int) {
+      me { suggestions(limit: $limit) { #{@actor_fields} } }
+    }"
+    def suggestions_gql(params, conn), do: graphql(conn, :suggestions_gql, params)
+
     def suggestions(params, conn) do
       current_user = conn.assigns[:current_user]
 
@@ -615,43 +549,15 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       else
         limit = PaginationHelpers.validate_limit(params["limit"], default: 40, max: 80)
 
-        # Get users from the suggested profiles circle (curated by admins)
-        users =
-          get_suggested_profiles()
-          |> exclude_current_user(current_user)
-          |> Enum.take(limit)
-
-        suggestions =
-          Mappers.Suggestion.from_users(users,
+        suggestions_gql(%{"limit" => limit}, conn)
+        |> RestAdapter.return(:me, ..., conn, fn me ->
+          Mappers.Suggestion.from_users(me[:suggestions] || [],
             source: "staff",
-            sources: ["featured"],
-            skip_expensive_stats: true
+            sources: ["featured"]
           )
-
-        RestAdapter.json(conn, suggestions)
+        end)
       end
     end
-
-    defp get_suggested_profiles do
-      alias Bonfire.Boundaries.Circles
-      alias Bonfire.Common.Needles
-
-      # shared cached curated list (see `Circles.list_suggested_profiles/0`); subjects come
-      # preloaded — convert the Needle.Pointer subjects to actual User structs for the mapper
-      Circles.list_suggested_profiles()
-      |> Enum.map(&Needles.follow!(&1, []))
-      |> Enum.reject(&is_nil/1)
-    end
-
-    defp exclude_current_user(users, current_user) when is_list(users) do
-      current_user_id = uid(current_user)
-
-      Enum.reject(users, fn user ->
-        uid(user) == current_user_id
-      end)
-    end
-
-    defp exclude_current_user(users, _), do: users
 
     @doc """
     Create a new account via Mastodon API signup.
@@ -840,7 +746,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     defp delete_profile_image(conn, field) do
       RestAdapter.with_current_user(conn, fn user ->
         with {:ok, updated} <- Bonfire.Me.Users.update(user, %{"profile" => %{field => nil}}) do
-          reload_and_return_user(conn, updated)
+          own_account(conn, updated)
         else
           {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
         end
@@ -890,7 +796,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
              new_aliases <- merge_aliases(actor, uris),
              updated_data <- Map.put(actor.data, "alsoKnownAs", new_aliases),
              {:ok, _} <- ActivityPub.Actor.update_actor(actor.ap_id, updated_data, false, true) do
-          reload_and_return_user(conn, user)
+          own_account(conn, user)
         else
           {:error, reason} -> RestAdapter.error_fn({:error, reason}, conn)
         end
@@ -921,7 +827,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
              {:ok, origin_actor} <- ActivityPub.Actor.get_cached(pointer: user.id),
              {:ok, target_actor} <- ActivityPub.Actor.get_cached_or_fetch(ap_id: target_uri),
              {:ok, _} <- ActivityPub.move(origin_actor, target_actor, true) do
-          reload_and_return_user(conn, user)
+          own_account(conn, user)
         else
           {:error, :not_in_also_known_as} ->
             RestAdapter.error_fn(
@@ -944,13 +850,34 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
     # Helper functions
 
-    defp reload_and_return_user(conn, user) do
-      case Bonfire.Me.Users.by_id(user.id) do
-        {:ok, reloaded} ->
-          RestAdapter.json(conn, Mappers.Account.from_user(reloaded, include_source: true))
+    # a GraphQL result that is not the data expected: its errors, or the error tuple `graphql/2` can return
+    defp graphql_error({:error, _} = error, conn), do: RestAdapter.error_fn(error, conn)
+    defp graphql_error(%{errors: errors}, conn), do: RestAdapter.error_fn({:error, errors}, conn)
+    defp graphql_error(other, conn), do: RestAdapter.error_fn({:error, other}, conn)
 
-        _ ->
-          RestAdapter.json(conn, Mappers.Account.from_user(user, include_source: true))
+    defp own_account_json(account, follow_requests_count) do
+      account
+      |> Map.put(:follow_requests_count, follow_requests_count)
+      |> Mappers.Account.from_user(include_source: true)
+    end
+
+    @graphql "query ($filter: CharacterFilters) {
+      me { follow_requests_count }
+      user(filter: $filter) { #{@account_fields} }
+    }"
+    def own_account_gql(params, conn), do: graphql(conn, :own_account_gql, params)
+
+    # read back by id after a change, so the change is seen
+    defp own_account(conn, user) do
+      case own_account_gql(%{"filter" => %{"id" => uid(user)}}, conn) do
+        %{data: %{user: %{} = account} = data} ->
+          RestAdapter.json(
+            conn,
+            own_account_json(account, get_in(data, [:me, :follow_requests_count]))
+          )
+
+        other ->
+          graphql_error(other, conn)
       end
     end
 

@@ -69,8 +69,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         resolve(&Bonfire.Social.Graph.API.GraphQL.following_count/3)
       end
 
+      @desc "How many posts the user created"
       field :statuses_count, :integer do
-        resolve(&resolve_statuses_count/3)
+        resolve(&Bonfire.Posts.API.StatusCountsDataloader.statuses_count/3)
+      end
+
+      @desc "False when the user opted out of discovery (the `undiscoverable` setting), readable by anyone who can see the user, as in Mastodon"
+      field :discoverable, :boolean do
+        resolve(&resolve_discoverable/3)
       end
 
       field :relationship, :relationship do
@@ -114,6 +120,23 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
       field(:account_id, :id) do
         resolve(&account_id/3)
+      end
+
+      @desc "For each id: up to 10 people the current user follows who follow that account (Mastodon's familiar followers)"
+      field :familiar_followers, list_of(:familiar_followers) do
+        arg(:ids, non_null(list_of(non_null(:id))))
+        resolve(&Bonfire.Social.Graph.API.GraphQL.familiar_followers/3)
+      end
+
+      @desc "Profiles the instance suggests following (the curated circle), without the current user"
+      field :suggestions, list_of(:any_character) do
+        arg(:limit, :integer)
+        resolve(&suggestions/3)
+      end
+
+      @desc "Follow requests waiting for the current user, for Mastodon's `source.follow_requests_count`"
+      field :follow_requests_count, :integer do
+        resolve(&Bonfire.Social.Graph.API.GraphQL.follow_requests_count/3)
       end
 
       field(:users, list_of(:user)) do
@@ -331,6 +354,19 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         resolve(&list_users/3)
       end
 
+      @desc "Users or groups by id, in the order given, that the current user may see"
+      field :characters, list_of(:any_character) do
+        arg(:ids, non_null(list_of(non_null(:id))))
+        resolve(&list_characters/3)
+      end
+
+      @desc "Search users by username or name (`Bonfire.Me.Users.search/2`), for Mastodon's account search"
+      field :search_accounts, list_of(:user) do
+        arg(:query, non_null(:string))
+        arg(:limit, :integer)
+        resolve(&search_accounts/3)
+      end
+
       @desc "Get information about and for the current account and/or user"
       field :me, :me do
         resolve(&get_me/3)
@@ -441,8 +477,9 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       {:ok, Bonfire.Me.Users.list(current_user: GraphQL.current_user(info))}
     end
 
+    # a local username, or `user@domain`, fetched over webfinger when remote (`Users.by_acct/1`)
     defp get_user(_parent, %{filter: %{username: username}}, _info) do
-      Users.by_username(username)
+      Users.by_acct(username)
     end
 
     defp get_user(_parent, %{filter: %{id: id}}, _info) do
@@ -455,6 +492,86 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
 
     defp get_user(_parent, _args, info) do
       {:ok, GraphQL.current_user(info)}
+    end
+
+    defp list_characters(_parent, %{ids: ids}, info) do
+      by_id =
+        ids
+        |> Bonfire.Common.Needles.list!(current_user: GraphQL.current_user(info))
+        # only what the `:any_character` union can type: anything else has no type there
+        |> Enum.filter(&Bonfire.API.MastoCompat.Accounts.account?/1)
+        |> Bonfire.Common.Repo.maybe_preload([:character, :profile])
+        |> Map.new(&{Bonfire.Common.Types.uid(&1), &1})
+
+      {:ok, ids |> Enum.map(&Map.get(by_id, &1)) |> Enum.reject(&is_nil/1)}
+    end
+
+    # the user's own settings: preloaded when the caller had them, else batched by the `:settings` source
+    defp resolve_discoverable(
+           %{settings: %Bonfire.Data.Identity.Settings{}} = user,
+           _args,
+           _info
+         ),
+         do: {:ok, discoverable?(user)}
+
+    defp resolve_discoverable(user, _args, %{context: %{loader: loader}}) do
+      case Bonfire.Common.Types.uid(user) do
+        nil ->
+          {:ok, true}
+
+        id ->
+          loader
+          |> Dataloader.load(:settings, :settings, id)
+          |> Helpers.on_load(fn loader ->
+            settings = Dataloader.get(loader, :settings, :settings, id)
+
+            {:ok,
+             discoverable?(
+               Map.put(user, :settings, settings || %Bonfire.Data.Identity.Settings{})
+             )}
+          end)
+      end
+    end
+
+    # the same read as `Users.search_index_for/1`, on a user whose settings are loaded
+    defp discoverable?(user),
+      do:
+        Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil,
+          current_user: user
+        ) != true
+
+    defp search_accounts(_parent, %{query: query} = args, info) do
+      users =
+        case Users.search(query,
+               # a public query: at most 80, Mastodon's maximum for a list of accounts
+               limit: min(args[:limit] || 10, 80),
+               current_user: GraphQL.current_user(info)
+             ) do
+          users when is_list(users) ->
+            users
+
+          %{edges: edges} when is_list(edges) ->
+            edges |> Enum.map(&e(&1, :edge, nil)) |> Enum.reject(&is_nil/1)
+
+          _ ->
+            []
+        end
+
+      {:ok, Bonfire.Common.Repo.maybe_preload(users, [:profile, :character])}
+    end
+
+    # the curated suggested-profiles circle, followed to its users and groups
+    defp suggestions(_me, args, info) do
+      user_id = Bonfire.Common.Types.uid(GraphQL.current_user(info))
+
+      {:ok,
+       Bonfire.Boundaries.Circles.list_suggested_profiles()
+       |> Enum.map(&Bonfire.Common.Needles.follow!(&1, []))
+       |> Enum.filter(
+         &(Bonfire.API.MastoCompat.Accounts.account?(&1) and
+             Bonfire.Common.Types.uid(&1) != user_id)
+       )
+       |> Enum.take(args[:limit] || 40)}
     end
 
     defp get_me(_parent, _args, info) do
@@ -677,30 +794,6 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     end
 
     defp resolve_character(_, _, _), do: {:ok, nil}
-
-    defp resolve_statuses_count(user, _args, _info) do
-      # Count posts created by this user
-      # TODO: Could be optimized with EdgeTotal in the future for better performance
-      user_id = Bonfire.Common.Types.uid(user)
-
-      count =
-        if user_id do
-          import Ecto.Query
-
-          Bonfire.Common.Repo.one(
-            from(c in Bonfire.Data.Social.Created,
-              join: p in Bonfire.Data.Social.Post,
-              on: c.id == p.id,
-              where: c.creator_id == ^user_id,
-              select: count(c.id)
-            )
-          ) || 0
-        else
-          0
-        end
-
-      {:ok, count}
-    end
 
     def icon(%{icon: icon}, _args, _info)
         when not is_nil(icon) and not is_struct(icon, Ecto.Association.NotLoaded) do
