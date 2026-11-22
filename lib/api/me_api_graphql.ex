@@ -494,16 +494,20 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       {:ok, GraphQL.current_user(info)}
     end
 
-    defp list_characters(_parent, %{ids: ids}, info) do
+    defp list_characters(_parent, %{ids: ids}, info),
+      do: {:ok, characters_by_ids(ids, GraphQL.current_user(info))}
+
+    @doc "The characters with these ids that `current_user` may see, in the order given, as the `:any_character` union types them. Used by `characters(ids:)` and a conversation's participants."
+    def characters_by_ids(ids, current_user) do
       by_id =
         ids
-        |> Bonfire.Common.Needles.list!(current_user: GraphQL.current_user(info))
+        |> Bonfire.Common.Needles.list!(current_user: current_user)
         # only what the `:any_character` union can type: anything else has no type there
         |> Enum.filter(&Bonfire.API.MastoCompat.Accounts.account?/1)
         |> Bonfire.Common.Repo.maybe_preload([:character, :profile])
         |> Map.new(&{Bonfire.Common.Types.uid(&1), &1})
 
-      {:ok, ids |> Enum.map(&Map.get(by_id, &1)) |> Enum.reject(&is_nil/1)}
+      ids |> Enum.map(&Map.get(by_id, &1)) |> Enum.reject(&is_nil/1)
     end
 
     # the user's own settings: preloaded when the caller had them, else batched by the `:settings` source
