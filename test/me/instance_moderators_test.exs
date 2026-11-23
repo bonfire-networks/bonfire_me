@@ -69,6 +69,46 @@ defmodule Bonfire.Me.InstanceModeratorsTest do
     refute plain.id in moderators
   end
 
+  describe "who may see them: list_visible_moderators/1, by the instance's `show_moderators_to`" do
+    # Config.get reads these per test process; the list is cached, so start from the current DB
+    setup do
+      Users.list_declared_moderators(cache: :reset)
+      admin = admin!()
+      Users.list_declared_moderators(cache: :reset)
+      {:ok, admin: admin, viewer: Fake.fake_user!()}
+    end
+
+    test "everyone, by default", %{admin: admin, viewer: viewer} do
+      assert admin.id in user_ids(Users.list_visible_moderators(nil))
+      assert admin.id in user_ids(Users.list_visible_moderators(viewer))
+    end
+
+    test "signed-in people only", %{admin: admin, viewer: viewer} do
+      Process.put([:bonfire_me, Users, :show_moderators_to], :users)
+
+      assert Users.list_visible_moderators(nil) == []
+      assert admin.id in user_ids(Users.list_visible_moderators(viewer))
+    end
+
+    test "nobody", %{viewer: viewer, admin: admin} do
+      Process.put([:bonfire_me, Users, :show_moderators_to], :nobody)
+
+      assert Users.list_visible_moderators(nil) == []
+      assert Users.list_visible_moderators(viewer) == []
+      assert Users.list_visible_moderators(admin) == []
+    end
+
+    test "an instance that hid them from guests with the older setting still does", %{
+      admin: admin,
+      viewer: viewer
+    } do
+      Process.put([:bonfire_ui_me, Bonfire.UI.Me.WidgetUsersLive, :show_guests], false)
+
+      assert Users.list_visible_moderators(nil) == []
+      assert admin.id in user_ids(Users.list_visible_moderators(viewer))
+    end
+  end
+
   describe "list_instance_wide/2: who holds a verb for the whole instance" do
     alias Bonfire.Boundaries.Circles
     alias Bonfire.Boundaries.Grants

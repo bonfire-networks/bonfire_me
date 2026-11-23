@@ -1099,6 +1099,19 @@ defmodule Bonfire.Me.Accounts do
     )
   end
 
+  @doc "The account for `email`, as `{:ok, new?, account}`: the existing one, or a passwordless one provisioned for it (see `provision_passwordless_account/1`, which sends nothing)."
+  def get_or_provision_by_email(email) do
+    case get_by_email(email) do
+      nil ->
+        with {:ok, account} <- provision_passwordless_account(email) do
+          {:ok, true, account}
+        end
+
+      account ->
+        {:ok, false, account}
+    end
+  end
+
   @doc """
   Checks if signup is allowed based on instance config and provided options.
 

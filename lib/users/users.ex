@@ -793,6 +793,39 @@ defmodule Bonfire.Me.Users do
 
   defp refresh_declared_moderators, do: list_declared_moderators(cache: :reset)
 
+  @doc """
+  The instance's moderators that `viewer` (a user, a context, or `nil` for a visitor) may see, as the instance chose in `[Bonfire.Me.Users, :show_moderators_to]`: `:guests` (everyone, the default), `:users` (signed-in people only) or `:nobody`.
+
+  Use this, not `list_declared_moderators/1`, wherever the list is shown to someone, including in APIs.
+  """
+  def list_visible_moderators(viewer) do
+    if moderators_visible?(viewer), do: List.wrap(list_declared_moderators()), else: []
+  end
+
+  @doc "Whether `viewer` may see who moderates the instance. See `list_visible_moderators/1`."
+  def moderators_visible?(viewer) do
+    case show_moderators_to() do
+      :nobody -> false
+      :users -> not is_nil(Bonfire.Common.Utils.current_user_id(viewer))
+      _guests -> true
+    end
+  end
+
+  # an instance setting, so read from config, where instance settings are mirrored
+  defp show_moderators_to do
+    case Bonfire.Common.Config.get([__MODULE__, :show_moderators_to], nil)
+         |> Bonfire.Common.Types.maybe_to_atom() do
+      value when value in [:guests, :users, :nobody] ->
+        value
+
+      _ ->
+        # an instance that hid them from guests with the toggle this replaces
+        if Bonfire.Common.Config.get([Bonfire.UI.Me.WidgetUsersLive, :show_guests], true) == false,
+          do: :users,
+          else: :guests
+    end
+  end
+
   @doc "Takes a user out of the mod circle. Their admin powers, if they have any, are not changed. Needs `current_user:` (an instance admin) or `skip_boundary_check: true` in `opts`, else `{:error, :not_permitted}`."
   def revoke_moderator(user_or_username, opts \\ [])
 
@@ -1406,6 +1439,72 @@ defmodule Bonfire.Me.Users do
       {:ok, Map.put(user, :settings, nil)}
     end
   end
+
+  # how many times a random number is tried after a taken username
+  @handle_suffix_attempts 5
+
+  @doc """
+  The user here for an author from another site (eg. a WordPress or Ghost author), by their email: the user of their account when they already have one, otherwise a new account (see `Bonfire.Me.Accounts.get_or_provision_by_email/1`, which sends nothing, so they can claim it later) with a user named `name`, its username the first free one of `handle_candidates` (see `get_or_create_for_account/4`).
+  """
+  def get_or_create_for_external_author(email, name, handle_candidates) do
+    with {:ok, new?, account} <- Accounts.get_or_provision_by_email(email) do
+      get_or_create_for_account(account, name, handle_candidates, new?: new?)
+    end
+  end
+
+  @doc """
+  A user of `account`: its existing one unless `new?: true` (the one with id `preferred_user_id:` when the account has several, else its first), otherwise a new one named `name`, its username the first of `handle_candidates` that's free, then each again with a random number after it (`_2` to `_99`, a few tries). Returns `{:error, :handle_exhausted}` when none is free.
+  """
+  def get_or_create_for_account(account, name, handle_candidates, opts \\ []) do
+    existing =
+      if !opts[:new?] do
+        users = by_account!(account)
+        Enum.find(users, &(&1.id == opts[:preferred_user_id])) || List.first(users)
+      end
+
+    case existing do
+      nil ->
+        handle_candidates
+        |> Enum.filter(&(is_binary(&1) and &1 != ""))
+        |> Enum.uniq()
+        |> try_create_user(account, name, 1)
+
+      user ->
+        {:ok, user}
+    end
+  end
+
+  defp try_create_user(_bases, _account, _name, attempt)
+       when attempt > @handle_suffix_attempts do
+    error("Could not find a free handle from any candidate")
+    {:error, :handle_exhausted}
+  end
+
+  defp try_create_user(bases, account, name, attempt) do
+    suffix = if attempt == 1, do: nil, else: Enum.random(2..99)
+
+    result =
+      Enum.find_value(bases, fn base ->
+        username = base |> handle_with_suffix(suffix) |> Characters.clean_username("")
+
+        case create(%{profile: %{name: name}, character: %{username: username}}, account) do
+          {:ok, user} ->
+            {:ok, user}
+
+          {:error, %Ecto.Changeset{} = cs} ->
+            debug(cs, "Users.create failed for #{username}")
+            nil
+        end
+      end)
+
+    case result do
+      {:ok, user} -> {:ok, user}
+      nil -> try_create_user(bases, account, name, attempt + 1)
+    end
+  end
+
+  defp handle_with_suffix(base, nil), do: base
+  defp handle_with_suffix(base, n), do: "#{base}_#{n}"
 
   def get_or_create_service_user(
         service_character_username,
