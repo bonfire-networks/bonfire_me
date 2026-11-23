@@ -545,9 +545,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
     # the same read as `Users.search_index_for/1`, on a user whose settings are loaded
     defp discoverable?(user),
       do:
-        Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil,
-          current_user: user
-        ) != true
+        Bonfire.Common.Settings.get([Bonfire.Me.Users, :undiscoverable], nil, current_user: user) !=
+          true
 
     defp search_accounts(_parent, %{query: query} = args, info) do
       users =

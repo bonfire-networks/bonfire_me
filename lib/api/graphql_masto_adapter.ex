@@ -292,7 +292,12 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
               %{"last" => limit, "before" => before}
 
             _ ->
-              PaginationHelpers.maybe_add_cursor(%{"first" => limit}, conn.params, "max_id", "after")
+              PaginationHelpers.maybe_add_cursor(
+                %{"first" => limit},
+                conn.params,
+                "max_id",
+                "after"
+              )
           end
 
         {result, field} =
