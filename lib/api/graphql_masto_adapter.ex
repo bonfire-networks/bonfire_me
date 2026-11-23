@@ -228,16 +228,21 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         {:ok, %{data: %{"user" => %{"relationship" => relationship}}}}
         when is_map(relationship) ->
           {:ok,
-           Bonfire.API.MastoCompat.Schemas.Relationship.new(%{
-             "id" => target_id,
-             "following" => relationship["following"],
-             "followed_by" => relationship["followed"],
-             "requested" => relationship["requested"],
-             "blocking" => relationship["ghosting"],
-             "muting" => relationship["silencing"],
-             "muting_notifications" => relationship["silencing"],
-             "notifying" => notifying?
-           })}
+           Bonfire.API.MastoCompat.Schemas.Relationship.new(
+             %{
+               "id" => target_id,
+               "following" => relationship["following"],
+               "followed_by" => relationship["followed"],
+               "requested" => relationship["requested"],
+               "notifying" => notifying?
+             }
+             |> Map.merge(
+               Bonfire.API.MastoCompat.Schemas.Relationship.restrictions(
+                 relationship["ghosting"],
+                 relationship["silencing"]
+               )
+             )
+           )}
 
         {:ok, %{errors: errors}} ->
           {:error, errors}
@@ -357,7 +362,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       user(filter: $filter) {
         followers(first: $first, after: $after, before: $before) {
           edges { node { #{@account_fields} } }
-          page_info { start_cursor end_cursor }
+          page_info { start_cursor end_cursor has_next_page }
         }
       }
     }"
@@ -367,7 +372,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       user(filter: $filter) {
         following(first: $first, after: $after, before: $before) {
           edges { node { #{@account_fields} } }
-          page_info { start_cursor end_cursor }
+          page_info { start_cursor end_cursor has_next_page }
         }
       }
     }"
