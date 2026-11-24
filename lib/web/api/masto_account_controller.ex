@@ -14,6 +14,8 @@ if Application.compile_env(:bonfire_me, :modularity) != :disabled do
 
     def show(conn, params), do: Adapter.user(params, conn)
 
+    def index(conn, params), do: Adapter.accounts(params, conn)
+
     def verify_credentials(conn, params), do: Adapter.me(params, conn)
     def update_credentials(conn, params), do: Adapter.update_credentials(params, conn)
     def show_preferences(conn, params), do: Adapter.get_preferences(params, conn)

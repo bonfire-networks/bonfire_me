@@ -217,40 +217,8 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     defp read_relationship(user, target_id, nil),
       do: read_relationship(user, target_id, target_id in notifying_ids(user, [target_id]))
 
-    defp read_relationship(user, target_id, notifying?) do
-      query =
-        "query($id: ID!, $target: ID!) { user(filter: {id: $id}) { relationship(with: $target) { following followed requested ghosting silencing } } }"
-
-      case Absinthe.run(query, Bonfire.API.GraphQL.Schema,
-             variables: %{"id" => user.id, "target" => target_id},
-             context: Bonfire.API.GraphQL.Schema.context(%{current_user: user})
-           ) do
-        {:ok, %{data: %{"user" => %{"relationship" => relationship}}}}
-        when is_map(relationship) ->
-          {:ok,
-           Bonfire.API.MastoCompat.Schemas.Relationship.new(
-             %{
-               "id" => target_id,
-               "following" => relationship["following"],
-               "followed_by" => relationship["followed"],
-               "requested" => relationship["requested"],
-               "notifying" => notifying?
-             }
-             |> Map.merge(
-               Bonfire.API.MastoCompat.Schemas.Relationship.restrictions(
-                 relationship["ghosting"],
-                 relationship["silencing"]
-               )
-             )
-           )}
-
-        {:ok, %{errors: errors}} ->
-          {:error, errors}
-
-        _ ->
-          {:error, :not_found}
-      end
-    end
+    defp read_relationship(user, target_id, notifying?),
+      do: BoundariesAdapter.read_relationship(user, target_id, notifying?)
 
     # Follow Requests endpoints
 
@@ -341,8 +309,10 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
         case result do
           {:ok, _} ->
-            relationship = BoundariesAdapter.build_relationship(current_user, account_id)
-            RestAdapter.json(conn, relationship)
+            case read_relationship(current_user, account_id) do
+              {:ok, relationship} -> RestAdapter.json(conn, relationship)
+              {:error, error} -> RestAdapter.error_fn({:error, error}, conn)
+            end
 
           {:error, :not_found} ->
             RestAdapter.error_fn({:error, :not_found}, conn)
@@ -419,6 +389,36 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         _ ->
           RestAdapter.error_fn({:error, :not_found}, conn)
       end
+    end
+
+    # Mastodon's limit per request
+    @max_account_ids 40
+
+    @doc """
+    Get several accounts by id, in the order asked; ids that do not exist or that the reader may not see are left out.
+    Mastodon API: GET /api/v1/accounts?id[]=1&id[]=2
+    """
+    def accounts(params, conn) do
+      ids =
+        case params do
+          %{"id" => ids} when is_list(ids) -> ids
+          %{"id" => id} when is_binary(id) -> [id]
+          _ -> []
+        end
+        |> Enum.uniq()
+        |> Enum.take(@max_account_ids)
+
+      by_id =
+        Bonfire.API.MastoCompat.Accounts.by_ids(ids, conn.assigns[:current_user], counts: true)
+
+      accounts =
+        ids
+        |> Enum.map(&Map.get(by_id, &1))
+        |> Enum.reject(&is_nil/1)
+        |> Enum.map(&Mappers.Account.from_user/1)
+        |> Enum.reject(&is_nil/1)
+
+      RestAdapter.json(conn, accounts)
     end
 
     @doc """

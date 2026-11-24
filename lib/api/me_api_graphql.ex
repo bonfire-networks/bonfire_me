@@ -133,7 +133,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
         resolve(&Bonfire.Social.Graph.API.GraphQL.familiar_followers/3)
       end
 
-      @desc "Profiles the instance suggests following (the curated circle), without the current user"
+      @desc "Profiles the instance suggests following (the curated circle), without the current user and the profiles they already follow"
       field :suggestions, list_of(:any_character) do
         arg(:limit, :integer)
         resolve(&suggestions/3)
@@ -568,17 +568,27 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled and
       {:ok, Bonfire.Common.Repo.maybe_preload(users, [:profile, :character])}
     end
 
-    # the curated suggested-profiles circle, followed to its users and groups
+    # the curated circle is cached for everyone, so the reader and whom they follow are dropped here
     defp suggestions(_me, args, info) do
-      user_id = Bonfire.Common.Types.uid(GraphQL.current_user(info))
+      current_user = GraphQL.current_user(info)
+      user_id = Bonfire.Common.Types.uid(current_user)
+
+      candidates =
+        Bonfire.Boundaries.Circles.list_suggested_profiles()
+        |> Enum.map(&Bonfire.Common.Needles.follow!(&1, []))
+        |> Enum.filter(
+          &(Bonfire.API.MastoCompat.Accounts.account?(&1) and
+              Bonfire.Common.Types.uid(&1) != user_id)
+        )
+
+      followed_ids =
+        if current_user,
+          do: Bonfire.Social.Graph.Follows.followed_ids(current_user, candidates),
+          else: []
 
       {:ok,
-       Bonfire.Boundaries.Circles.list_suggested_profiles()
-       |> Enum.map(&Bonfire.Common.Needles.follow!(&1, []))
-       |> Enum.filter(
-         &(Bonfire.API.MastoCompat.Accounts.account?(&1) and
-             Bonfire.Common.Types.uid(&1) != user_id)
-       )
+       candidates
+       |> Enum.reject(&(Bonfire.Common.Types.uid(&1) in followed_ids))
        |> Enum.take(args[:limit] || 40)}
     end
 

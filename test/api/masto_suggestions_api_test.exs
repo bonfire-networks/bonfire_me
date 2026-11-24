@@ -2,10 +2,10 @@
 if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
   defmodule Bonfire.Me.Web.MastoSuggestionsApiTest do
     @moduledoc """
-    Tests for Mastodon-compatible Suggestions API v2 endpoint.
+    Tests for Mastodon-compatible Suggestions API endpoints (v2, and v1 for the follow filter).
 
     The suggestions endpoint returns users from the "Suggested Profiles" circle
-    maintained by instance admins/mods, falling back to discoverable users if empty.
+    maintained by instance admins/mods, without the reader and the profiles they already follow.
 
     Run with: just test extensions/bonfire_me/test/api/masto_suggestions_api_test.exs
     """
@@ -121,24 +121,21 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         refute user.id in user_ids
       end
 
-      test "excludes users that the current user is already following", %{
+      test "leaves out a curated profile the reader already follows", %{
         conn: conn,
         user: user
       } do
-        # Create and follow another user
-        other_account = Fake.fake_account!()
-        other_user = Fake.fake_user!(other_account)
-        {:ok, _} = Follows.follow(user, other_user)
+        {followed, other} = two_suggested_users()
+        {:ok, _} = Follows.follow(user, followed)
 
-        response =
+        suggested_ids =
           conn
           |> get("/api/v2/suggestions")
           |> json_response(200)
+          |> Enum.map(& &1["account"]["id"])
 
-        assert is_list(response)
-
-        suggested_ids = Enum.map(response, & &1["account"]["id"])
-        refute other_user.id in suggested_ids
+        assert other.id in suggested_ids
+        refute followed.id in suggested_ids
       end
 
       test "respects the limit parameter", %{conn: conn} do
@@ -197,6 +194,36 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
 
         assert response["error"] == "You need to login first."
       end
+    end
+
+    describe "GET /api/v1/suggestions" do
+      test "leaves out a curated profile the reader already follows", %{
+        conn: conn,
+        user: user
+      } do
+        {followed, other} = two_suggested_users()
+        {:ok, _} = Follows.follow(user, followed)
+
+        suggested_ids =
+          conn
+          |> get("/api/v1/suggestions")
+          |> json_response(200)
+          |> Enum.map(& &1["id"])
+
+        assert other.id in suggested_ids
+        refute followed.id in suggested_ids
+      end
+    end
+
+    # two users in the curated circle, so both are candidates before any follow filter
+    defp two_suggested_users do
+      circle_id = Instance.suggested_profiles_circle()
+      followed = Fake.fake_user!(Fake.fake_account!())
+      other = Fake.fake_user!(Fake.fake_account!())
+      {:ok, _} = Circles.add_to_circles(followed, circle_id, skip_boundary_check: true)
+      {:ok, _} = Circles.add_to_circles(other, circle_id, skip_boundary_check: true)
+      Circles.list_suggested_profiles(cache: :reset)
+      {followed, other}
     end
   end
 end
