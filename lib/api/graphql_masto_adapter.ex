@@ -69,17 +69,20 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
       else
         graphql(conn, :me, params)
         |> RestAdapter.return(:me, ..., conn, fn
-          %{user: %{} = user} = me -> own_account_json(user, me[:follow_requests_count])
-          _no_user -> nil
+          %{user: %{} = user} = me ->
+            own_account_json(user, me[:follow_requests_count], conn.assigns[:current_user])
+
+          _no_user ->
+            nil
         end)
       end
     end
 
     @doc "Get user preferences"
     def get_preferences(_params \\ %{}, conn) do
-      # TODO: implement actual preferences
+      # TODO: the other preferences
       Phoenix.Controller.json(conn, %{
-        "posting:default:visibility" => "public",
+        "posting:default:visibility" => default_visibility(conn.assigns[:current_user]),
         "posting:default:sensitive" => false,
         "posting:default:language" => "en",
         "reading:expand:media" => "default",
@@ -872,11 +875,14 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
     defp graphql_error(%{errors: errors}, conn), do: RestAdapter.error_fn({:error, errors}, conn)
     defp graphql_error(other, conn), do: RestAdapter.error_fn({:error, other}, conn)
 
-    defp own_account_json(account, follow_requests_count) do
+    defp own_account_json(account, follow_requests_count, current_user) do
       account
       |> Map.put(:follow_requests_count, follow_requests_count)
+      |> Map.put(:default_privacy, default_visibility(current_user))
       |> Mappers.Account.from_user(include_source: true)
     end
+
+    defdelegate default_visibility(current_user), to: Bonfire.API.MastoCompat.Helpers
 
     @graphql "query ($filter: CharacterFilters) {
       me { follow_requests_count }
@@ -890,7 +896,7 @@ if Application.compile_env(:bonfire_api_graphql, :modularity) != :disabled do
         %{data: %{user: %{} = account} = data} ->
           RestAdapter.json(
             conn,
-            own_account_json(account, get_in(data, [:me, :follow_requests_count]))
+            own_account_json(account, get_in(data, [:me, :follow_requests_count]), user)
           )
 
         other ->
